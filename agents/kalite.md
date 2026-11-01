@@ -17,7 +17,9 @@ test/CI çıktısının bulunduğu dosya (ör. `.ekip/test-sonucu.txt`), odak li
 2. **Test kanıtı:** test çıktısı dosyasında doğrulama komutu ve beklenen çıktı eşleşiyor mu; test dosyası değiştirilmiş
    ya da zayıflatılmış mı (`skip`, `xfail`, assert silme, hardcode) — bu **P0**.
 3. **Spec uyumu ve drift:** spec'te olmayan davranış eklenmiş mi (over-build), spec'teki bir şey eksik mi.
-4. **Yasaklar:** kartın dokunulmayacak yolları ve `tests/**`'e dokunulmuş mu; gerekçesiz yeni bağımlılık var mı.
+4. **Yasaklar:** kartın dokunulmayacak yolları ve `tests/**`'e (kartın Files listesinde olmayan) dokunulmuş mu; diff'te
+   kart dosyası ya da `docs/ekip/**` değişikliği var mı (uygulayıcı bunlara yazamaz, Bash ile yazılmışsa **P0**);
+   gerekçesiz yeni bağımlılık var mı.
 5. **Davranış hataları:** sınır koşulları, hata yolları, eşzamanlılık, kaynak sızıntısı — yalnız gösterebildiğin.
 
 ## Nasıl yazarsın

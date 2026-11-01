@@ -17,6 +17,10 @@ kartları `STATE.json.kartlar`a (status `acik`, tur 0).
 - Aynı dosya iki kartta mı? Varsa birleştir ya da sıraya al (ayrı wave). `Agent` ile mimar "iş C".
 - Her kartın kademesi `korunan_yollar` ile tutarlı mı; Kademe 3 kartları 🔐 ile işaretle, bunlar **interaktif**
   oturumda ve kullanıcının güvenlik onayıyla yapılır.
+- Her kartın Files listesindeki test ve korunan yollar kapıyla uyumlu mu: var olan test dosyasına ekleme ve korunan yol
+  yalnız Files'ta backtick içinde açıkça yazılıysa açılır (glob değil, tam yol). Kademe 3 kartlara başlık tablosundan
+  sonra `**🔐 Onay:** <YYYY-MM-DD> <kim>` satırı yalnız kullanıcının sohbetteki açık "evet"inden sonra yazılır ve main'e
+  commit edilir (worktree bu commit'ten dallanır); onaysız kartta hook korunan yolu reddeder.
 - Bir wave'de en çok `paralel_ust_sinir` (varsayılan 3) kart; fazlası sonraki wave'e.
 
 ## 3. Dispatch prompt'ları
@@ -30,8 +34,10 @@ Kullanıcıya her kart için tek satır: kart, rol, kademe, nasıl açılacağı
   `context: fresh`, prompt = dispatch dosyasının içeriği; Kademe 3 kartlar için kullanıcıya oturumu kendisinin açmasını
   söyle (gözü önünde).
 - **Terminal:** Kademe 1–2 için
-  `claude -p --worktree ekip-T<nnn> --max-turns 60 --max-budget-usd <bütçe> "$(cat docs/ekip/tasks/T<nnn>.dispatch.md)"`;
-  Kademe 3 için `claude -w ekip-T<nnn>` interaktif. `--bare` kullanılmaz.
+  `claude -p --worktree ekip-T<nnn> --plugin-dir <plugin kökü> --permission-mode auto --max-turns 60 --max-budget-usd <bütçe> "$(cat docs/ekip/tasks/T<nnn>.dispatch.md)"`;
+  Kademe 3 için `claude -w ekip-T<nnn> --plugin-dir <plugin kökü> --permission-mode auto` interaktif. `--plugin-dir`
+  yalnız plugin kalıcı kurulu değilse gerekir (yoksa uygulayıcı `ekip-uygula` skill'ini ve hook'ları bulamaz).
+  `--bare` kullanılmaz.
 - Worktree varsayılan daldan dallanır; kartın bağımlı olduğu kart merge edilmemişse interface-first çalışılır.
 Açılan her kart için `STATE.json` status → `suruyor`.
 

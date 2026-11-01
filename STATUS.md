@@ -81,6 +81,10 @@ Araştırma sonrası düzeltmeler (2026-11-01, kanıt raporda):
 - **K23** Tek test ortamı = tek sahip: GTR9 LLMPortal test ortamını aynı anda iki oturum kullandı (B01 testi geçersiz,
   yeniden koşulmadı; ikinci ölçüm "test ölçülmedi"). Ders pilota taşınır: `ekip-denetle` tam test adımı için ortam
   kilidi gereksinimi (retro maddesi, 2.4).
+- **K29** Yazma kapısına karta özel izin (2026-11-01, pilot bulgusu, kullanıcı "seçenek 1"; dal `worktree-kapi-kart-izni`):
+  var olan test dosyası kartın `## Files` listesindeyse yazılır; korunan yol Files'ta **ve** kart başlığında
+  `**🔐 Onay:** <tarih> <kim>` varsa yazılır; kart ve `docs/ekip/**` uygulayıcıya kapalı. Bash yazımı kapsam dışı,
+  `ekip:kalite` diff'te bulgu sayar. `ekip-dagit` terminal örneğine `--plugin-dir` ve `--permission-mode auto` eklendi.
 - **K28** Baz çizgi referansı (2026-11-01): tek oturum Opus 5.5 medium, S ≈ 0,9 USD / M ≈ 1,6 USD / 1 tur / ilk denemede
   yeşil 10/10. Ekip akışı aynı görevlerde değil pilot özellikte (K21) ölçülür; başarı ölçütü spec §10: kalite kaybı yok,
   insan müdahalesi 2 kapı, maliyet çarpanı raporlanır (araştırma: ekip 2,2–5,1×; hedef bunu aşmamak). Gözlem: baz

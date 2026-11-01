@@ -37,7 +37,7 @@ hook testleri: `bash tests/hook_testleri.sh`; davranış testleri: `claude plugi
 |---|---|---|---|
 | orkestratör | ana oturum | kod yazmaz | üst |
 | `ekip:mimar` | subagent | Read, Grep, Glob | opus |
-| uygulayıcı (backend / frontend / ui-ux rol notu) | ayrı oturum, worktree | tümü; korunan yol ve test dosyası hook'la engelli | sonnet |
+| uygulayıcı (backend / frontend / ui-ux rol notu) | ayrı oturum, worktree | tümü; korunan yol ve var olan test dosyası yalnız kartın Files listesinde (korunan yol ek olarak 🔐 Onay satırıyla) açık, kart ve `docs/ekip/**` hook'la engelli | sonnet |
 | `ekip:kalite` | subagent | Read, Grep, Glob | sonnet |
 | `ekip:guvenlik` | subagent | Read, Grep, Glob + salt-okunur tarayıcı Bash | opus |
 | `ekip:arayici` | subagent | Read, Grep, Glob | haiku |
@@ -55,3 +55,10 @@ Hook'lar plugin kurulu her oturumda yüklenir; uygulayıcı kapıları yalnız `
 yalnız `agent_type` `ekip:*` ise çalışır. Deneysel Agent Teams kullanılmaz. Plugin monitor'ı (`ekip-izleyici`) `-p` oturumlarında başlamaz ve
 kapatılan plugin'le durmaz (oturum sonunda durur); `/ekip:durum` ise `-p`'de de çalışır. `gitleaks` kuruluysa commit öncesi sır
 taraması yapılır; yoksa `.ekip/uyarilar.log`'a not düşer.
+
+Yazma kapısı (`scripts/yazma_kapisi.py`) yalnız Write/Edit/MultiEdit/NotebookEdit araçlarını görür; uygulayıcının Bash
+ile dosya yazması (`echo >`, `sed -i`, `tee`) bu hook'un kapsamı dışıdır (`bash_kapisi.py` yalnız `.env` yönlendirmesini
+ve inceleyici Bash'ini keser). Bu yüzden kart dosyası, `docs/ekip/**` ya da kartta onaysız korunan yol değişikliği
+`ekip:kalite` incelemesinde diff'ten bulgu sayılır. Kademe 3 izni kartın başlık tablosundan sonraki
+`**🔐 Onay:** <YYYY-MM-DD> <kim>` satırıyla açılır; bu satırı yalnız orkestratör, kullanıcının sohbetteki açık "evet"inden
+sonra yazar ve main'e commit eder.
