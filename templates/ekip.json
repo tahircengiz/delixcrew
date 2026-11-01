@@ -1,5 +1,6 @@
 {
   "$comment": "Proje kökünde docs/ekip/ekip.json olarak durur. Hook'lar ve skill'ler buradan okur.",
+  "$comment_test_komutu": "Stop kapısı yalnız bu komutu koşar; yerelde koşabilen birim testlerini dahil et (yalnız derleme/lint ise Stop kapısı mantık hatasını geçirir, pilot T004). Tam takım ve uzak ortam koşusu kartın 'Doğrulama komutu'nda, orkestratör deterministik kapıda koşar.",
   "test_komutu": "pytest -q",
   "ek_kontroller": ["ruff check .", "mypy ."],
   "korunan_yollar": [

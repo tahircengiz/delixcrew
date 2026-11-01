@@ -33,6 +33,8 @@ geçmişini okuma. Kartın rol etiketine göre `${CLAUDE_PLUGIN_ROOT}/skills/eki
 - Çıktıları `.ekip/test-sonucu.txt`'ye yaz (inceleyici bunu okur). ui-ux / şablon değişikliğinde ekran görüntüsü ya da
   Playwright kanıtı zorunlu (`.ekip/kanit/`).
 - Stop hook testler geçmeden turu kapatmaz; 3 denemede geçmiyorsa `BLOCKED` ile raporla, hileye sapma.
+- Paylaşımlı uzak test ortamına (rsync, imaj derleme, compose) **dokunma**; o koşu orkestratörde (K23). Kart açıkça
+  izin verdiyse önce `STATE.json.ortam_sahibi` senin kartın olmalı; değilse raporda "uzak koşu orkestratörde" yaz.
 
 ## 4. Teslim
 - Commit mesajı: `T<nnn>: <ne>`; yalnız dokunduğun dosyaları adıyla ekle.

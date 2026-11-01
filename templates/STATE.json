@@ -3,6 +3,8 @@
   "spec": "docs/ekip/SPEC.md",
   "boy": "M",
   "guncelleme": "2026-01-01T00:00:00Z",
+  "ortam_sahibi": null,
+  "$comment_ortam_sahibi": "Paylaşımlı test ortamının kilidi (K23): null ya da {\"kart\": \"T001\", \"kim\": \"orkestratör\", \"baslangic\": \"<ISO>\"}; yalnız orkestratör yazar.",
   "waves": [["T001", "T002"], ["T003"]],
   "kartlar": {
     "T001": { "dosya": "docs/ekip/tasks/T001-ornek.md", "rol": "backend", "kademe": 2, "status": "acik", "pr": null, "tur": 0, "maliyet_usd": null }

@@ -29,7 +29,7 @@ hook testleri: `bash tests/hook_testleri.sh`; davranış testleri: `claude plugi
 | 4 | `/ekip:uygula <kart>` | Uygulayıcı oturumda: test-first, yalnız kartın dosyaları, PR, `.ekip/rapor.md`. |
 | 5 | `/ekip:denetle <kart>` | Deterministik kapılar → `kalite` (+ `guvenlik`) sıfır bağlamla → ≤ 3 düzeltme turu → **Kapı 2 (merge, insan).** |
 | 6 | `/ekip:kapat` | STATUS/CHANGELOG, ölçüm (maliyet, tur), drift kontrolü, onaylı bellek yazımı, worktree temizliği. |
-| her an | `/ekip:durum` | Salt-okunur pano: wave · kart · rol · kademe · status · tur · PR · maliyet · son rapor · bekleyen kapı (🔐, merge) tablosu sohbete ve `docs/ekip/PANO.md`'ye. `ekip-izleyici` monitor'ı `/ekip:dagit`'ten sonra değişimleri görev paneline yazar. |
+| her an | `/ekip:durum` | Salt-okunur pano: wave · kart · rol · kademe · status · tur · PR · maliyet · son rapor · bekleyen kapı (🔐, merge) tablosu sohbete; istenirse (`--dosya`) `docs/ekip/PANO.md`'ye (git'e girmez). |
 
 ## Roller
 
@@ -45,14 +45,14 @@ hook testleri: `bash tests/hook_testleri.sh`; davranış testleri: `claude plugi
 ## Proje tarafı dosyalar
 
 `docs/ekip/ekip.json` (test komutu, korunan yollar, test yolları, paralel üst sınır), `docs/ekip/SPEC.md`,
-`docs/ekip/tasks/T<nnn>-<slug>.md`, `docs/ekip/STATE.json`, `docs/ekip/PANO.md` (üretilir, salt-okunur). Uygulayıcı worktree'sinde `.ekip/kart` (hook'ları
+`docs/ekip/tasks/T<nnn>-<slug>.md`, `docs/ekip/STATE.json`, `docs/ekip/PANO.md` (yalnız istenince üretilir, `.gitignore`'da). Uygulayıcı worktree'sinde `.ekip/kart` (hook'ları
 aktifleştirir), `.ekip/rapor.md`, `.ekip/test-sonucu.txt`, `.ekip/kanit/`.
 
 ## Bilinen sınırlar
 
 Plugin agent'ları `permissionMode`, `hooks`, `mcpServers` alanlarını yok sayar (kısıt `tools` + `hooks/hooks.json`).
 Hook'lar plugin kurulu her oturumda yüklenir; uygulayıcı kapıları yalnız `cwd/.ekip/kart` varsa, inceleyici kapıları
-yalnız `agent_type` `ekip:*` ise çalışır. Deneysel Agent Teams kullanılmaz. Plugin monitor'ı (`ekip-izleyici`) `-p` oturumlarında başlamaz ve
+yalnız `agent_type` `ekip:*` ise çalışır. Deneysel Agent Teams kullanılmaz. Plugin monitor'ı yok: `ekip-izleyici` pilotta ve 3 teşhis koşusunda hiç başlamadı, 2026-11-01'de kaldırıldı (retro A9, K35).
 kapatılan plugin'le durmaz (oturum sonunda durur); `/ekip:durum` ise `-p`'de de çalışır. `gitleaks` kuruluysa commit öncesi sır
 taraması yapılır; yoksa `.ekip/uyarilar.log`'a not düşer.
 

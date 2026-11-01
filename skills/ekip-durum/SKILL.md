@@ -1,12 +1,13 @@
 ---
 name: durum
-description: Ekip işinin anlık durumunu gösterir: docs/ekip/STATE.json, görev kartları ve uygulayıcı worktree'lerindeki .ekip/rapor.md dosyalarından wave · kart · rol · kademe · status · tur · PR · maliyet · son rapor · bekleyen kapı (🔐, merge) tablosunu sohbete basar ve docs/ekip/PANO.md'yi yeniden üretir. Salt-okunur, kod yazmaz. "durum", "pano", "kartlar ne durumda", "hangi kart bekliyor", "/ekip:durum" denince kullan.
+description: Ekip işinin anlık durumunu gösterir: docs/ekip/STATE.json, görev kartları ve uygulayıcı worktree'lerindeki .ekip/rapor.md dosyalarından wave · kart · rol · kademe · status · tur · PR · maliyet · son rapor · bekleyen kapı (🔐, merge) tablosunu sohbete basar; istenirse (`--dosya`) docs/ekip/PANO.md'yi yeniden üretir. Salt-okunur, kod yazmaz. "durum", "pano", "kartlar ne durumda", "hangi kart bekliyor", "/ekip:durum" denince kullan.
 allowed-tools: Bash(python3 *pano_uret.py*)
 ---
 
 Sen `ekip` orkestratörüsün; bu adım **salt-okunur**: kod yazmaz, kart ya da STATE değiştirmez, oturum açmaz.
-Aşağıdaki tablo `${CLAUDE_PLUGIN_ROOT}/scripts/pano_uret.py` ile bu projenin kökünde üretildi ve aynı içerik
-`docs/ekip/PANO.md`'ye yazıldı (`docs/ekip/` yoksa yazılmaz).
+Aşağıdaki tablo `${CLAUDE_PLUGIN_ROOT}/scripts/pano_uret.py` ile bu projenin kökünde üretildi; dosya yazılmadı.
+Kullanıcı "dosyaya yaz" / "PANO.md" / "Obsidian" derse `--dosya` ile yeniden koş (`docs/ekip/PANO.md`; proje
+`.gitignore`'unda olmalı, commit edilmez).
 
 ## Pano
 

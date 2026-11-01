@@ -13,6 +13,10 @@ eksikse `/ekip:basla` mantığıyla kendin öner).
    `[NEEDS CLARIFICATION]` işaretini dosyaya bırakmak yerine soruyu şimdi sor.
 3. İki makul uygulama farklı diff üretmeyecek hale gelince dur; kullanıcı `yeter` derse kes, kalanı varsayım olarak
    spec'in "Kararlar" bölümüne K-numaralı yaz.
+4. **Zorunlu soru** (cevabı repoda yoksa): iş bir dış sisteme (Keycloak, DB, dış API) birden fazla yazım yapıyorsa
+   **yazım sırası ve yarım kalma**: hangi sıra fail-closed, yarım kalan yazım nasıl onarılır (geri okuma, idempotent
+   tekrar, açılışta eşitleme). Cevap spec'in güvenlik notuna K olarak yazılır. Pilot dersi: sorulmadığında aynı bulgu
+   inceleme turunda çıktı (LLMPortal T002, K28), spec'te yakalanınca sıfır düzeltme turu (E.7).
 
 ## 2. Spec'i yaz
 - Şablon: boy M → `${CLAUDE_PLUGIN_ROOT}/templates/spec-M.md`; boy L → `templates/spec-L.md` (+ `docs/ekip/design.md`,

@@ -6,8 +6,10 @@
 3. M/L ise `/ekip:spec` grill'ini cevapla; `yeter` diyebilirsin. Spec'i oku, **onayla** (kapı 1).
 4. `/ekip:dagit` → kartlar ve dispatch dosyaları. Her kart için oturum aç: Desktop'ta `start_session` (worktree),
    terminalde `claude -w ekip-T001` ve içinde `/ekip:uygula docs/ekip/tasks/T001-<slug>.md`. Kademe 3 kartı kendin aç.
-   İstediğin an `/ekip:durum`: kart tablosu ve bekleyen kapılar; `docs/ekip/PANO.md` Obsidian'da da açılır.
-5. Uygulayıcı bitince PR ve `.ekip/rapor.md` gelir. Orkestratörde `/ekip:denetle T001`.
+   İstediğin an `/ekip:durum`: kart tablosu ve bekleyen kapılar ("dosyaya yaz" dersen `docs/ekip/PANO.md`, Obsidian'da
+   açılır; git'e girmez).
+5. Uygulayıcı bitince PR ve `.ekip/rapor.md` gelir. Orkestratörde `/ekip:denetle T001`: tam test koşusu ve uzak ortam
+   doğrulaması kartın **dal commit'inden** (`git archive <sha>`), tek test ortamında tek sahip (`STATE.json.ortam_sahibi`).
 6. İnceleyiciler KABUL/TEMİZ ise PR'ı **sen merge et** (kapı 2). Sonraki wave için `/ekip:dagit` devam.
 7. Tüm kartlar kabul → `/ekip:kapat`: ölçüm, drift, STATUS, worktree temizliği.
 

@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `ekip`)
 
-**Son güncelleme:** 2026-11-01 · **Faz:** 2 bitti — pilot ve retro tamam; sırada Faz 3: retro aksiyonları A1–A12 (`docs/retro/2026-11-01-pilot-retro.md`)
+**Son güncelleme:** 2026-11-01 · **Faz:** 3 — retro aksiyonları: A1–A9 dal `retro-aksiyonlar`'da (merge bekliyor); sırada A10 karşı ölçüm, A11 Mac kurulumu, A12
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -26,6 +26,10 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 2.2 | Pilot: LLMPortal'da M boy / Kademe 2 özellik uçtan uca | ✔ 2026-11-01: E.6 ekip OTP zorunluluğu (W0 + T001–T003) main'de, GTR9 623/0, ≈ 29,8 USD, ≈ 2 sa 50 dk; aynı akışla E.7 açık işleri (T004–T006) ≈ 22,7 USD, 644/0, ≈ 1,5 sa; takipler T007 1,68 / T008 0,71 USD. Ayrıntı LLMPortal `docs/ekip/olcum.md` "Ekip akışı" (K30) |
 | 2.3 | Pilot: bir Kademe 3 kart interaktif + güvenlik onayı | ✔ 2026-11-01: 4 kart (T002, T003, T005, T007) interaktif oturum + 🔐 sohbet onayı, kapı 2 merge insanla; onay kaydı prj_HomeLab #195 (3ec751d) |
 | 2.4 | Retro: hangi harness parçası taşıyıcı | ✔ 2026-11-01 [docs/retro/2026-11-01-pilot-retro.md](docs/retro/2026-11-01-pilot-retro.md): taşıyıcı = grill+spec+mimar, kart+dispatch, `guvenlik`, orkestratör denetimi, insan kapıları, `ekip-kapat`; yardımcı = Stop kapısı, `kalite`; doğrulanmadı = yazma/bash kapıları, rol prompt'ları; çıkarılabilir = `ekip-izleyici`, `PANO.md` dosya yazımı. 12 aksiyon A1–A12 (K32–K34) |
+| 3.1 | Retro aksiyonları A1–A9 (plugin içi: skill metinleri, şablonlar, pano, monitor teşhisi) | ✔ 2026-11-01 dal `retro-aksiyonlar` (K35–K37); merge kullanıcıda |
+| 3.2 | A10 karşı ölçüm: E.7 boyutunda bir kart plugin'siz tek oturumda, LLMPortal | ◻ |
+| 3.3 | A11 plugin'i Mac'e kalıcı kur (yerel marketplace, `/mac-change` R1) | ◻ 🔐 |
+| 3.4 | A12 tutarlılıklar (spec §7 pytest, `kalite` tests/** kuralı, LLMPortal gitleaks allowlist) | ◻ |
 
 ## Kararlar
 
@@ -100,7 +104,7 @@ Görünürlük (1.5, 2026-11-01):
 - **K25** Worktree↔kart eşlemesi: `git worktree list --porcelain` + worktree'deki `.ekip/kart` içeriği, yoksa dal adındaki
   `T<nnn>`. PR merge durumu `gh` ile sorgulanmaz (çevrimdışı ve stdlib kalsın); "merge" kapısı `status=kabul` + PR
   numarası varken gösterilir. Kart yalnız `tasks/` altında olup STATE'te yoksa kart tablosundan okunur.
-- **K26** `ekip-izleyici`: `monitors/monitors.json`, `when: on-skill-invoke:dagit`, 12 sn yoklama (`EKIP_IZLEYICI_ARALIK`),
+- **K26** (kaldırıldı, bkz. K35) `ekip-izleyici`: `monitors/monitors.json`, `when: on-skill-invoke:dagit`, 12 sn yoklama (`EKIP_IZLEYICI_ARALIK`),
   yalnız değişimde `[ekip] T001 status: a → b` biçiminde tek satır. Resmî dokümandan doğrulandı (components.md
   "Monitors", manifest-reference "monitors", 2026-11-01): alanlar `name/command/description/when`; komut oturum cwd'sinde,
   sandbox dışında, kullanıcı yetkisiyle çalışır; stdout satırları Claude'a bildirim olarak düşer; `-p`'de başlamaz;
@@ -145,6 +149,20 @@ Retro (2.4, 2026-11-01):
   A2 yeni `-p` oturum + bulgu + diff özeti, ilk kartta ikisi ölçülür. Denetim sırası: deterministik kapı (GTR9 koşusu,
   `py_compile`, gitleaks) önce, LLM inceleyiciler sonra (T004 P0 böyle yakalandı; Stop kapısı Mac'te birim testi
   koşmadığı için geçirdi, A3).
+
+Faz 3 (retro aksiyonları, 2026-11-01, dal `retro-aksiyonlar`):
+- **K35** `ekip-izleyici` monitor kaldırıldı (`monitors/`, `scripts/izleyici.py`, test bölümü 3). Teşhis (A9): `claude
+  --plugin-dir` interaktif oturumda `/ekip:dagit` çağrıldı, `when` üç biçimde denendi (`dagit`, `ekip-dagit`,
+  `ekip:ekip-dagit`); üçünde de `izleyici.py` süreci doğmadı (`pgrep`, claude'un tek çocuğu `caffeinate`), transkriptte
+  bildirim yok; sürüm 2.1.309, telemetri değişkeni yok. Pilotta Skill aracı yoluyla da 0 bildirim. Sebep (doğrulanmadı):
+  `--plugin-dir` ile yüklenen plugin'de monitor başlamıyor ya da `on-skill-invoke` slash/Skill çağrısını yakalamıyor.
+  Geri alma: `git revert` ile dosyalar döner; kalıcı kurulumdan (A11) sonra bir kez daha denenebilir.
+- **K36** `/ekip:durum` dosya yazımı varsayılan kapalı (`--dosya` ile açılır); `ekip-basla` proje `.gitignore`'una
+  `docs/ekip/PANO.md` ekler (A8). Pano testleri 9/9.
+- **K37** Denetim: her doğrulama kartın dal commit'inden (`git archive <sha>`), tek test ortamı kilidi
+  `STATE.json.ortam_sahibi`, deterministik kapı önce (A4–A6); headless düzeltme turu `--resume` yerine yeni `-p`
+  oturum (A2, ilk kartta ölçülecek); grill zorunlu "yazım sırası / yarım kalma" sorusu (A1); ölçüt kapı / kapı dışı
+  müdahale (A7); `ekip.json.test_komutu` birim testleri içermeli (A3).
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

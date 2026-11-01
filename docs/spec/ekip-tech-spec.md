@@ -191,8 +191,10 @@ Guardrail: interaktif oturumda dolar kapısı yok → `maxTurns`, `-p`'de `--max
 
 0. **Baz çizgi önce:** aynı 10 görevde "tek oturum, Opus 5.5 medium" maliyeti ve ilk-denemede-CI-yeşil oranı ölçülür;
    ekip akışı buna karşı raporlanır (ölçülmeden iddia yok).
-1. Bir M boy / Kademe 2 özellik uçtan uca: spec onayı → kartlar → ≤ 2 paralel uygulayıcı → PR → kapılar → merge;
-   kullanıcı yalnız 2 kapıda müdahale etti.
+1. Bir M boy / Kademe 2 özellik uçtan uca: spec onayı → kartlar → ≤ 2 paralel uygulayıcı → PR → kapılar → merge.
+   İnsan müdahalesi iki sayıyla ölçülür (retro A7, 2026-11-01): **kapı** = karar noktası (spec/kart onayı, 🔐
+   güvenlik onayı, merge) ve **kapı dışı müdahale** = kullanıcı mesajı − kapı sayısı; hedef kapı dışı ≤ 5 / kart.
+   (İlk biçim "kullanıcı yalnız 2 kapıda müdahale etti" pilotta karşılanmadı: E.6 41, E.7 61 mesaj.)
 2. Her PR'da test kanıtı kartta; Kademe 2+ PR'larda inceleyici bulgusu ve kapanışı görünür; `/security-review`
    bulgusu sıfır ya da kabul edilmiş.
 3. Bir Kademe 3 kart (ör. Keycloak ayarı) interaktif oturumda, güvenlik onay kapısından geçerek bitti.
@@ -234,8 +236,8 @@ ucuz ve ajanın kapatamayacağı yerde:
 
 | Katman | Ne gösterir | Mekanizma | Ne zaman |
 |---|---|---|---|
-| **`/ekip:durum`** | wave'ler, kart tablosu (id · rol · kademe · status · tur · PR · maliyet · son rapor özeti), bekleyen kapılar (🔐, merge) | STATE.json + kartlar + worktree `.ekip/rapor.md`'lerini okur; sohbete tablo basar, `docs/ekip/PANO.md`'yi yeniden üretir (Obsidian'da da açılır) | faz 1.5 |
-| **Plugin monitor** `ekip-izleyici` | kart status değişimi, yeni rapor, PR check sonucu; orkestratörün sormadan haberdar olması | `monitors/monitors.json`: `docs/ekip/STATE.json` ve worktree `.ekip/rapor.md` dosyalarını izleyen arka plan betiği (`when: on-skill-invoke:dagit`), değişikliği görev paneline yazar; `-p` oturumlarında çalışmaz (resmî sınır) | faz 1.5 |
+| **`/ekip:durum`** | wave'ler, kart tablosu (id · rol · kademe · status · tur · PR · maliyet · son rapor özeti), bekleyen kapılar (🔐, merge) | STATE.json + kartlar + worktree `.ekip/rapor.md`'lerini okur; sohbete tablo basar; `--dosya` ile `docs/ekip/PANO.md`'yi yeniden üretir (Obsidian'da açılır; varsayılan kapalı, retro A8) | faz 1.5 |
+| **Plugin monitor** `ekip-izleyici` | kart status değişimi, yeni rapor, PR check sonucu; orkestratörün sormadan haberdar olması | `monitors/monitors.json`: `docs/ekip/STATE.json` ve worktree `.ekip/rapor.md` dosyalarını izleyen arka plan betiği (`when: on-skill-invoke:dagit`), değişikliği görev paneline yazar; `-p` oturumlarında çalışmaz (resmî sınır) | **kaldırıldı 2026-11-01** (retro A9, K35): pilotta 0 bildirim, 3 `when` biçimiyle teşhiste süreç başlamadı |
 | **Desktop bağlı oturumlar** | her uygulayıcı oturumunun canlı durumu (çalışıyor / bekliyor / bitti), kendi görev listesi | `start_session` ile açılan oturumlar sidebar'da orkestratöre bağlı görünür; `update_plan` listesi uygulayıcıda kart adımlarını taşır | hazır (uygulama) |
 | **HTML pano** (isteğe bağlı) | aynı tablo tarayıcıda, telefon dahil | `PANO.md`'den statik sayfa, `ts-share.sh <port>` ile tailnet'te (8440–8449; Funnel yok, kimliksiz yazma yok, salt-okunur) | pilot sonrası, gerek görülürse |
 | **Maliyet** | kart başına token/USD, cache hit | `/usage`, OTel `claude_code.token.usage` (`agent.name`), ccusage; `/ekip:kapat` karta yazar | faz 2 ölçümle |

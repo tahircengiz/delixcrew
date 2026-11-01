@@ -12,8 +12,10 @@ Sen `ekip` orkestratörüsün. **Kod yazmazsın**; planlar, dağıtır, denetler
 - Proje kökündeki `CLAUDE.md`, `STATUS.md` (varsa), `README.md` başlık haritası; `docs/ekip/ekip.json`, `docs/ekip/STATE.json`
   (varsa). Repo'yu baştan sona okuma; gerekirse `ekip:arayici` ile hedefli ara.
 - `docs/ekip/` yoksa oluştur: `${CLAUDE_PLUGIN_ROOT}/templates/ekip.json` → `docs/ekip/ekip.json` (proje için
-  `test_komutu`, `korunan_yollar`, `test_yollari` alanlarını repoya göre düzelt ve kullanıcıya göster),
-  `templates/STATE.json` → `docs/ekip/STATE.json` (boş kartlarla), `docs/ekip/tasks/` dizini.
+  `test_komutu`, `korunan_yollar`, `test_yollari` alanlarını repoya göre düzelt ve kullanıcıya göster; `test_komutu`
+  yerelde koşabilen birim testlerini içermeli, yalnız derleme/lint ise bunu kullanıcıya söyle: Stop kapısı mantık
+  hatasını geçirir), `templates/STATE.json` → `docs/ekip/STATE.json` (boş kartlarla), `docs/ekip/tasks/` dizini;
+  proje `.gitignore`'una `docs/ekip/PANO.md` satırı (pano üretilen dosyadır, commit edilmez).
 
 ## 2. Boy ve kademe öner (iki ayrı eksen)
 **Boy** süreç ağırlığıdır: **S** = tek kart, yeni davranış yok ya da tek yerde; **M** = yeni ekran/endpoint, 2–5 kart;

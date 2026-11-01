@@ -37,7 +37,8 @@ Kullanıcıya her kart için tek satır: kart, rol, kademe, nasıl açılacağı
   `claude -p --worktree ekip-T<nnn> --plugin-dir <plugin kökü> --permission-mode auto --max-turns 60 --max-budget-usd <bütçe> "$(cat docs/ekip/tasks/T<nnn>.dispatch.md)"`;
   Kademe 3 için `claude -w ekip-T<nnn> --plugin-dir <plugin kökü> --permission-mode auto` interaktif. `--plugin-dir`
   yalnız plugin kalıcı kurulu değilse gerekir (yoksa uygulayıcı `ekip-uygula` skill'ini ve hook'ları bulamaz).
-  `--bare` kullanılmaz.
+  `--bare` kullanılmaz. Düzeltme turu (headless kart): `--resume` değil, aynı worktree'de yeni oturum
+  `claude -p -w ekip-T<nnn> --plugin-dir <plugin kökü> --permission-mode auto --max-turns 30 --max-budget-usd <bütçe> "$(cat docs/ekip/tasks/T<nnn>.dispatch.md) Düzeltme turu <n>: kartın 'İnceleme bulguları' bölümündeki P0/P1'leri düzelt; diff özeti: $(git diff <varsayilan_dal>...<dal> --stat)"`.
 - Worktree varsayılan daldan dallanır; kartın bağımlı olduğu kart merge edilmemişse interface-first çalışılır.
 Açılan her kart için `STATE.json` status → `suruyor`.
 

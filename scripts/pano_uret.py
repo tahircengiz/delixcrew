@@ -2,12 +2,12 @@
 """ekip panosu: docs/ekip/STATE.json + kartlar + worktree .ekip/rapor.md → tek Markdown tablo.
 
 Kullanım (proje kökünde):
-    python3 pano_uret.py             # tabloyu stdout'a basar ve docs/ekip/PANO.md'yi yeniden üretir
-    python3 pano_uret.py --yazma     # yalnız stdout
-    python3 pano_uret.py --json      # ham veri (izleyici ve testler için)
+    python3 pano_uret.py             # tabloyu stdout'a basar (dosya yazmaz)
+    python3 pano_uret.py --dosya     # ayrıca docs/ekip/PANO.md'yi yeniden üretir (retro A8: varsayılan kapalı)
+    python3 pano_uret.py --json      # ham veri (testler için)
     python3 pano_uret.py --proje <kök>
 
-Yalnız stdlib. Salt-okunur: tek yazdığı dosya docs/ekip/PANO.md. Ajan panodan komut almaz (spec §14).
+Yalnız stdlib. Salt-okunur: yalnız --dosya ile docs/ekip/PANO.md yazar. Ajan panodan komut almaz (spec §14).
 """
 import argparse
 import datetime as dt
@@ -237,7 +237,7 @@ def tablo(veri):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--proje", default=os.getcwd())
-    ap.add_argument("--yazma", action="store_true", help="PANO.md yazma")
+    ap.add_argument("--dosya", action="store_true", help="docs/ekip/PANO.md'yi de yaz (varsayılan: yalnız stdout)")
     ap.add_argument("--json", action="store_true", help="tabloyu değil ham veriyi bas")
     a = ap.parse_args()
     kok = os.path.abspath(a.proje)
@@ -248,7 +248,7 @@ def main():
     metin = tablo(veri)
     print(metin, end="")
     ekip = os.path.join(kok, "docs", "ekip")
-    if not a.yazma and os.path.isdir(ekip):
+    if a.dosya and os.path.isdir(ekip):
         pano = os.path.join(ekip, "PANO.md")
         with open(pano, "w", encoding="utf-8") as f:
             f.write(metin)

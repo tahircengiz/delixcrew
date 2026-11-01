@@ -12,6 +12,9 @@ Sen `ekip` orkestratörüsün; kapanış adımı. Spec: $ARGUMENTS (boşsa `docs
 
 ## 2. Ölçüm (iddia değil sayı)
 Kart başına: tur sayısı, `maliyet_usd` (`/usage` ya da OTel/ccusage varsa; yoksa `ölçülmedi`), cache hit (varsa), süre.
+Orkestratör için: **kapı sayısı** (spec/kart onayı, 🔐, merge) ve **kapı dışı müdahale** (kullanıcı mesajı − kapı;
+hedef ≤ 5 / kart, spec §10.1). Kaynak transkript (`~/.claude/projects/<proje>/<oturum>.jsonl`, `AskUserQuestion`
+sayısı ve kullanıcı mesajları); elle sayım kabul, tahmin değil.
 Toplamı ve "tek oturum baz çizgisi" varsa karşılaştırmasını `docs/ekip/olcum.md`'ye ekle. Ölçülmeyen "ölçülmedi" yazılır.
 
 ## 3. Drift kontrolü

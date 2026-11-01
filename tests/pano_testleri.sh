@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# pano_uret.py ve izleyici.py deterministik testleri. Çalıştır: bash tests/pano_testleri.sh
+# pano_uret.py deterministik testleri. Çalıştır: bash tests/pano_testleri.sh
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; S="$ROOT/scripts"; FAIL=0
 ok(){ echo "✔ $1"; }; bad(){ echo "✘ $1"; FAIL=1; }
@@ -26,22 +26,12 @@ mkdir -p "$T/wt-T001/.ekip"; echo "docs/ekip/tasks/T001-api.md" > "$T/wt-T001/.e
 printf '# Rapor — T001\n\n**Durum:** NEEDS_CONTEXT\n**PR:** #7 (ekip-T001)\n\n## Kanıt\n- `pytest -q` → 3 passed\n\n## Çekinceler / kalan iş\n- Keycloak realm adı spec'"'"'te yok\n' > "$T/wt-T001/.ekip/rapor.md"
 
 out=$(python3 "$S/pano_uret.py")
+[ ! -e docs/ekip/PANO.md ] && ok "varsayılan: PANO yazılmadı" || bad "varsayılan: PANO yazılmamalıydı"
+out=$(python3 "$S/pano_uret.py" --dosya)
 echo "$out" | grep -q "| 1 | T001 | backend | 2 | suruyor | 0 | #7 | ölçülmedi | NEEDS_CONTEXT · Keycloak realm adı spec'te yok | needs_context |" && ok "T001 satırı (rapor, PR, kapı)" || { bad "T001 satırı"; echo "$out"; }
 echo "$out" | grep -q "| 1 | T002 | backend | 3 | kabul | 2 | #12 | \$1.50 | - | merge |" && ok "T002 satırı (maliyet, merge kapısı)" || { bad "T002 satırı"; echo "$out"; }
 echo "$out" | grep -q "| 2 | T003 | frontend | 1 | acik | 0 | - | ölçülmedi | - | - |" && ok "T003 yalnız kart dosyasından" || { bad "T003 satırı"; echo "$out"; }
-[ -f docs/ekip/PANO.md ] && grep -q "T001" docs/ekip/PANO.md && ok "PANO.md yazıldı" || bad "PANO.md yok"
+[ -f docs/ekip/PANO.md ] && grep -q "T001" docs/ekip/PANO.md && ok "--dosya: PANO.md yazıldı" || bad "PANO.md yok"
 python3 "$S/pano_uret.py" --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert len(d["kartlar"])==3 and d["kartlar"][0]["worktree"], d' && ok "--json çıktısı" || bad "--json"
-
-# 3) izleyici: değişiklikleri tek satır olarak yazar, zaman aşımıyla çıkar
-( python3 "$S/izleyici.py" --aralik 0.3 --sure 3 > "$T/izleyici.out" 2>&1 ) &
-sleep 1
-python3 - <<'PY'
-import json; p="docs/ekip/STATE.json"; d=json.load(open(p)); d["kartlar"]["T001"]["status"]="incelemede"; json.dump(d,open(p,"w"))
-PY
-printf '# Rapor — T001\n\n**Durum:** DONE\n**PR:** #7\n' > "$T/wt-T001/.ekip/rapor.md"
-wait
-grep -q "T001 status: suruyor → incelemede" "$T/izleyici.out" && ok "izleyici: status değişimi" || { bad "izleyici: status"; cat "$T/izleyici.out"; }
-grep -q "T001 rapor: DONE" "$T/izleyici.out" && ok "izleyici: rapor değişimi" || { bad "izleyici: rapor"; cat "$T/izleyici.out"; }
-[ "$(grep -c . "$T/izleyici.out")" -le 4 ] && ok "izleyici: gürültüsüz ($(grep -c . "$T/izleyici.out") satır)" || { bad "izleyici: fazla satır"; cat "$T/izleyici.out"; }
 
 cd /; rm -rf "$T"; [ $FAIL -eq 0 ] && echo "TÜMÜ GEÇTİ" || { echo "BAŞARISIZ"; exit 1; }
