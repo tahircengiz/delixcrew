@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `ekip`)
 
-**Son güncelleme:** 2026-11-01 · **Faz:** 2 — faz 1 bitti (iskelet, görünürlük, eval, gitleaks); baz çizgi LLMPortal'da koşuyor, pilot özelliği seçildi
+**Son güncelleme:** 2026-11-01 · **Faz:** 2 — baz çizgi bitti (10/10, 9,89 USD); sırada pilot (2.2) `/ekip:basla`, özellik: ekip için OTP zorunluluğu
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -22,7 +22,7 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 1.5 | Görünürlük: `/ekip:durum` skill'i + `PANO.md` + `ekip-izleyici` monitor (spec §14) | ✔ 2026-11-01; `tests/pano_testleri.sh` 10/10, boş projede `-p` smoke testi "kart yok" |
 | 1.6 | Eval süiti 1 kez (`--max-cost-usd 10`), bulgulara göre skill description düzeltmesi | ✔ 2026-11-01: 5/5 geçti, skor 1.0, ortalama Δ 0.47, 2.92 USD, 672 sn (`evals/results/ilk.json`, gitignore'da). Description düzeltmesi gerekmedi; `boy-kademe` case'i doğal dile çevrildi, tekrar 1 koşu 0.10 USD, geçti (K27) |
 | 1.7 | Mac ön koşul: `gitleaks` (`/mac-change`, R1) | ✔ 8.30.1, ledger PR prj_HomeLab #194 |
-| 2.1 | Baz çizgi: LLMPortal'da 10 görev tek oturum Opus medium, `docs/ekip/olcum.md` (K16) | ◐ hazırlık main'e alındı (LLMPortal b99ac63); koşu yan oturumda sürüyor, sonuç `docs/ekip/baz/B0n.json` |
+| 2.1 | Baz çizgi: LLMPortal'da 10 görev tek oturum Opus medium, `docs/ekip/olcum.md` (K16) | ✔ 2026-11-01: 10/10 görev, her biri 1 tur, toplam 9,89 USD (S 0,49–1,20; M 1,32–1,81), GTR9'da ilk denemede 10/10 yeşil; LLMPortal dalı `ekip-olcum` (2dd0080), main'e merge kullanıcıda. Birim referans: S ≈ 0,9 USD, M ≈ 1,6 USD, 1 tur |
 | 2.2 | Pilot: LLMPortal'da M boy / Kademe 2 özellik uçtan uca | ◻ özellik seçildi: müşteri sahibi ekibine OTP zorunlu kılar (K21); LLMPortal commit b99ac63 |
 | 2.3 | Pilot: bir Kademe 3 kart interaktif + güvenlik onayı | ◻ |
 | 2.4 | Retro: hangi harness parçası taşıyıcı | ◻ |
@@ -81,6 +81,12 @@ Araştırma sonrası düzeltmeler (2026-11-01, kanıt raporda):
 - **K23** Tek test ortamı = tek sahip: GTR9 LLMPortal test ortamını aynı anda iki oturum kullandı (B01 testi geçersiz,
   yeniden koşulmadı; ikinci ölçüm "test ölçülmedi"). Ders pilota taşınır: `ekip-denetle` tam test adımı için ortam
   kilidi gereksinimi (retro maddesi, 2.4).
+- **K28** Baz çizgi referansı (2026-11-01): tek oturum Opus 5.5 medium, S ≈ 0,9 USD / M ≈ 1,6 USD / 1 tur / ilk denemede
+  yeşil 10/10. Ekip akışı aynı görevlerde değil pilot özellikte (K21) ölçülür; başarı ölçütü spec §10: kalite kaybı yok,
+  insan müdahalesi 2 kapı, maliyet çarpanı raporlanır (araştırma: ekip 2,2–5,1×; hedef bunu aşmamak). Gözlem: baz
+  çizgi görevleri küçük ve iyi tanımlıydı, tek oturum hepsini ilk turda bitirdi; ekibin değeri belirsiz/uzun işte
+  sınanır. Yan bulgu: Desktop worktree dizin adları yeniden kullanılıyor, doğrulama dal commit'inden alınmalı
+  (`git archive`), worktree'den değil.
 
 Görünürlük (1.5, 2026-11-01):
 - **K24** `/ekip:durum` tabloyu modele yazdırmaz: `scripts/pano_uret.py` (stdlib) üretir, SKILL.md dinamik bağlamla
