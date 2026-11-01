@@ -226,3 +226,19 @@ saymak · 50 subagent, vague brief.
 4. Uygulayıcı: `start_session` (interaktif) mi `-p --worktree` mi; hook, temizlik, bütçe dengesi.
 5. 2–3 paralel uygulayıcı sıralıya göre kalite kaybı yaratıyor mu.
 6. Hangi harness parçası Opus 5.5 / Fable 5.1 ile artık gereksiz.
+
+## 14. Görünürlük: proje, kartlar ve ajan durumları (K20, 2026-11-01 eklendi)
+
+Tek doğruluk kaynağı `docs/ekip/STATE.json` + kartlar + `.ekip/rapor.md`; görünürlük bunların üzerine üç katman, hepsi
+ucuz ve ajanın kapatamayacağı yerde:
+
+| Katman | Ne gösterir | Mekanizma | Ne zaman |
+|---|---|---|---|
+| **`/ekip:durum`** | wave'ler, kart tablosu (id · rol · kademe · status · tur · PR · maliyet · son rapor özeti), bekleyen kapılar (🔐, merge) | STATE.json + kartlar + worktree `.ekip/rapor.md`'lerini okur; sohbete tablo basar, `docs/ekip/PANO.md`'yi yeniden üretir (Obsidian'da da açılır) | faz 1.5 |
+| **Plugin monitor** `ekip-izleyici` | kart status değişimi, yeni rapor, PR check sonucu; orkestratörün sormadan haberdar olması | `monitors/monitors.json`: `docs/ekip/STATE.json` ve worktree `.ekip/rapor.md` dosyalarını izleyen arka plan betiği (`when: on-skill-invoke:dagit`), değişikliği görev paneline yazar; `-p` oturumlarında çalışmaz (resmî sınır) | faz 1.5 |
+| **Desktop bağlı oturumlar** | her uygulayıcı oturumunun canlı durumu (çalışıyor / bekliyor / bitti), kendi görev listesi | `start_session` ile açılan oturumlar sidebar'da orkestratöre bağlı görünür; `update_plan` listesi uygulayıcıda kart adımlarını taşır | hazır (uygulama) |
+| **HTML pano** (isteğe bağlı) | aynı tablo tarayıcıda, telefon dahil | `PANO.md`'den statik sayfa, `ts-share.sh <port>` ile tailnet'te (8440–8449; Funnel yok, kimliksiz yazma yok, salt-okunur) | pilot sonrası, gerek görülürse |
+| **Maliyet** | kart başına token/USD, cache hit | `/usage`, OTel `claude_code.token.usage` (`agent.name`), ccusage; `/ekip:kapat` karta yazar | faz 2 ölçümle |
+
+Kurallar: pano salt-okunurdur, ajan panodan komut almaz; ajanların kendi durumunu yazdığı tek alan kendi kartının
+`status`/`pr`/`tur`; orkestratör kalanını yazar. Uzun vadede prj_Ortak (görev yöneticisi) ile entegrasyon aday, v1 dışı.

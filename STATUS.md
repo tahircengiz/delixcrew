@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `ekip`)
 
-**Son güncelleme:** 2026-11-01 · **Faz:** 1 — plugin iskeleti yazıldı, pilot bekliyor
+**Son güncelleme:** 2026-11-01 · **Faz:** 1 — iskelet commit'lendi; sırada görünürlük (1.5–1.7), sonra pilot (2.x)
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -18,7 +18,10 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 1.1 | Plugin iskeleti: manifest, 4 ajan, 6 skill (+3 rol notu), 3 hook betiği, 7 şablon, 5 eval case, README, runbook | ✔ `claude plugin validate` geçti |
 | 1.2 | Hook birim testleri `tests/hook_testleri.sh` | ✔ 15/15 |
 | 1.3 | Eval süiti çalıştırma (`claude plugin eval .`) | ◻ maliyetli, pilot öncesi 1 kez |
-| 1.4 | İlk commit | ◻ onay bekliyor |
+| 1.4 | İlk commit | ✔ `2645cd2` |
+| 1.5 | Görünürlük: `/ekip:durum` skill'i + `PANO.md` + `ekip-izleyici` monitor (spec §14) | ◻ yeni oturum |
+| 1.6 | Eval süiti 1 kez (`--max-cost-usd 10`), bulgulara göre skill description düzeltmesi | ◻ aynı oturum |
+| 1.7 | Mac ön koşul: `gitleaks` (`/mac-change`, R1) | ◻ |
 | 2.1 | Baz çizgi: LLMPortal'da 10 görev tek oturum Opus medium, `docs/ekip/olcum.md` (K16) | ◻ |
 | 2.2 | Pilot: LLMPortal'da M boy / Kademe 2 özellik uçtan uca | ◻ |
 | 2.3 | Pilot: bir Kademe 3 kart interaktif + güvenlik onayı | ◻ |
@@ -65,6 +68,9 @@ Araştırma sonrası düzeltmeler (2026-11-01, kanıt raporda):
 - **K18** Hook'lar Python 3 (stdlib) ile; jq bağımlılığı yok, macOS/Linux'ta aynı. Uygulayıcı kapıları `cwd/.ekip/kart`
   varlığıyla, inceleyici kapıları `agent_type` ile aktifleşir; diğer oturumlarda pasif.
 - **K19** `license` alanı boş bırakıldı; lisans kararı kullanıcıda (validate "directory" profilinde eksik sayar).
+- **K20** Görünürlük üç katman (spec §14): `/ekip:durum` + `docs/ekip/PANO.md`; `ekip-izleyici` plugin monitor'ı
+  (STATE.json ve rapor dosyalarını izler, görev paneline yazar); Desktop bağlı oturumlar. HTML pano (tailnet, salt-okunur)
+  pilot sonrası isteğe bağlı. Pano salt-okunur; ajan panodan komut almaz.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; pilot sonunda "bir bileşeni çıkar" turu.
