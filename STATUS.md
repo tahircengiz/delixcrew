@@ -22,7 +22,7 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 1.5 | Görünürlük: `/ekip:durum` skill'i + `PANO.md` + `ekip-izleyici` monitor (spec §14) | ◐ yan oturum, dal `claude/goofy-hugle-87d0ae` |
 | 1.6 | Eval süiti 1 kez (`--max-cost-usd 10`), bulgulara göre skill description düzeltmesi | ◐ koşuyor (1.5 oturumu) |
 | 1.7 | Mac ön koşul: `gitleaks` (`/mac-change`, R1) | ✔ 8.30.1, ledger PR prj_HomeLab #194 |
-| 2.1 | Baz çizgi: LLMPortal'da 10 görev tek oturum Opus medium, `docs/ekip/olcum.md` (K16) | ◐ liste B01–B10 hazır (LLMPortal dal `ekip-pilot-hazirlik`, commit ee00c38); koşu ◻ |
+| 2.1 | Baz çizgi: LLMPortal'da 10 görev tek oturum Opus medium, `docs/ekip/olcum.md` (K16) | ◐ hazırlık main'e alındı (LLMPortal b99ac63); koşu yan oturumda sürüyor, sonuç `docs/ekip/baz/B0n.json` |
 | 2.2 | Pilot: LLMPortal'da M boy / Kademe 2 özellik uçtan uca | ◻ özellik seçildi: müşteri sahibi ekibine OTP zorunlu kılar (K21); LLMPortal commit b99ac63 |
 | 2.3 | Pilot: bir Kademe 3 kart interaktif + güvenlik onayı | ◻ |
 | 2.4 | Retro: hangi harness parçası taşıyıcı | ◻ |
@@ -74,7 +74,7 @@ Araştırma sonrası düzeltmeler (2026-11-01, kanıt raporda):
 - **K21** Pilot özelliği (2026-11-01, kullanıcı seçimi): LLMPortal'da müşteri sahibi kendi ekibine OTP'yi zorunlu
   kılar; M boy / Kademe 2, Keycloak kartı Kademe 3 (interaktif oturum + güvenlik onayı). Alternatif (yedek doğrulama)
   daha güvenli ama Kademe 3 kapısını sınamazdı. Hazırlık LLMPortal dalı `ekip-pilot-hazirlik` (ee00c38, b99ac63),
-  main'e merge kullanıcıda. Sıra: önce baz çizgi B01–B10 (K16), sonra `/ekip:basla`.
+  main'e fast-forward alındı (2026-11-01, kullanıcı onayı). Sıra: önce baz çizgi B01–B10 (K16), sonra `/ekip:basla`.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; pilot sonunda "bir bileşeni çıkar" turu.
