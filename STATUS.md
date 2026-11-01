@@ -23,7 +23,7 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 1.6 | Eval süiti 1 kez (`--max-cost-usd 10`), bulgulara göre skill description düzeltmesi | ✔ 2026-11-01: 5/5 geçti, skor 1.0, ortalama Δ 0.47, 2.92 USD, 672 sn (`evals/results/ilk.json`, gitignore'da). Description düzeltmesi gerekmedi; `boy-kademe` case'i doğal dile çevrildi, tekrar 1 koşu 0.10 USD, geçti (K27) |
 | 1.7 | Mac ön koşul: `gitleaks` (`/mac-change`, R1) | ✔ 8.30.1, ledger PR prj_HomeLab #194 |
 | 2.1 | Baz çizgi: LLMPortal'da 10 görev tek oturum Opus medium, `docs/ekip/olcum.md` (K16) | ✔ 2026-11-01: 10/10 görev, her biri 1 tur, toplam 9,89 USD (S 0,49–1,20; M 1,32–1,81), GTR9'da ilk denemede 10/10 yeşil; LLMPortal dalı `ekip-olcum` (2dd0080), main'e merge kullanıcıda. Birim referans: S ≈ 0,9 USD, M ≈ 1,6 USD, 1 tur |
-| 2.2 | Pilot: LLMPortal'da M boy / Kademe 2 özellik uçtan uca | ◻ özellik seçildi: müşteri sahibi ekibine OTP zorunlu kılar (K21); LLMPortal commit b99ac63 |
+| 2.2 | Pilot: LLMPortal'da M boy / Kademe 2 özellik uçtan uca | ◐ 2026-11-01: orkestratör terminalde (`claude --plugin-dir prj_Ekip`, cwd LLMPortal), istek `docs/ekip/pilot-istek.md`; `/ekip:basla` → grill → Kapı 1 |
 | 2.3 | Pilot: bir Kademe 3 kart interaktif + güvenlik onayı | ◻ |
 | 2.4 | Retro: hangi harness parçası taşıyıcı | ◻ |
 
