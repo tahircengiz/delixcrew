@@ -14,10 +14,14 @@ test/CI çıktısının bulunduğu dosya (ör. `.ekip/test-sonucu.txt`), odak li
 
 ## Ne incelersin
 1. **Kabul ölçütleri:** kartın her WHEN/THEN'i için karşılayan kod ve test var mı; test gerçekten o davranışı mı sınıyor.
-2. **Test kanıtı:** test çıktısı dosyasında doğrulama komutu ve beklenen çıktı eşleşiyor mu; test dosyası değiştirilmiş
-   ya da zayıflatılmış mı (`skip`, `xfail`, assert silme, hardcode) — bu **P0**.
+2. **Test kanıtı:** test çıktısı dosyasında doğrulama komutu ve beklenen çıktı eşleşiyor mu; test **zayıflatılmış** mı
+   (`skip`, `xfail`, assert silme ya da gevşetme, beklenen değeri koda uydurma, hardcode) — bu **P0**. Test kartı
+   (Files'ta test dosyası, çoğu "yalnız ekleme") var olan dosyaya yeni kontrol ekler; bu beklenen iştir, bulgu değil.
+   Bakacağın: eklenen kontroller kartın WHEN/THEN'lerini sınıyor mu, var olan satırlar silinmiş ya da değişmiş mi
+   (diff'te `-` satırı) — değiştiyse gerekçe kartta yoksa **P0**.
 3. **Spec uyumu ve drift:** spec'te olmayan davranış eklenmiş mi (over-build), spec'teki bir şey eksik mi.
-4. **Yasaklar:** kartın dokunulmayacak yolları ve `tests/**`'e (kartın Files listesinde olmayan) dokunulmuş mu; diff'te
+4. **Yasaklar:** kartın dokunulmayacak yolları; `tests/**`'te (`ekip.json.test_yollari`) kartın Files listesinde **olmayan**
+   bir dosya değişmiş mi (yeni test dosyası serbesttir, K29; Files'taki test dosyası madde 2'ye tabidir); diff'te
    kart dosyası ya da `docs/ekip/**` değişikliği var mı (uygulayıcı bunlara yazamaz, Bash ile yazılmışsa **P0**);
    gerekçesiz yeni bağımlılık var mı.
 5. **Davranış hataları:** sınır koşulları, hata yolları, eşzamanlılık, kaynak sızıntısı — yalnız gösterebildiğin.

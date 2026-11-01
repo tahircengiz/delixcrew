@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `ekip`)
 
-**Son güncelleme:** 2026-11-01 · **Faz:** 3 — retro aksiyonları: A1–A9 main'de (2690003), A11 ✔ (K38), A10 + A10-b ✔ (K39–K40); sırada A12, isteğe bağlı A10-c
+**Son güncelleme:** 2026-11-01 · **Faz:** 3 — retro aksiyonları: A1–A9 main'de (2690003), A11 ✔ (K38), A10 + A10-b ✔ (K39–K40), A12 ✔ (K41); retro aksiyonları A2 (ilk kartta ölçüm) ve A13 dışında kapandı; isteğe bağlı A10-c
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -29,7 +29,7 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 3.1 | Retro aksiyonları A1–A9 (plugin içi: skill metinleri, şablonlar, pano, monitor teşhisi) | ✔ 2026-11-01 main'e merge edildi (2690003, K35–K37) |
 | 3.2 | A10 karşı ölçüm: E.7 boyutunda bir kart plugin'siz tek oturumda, LLMPortal | ✔ 2026-11-01 T006 kartı tek oturum 0,67 USD (K39); A10-b kart yok, kısa istek 0,83 USD / 1 tur / ilk yeşil (K40); A10-c (tüm E.7 tek oturum) kullanıcı kararı |
 | 3.3 | A11 plugin'i Mac'e kalıcı kur (yerel marketplace, `/mac-change` R1) | ✔ 2026-11-01 `ekip@ekip-local` user kapsamı, gerçek rollback denendi (K38) |
-| 3.4 | A12 tutarlılıklar (spec §7 pytest, `kalite` tests/** kuralı, LLMPortal gitleaks allowlist) | ◻ |
+| 3.4 | A12 tutarlılıklar (spec §7 pytest, `kalite` tests/** kuralı, LLMPortal gitleaks allowlist) | ✔ 2026-11-01 (K41) |
 
 ## Kararlar
 
@@ -182,6 +182,11 @@ Faz 3 (retro aksiyonları, 2026-11-01, dal `retro-aksiyonlar`):
   ~%4'ü maliyetle aynı test sonucuna ulaştı; ekip akışının kazancı güvenlik incelemesinin gerçek bulguları ve "önce kırmızı
   test" kartı. Aday A10-c: tüm E.7 (T004–T006) kısa istekle tek oturum, kullanıcı kararı. Ayrıntı LLMPortal
   `docs/ekip/olcum.md` "A10-b".
+- **K41** A12 tutarlılıklar: spec §7 kapı reçetesi gerçek hook davranışına çekildi (Stop kapısı `ekip.json.test_komutu`,
+  pytest varsayılmaz; yazma kapısı K29 kuralı; `gitleaks protect --staged`), §6 doğrulama örneği pilot komutuyla;
+  `kalite` madde 2/4: test kartının var olan dosyaya **ekleme** yapması bulgu değil, zayıflatma ve Files dışı test dosyası
+  P0, yeni test dosyası serbest (K29). LLMPortal `.gitleaks.toml`: `compose.yaml` `KC_DB_URL` JDBC satırı için satır
+  bazlı allowlist; `gitleaks dir .` 0 bulgu, geçerli biçimli sahte AWS anahtarı hâlâ yakalanıyor (2 → 1).
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

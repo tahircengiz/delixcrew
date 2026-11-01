@@ -131,7 +131,8 @@ Kademe 1'de insan onayı istenmez: onay yorgunluğu Kademe 3 onayını değersiz
 `id · boy · kademe · rol etiketi` · Amaç (1 cümle) + spec gereksinim linki (`REQ-3`) · **Files** (oluştur / değiştir
 satır aralığıyla / test; tam yollar; sahiplik ayrık) · **Interfaces** (tüketilen/üretilen imzalar) · **Global
 Constraints** (spec'ten aynen kullanılacak değerler) · **Steps** (failing test → kırmızı → uygula → yeşil → commit) ·
-**Doğrulama komutu + beklenen çıktı** (`pytest tests/test_x.py -q` → `3 passed`) · **Review Focus** · **Yasaklar**
+**Doğrulama komutu + beklenen çıktı** (projenin kendi komutu, pytest varsayılmaz; pilot: `python3 -I tests/teamguard_unit.py` →
+`REQ-3 R0–R6 GEÇTİ`) · **Review Focus** · **Yasaklar**
 (dokunulmayacak yollar; test dosyası değiştirilmez, test hatalıysa dur ve açıkla; yeni bağımlılık gerekçeli) ·
 **Rapor sözleşmesi**.
 
@@ -148,10 +149,17 @@ kullanılmaz (oturuma bağlı, resume'da kırılgan).
 
 ## 7. Kapı reçeteleri (pilot: FastAPI + Jinja2 + Keycloak)
 
-- **Stop hook** (uygulayıcı): `pytest -q 1>&2 || exit 2` (+ `ruff`, `mypy`); `stop_hook_active` true ise `exit 0`;
-  cap 8 ardışık (`CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`); hook ilk turda uyacak kadar bilgi vermeli; `onFailure: block`.
-- **PreToolUse** (uygulayıcı): `tests/**` yazma deny; Kademe 3 yolları deny (`auth/`, `keycloak/`, `.env*`,
-  `.github/workflows/`, lockfile'lar); commit öncesi `gitleaks --no-git` staged dosyalarda.
+- **Stop hook** (uygulayıcı, `scripts/stop_kapisi.py`): projenin `docs/ekip/ekip.json` → `test_komutu` (+ `ek_kontroller`)
+  koşar, geçmezse `exit 2` ve çıktıyı `.ekip/test-sonucu.txt`'ye yazar; pytest varsayılmaz (pilot LLMPortal: `python3 -m
+  compileall -q portal/app && python3 -I tests/i18n_check.py && bash tests/gen_env_test.sh`, birim testleri GTR9 imajında;
+  ruff/mypy/pytest kurulu değil, `ek_kontroller` boş). `stop_hook_active` true ise `exit 0`; cap 8 ardışık
+  (`CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`); hook ilk turda uyacak kadar bilgi vermeli; `onFailure: block`. A3: `test_komutu`
+  yerelde koşabilen birim testlerini içermeli.
+- **PreToolUse** (uygulayıcı, `scripts/yazma_kapisi.py`, K29): var olan test dosyası (`ekip.json.test_yollari`, varsayılan
+  `tests/**`) yalnız kartın `## Files` listesindeyse yazılır, yeni test dosyası serbest; korunan yollar
+  (`ekip.json.korunan_yollar`: `auth/`, `keycloak/`, `.env*`, `.github/workflows/`, lockfile'lar…) yalnız Files'ta **ve**
+  kartta `**🔐 Onay:**` satırı varsa; kart dosyası ve `docs/ekip/**` her zaman deny. `scripts/bash_kapisi.py`: `git commit`
+  öncesi `gitleaks protect --staged` (proje `.gitleaks.toml` allowlist'i okunur), gitleaks yoksa `.ekip/uyarilar.log`.
 - **PreToolUse** (`kalite`, `guvenlik`): Write/Edit/Bash yazma komutları deny; `guvenlik` için yalnız gitleaks/semgrep.
 - **Bağımlılık:** `requirements*`/`pyproject`/lockfile değişen diff'te registry varlığı/yaşı/OSV (`pip-audit`);
   hallucinated paket oranı %19.7, %43'ü tekrarlanabilir (USENIX 2025).
