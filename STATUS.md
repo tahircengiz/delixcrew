@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `ekip`)
 
-**Son güncelleme:** 2026-11-01 · **Faz:** 1 — iskelet commit'lendi; sırada görünürlük (1.5–1.7), sonra pilot (2.x)
+**Son güncelleme:** 2026-11-01 · **Faz:** 1→2 — görünürlük ve eval yan oturumda; LLMPortal hazırlığı bitti, pilot adayı seçimi bekliyor
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -19,11 +19,11 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 1.2 | Hook birim testleri `tests/hook_testleri.sh` | ✔ 15/15 |
 | 1.3 | Eval süiti çalıştırma (`claude plugin eval .`) | ◻ maliyetli, pilot öncesi 1 kez |
 | 1.4 | İlk commit | ✔ `2645cd2` |
-| 1.5 | Görünürlük: `/ekip:durum` skill'i + `PANO.md` + `ekip-izleyici` monitor (spec §14) | ◻ yeni oturum |
-| 1.6 | Eval süiti 1 kez (`--max-cost-usd 10`), bulgulara göre skill description düzeltmesi | ◻ aynı oturum |
-| 1.7 | Mac ön koşul: `gitleaks` (`/mac-change`, R1) | ◻ |
-| 2.1 | Baz çizgi: LLMPortal'da 10 görev tek oturum Opus medium, `docs/ekip/olcum.md` (K16) | ◻ |
-| 2.2 | Pilot: LLMPortal'da M boy / Kademe 2 özellik uçtan uca | ◻ |
+| 1.5 | Görünürlük: `/ekip:durum` skill'i + `PANO.md` + `ekip-izleyici` monitor (spec §14) | ◐ yan oturum, dal `claude/goofy-hugle-87d0ae` |
+| 1.6 | Eval süiti 1 kez (`--max-cost-usd 10`), bulgulara göre skill description düzeltmesi | ◐ koşuyor (1.5 oturumu) |
+| 1.7 | Mac ön koşul: `gitleaks` (`/mac-change`, R1) | ✔ 8.30.1, ledger PR prj_HomeLab #194 |
+| 2.1 | Baz çizgi: LLMPortal'da 10 görev tek oturum Opus medium, `docs/ekip/olcum.md` (K16) | ◐ liste B01–B10 hazır (LLMPortal dal `ekip-pilot-hazirlik`, commit ee00c38); koşu ◻ |
+| 2.2 | Pilot: LLMPortal'da M boy / Kademe 2 özellik uçtan uca | ◻ aday seçimi kullanıcıda (Aday 1 OTP zorunluluğu / Aday 2 yedek doğrulama) |
 | 2.3 | Pilot: bir Kademe 3 kart interaktif + güvenlik onayı | ◻ |
 | 2.4 | Retro: hangi harness parçası taşıyıcı | ◻ |
 
