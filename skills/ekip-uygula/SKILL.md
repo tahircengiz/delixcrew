@@ -9,8 +9,11 @@ geçmişini okuma. Kartın rol etiketine göre `${CLAUDE_PLUGIN_ROOT}/skills/eki
 
 ## 0. Hazırlık
 1. Kartı oku; `docs/ekip/SPEC.md`'de yalnız kartın işaret ettiği REQ bölümünü oku; `docs/ekip/ekip.json`'ı oku.
-2. Worktree kökünde `.ekip/kart` dosyasına kart yolunu yaz (hook'lar bu dosyayla aktifleşir: korunan yol ve test
-   dosyası yazma yasağı, Stop test kapısı, commit öncesi sır taraması). `.ekip/` git'e girmez (`.git/info/exclude`).
+2. Worktree kökünde `.ekip/kart` dosyasına kart yolunu yaz (hook'lar bu dosyayla aktifleşir: yazma kapısı, Stop
+   test kapısı, commit öncesi sır taraması). Yazma kapısı: var olan test dosyasına yalnız kartın Files listesinde
+   yazılıysa ekleme yapılır; korunan yola yalnız Files'ta yazılıysa **ve** kartta `🔐 Onay` satırı varsa yazılır; kart
+   dosyası ve `docs/ekip/**` hiç değiştirilmez (Bash ile de değil; inceleme bunu bulgu sayar). Ret alırsan yolu
+   dolanma, `BLOCKED`/`NEEDS_CONTEXT` yaz. `.ekip/` git'e girmez (`.git/info/exclude`).
 3. Kartta anlamadığın ya da çelişen bir şey varsa **tahmin etme**: `.ekip/rapor.md`'ye `NEEDS_CONTEXT` yaz, dur.
 
 ## 1. Test-first
