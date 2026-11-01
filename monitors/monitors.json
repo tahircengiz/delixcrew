@@ -1,0 +1,8 @@
+[
+  {
+    "name": "ekip-izleyici",
+    "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/scripts/izleyici.py",
+    "description": "ekip kart status / rapor / PR değişimleri (STATE.json ve worktree .ekip/rapor.md)",
+    "when": "on-skill-invoke:dagit"
+  }
+]
