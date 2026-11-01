@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `ekip`)
 
-**Son güncelleme:** 2026-11-01 · **Faz:** 3 — retro aksiyonları: A1–A9 main'de (2690003), A11 Mac kurulumu ✔ (K38); sırada A10 karşı ölçüm, A12
+**Son güncelleme:** 2026-11-01 · **Faz:** 3 — retro aksiyonları: A1–A9 main'de (2690003), A11 ✔ (K38), A10 ✔ (K39); sırada A12, isteğe bağlı A10-b
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -27,7 +27,7 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 2.3 | Pilot: bir Kademe 3 kart interaktif + güvenlik onayı | ✔ 2026-11-01: 4 kart (T002, T003, T005, T007) interaktif oturum + 🔐 sohbet onayı, kapı 2 merge insanla; onay kaydı prj_HomeLab #195 (3ec751d) |
 | 2.4 | Retro: hangi harness parçası taşıyıcı | ✔ 2026-11-01 [docs/retro/2026-11-01-pilot-retro.md](docs/retro/2026-11-01-pilot-retro.md): taşıyıcı = grill+spec+mimar, kart+dispatch, `guvenlik`, orkestratör denetimi, insan kapıları, `ekip-kapat`; yardımcı = Stop kapısı, `kalite`; doğrulanmadı = yazma/bash kapıları, rol prompt'ları; çıkarılabilir = `ekip-izleyici`, `PANO.md` dosya yazımı. 12 aksiyon A1–A12 (K32–K34) |
 | 3.1 | Retro aksiyonları A1–A9 (plugin içi: skill metinleri, şablonlar, pano, monitor teşhisi) | ✔ 2026-11-01 main'e merge edildi (2690003, K35–K37) |
-| 3.2 | A10 karşı ölçüm: E.7 boyutunda bir kart plugin'siz tek oturumda, LLMPortal | ◻ |
+| 3.2 | A10 karşı ölçüm: E.7 boyutunda bir kart plugin'siz tek oturumda, LLMPortal | ✔ 2026-11-01 T006 kartı tek oturum 0,67 USD / 1 tur / ilk yeşil (K39); A10-b (kısa istek) kullanıcı kararı |
 | 3.3 | A11 plugin'i Mac'e kalıcı kur (yerel marketplace, `/mac-change` R1) | ✔ 2026-11-01 `ekip@ekip-local` user kapsamı, gerçek rollback denendi (K38) |
 | 3.4 | A12 tutarlılıklar (spec §7 pytest, `kalite` tests/** kuralı, LLMPortal gitleaks allowlist) | ◻ |
 
@@ -170,6 +170,12 @@ Faz 3 (retro aksiyonları, 2026-11-01, dal `retro-aksiyonlar`):
   oturumunda ilk gerçek kullanım A10/A12 sırasında görülecek. Yolda çıktı: uygulayıcı cwd **dışına** yazarsa kapı
   desenleri eşleşmez (test sırasında Haiku yolu yanlış kurdu, dosya cwd dışına yazıldı); kapıya "cwd dışı yol → deny"
   kuralı A13 olarak açık.
+- **K39** A10 karşı ölçüm (LLMPortal `docs/ekip/olcum.md` "Karşı ölçüm A10"): T006 kartı aynı metinle, tabanı `49ee36c`
+  olan geleceksiz bir depoda, plugin'siz tek Opus 5.5 oturumuna (headless, medium) verildi: **0,67 USD, 1 tur, 74 sn,
+  ilk denemede yeşil** (GTR9 `teamguard_unit` REQ-3 R0–R6 7/7); ekip T006 0,97 USD / 2,2 dk. Diff neredeyse birebir.
+  Uygulayıcı düzeyinde kapı maliyeti ≈ 0,3 USD; asıl fark orkestratör (kart başına ≈ 5 USD). Bu ölçüm kartı hazır
+  sayar; kısa doğal istekle tek oturum (A10-b) ölçülmedi, kullanıcı kararı. GTR9 doğrulaması canlı stack'e dokunmadan
+  ayrı dizin + ayrı imaj etiketiyle (ortam Trivy dalında).
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
