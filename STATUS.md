@@ -75,6 +75,9 @@ Araştırma sonrası düzeltmeler (2026-11-01, kanıt raporda):
   kılar; M boy / Kademe 2, Keycloak kartı Kademe 3 (interaktif oturum + güvenlik onayı). Alternatif (yedek doğrulama)
   daha güvenli ama Kademe 3 kapısını sınamazdı. Hazırlık LLMPortal dalı `ekip-pilot-hazirlik` (ee00c38, b99ac63),
   main'e fast-forward alındı (2026-11-01, kullanıcı onayı). Sıra: önce baz çizgi B01–B10 (K16), sonra `/ekip:basla`.
+- **K22** Baz çizgi iki oturumda başlamıştı (sürücü `claude -p` sıralı; hazırlık oturumu Desktop'ta 4'lü dalga).
+  Çakışma çözümü: B02–B10 ve `olcum.md` sahipliği hazırlık oturumunda (4/10 bitmişti); sürücü oturum B01'i "ikinci
+  ölçüm" olarak kaydedip çekilir. GTR9 test ortamı tek, testler sırayla; "serbest" mesajıyla el değiştirir.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; pilot sonunda "bir bileşeni çıkar" turu.
