@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `ekip`)
 
-**Son güncelleme:** 2026-11-01 · **Faz:** 3 — retro aksiyonları: A1–A9 main'de (2690003); sırada A10 karşı ölçüm, A11 Mac kurulumu, A12
+**Son güncelleme:** 2026-11-01 · **Faz:** 3 — retro aksiyonları: A1–A9 main'de (2690003), A11 Mac kurulumu ✔ (K38); sırada A10 karşı ölçüm, A12
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -28,7 +28,7 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 2.4 | Retro: hangi harness parçası taşıyıcı | ✔ 2026-11-01 [docs/retro/2026-11-01-pilot-retro.md](docs/retro/2026-11-01-pilot-retro.md): taşıyıcı = grill+spec+mimar, kart+dispatch, `guvenlik`, orkestratör denetimi, insan kapıları, `ekip-kapat`; yardımcı = Stop kapısı, `kalite`; doğrulanmadı = yazma/bash kapıları, rol prompt'ları; çıkarılabilir = `ekip-izleyici`, `PANO.md` dosya yazımı. 12 aksiyon A1–A12 (K32–K34) |
 | 3.1 | Retro aksiyonları A1–A9 (plugin içi: skill metinleri, şablonlar, pano, monitor teşhisi) | ✔ 2026-11-01 main'e merge edildi (2690003, K35–K37) |
 | 3.2 | A10 karşı ölçüm: E.7 boyutunda bir kart plugin'siz tek oturumda, LLMPortal | ◻ |
-| 3.3 | A11 plugin'i Mac'e kalıcı kur (yerel marketplace, `/mac-change` R1) | ◻ 🔐 |
+| 3.3 | A11 plugin'i Mac'e kalıcı kur (yerel marketplace, `/mac-change` R1) | ✔ 2026-11-01 `ekip@ekip-local` user kapsamı, gerçek rollback denendi (K38) |
 | 3.4 | A12 tutarlılıklar (spec §7 pytest, `kalite` tests/** kuralı, LLMPortal gitleaks allowlist) | ◻ |
 
 ## Kararlar
@@ -163,11 +163,19 @@ Faz 3 (retro aksiyonları, 2026-11-01, dal `retro-aksiyonlar`):
   `STATE.json.ortam_sahibi`, deterministik kapı önce (A4–A6); headless düzeltme turu `--resume` yerine yeni `-p`
   oturum (A2, ilk kartta ölçülecek); grill zorunlu "yazım sırası / yarım kalma" sorusu (A1); ölçüt kapı / kapı dışı
   müdahale (A7); `ekip.json.test_komutu` birim testleri içermeli (A3).
+- **K38** Plugin Mac'e kalıcı kuruldu (A11): yerel directory marketplace `ekip-local` (`.claude-plugin/marketplace.json`,
+  kaynak bu repo, yerinde okunur) + `claude plugin install ekip@ekip-local` (user kapsamı). `/mac-change` R1 kaydı
+  `20261101-232024-ekip`, gerçek rollback denenip yeniden kuruldu; ledger satırı prj_HomeLab PR #194'te. Headless
+  doğrulama (`--plugin-dir` yok): 7 skill yüklü, yazma kapısı `docs/ekip/**` deny, Stop kapısı çalıştı. Desktop
+  oturumunda ilk gerçek kullanım A10/A12 sırasında görülecek. Yolda çıktı: uygulayıcı cwd **dışına** yazarsa kapı
+  desenleri eşleşmez (test sırasında Haiku yolu yanlış kurdu, dosya cwd dışına yazıldı); kapıya "cwd dışı yol → deny"
+  kuralı A13 olarak açık.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
 - [Orta] Rol oturumları paralel çalışırken aynı dosyaya dokunma; görev bölme bunu bağımlılık olarak çözmeli.
 - [Düşük] Alt-ajana giden içerik (web, repo) prompt-injection taşıyabilir; inceleyici roller salt-okunur kalır.
+- [Düşük] Yazma kapısı cwd dışı yolu denetlemez (A13, K38); worktree dışına yazan uygulayıcı kapıyı atlar.
 
 ## Kaynaklar
 - Önceki deneme: `~/Documents/projects/prj_vibecoding-agents/` (32 rol, `roles/*.md`, yalnız metin düzeyinde)

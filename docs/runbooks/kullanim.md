@@ -1,6 +1,7 @@
 # Runbook — ekip ile bir özellik
 
-1. Projede oturum aç; plugin yüklü değilse `claude --plugin-dir ~/Documents/projects/prj_Ekip`.
+1. Projede oturum aç (Desktop ya da terminal). Plugin Mac'te kalıcı kurulu (`claude plugin list` → `ekip@ekip-local`);
+   değilse README "Kurulum" (marketplace add + install), tek seferlik için `claude --plugin-dir ~/Documents/projects/prj_Ekip`.
 2. `/ekip:basla <istek>` → boy/kademe önerisini oku; `docs/ekip/ekip.json` ilk kez oluşturulduysa `test_komutu` ve
    `korunan_yollar`ı projeye göre düzelt (ör. LLMPortal: `tests/run_all.sh`, `keycloak/**`, `compose*.yaml`).
 3. M/L ise `/ekip:spec` grill'ini cevapla; `yeter` diyebilirsin. Spec'i oku, **onayla** (kapı 1).

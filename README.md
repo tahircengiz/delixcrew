@@ -9,13 +9,21 @@ hook'u testler geçmeden uygulayıcı turunu kapatmaz.
 
 Tasarım ve kanıt: [tech spec](docs/spec/ekip-tech-spec.md) · [araştırma raporu](docs/research/reports/Çoklu%20ajan%20yazılım%20ekibi%20orkestrasyonu.md) · kararlar [STATUS.md](STATUS.md).
 
-## Kurulum (yerel geliştirme)
+## Kurulum
+
+Kalıcı (Desktop ve terminal, `--plugin-dir` gerekmez; repo yerinde okunur, kopya yok):
 
 ```bash
-claude --plugin-dir /Users/tacengiz/Documents/projects/prj_Ekip
+claude plugin marketplace add ~/Documents/projects/prj_Ekip
 ```
 
-Kalıcı kurulum için bir marketplace girdisi gerekir (henüz yok). Doğrulama: `claude plugin validate .`;
+```bash
+claude plugin install ekip@ekip-local
+```
+
+Marketplace tanımı [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json); güncelleme `git pull` sonrası
+`claude plugin update ekip@ekip-local`. Tek seferlik deneme için `claude --plugin-dir ~/Documents/projects/prj_Ekip`
+da çalışır. Mac'te kurulum `/mac-change` R1 kaydıyla yapıldı (2026-11-01, K38). Doğrulama: `claude plugin validate .`;
 hook testleri: `bash tests/hook_testleri.sh`; davranış testleri: `claude plugin eval . --trust-plugin --no-publish`
 (model çağrısı yapar, maliyeti vardır).
 
