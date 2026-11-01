@@ -19,8 +19,8 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 1.2 | Hook birim testleri `tests/hook_testleri.sh` | ✔ 15/15 |
 | 1.3 | Eval süiti çalıştırma (`claude plugin eval .`) | ◻ maliyetli, pilot öncesi 1 kez |
 | 1.4 | İlk commit | ✔ `2645cd2` |
-| 1.5 | Görünürlük: `/ekip:durum` skill'i + `PANO.md` + `ekip-izleyici` monitor (spec §14) | ◻ yeni oturum |
-| 1.6 | Eval süiti 1 kez (`--max-cost-usd 10`), bulgulara göre skill description düzeltmesi | ◻ aynı oturum |
+| 1.5 | Görünürlük: `/ekip:durum` skill'i + `PANO.md` + `ekip-izleyici` monitor (spec §14) | ✔ 2026-11-01; `tests/pano_testleri.sh` 10/10, boş projede `-p` smoke testi "kart yok" |
+| 1.6 | Eval süiti 1 kez (`--max-cost-usd 10`), bulgulara göre skill description düzeltmesi | ◐ çalışıyor |
 | 1.7 | Mac ön koşul: `gitleaks` (`/mac-change`, R1) | ◻ |
 | 2.1 | Baz çizgi: LLMPortal'da 10 görev tek oturum Opus medium, `docs/ekip/olcum.md` (K16) | ◻ |
 | 2.2 | Pilot: LLMPortal'da M boy / Kademe 2 özellik uçtan uca | ◻ |
@@ -71,6 +71,23 @@ Araştırma sonrası düzeltmeler (2026-11-01, kanıt raporda):
 - **K20** Görünürlük üç katman (spec §14): `/ekip:durum` + `docs/ekip/PANO.md`; `ekip-izleyici` plugin monitor'ı
   (STATE.json ve rapor dosyalarını izler, görev paneline yazar); Desktop bağlı oturumlar. HTML pano (tailnet, salt-okunur)
   pilot sonrası isteğe bağlı. Pano salt-okunur; ajan panodan komut almaz.
+
+Görünürlük (1.5, 2026-11-01):
+- **K21** `/ekip:durum` tabloyu modele yazdırmaz: `scripts/pano_uret.py` (stdlib) üretir, SKILL.md dinamik bağlamla
+  (`` !`…` ``) tabloyu skill metnine gömer; model yalnız basar ve kapıları yorumlar. Böylece `-p --max-turns 1`'de bile
+  çalışır ve çıktı deterministiktir. `!` komutları kapalıysa (`disableSkillShellExecution`) model komutu kendi
+  çalıştırır (yedek talimat). Tek yan etki `docs/ekip/PANO.md`; `docs/ekip/` yoksa yazılmaz.
+- **K22** Worktree↔kart eşlemesi: `git worktree list --porcelain` + worktree'deki `.ekip/kart` içeriği, yoksa dal adındaki
+  `T<nnn>`. PR merge durumu `gh` ile sorgulanmaz (çevrimdışı ve stdlib kalsın); "merge" kapısı `status=kabul` + PR
+  numarası varken gösterilir. Kart yalnız `tasks/` altında olup STATE'te yoksa kart tablosundan okunur.
+- **K23** `ekip-izleyici`: `monitors/monitors.json`, `when: on-skill-invoke:dagit`, 12 sn yoklama (`EKIP_IZLEYICI_ARALIK`),
+  yalnız değişimde `[ekip] T001 status: a → b` biçiminde tek satır. Resmî dokümandan doğrulandı (components.md
+  "Monitors", manifest-reference "monitors", 2026-11-01): alanlar `name/command/description/when`; komut oturum cwd'sinde,
+  sandbox dışında, kullanıcı yetkisiyle çalışır; stdout satırları Claude'a bildirim olarak düşer; `-p`'de başlamaz;
+  plugin kapatılınca durmaz; `${CLAUDE_PLUGIN_ROOT}` komutta değiştirilir, `${user_config.*}` yasak.
+  **Doğrulanmadı:** bildirimlerin görev panelinde nasıl gruplandığı, satır uzunluğu sınırı, stderr'in ne olduğu,
+  monitor'ın orkestratör turunu uyandırıp uyandırmadığı; pilotta (2.2) gözlenecek. Monitor ucuz ucuz tutulur:
+  bildirim = token, startup dışında sessizdir.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; pilot sonunda "bir bileşeni çıkar" turu.
