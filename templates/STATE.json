@@ -1,0 +1,11 @@
+{
+  "$comment": "docs/ekip/STATE.json. Orkestratör yazar; uygulayıcı yalnız kendi kartının status ve pr alanını değiştirir.",
+  "spec": "docs/ekip/SPEC.md",
+  "boy": "M",
+  "guncelleme": "2026-01-01T00:00:00Z",
+  "waves": [["T001", "T002"], ["T003"]],
+  "kartlar": {
+    "T001": { "dosya": "docs/ekip/tasks/T001-ornek.md", "rol": "backend", "kademe": 2, "status": "acik", "pr": null, "tur": 0, "maliyet_usd": null }
+  },
+  "status_degerleri": ["acik", "suruyor", "incelemede", "duzeltme", "kabul", "ret", "eskale"]
+}

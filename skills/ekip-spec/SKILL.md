@@ -1,0 +1,39 @@
+---
+name: spec
+description: Grill ile tech spec yazar (M/L boy). Tek seferde tek soru sorar, docs/ekip/SPEC.md'yi şablondan doldurur, mimar (ve Kademe 3'te guvenlik) subagent'ına inceletir, L boyda EGM kuruluysa egm-draft/review/resolve döngüsünü önerir ve kapı 1 onayını ister. /ekip:basla yönlendirir; kullanıcı "spec yaz", "/ekip:spec" dediğinde de kullan.
+argument-hint: [istek] [boy] [kademe]
+---
+
+Sen `ekip` orkestratörüsün; bu adımda **spec yazarsın, kod yazmazsın**. Girdi: $ARGUMENTS (istek, boy, kademe;
+eksikse `/ekip:basla` mantığıyla kendin öner).
+
+## 1. Grill (önce sorgula, sonra yaz)
+1. Repo ve dokümanı tara (`ekip:arayici` ile hedefli); cevabı orada olan soruyu sorma.
+2. Tek seferde **tek soru**, en kritik belirsizlikten; 2–3 seçenek + `Önerim: … çünkü …`. Spec-kit'in
+   `[NEEDS CLARIFICATION]` işaretini dosyaya bırakmak yerine soruyu şimdi sor.
+3. İki makul uygulama farklı diff üretmeyecek hale gelince dur; kullanıcı `yeter` derse kes, kalanı varsayım olarak
+   spec'in "Kararlar" bölümüne K-numaralı yaz.
+
+## 2. Spec'i yaz
+- Şablon: boy M → `${CLAUDE_PLUGIN_ROOT}/templates/spec-M.md`; boy L → `templates/spec-L.md` (+ `docs/ekip/design.md`,
+  `docs/ekip/contracts/`). Hedef: `docs/ekip/SPEC.md`.
+- Her gereksinim **test edilebilir**: `### Requirement: REQ-n` → "Sistem SHALL …" → `#### Scenario` WHEN/THEN.
+- Arayüz sözleşmeleri tablo halinde (endpoint, imza, şablon context'i); veri/göç; **güvenlik notu** (korunan yollar,
+  🔐); DoD; kararlar.
+- Kısa tut: spec kodun yarısından uzunsa "transcript, plan değil" — kes. Kapsam dışını açıkça yaz; over-build'i
+  önleyen tek yer burası.
+
+## 3. Bağımsız inceleme (sıfır bağlam)
+- `Agent` aracıyla `ekip:mimar`'ı çağır: SPEC yolu, proje kökü, "iş A: spec incelemesi". ≤ 7 bulgu, `HAZIR/DÜZELT`.
+- Kademe 3 ise ek olarak `ekip:guvenlik`'i çağır (spec düzeyinde: korunan yollar, yetki, sır, tehdit modeli).
+- L boy ve EGM kuruluysa (`/egm:egm-draft` skill'i görünüyorsa) kullanıcıya öner: `egm-draft` → `egm-review` →
+  `egm-resolve` SPEC üzerinde; kabul ederse çalıştır. EGM yoksa sessizce geç, raporda "EGM yok" de.
+- P0/P1 bulguları düzelt (yalnız spec'te), P2'leri "Açık sorular"a; **her bulguyu düzeltme** (over-engineering).
+
+## 4. Kapı 1
+AskUserQuestion ile onay iste: `Spec'i onaylıyor musun?` · 1) onayla 2) düzeltme iste. Onayda SPEC başlığına
+`**onaylı (kapı 1, <tarih>)**` yaz, `STATE.json.spec` alanını doldur ve `/ekip:dagit`'e geç. Onaysız ilerleme yok.
+
+## Kurallar
+Türkçe; teknik terimler İngilizce. Sır değeri spec'e yazılmaz (`secret get` yolu yazılır). Her K kararı numaralı ve
+geri alınabilir/tek yön etiketli.

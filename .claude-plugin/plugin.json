@@ -1,0 +1,9 @@
+{
+  "name": "ekip",
+  "displayName": "Ekip",
+  "version": "0.1.0",
+  "description": "Claude Code için ekip düzeni: orkestratör grill ile spec yazar, görev kartlarına böler, worktree'li uygulayıcı oturumlarına dağıtır, salt-okunur inceleyicilerle denetler. İki insan kapısı: spec onayı ve PR merge.",
+  "author": { "name": "Tahir Cengiz" },
+  "repository": "https://github.com/tahircengiz/prj_Ekip",
+  "keywords": ["orchestration", "spec-driven", "code-review", "security-review", "worktree", "subagents"]
+}

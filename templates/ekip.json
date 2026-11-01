@@ -1,0 +1,14 @@
+{
+  "$comment": "Proje kökünde docs/ekip/ekip.json olarak durur. Hook'lar ve skill'ler buradan okur.",
+  "test_komutu": "pytest -q",
+  "ek_kontroller": ["ruff check .", "mypy ."],
+  "korunan_yollar": [
+    "auth/**", "keycloak/**", ".env*", ".github/workflows/**",
+    "requirements*.txt", "pyproject.toml", "*.lock", "uv.lock", "compose*.y*ml", "docs/ekip/ekip.json"
+  ],
+  "test_yollari": ["tests/**"],
+  "paralel_ust_sinir": 3,
+  "inceleme_tur_ust_sinir": 3,
+  "varsayilan_dal": "main",
+  "pr_aciklama_bolumu": "## Nasıl test ettim"
+}
