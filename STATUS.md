@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `ekip`)
 
-**Son güncelleme:** 2026-11-01 · **Faz:** 2 — baz çizgi bitti (10/10, 9,89 USD); sırada pilot (2.2) `/ekip:basla`, özellik: ekip için OTP zorunluluğu
+**Son güncelleme:** 2026-11-01 · **Faz:** 2 — pilot bitti (E.6 ≈ 29,8 USD, E.7 ≈ 22,7 USD, hepsi main'de, GTR9 yeşil); sırada retro (2.4)
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -23,9 +23,9 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 1.6 | Eval süiti 1 kez (`--max-cost-usd 10`), bulgulara göre skill description düzeltmesi | ✔ 2026-11-01: 5/5 geçti, skor 1.0, ortalama Δ 0.47, 2.92 USD, 672 sn (`evals/results/ilk.json`, gitignore'da). Description düzeltmesi gerekmedi; `boy-kademe` case'i doğal dile çevrildi, tekrar 1 koşu 0.10 USD, geçti (K27) |
 | 1.7 | Mac ön koşul: `gitleaks` (`/mac-change`, R1) | ✔ 8.30.1, ledger PR prj_HomeLab #194 |
 | 2.1 | Baz çizgi: LLMPortal'da 10 görev tek oturum Opus medium, `docs/ekip/olcum.md` (K16) | ✔ 2026-11-01: 10/10 görev, her biri 1 tur, toplam 9,89 USD (S 0,49–1,20; M 1,32–1,81), GTR9'da ilk denemede 10/10 yeşil; LLMPortal dalı `ekip-olcum` (2dd0080), main'e merge kullanıcıda. Birim referans: S ≈ 0,9 USD, M ≈ 1,6 USD, 1 tur |
-| 2.2 | Pilot: LLMPortal'da M boy / Kademe 2 özellik uçtan uca | ◐ 2026-11-01: orkestratör terminalde (`claude --plugin-dir prj_Ekip`, cwd LLMPortal), istek `docs/ekip/pilot-istek.md`; `/ekip:basla` → grill → Kapı 1 |
-| 2.3 | Pilot: bir Kademe 3 kart interaktif + güvenlik onayı | ◻ |
-| 2.4 | Retro: hangi harness parçası taşıyıcı | ◻ |
+| 2.2 | Pilot: LLMPortal'da M boy / Kademe 2 özellik uçtan uca | ✔ 2026-11-01: E.6 ekip OTP zorunluluğu (W0 + T001–T003) main'de, GTR9 623/0, ≈ 29,8 USD, ≈ 2 sa 50 dk; aynı akışla E.7 açık işleri (T004–T006) ≈ 22,7 USD, 644/0, ≈ 1,5 sa; takipler T007 1,68 / T008 0,71 USD. Ayrıntı LLMPortal `docs/ekip/olcum.md` "Ekip akışı" (K30) |
+| 2.3 | Pilot: bir Kademe 3 kart interaktif + güvenlik onayı | ✔ 2026-11-01: 4 kart (T002, T003, T005, T007) interaktif oturum + 🔐 sohbet onayı, kapı 2 merge insanla; onay kaydı prj_HomeLab #195 (3ec751d) |
+| 2.4 | Retro: hangi harness parçası taşıyıcı | ◻ maddeler: aynı işin tek oturum karşı ölçümü (K30); orkestratör payı %39 → %67; resume edilen headless test kartı düzeltme turu 1,8–2,1 USD; `ekip-denetle` için test ortamı kilidi (K23); dal commit'inden doğrulama (worktree adı yeniden kullanılıyor); grill şablonuna "yazım sırası / yarım kalma" sorusu (K31); reviewer `tests/**` kural çakışması; spec §7 pytest tarifi; `.gitleaks.toml` compose.yaml:69 allowlist; `ekip-izleyici` monitor gözlemi (K26 doğrulanmadı) |
 
 ## Kararlar
 
@@ -116,6 +116,21 @@ Eval (1.6, 2026-11-01):
   aracı değil); `boy-kademe` case'i doğal dile ("Bunu ekibe ver ve ekip ile başla: …") çevrildi, böylece description
   tetiklemesi ölçülüyor: tekrar koşuda Skill 1 kez çağrıldı, Boy S / Kademe 3 doğru. Kural: skill'in description ile
   tetiklenmesini ölçen case'ler slash kullanmaz; slash'lı case'ler yalnız çıktı grader'ı taşır.
+
+Pilot (2.2–2.3, 2026-11-01, kaynak LLMPortal `docs/ekip/olcum.md` ve `STATE.json`):
+- **K30** Pilot kıyası: E.6 (3 kart + W0) ≈ 29,8 USD / ≈ 2 sa 50 dk, E.7 (3 kart) ≈ 22,7 USD / ≈ 1,5 sa; baz çizgi M ≈ 1,6 USD
+  / 1 tur. Doğrudan oran (≈ 18×) yanıltıcı: pilot işi baz görevlerinden büyük ve **aynı işin tek oturum ölçümü yok**;
+  retro'da bir karşı ölçüm (aynı kartı plugin'siz tek oturuma vermek) kararlaştırılır. Kurulum hataları 3,22 USD tekrar
+  etmez. Kazanım: inceleyici ve insan kapıları 5 gerçek bulgu yakaladı (E.6: fail-open yazım sırası, eksik görsel kanıt;
+  E.7: spec'te kısmi PUT fail-open Yüksek, testte sessiz geri yükleme Orta, mimar P0 birim testi kip sınırı). İlk
+  denemede yeşil: E.6 1/3, E.7 2/3, takipler 2/2.
+- **K31** Grill gözlemi (transkriptten sayıldı): E.6 grill 1 soru (ayarın kaynağı: Keycloak org özniteliği, K1) + Kapı 1
+  onayı; 13 karar (K1–K13) spec'e yazıldı, Wave 0 doğrulama kapısı eklendi, kullanıcı 41 mesaj. E.7 grill 1 soru (502'de
+  Ekip sayfası davranışı, K32) + Kapı 1; K32–K40, kullanıcı 61 mesaj (kapı 2 ve 🔐 onayları dahil, 10 AskUserQuestion).
+  Soru sayısı global kuralla uyumlu (yalnız farklı diff üreten dal). Eksik: E.6 grill'i "Keycloak'a çoklu yazımda
+  sıra ve yarım kalma" sorusunu sormadı; aynı sınıf bulgu T002 tur 1'de güvenlik incelemesinden çıktı (K28), E.7'de ise
+  spec aşamasında yakalandı. Retro adayı: `ekip-spec` grill şablonuna dış sisteme çoklu yazım varsa "sıra / fail-closed"
+  sorusu.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; pilot sonunda "bir bileşeni çıkar" turu.
