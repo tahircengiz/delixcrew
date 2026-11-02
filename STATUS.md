@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `ekip`)
 
-**Son güncelleme:** 2026-11-02 · **Faz:** 3 — retro aksiyonları: A1–A9 main'de (2690003), A11 ✔ (K38), A10 + A10-b ✔ (K39–K40), A12 ✔ (K41), A13 ✔ (K42); yalnız A2 (ilk gerçek kartta ölçüm) açık; isteğe bağlı A10-c
+**Son güncelleme:** 2026-11-02 · **Faz:** 3 — retro aksiyonları: A1–A9 main'de (2690003), A11 ✔ (K38), A10 + A10-b ✔ (K39–K40), A12 ✔ (K41), A13 ✔ (K42), A10-c ✔ (K43); yalnız A2 (ilk gerçek kartta ölçüm) açık
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -27,7 +27,7 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 2.3 | Pilot: bir Kademe 3 kart interaktif + güvenlik onayı | ✔ 2026-11-01: 4 kart (T002, T003, T005, T007) interaktif oturum + 🔐 sohbet onayı, kapı 2 merge insanla; onay kaydı prj_HomeLab #195 (3ec751d) |
 | 2.4 | Retro: hangi harness parçası taşıyıcı | ✔ 2026-11-01 [docs/retro/2026-11-01-pilot-retro.md](docs/retro/2026-11-01-pilot-retro.md): taşıyıcı = grill+spec+mimar, kart+dispatch, `guvenlik`, orkestratör denetimi, insan kapıları, `ekip-kapat`; yardımcı = Stop kapısı, `kalite`; doğrulanmadı = yazma/bash kapıları, rol prompt'ları; çıkarılabilir = `ekip-izleyici`, `PANO.md` dosya yazımı. 12 aksiyon A1–A12 (K32–K34) |
 | 3.1 | Retro aksiyonları A1–A9 (plugin içi: skill metinleri, şablonlar, pano, monitor teşhisi) | ✔ 2026-11-01 main'e merge edildi (2690003, K35–K37) |
-| 3.2 | A10 karşı ölçüm: E.7 boyutunda bir kart plugin'siz tek oturumda, LLMPortal | ✔ 2026-11-01 T006 kartı tek oturum 0,67 USD (K39); A10-b kart yok, kısa istek 0,83 USD / 1 tur / ilk yeşil (K40); A10-c (tüm E.7 tek oturum) kullanıcı kararı |
+| 3.2 | A10 karşı ölçüm: E.7 boyutunda bir kart plugin'siz tek oturumda, LLMPortal | ✔ 2026-11-01 T006 kartı tek oturum 0,67 USD (K39); A10-b kart yok, kısa istek 0,83 USD / 1 tur / ilk yeşil (K40); A10-c tüm E.7 tek oturum 2,79 USD / 7 dk / gizli test 24/27 (K43) |
 | 3.3 | A11 plugin'i Mac'e kalıcı kur (yerel marketplace, `/mac-change` R1) | ✔ 2026-11-01 `ekip@ekip-local` user kapsamı, gerçek rollback denendi (K38) |
 | 3.4 | A12 tutarlılıklar (spec §7 pytest, `kalite` tests/** kuralı, LLMPortal gitleaks allowlist) | ✔ 2026-11-01 (K41) |
 | 3.5 | A13 yazma kapısı: cwd (worktree) dışı yol → deny | ✔ 2026-11-02 (K42), hook testleri 31/31 |
@@ -193,6 +193,15 @@ Faz 3 (retro aksiyonları, 2026-11-01, dal `retro-aksiyonlar`):
   sonra cwd'ye göre eşleşir. Kural uygulayıcıya özel (inceleyici zaten yazamaz, kart yoksa kapı pasif). Bash ile yazma
   hâlâ kapsam dışı (README "Bilinen sınırlar"). 4 yeni hook testi, kuralsız kopyada kırmızı olduğu gösterildi; plugin
   repodan yerinde okunduğu için (K38) canlı kurulum bu değişikliği hemen görür.
+- **K43** A10-c (LLMPortal `docs/ekip/olcum.md` "A10-c"): tüm E.7 (T004+T005+T006; M boy, Kademe 3) `40735be` tabanlı
+  geleceksiz depoda, `docs/ekip/` yok, 13 satırlık kullanıcı isteğiyle (grill kararları kullanıcı sözüyle, sözleşme adı ve
+  metin yok) tek Opus 5.5 oturumu: **2,79 USD, 1 mesaj / 31 API turu, 7 dk 6 sn**; kod ve test aynı 8 dosya; gizli kabul
+  testi (T004 `teamguard_unit`) **24/27** — REQ-2 6/6, REQ-3 R1–R3 KALDI yalnız kartın metin ("şu an yüklenemedi") ve
+  `data-otp-required` yok sözleşmesinden, davranış doğru (kendi testleri 41/41). Ekip E.7 ≈ 22,7 USD / 1,5 sa / 27/27 +
+  smoke 644/0 + kırmızı koşu kanıtı. Koşulmadı: smoke REQ-1/REQ-4 (canlı stack yok), kırmızı koşu. Karar: iyi tarif edilmiş
+  S/M işte tek oturum + orkestratörün yalnız doğrulama adımı (GTR9 koşusu, `guvenlik` tek geçiş); tam ekip akışı Kademe 3 +
+  paralel kart + belirsiz spec'e. A10 serisi kapandı; ilk gerçek kartta A2 ile birlikte "doğrulama-yalnız" kipinin
+  maliyeti ölçülür.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
