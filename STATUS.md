@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `ekip`)
 
-**Son güncelleme:** 2026-11-01 · **Faz:** 3 — retro aksiyonları: A1–A9 main'de (2690003), A11 ✔ (K38), A10 + A10-b ✔ (K39–K40), A12 ✔ (K41); retro aksiyonları A2 (ilk kartta ölçüm) ve A13 dışında kapandı; isteğe bağlı A10-c
+**Son güncelleme:** 2026-11-02 · **Faz:** 3 — retro aksiyonları: A1–A9 main'de (2690003), A11 ✔ (K38), A10 + A10-b ✔ (K39–K40), A12 ✔ (K41), A13 ✔ (K42); yalnız A2 (ilk gerçek kartta ölçüm) açık; isteğe bağlı A10-c
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -30,6 +30,7 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 3.2 | A10 karşı ölçüm: E.7 boyutunda bir kart plugin'siz tek oturumda, LLMPortal | ✔ 2026-11-01 T006 kartı tek oturum 0,67 USD (K39); A10-b kart yok, kısa istek 0,83 USD / 1 tur / ilk yeşil (K40); A10-c (tüm E.7 tek oturum) kullanıcı kararı |
 | 3.3 | A11 plugin'i Mac'e kalıcı kur (yerel marketplace, `/mac-change` R1) | ✔ 2026-11-01 `ekip@ekip-local` user kapsamı, gerçek rollback denendi (K38) |
 | 3.4 | A12 tutarlılıklar (spec §7 pytest, `kalite` tests/** kuralı, LLMPortal gitleaks allowlist) | ✔ 2026-11-01 (K41) |
+| 3.5 | A13 yazma kapısı: cwd (worktree) dışı yol → deny | ✔ 2026-11-02 (K42), hook testleri 31/31 |
 
 ## Kararlar
 
@@ -187,12 +188,16 @@ Faz 3 (retro aksiyonları, 2026-11-01, dal `retro-aksiyonlar`):
   `kalite` madde 2/4: test kartının var olan dosyaya **ekleme** yapması bulgu değil, zayıflatma ve Files dışı test dosyası
   P0, yeni test dosyası serbest (K29). LLMPortal `.gitleaks.toml`: `compose.yaml` `KC_DB_URL` JDBC satırı için satır
   bazlı allowlist; `gitleaks dir .` 0 bulgu, geçerli biçimli sahte AWS anahtarı hâlâ yakalanıyor (2 → 1).
+- **K42** A13: `yazma_kapisi.py` uygulayıcı kapısı cwd (worktree) dışına çıkan her yolu reddeder (`os.path.realpath` +
+  `commonpath`, böylece `/tmp` → `/private/tmp` ve `cwd + 'x'` önek benzeri dizin doğru ayrılır); diğer kurallar bundan
+  sonra cwd'ye göre eşleşir. Kural uygulayıcıya özel (inceleyici zaten yazamaz, kart yoksa kapı pasif). Bash ile yazma
+  hâlâ kapsam dışı (README "Bilinen sınırlar"). 4 yeni hook testi, kuralsız kopyada kırmızı olduğu gösterildi; plugin
+  repodan yerinde okunduğu için (K38) canlı kurulum bu değişikliği hemen görür.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
 - [Orta] Rol oturumları paralel çalışırken aynı dosyaya dokunma; görev bölme bunu bağımlılık olarak çözmeli.
 - [Düşük] Alt-ajana giden içerik (web, repo) prompt-injection taşıyabilir; inceleyici roller salt-okunur kalır.
-- [Düşük] Yazma kapısı cwd dışı yolu denetlemez (A13, K38); worktree dışına yazan uygulayıcı kapıyı atlar.
 
 ## Kaynaklar
 - Önceki deneme: `~/Documents/projects/prj_vibecoding-agents/` (32 rol, `roles/*.md`, yalnız metin düzeyinde)

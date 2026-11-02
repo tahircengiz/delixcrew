@@ -97,6 +97,7 @@ Spec §12 "bir bileşeni çıkar" turunun cevabı: pilottan **`ekip-izleyici` mo
 | A10 | Karşı ölçüm: E.7 boyutunda bir kart (örn. T006 benzeri S/K2) plugin'siz tek oturuma aynı kart metniyle verilir; maliyet, tur, ilk yeşil | LLMPortal, sıradaki küçük iş | Yapıldı 2026-11-01: T006 aynı kartla tek oturum 0,67 USD / 1 tur / ilk yeşil (ekip 0,97); A10-b kart yok, kısa istek 0,83 USD / 1 tur / ilk yeşil (K40); aday A10-c tüm E.7 tek oturum |
 | A11 | Plugin'i Mac'e kalıcı kur (yerel marketplace, `/mac-change` R1) → Kademe 3 oturumları Desktop'tan plugin'li açılır, kullanıcı mesajı azalır | `.claude-plugin/marketplace.json`, Mac ayarı | 🔐 R1 onayı kullanıcıda |
 | A12 | Küçük tutarlılıklar: spec §7 kapı reçetesi pytest yazıyor, LLMPortal'da pytest yok (düzelt); inceleyici `tests/**` kuralı ile "test kartı test dosyasına ekler" (K29) çelişkisi netleştirilir; LLMPortal `.gitleaks.toml` allowlist `compose.yaml:69` yanlış pozitifi | `docs/spec` §7, `agents/kalite.md`, LLMPortal | Yapıldı 2026-11-01 (K41): spec §6/§7 gerçek hook davranışı, kalite madde 2/4, LLMPortal `.gitleaks.toml` |
+| A13 | Yazma kapısı cwd (worktree) dışına yazan yolu denetlemiyordu (A11 testinde çıktı, K38): `../`, başka mutlak dizin ve önek benzeri dizin deny | `scripts/yazma_kapisi.py`, `tests/hook_testleri.sh` | Yapıldı 2026-11-02 (K42): realpath + commonpath; 4 yeni test, kuralsız kopyada kırmızı |
 
 Kapsam dışı (LLMPortal tarafında, ekip plugin'i değil): B01/B04/B08 kart adayları, `main.py` `%r` logları, Keycloak
 config'siz koşul davranışı.

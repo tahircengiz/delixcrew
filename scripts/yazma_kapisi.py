@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """PreToolUse (Write|Edit|MultiEdit|NotebookEdit): inceleyici roller yazamaz; uygulayıcı kart dosyasına ve
 docs/ekip/**'ye yazamaz; korunan yola yalnız kartın Files listesinde ve kartta 🔐 Onay satırı varsa, var olan test
-dosyasına yalnız Files listesindeyse yazar (yeni test dosyası serbest). Uygulayıcı kapısı yalnız cwd/.ekip/kart varsa
-aktif."""
+dosyasına yalnız Files listesindeyse yazar (yeni test dosyası serbest); cwd (worktree) dışına hiç yazamaz (A13).
+Uygulayıcı kapısı yalnız cwd/.ekip/kart varsa aktif."""
 import os
 import re
 import sys
@@ -41,11 +41,22 @@ def kart_oku():
     return yollar, bool(ONAY.search(bas))
 
 
+def cwd_disi(yol):
+    """Yol cwd'nin (worktree) dışına çıkıyor mu? Sembolik bağlar (/tmp → /private/tmp) için realpath."""
+    kok = os.path.realpath(cwd)
+    hedef = os.path.realpath(os.path.join(cwd, yol))
+    return os.path.commonpath([kok, hedef]) != kok
+
+
 cfg = ekip_json(cwd)
 ti = g.get("tool_input") or {}
 yol = ti.get("file_path") or ti.get("notebook_path") or ""
 korunan = cfg.get("korunan_yollar") or []
 test_yollari = cfg.get("test_yollari") or ["tests/**"]
+
+if yol and cwd_disi(yol):
+    deny(f"ekip: '{yol}' worktree'nin ({cwd}) dışında; uygulayıcı yalnız kendi worktree'sine yazar (A13). Yolu cwd'ye "
+         f"göre kur; dosya gerçekten başka yerdeyse raporda NEEDS_CONTEXT yaz.")
 
 if eslesir(yol, ["docs/ekip/**", kart], cwd):
     deny(f"ekip: '{yol}' kart ya da docs/ekip altında; uygulayıcı bunları değiştiremez. Gerekiyorsa raporda "

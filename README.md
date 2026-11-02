@@ -66,7 +66,8 @@ taraması yapılır; yoksa `.ekip/uyarilar.log`'a not düşer.
 
 Yazma kapısı (`scripts/yazma_kapisi.py`) yalnız Write/Edit/MultiEdit/NotebookEdit araçlarını görür; uygulayıcının Bash
 ile dosya yazması (`echo >`, `sed -i`, `tee`) bu hook'un kapsamı dışıdır (`bash_kapisi.py` yalnız `.env` yönlendirmesini
-ve inceleyici Bash'ini keser). Bu yüzden kart dosyası, `docs/ekip/**` ya da kartta onaysız korunan yol değişikliği
+ve inceleyici Bash'ini keser). Worktree (cwd) dışına çıkan yol her zaman reddedilir (A13, K42); yol eşleşmeleri cwd'ye
+göredir. Bu yüzden kart dosyası, `docs/ekip/**` ya da kartta onaysız korunan yol değişikliği
 `ekip:kalite` incelemesinde diff'ten bulgu sayılır. Kademe 3 izni kartın başlık tablosundan sonraki
 `**🔐 Onay:** <YYYY-MM-DD> <kim>` satırıyla açılır; bu satırı yalnız orkestratör, kullanıcının sohbetteki açık "evet"inden
 sonra yazar ve main'e commit eder.

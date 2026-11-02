@@ -18,6 +18,12 @@ deny  "uygulayıcı korunan yol auth/"     yazma_kapisi.py "{\"tool_name\":\"Edi
 deny  "uygulayıcı mevcut test düzenler"  yazma_kapisi.py "{\"tool_name\":\"Edit\",\"cwd\":\"$T\",\"tool_input\":{\"file_path\":\"tests/test_a.py\"}}"
 allow "uygulayıcı yeni test dosyası"     yazma_kapisi.py "{\"tool_name\":\"Write\",\"cwd\":\"$T\",\"tool_input\":{\"file_path\":\"tests/test_b.py\"}}"
 allow "uygulayıcı serbest dosya"         yazma_kapisi.py "{\"tool_name\":\"Edit\",\"cwd\":\"$T\",\"tool_input\":{\"file_path\":\"portal/app.py\"}}"
+allow "serbest dosya, mutlak yol"        yazma_kapisi.py "{\"tool_name\":\"Edit\",\"cwd\":\"$T\",\"tool_input\":{\"file_path\":\"$T/portal/app.py\"}}"
+# A13: cwd (worktree) dışına yazma — göreli kaçış, mutlak başka dizin, önek benzerliği (cwd + 'x')
+deny  "cwd dışı: ../ ile kaçış"          yazma_kapisi.py "{\"tool_name\":\"Write\",\"cwd\":\"$T\",\"tool_input\":{\"file_path\":\"../disarida.py\"}}"
+deny  "cwd dışı: mutlak başka dizin"     yazma_kapisi.py "{\"tool_name\":\"Write\",\"cwd\":\"$T\",\"tool_input\":{\"file_path\":\"$(dirname "$T")/disarida.py\"}}"
+deny  "cwd dışı: önek benzeri dizin"     yazma_kapisi.py "{\"tool_name\":\"Write\",\"cwd\":\"$T\",\"tool_input\":{\"file_path\":\"${T}x/portal/app.py\"}}"
+deny  "cwd dışı: serbest ad bile ret"    yazma_kapisi.py "{\"tool_name\":\"Write\",\"cwd\":\"$T\",\"tool_input\":{\"file_path\":\"/tmp/deneme.txt\"}}"
 # Karta özel izin (Files listesi + 🔐 Onay satırı)
 mkdir -p "$T/docs/ekip/tasks"; echo "x" > "$T/tests/listeli.py"; echo "x" > "$T/auth/izinli.py"
 cat > "$T/docs/ekip/tasks/T001-x.md" <<'MD'

@@ -158,7 +158,8 @@ kullanılmaz (oturuma bağlı, resume'da kırılgan).
 - **PreToolUse** (uygulayıcı, `scripts/yazma_kapisi.py`, K29): var olan test dosyası (`ekip.json.test_yollari`, varsayılan
   `tests/**`) yalnız kartın `## Files` listesindeyse yazılır, yeni test dosyası serbest; korunan yollar
   (`ekip.json.korunan_yollar`: `auth/`, `keycloak/`, `.env*`, `.github/workflows/`, lockfile'lar…) yalnız Files'ta **ve**
-  kartta `**🔐 Onay:**` satırı varsa; kart dosyası ve `docs/ekip/**` her zaman deny. `scripts/bash_kapisi.py`: `git commit`
+  kartta `**🔐 Onay:**` satırı varsa; kart dosyası ve `docs/ekip/**` her zaman deny; cwd (worktree) dışına çıkan yol
+  (`../`, başka mutlak dizin; realpath ile) her zaman deny (A13, K42). `scripts/bash_kapisi.py`: `git commit`
   öncesi `gitleaks protect --staged` (proje `.gitleaks.toml` allowlist'i okunur), gitleaks yoksa `.ekip/uyarilar.log`.
 - **PreToolUse** (`kalite`, `guvenlik`): Write/Edit/Bash yazma komutları deny; `guvenlik` için yalnız gitleaks/semgrep.
 - **Bağımlılık:** `requirements*`/`pyproject`/lockfile değişen diff'te registry varlığı/yaşı/OSV (`pip-audit`);
