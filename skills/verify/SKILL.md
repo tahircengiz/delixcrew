@@ -48,7 +48,7 @@ decision. PRs with a card go to `/delix:review` (with fix rounds); here it is a 
    test file once more with the `$base` archive (`<dir>-base`, `<image>-base`); if it is red on the base as well, write
    `pre-existing failure: <test> x/y (also on base)`; this does not lower the verdict (not the patch's) but is listed
    separately in the report.
-4. **Full suite** (`delix.json.full_test_command_gtr9` or similar runs needing the shared test environment): only if the
+4. **Full suite** (`delix.json.full_test_command_remote` or similar runs needing the shared test environment): only if the
    user said `--full` in this call **and** `STATE.json.env_owner` is empty (K23). While running write `env_owner =
    {"card": "verify:<name>", "who": "orchestrator", "since": "<ISO>"}`; when done return the environment to the default
    branch and set `null`. If the lock is taken, do not wait and do not seize: `not run: environment lock <card>`. Without
