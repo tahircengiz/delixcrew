@@ -146,7 +146,7 @@ test('a foreground run_all.sh is followed, counted and toasted', async ($, on) =
   const { toasts } = world(on, FILES)
   on('tool.call', () => ({ result: { stdout: RUN_ALL, stderr: '', interrupted: false } }))
   await $.session.start({ cwd: ROOT, surface: 'desktop', isInteractive: true })
-  await $.tool.call({ tool: 'Bash', command: "ssh gtr9 'cd ~/projects/x && bash tests/run_all.sh'" })
+  await $.tool.call({ tool: 'Bash', command: "ssh build-host 'cd ~/projects/x && bash tests/run_all.sh'" })
   expect(toasts.at(-1)).toMatch(/run_all\.sh başarısız: 5 GEÇTİ \/ 1 KALDI/)
   for (const surface of SURFACES) {
     const ui = await $.ui.mount({ ...PANE, surface })

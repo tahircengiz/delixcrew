@@ -50,7 +50,7 @@ Bütçe: bir tik ≤ ~15 `stat`; LLMPortal'da 22 kart dosyası mtime değişmedi
 
 **Karar B1: `tool.call` hook'u, ilerleme dosyası değil.** delix değişmeyeceği için (K3) `.delix/` altına ilerleme
 dosyası yazdıramayız; oturumun kendi Bash çağrısını izlemek ek sözleşme gerektirmez ve LLMPortal'daki gerçek
-komutları (`ssh gtr9 '… bash tests/run_all.sh'`, `scripts/build.sh`, `gh run watch`) olduğu gibi yakalar.
+komutları (`ssh build-host '… bash tests/run_all.sh'`, `scripts/build.sh`, `gh run watch`) olduğu gibi yakalar.
 
 - **Tanıma:** `on('tool.call', { tool: 'Bash' })` komut metnini desen listesine bakar. Varsayılanlar:
   `run_all.sh`, `build.sh`, `release.sh`, `install_trial`, `upgrade_restore_drill`, `gh run watch`,
