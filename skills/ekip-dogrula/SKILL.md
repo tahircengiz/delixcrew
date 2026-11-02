@@ -40,6 +40,9 @@ PR'lar için `/ekip:denetle` (düzeltme turlu); burada **tek geçiş**.
    `rsync -a arsiv/ <uzak>:<dizin>/`, `ssh <uzak> '<hazirlik>'`, `ssh <uzak> '<birim_test>'` (çıktıyı `<çalışma>/kapilar.txt`'ye
    de ekle); sonunda `ssh <uzak> '<temizlik>'` (`--tut` verilmedikçe). Canlı dizine ve canlı imaj etiketine **dokunma**;
    komut şablonu canlı dizini ya da `compose up` içeriyorsa o kapıyı koşma, `koşulmadı: canlı stack'e dokunur` yaz.
+   Yalnız `{ad}` `{dizin}` `{imaj}` doldurulur; **test başına env** komutun içindedir (`case $t in <test>) env=…;; esac`,
+   `templates/ekip.json` `$comment_birim_env`, K46): komutu değiştirme, env eksikse (bir test tabanda da aynı sebeple
+   kırmızıysa) raporda `ekip.json dogrulama.birim_test env eksik: <test>` yaz, "önceden kırmızı" sayma.
    Kilit gerekmez: dizin ve imaj bu doğrulamaya özeldir. **Kırmızıysa tabanı ayır:** kalan test dosyasını `$taban`
    arşiviyle (`<dizin>-taban`, `<imaj>-taban`) bir kez daha koş; tabanda da aynı kırmızıysa sonucu `önceden kırmızı:
    <test> x/y (tabanda da)` yaz; bu, kararı düşürmez (yamaya ait değil) ama raporda ayrı listelenir.

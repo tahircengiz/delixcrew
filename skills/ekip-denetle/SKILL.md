@@ -19,6 +19,9 @@ boşsa `STATE.json`'da `incelemede` olan kartlar).
 - **Her şey kartın dal commit'inden** (`git rev-parse <dal>`): diff `git diff <varsayilan_dal>...<sha> > .ekip/diff.patch`,
   uzak test ortamına gönderim `git archive <sha>` ile; **worktree dizininden değil** (Desktop worktree dizin adlarını
   yeniden kullanır, dizin başka karta ait içerik taşıyabilir). Kabul kaydına ve `STATE.json.pr`'a SHA yazılır.
+  Uzak izole birim testi için `ekip.json.dogrulama` bloğu varsa `/ekip:dogrula` adım 3 reçetesi (ayrı dizin ve imaj,
+  `{ad}` = kart no); **test başına env** `birim_test` komutunun içindeki `case $t in …` ile gelir (K46), komutu elle
+  tamamlama; bir test yalnız eksik env'den kırmızıysa bu uygulayıcı bulgusu değil `ekip.json` düzeltmesidir (korunan yol, 🔐).
 - **Tek test ortamı = tek sahip (K23):** paylaşımlı test ortamında koşmadan önce `STATE.json.ortam_sahibi` boş mu bak;
   doluysa bekle, zorla alma. Koşarken `{"kart": "T<nnn>", "kim": "orkestratör", "baslangic": "<ISO>"}` yaz; bitince
   ortamı varsayılan dala döndür ve alanı `null` yap. Uygulayıcı oturumları bu ortama dokunmaz (kart aksini yazmadıkça).
