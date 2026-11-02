@@ -3,7 +3,7 @@
 Soru (STATUS 2.4, spec §12 ve §13.6): **hangi harness parçası taşıyıcı**, hangisi Opus 5.5 ile gereksiz ya da
 doğrulanmamış. Kaynaklar: LLMPortal `docs/ekip/olcum.md` (Ekip akışı E.6, E.7), `STATE.json` + `arsiv/E6-STATE.json`,
 kartların "İnceleme bulguları" bölümleri (T001–T008), `SPEC.md` + `arsiv/E6-SPEC.md` kararları, 12 oturum transkripti
-(`~/.claude/projects/-Users-tacengiz-Documents-projects-prj-LLMPortal*/`; `usage`, `tool_use`, `stop_hook_summary`
+(`~/.claude/projects/<proje>/`; `usage`, `tool_use`, `stop_hook_summary`
 kayıtları betikle sayıldı). Fiyat Opus 5.5 liste (4 / 20 / 8 / 0,20 USD per MTok). "Doğrulandı" yalnız bu
 kaynaklardan okunan değerler içindir; yorum satırları ayrı işaretlidir.
 
