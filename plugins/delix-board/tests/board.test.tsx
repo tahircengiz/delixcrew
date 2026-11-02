@@ -57,6 +57,9 @@ function world(on: On, files: Record<string, string>) {
     return { value: undefined }
   })
   on('session.start', (_, e) => ({ cwd: e.cwd }))
+  on('session.attach', (_, e) => ({ clientId: e.clientId }))
+  on('session.surfaces', () => ({ value: [] }))
+  on('session.cwd', () => ({ value: ROOT }))
   return { toasts, now }
 }
 
@@ -219,4 +222,16 @@ test('the band names pending gates when nothing runs', async ($, on) => {
     expect((await band.find({ type: 'Text', text: /kapı bekliyor/ }))?.text).toMatch(/2 kapı bekliyor/)
     await band.unmount()
   }
+})
+
+test('a desktop session (SDK, not interactive at start) starts when the desktop attaches', async ($, on) => {
+  const { toasts } = world(on, FILES)
+  on('tool.call', () => ({ result: { stdout: RUN_ALL, stderr: '', interrupted: false } }))
+  await $.session.start({ cwd: ROOT, surface: null, isInteractive: false })
+  await $.session.attach({ surface: 'desktop', clientId: 'desktop:default' })
+  await $.tool.call({ tool: 'Bash', command: 'bash tests/run_all.sh' })
+  expect(toasts).toHaveLength(1)
+  const band = await $.ui.mount({ ...BAND, surface: 'desktop' })
+  expect((await band.find({ type: 'Text', text: /kapı bekliyor/ }))?.text).toMatch(/2 kapı bekliyor/)
+  await band.unmount()
 })

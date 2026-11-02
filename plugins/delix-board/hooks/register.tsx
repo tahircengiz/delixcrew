@@ -1,6 +1,7 @@
 // delix-board: a live board for delix beside the chat. Read-only: it reads the
 // project's docs/delix files and follows the session's long runs; it never
-// changes a tool call. Does nothing in a session no person is at (`claude -p`, SDK).
+// changes a tool call. Starts when someone can see it: the REPL, or a surface
+// attaching (the desktop app runs over the SDK); a plain `claude -p` run starts nothing.
 
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
@@ -43,6 +44,17 @@ function openPane($: EngineInterface) {
   return $.ui.open({ id: PANE, title: 'delix' })
 }
 
+/** Starts the board once: project root, refresh and run timers, the pane in a delix project. */
+async function activate($: EngineInterface, cwd: string) {
+  if (rt.isActive) return
+  rt.isActive = true
+  rt.root = await findRoot($, cwd)
+  await refresh($)
+  $.clock.every(4000, () => refresh($))
+  $.clock.every(2000, () => pollRuns($).catch(() => undefined))
+  if ((await read($, snapshotAtom))?.isDelix) void openPane($)
+}
+
 async function context($: EngineInterface, k: Ctx['k']): Promise<Ctx> {
   return {
     k,
@@ -63,19 +75,19 @@ export const register: Register = (on, options) => {
 
   on('session.start', async ($, e, next) => {
     const started = await next(e)
-    if (!e.isInteractive) return started
-    rt.isActive = true
     await $.command.register({
       name: 'delix-board',
       description: 'Open the delix board pane (pano, bekleme, kart <Tnnn>, olcum)',
     })
-    rt.root = await findRoot($, e.cwd)
-    await refresh($)
-    $.clock.every(4000, () => refresh($))
-    $.clock.every(2000, () => pollRuns($).catch(() => undefined))
-    if ((await read($, snapshotAtom))?.isDelix) void openPane($)
+    if (e.isInteractive || (await $.session.surfaces()).length > 0) await activate($, e.cwd)
     return started
   })
+
+  on('session.attach', async ($, e, next) => {
+    const attached = await next(e)
+    await activate($, await $.session.cwd())
+    return attached
+  }).catch(($, e, next) => next(e))
 
   on('command.run', { command: 'delix-board' }, async ($, e) => {
     const [arg, card] = e.args.trim().toLowerCase().split(/\s+/)
