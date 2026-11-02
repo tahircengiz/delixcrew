@@ -204,7 +204,7 @@ Faz 3 (retro aksiyonları, 2026-11-01, dal `retro-aksiyonlar`):
   paralel kart + belirsiz spec'e. A10 serisi kapandı; ilk gerçek kartta A2 ile birlikte "doğrulama-yalnız" kipinin
   maliyeti ölçülür.
 
-Faz 4 (doğrulama-yalnız kipi, 2026-11-02, dal `claude/goofy-hugle-87d0ae`):
+Faz 4 (doğrulama-yalnız kipi, 2026-11-02, dal `claude/bold-swanson-53241b`):
 - **K44** `/ekip:dogrula` (K43'ün uygulaması): kartsız iş için orkestratör yalnız doğrular; girdi dal/commit (`git archive
   <sha>`, K37) ya da dizin; kapılar gitleaks (diff + arşiv) → `ekip.json.test_komutu` arşivde → uzak **izole** birim testi
   (`ekip.json.dogrulama`: `{ad}/{dizin}/{imaj}` şablonu, ayrı dizin + ayrı imaj, canlı stack'e dokunmaz, kilit gerekmez) →
