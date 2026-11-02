@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `ekip`)
 
-**Son güncelleme:** 2026-11-02 · **Faz:** 4 — doğrulama-yalnız kipi `/ekip:dogrula` (4.1 ✔, K44); A2 ölçüldü ve kapandı (4.2 ✔, K45): headless düzeltme turu varsayılanı yeni `-p` oturumu; retro A1–A13 tamamı kapalı
+**Son güncelleme:** 2026-11-02 · **Faz:** 4 — doğrulama-yalnız kipi `/ekip:dogrula` (4.1 ✔, K44); A2 ölçüldü ve kapandı (4.2 ✔, K45): headless düzeltme turu varsayılanı yeni `-p` oturumu; retro A1–A13 tamamı kapalı; `dogrulama.birim_test` test başına env (4.3 ✔, K46)
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -33,6 +33,7 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 3.5 | A13 yazma kapısı: cwd (worktree) dışı yol → deny | ✔ 2026-11-02 (K42), hook testleri 31/31 |
 | 4.1 | Doğrulama-yalnız kipi: `skills/ekip-dogrula` (`/ekip:dogrula <dal\|commit\|dizin>`), `/ekip:basla` kip önerisi, pano "Doğrulamalar" tablosu, spec §15, `templates/ekip.json` `dogrulama` bloğu | ✔ 2026-11-02 (K44): validate ✔, hook 31/31, pano 12/12; LLMPortal A10-c yaması üzerinde kuru koşu 1,38 USD / 3 dk 21 sn, rapor `docs/ekip/dogrulama/2026-11-02-a10c-e7.md` |
 | 4.2 | A2 ölçümü ilk gerçek kartta: LLMPortal T009 (B04 rotate spend, S · K2) tam akış; gerçek Orta bulguda düzeltme turu `--resume` vs yeni `-p` | ✔ 2026-11-02 (K45): yeni `-p` **0,44 USD** / 5 tur / 40 sn, `--resume` 1,11 / 7 / 40 sn, ikisi yeşil; kart toplamı ≈ 9,3 USD (Opus eşdeğeri), kart onayı → merge 14 dk, kapı dışı müdahale 0; `ekip-denetle`/`ekip-dagit` reçetesi güncellendi; LLMPortal `olcum.md` "A2" |
+| 4.3 | `dogrulama.birim_test` test başına ortam değişkeni (K45 yan bulgu 3): `templates/ekip.json` `$comment_birim_env`, `ekip-dogrula`/`ekip-denetle` notu, spec §15; LLMPortal `ekip.json` `session_unit` için `run_all.sh` env'i | ✔ 2026-11-02 (K46): validate ✔, hook 31/31, pano 12/12; GTR9 izole koşu (`~/projects/llm-portal-dogrula/env-test`, imaj `llm-portal:dogrula-env-test`, HEAD 8c11f71): 8 dosya **165/165**, `session_unit` **8/8**; derleme 14 sn + koşu 3 sn; dizin ve imaj silindi, canlı stack dokunulmadı (`.env` 0.1.9, 9 Up) |
 
 ## Kararlar
 
@@ -239,6 +240,14 @@ A2 ölçümü (4.2, 2026-11-02, LLMPortal `docs/ekip/olcum.md` "A2"):
   ana checkout'tan yazar); (3) LLMPortal `dogrulama.birim_test` döngüsünde `session_unit` 4/8 **eksik ortam değişkeninden**
   (`PORTAL_MODE=admin`, `ADMIN_PUBLIC_URL`), `run_all.sh` env'iyle 8/8: K44'teki "miras kırmızı" yorumu yanlış; `templates/ekip.json`
   ve LLMPortal `ekip.json` için test başına env desteği açık iş. Koşulmadı: canlı smoke (LiteLLM `spend` kabulü), `--tam`.
+- **K46** `dogrulama.birim_test`'te test başına env **komutun içinde** `case $t in <test>) env="-e K=V";; *) env="";; esac` ile; ayrı
+  `birim_env` alanı ve `{env:$t}` yer tutucusu **yok**. Neden: skill yalnız `{ad}` `{dizin}` `{imaj}` doldurur ve komutu
+  `ssh <uzak> '<komut>'` ile olduğu gibi koşar; yeni alan + yer tutucu, LLM'in map'i shell'e çevirmesini ister (ikinci bir
+  dönüşüm noktası, hata ve sapma yeri), `case` ise env'i döngünün yanında tutar ve `run_all.sh` ile birebir karşılaştırılır.
+  Şablon dokümanı `templates/ekip.json` `$comment_birim_env`; kural: eksik env'den kırmızı test "önceden kırmızı" değil
+  `ekip.json` düzeltmesidir (korunan yol). LLMPortal `session_unit` `PORTAL_MODE=admin ADMIN_SECRET ADMIN_PUBLIC_URL` ile
+  GTR9 izole koşuda 8/8 (toplam 165/165, 8 dosya). Yan bulgu: LLMPortal `tests/run_all.sh` birim listesinde `keys_unit` yok
+  (döngü 27/27 geçirdi); LLMPortal'da ayrı iş.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
