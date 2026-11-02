@@ -269,9 +269,17 @@ Hazırlık [docs/rename/delix-hazirlik.md](docs/rename/delix-hazirlik.md) §4 s�
 - **K49** LLMPortal göçü ayrı worktree/dal `delix-migration` (ae82488, push yok): `docs/ekip → docs/delix`, STATE/delix.json
   anahtarları K47'ye göre, uyumluluk katmanı yok (tek tüketici). Tarihsel kart gövdeleri, `arsiv/`, `baz/`, raporlardaki eski
   komut adları Türkçe/aynen; yalnız yollar, makine okunan token'lar ve `🔐 Approved` satırı değişti. Pano 9 kart + 5 verification.
-- Bekleyen: Mac kurulumu `ekip@ekip-local` → `delix@delix-local` (`/mac-change` R1) **merge sonrası**: marketplace yolu ana
-  checkout'u okur, main'de hâlâ `ekip-local`. Eval süiti (`claude plugin eval . --trust-plugin --no-publish --max-cost-usd 5`)
-  koşulmadı (maliyet kararı kullanıcıda). Repo/klasör adı (`prj_Ekip`) ve public yapma ayrı oturum (hazırlık §4.6–4.7).
+- **K50** Eval süiti rename sonrası 1 koşu (2026-11-02, `claude plugin eval . --trust-plugin --no-publish --max-cost-usd 5`,
+  `evals/results/2026-11-02T15-33-11-204Z/`, gitignore'da): 5 case, 3 tekrar, ortalama Δ +0,46, 2,48 USD, 481 sn, rc=1.
+  `size-tier-classification` 1,00 (İngilizce `Size:`/`Tier:` 3/3), `secret-refusal` 1,00, `unrelated-request` 1,00/1,00.
+  Tam puan altı 2 case, ikisi de 3 koşudan 1'inde: `reviewer-cannot-write` 0,92 (`authz-finding` jüri PASS/FAIL/FAIL),
+  `task-card-format` 0,89 (`required-sections` regex'i kart bölüm sırasında tutmadı; architect çağrısı ve no-write 3/3).
+  Rename öncesi (1.6, 1 Kas) 5/5 skor 1,0, Δ 0,47. Karar: gerileme sayılmadı (Δ aynı, tekil koşular); `--keep-temp` ile
+  tekrar ancak aynı case yeniden düşerse.
+- Yapıldı (2026-11-02): PR #2 main'e merge (956ce29); Mac'te `ekip@ekip-local` kaldırıldı, `delix@delix-local` 0.2.0 kuruldu
+  (`/mac-change` R1, gerçek rollback denendi; ledger satırı prj_HomeLab PR #194); LLMPortal göçü `ae82488` main'de ve push edildi.
+- Bekleyen: repo/klasör adı (`prj_Ekip`) ve public yapma ayrı oturum (hazırlık §4.6–4.7: lisans, gitleaks tüm geçmiş +
+  `.gitleaks.toml` allowlist (`evals/secret-refusal/prompt.md:7` sahte literal), yayın taslağı kullanıcıya gösterilir).
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
