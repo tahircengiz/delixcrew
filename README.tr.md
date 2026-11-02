@@ -26,8 +26,9 @@ claude plugin install delix@delix-local
 ```
 
 Yerel klonda repo yerinde okunur, kopya yok: `claude plugin marketplace add /path/to/delix`, sonra aynı `install`
-komutu. Marketplace tanımı [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json); güncelleme
-`claude plugin marketplace update delix-local` (yerel klonda `git pull`) sonrası `claude plugin update delix@delix-local`.
+komutu. Marketplace tanımı [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json); GitHub kurulumu yalnız
+`plugin.json` sürümü değişince güncellenir: `claude plugin marketplace update delix-local`, sonra `claude plugin update delix@delix-local`,
+ardından Claude'u yeniden başlat. Yerel yol kurulumu yerinde okunur: `git pull` yeter, `update` gerekmez.
 Tek seferlik deneme için `claude --plugin-dir /path/to/delix` da çalışır. Doğrulama: `claude plugin validate .`; hook testleri: `bash tests/hook_tests.sh`; pano testleri:
 `bash tests/board_tests.sh`; davranış testleri: `claude plugin eval . --trust-plugin --no-publish` (model çağrısı yapar,
 maliyeti vardır).

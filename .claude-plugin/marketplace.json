@@ -3,7 +3,7 @@
   "owner": {
     "name": "tahircengiz"
   },
-  "description": "Local Claude Code plugin: delix (orchestrator + role sessions + read-only reviewers). Source is this repo; update with git pull + claude plugin update.",
+  "description": "Claude Code plugin: delix (orchestrator + role sessions + read-only reviewers). Source is this repo. A GitHub install updates only when plugin.json's version changes: claude plugin marketplace update delix-local, then claude plugin update delix@delix-local. A local-path install is read in place; git pull is enough.",
   "plugins": [
     {
       "name": "delix",
