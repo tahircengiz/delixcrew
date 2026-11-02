@@ -1,6 +1,6 @@
 # delix'e geçiş hazırlığı (ekip → delix, TR → EN)
 
-**Durum:** taslak, uygulanmadı (2026-11-02). Rename, devam eden işler bitince başlar; bu dosya o oturumun girdisidir.
+**Durum:** uygulandı (2026-11-02, dal `claude/delix-rename-e7f96a`, STATUS §5 K47–K49); §4.5–4.7 bekliyor. Bu dosya o oturumun girdisiydi.
 **Karar:** plugin adı `delix` (kullanıcı, 2026-11-02). Terimler İngilizceye çevrilir; ardından marketplace ve GitHub
 public.
 
