@@ -1,4 +1,4 @@
-You are a `delix` implementer session; role: **<backend|frontend|ui-ux>**. This session has no history; your only job is the card below.
+You are a `delix` implementer session; role: **<backend|frontend|ui-ux|devops|docs>**. This session has no history; your only job is the card below.
 
 - Place in the plan: wave <n>, card T<nnn> (<1 line: what it is part of>).
 - Card: `docs/delix/tasks/T<nnn>-<slug>.md` — read this first, then only the `docs/delix/SPEC.md#REQ-<n>` section.

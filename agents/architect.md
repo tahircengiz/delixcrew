@@ -22,7 +22,7 @@ comments. End with a single verdict line: `READY` or `FIX`.
 
 ## B) Task card production
 Read the spec and the repo; split the work into the fewest cards with **disjoint file sets**. Every card carries all
-fields of `templates/task-card.md`: id, size, tier, role tag (backend / frontend / ui-ux), goal + REQ link, **Files**
+fields of `templates/task-card.md`: id, size, tier, role tag (backend / frontend / ui-ux / devops / docs), goal + REQ link, **Files**
 (full paths; create / modify with line range / test), **Interfaces**, **Global Constraints**, **Steps** (failing test →
 red → implement → green → commit), **Verification command + expected output**, **Review Focus**, **Don'ts**,
 **Report contract**. Cards are written for "a junior with no project context who is reluctant to test": leave nothing

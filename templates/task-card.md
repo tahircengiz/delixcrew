@@ -2,7 +2,7 @@
 
 | id | size | tier | role | wave | status |
 |---|---|---|---|---|---|
-| T<nnn> | S/M/L | 1/2/3 | backend / frontend / ui-ux | <n> | open |
+| T<nnn> | S/M/L | 1/2/3 | backend / frontend / ui-ux / devops / docs | <n> | open |
 
 **Goal (1 sentence):** … · **Spec:** `docs/delix/SPEC.md#REQ-<n>`
 

@@ -51,7 +51,7 @@ after `claude plugin marketplace update delix-local` (or `git pull` in a local c
 |---|---|---|---|
 | orchestrator | main session | writes no code | top |
 | `delix:architect` | subagent | Read, Grep, Glob | opus |
-| implementer (backend / frontend / ui-ux role note) | separate session, worktree | everything; a protected path or an existing test file only when listed in the card's Files (a protected path additionally needs a 🔐 Approved line); the card and `docs/delix/**` blocked by hook | sonnet |
+| implementer (backend / frontend / ui-ux / devops / docs role note) | separate session, worktree | everything; a protected path or an existing test file only when listed in the card's Files (a protected path additionally needs a 🔐 Approved line); the card and `docs/delix/**` blocked by hook | sonnet |
 | `delix:qa` | subagent | Read, Grep, Glob | sonnet |
 | `delix:security` | subagent | Read, Grep, Glob + read-only scanner Bash | opus |
 | `delix:scout` | subagent | Read, Grep, Glob | haiku |

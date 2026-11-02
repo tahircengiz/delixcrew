@@ -278,8 +278,15 @@ Hazırlık [docs/rename/delix-hazirlik.md](docs/rename/delix-hazirlik.md) §4 s�
   tekrar ancak aynı case yeniden düşerse.
 - Yapıldı (2026-11-02): PR #2 main'e merge (956ce29); Mac'te `ekip@ekip-local` kaldırıldı, `delix@delix-local` 0.2.0 kuruldu
   (`/mac-change` R1, gerçek rollback denendi; ledger satırı prj_HomeLab PR #194); LLMPortal göçü `ae82488` main'de ve push edildi.
-- Bekleyen: repo/klasör adı (`prj_Ekip`) ve public yapma ayrı oturum (hazırlık §4.6–4.7: lisans, gitleaks tüm geçmiş +
-  `.gitleaks.toml` allowlist (`evals/secret-refusal/prompt.md:7` sahte literal), yayın taslağı kullanıcıya gösterilir).
+- Yapıldı (2026-11-02 akşam): GitHub repo `tahircengiz/delixcrew` (ad `delix` marka için boş bırakıldı; yerel klasör
+  `prj_Ekip` kaldı), MIT lisans, gitleaks allowlist, **public**, release `v0.2.0` (c75842f). Kurulum:
+  `claude plugin marketplace add tahircengiz/delixcrew` + `claude plugin install delix@delix-local`; geçici HOME'da denendi.
+- **K51** Uygulayıcı rol notlarına `devops` ve `docs` eklendi (`skills/implement/roles/`, K17 kalıbı; ajan değil, etiket).
+  Gerekçe: pilotta compose/Dockerfile/CI kartları `backend` etiketiyle gitti ve homelab çevre kuralları (proxy'yi atlayan
+  `ports:` yok, TLS kapatma yok, sır kasadan, digest sabitleme) hiçbir rol notunda yoktu; doküman kartlarının "komut
+  çalıştırılarak doğrulanır, dil çiftleri aynı commit'te" kuralı da yoktu. Yeni ajan (tester, debugger, release, pm)
+  eklenmedi: yazan rol = oturum, okuyan rol = ajan (K11, K17); rol notlarının etkisi hâlâ ölçülmedi (retro), ilk devops
+  kartında retro satırı yazılacak.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

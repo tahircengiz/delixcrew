@@ -51,7 +51,7 @@ maliyeti vardır).
 |---|---|---|---|
 | orkestratör | ana oturum | kod yazmaz | üst |
 | `delix:architect` | subagent | Read, Grep, Glob | opus |
-| uygulayıcı (backend / frontend / ui-ux rol notu) | ayrı oturum, worktree | tümü; korunan yol ve var olan test dosyası yalnız kartın Files listesinde (korunan yol ek olarak 🔐 Approved satırıyla) açık, kart ve `docs/delix/**` hook'la engelli | sonnet |
+| uygulayıcı (backend / frontend / ui-ux / devops / docs rol notu) | ayrı oturum, worktree | tümü; korunan yol ve var olan test dosyası yalnız kartın Files listesinde (korunan yol ek olarak 🔐 Approved satırıyla) açık, kart ve `docs/delix/**` hook'la engelli | sonnet |
 | `delix:qa` | subagent | Read, Grep, Glob | sonnet |
 | `delix:security` | subagent | Read, Grep, Glob + salt-okunur tarayıcı Bash | opus |
 | `delix:scout` | subagent | Read, Grep, Glob | haiku |

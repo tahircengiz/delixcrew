@@ -1,6 +1,6 @@
 ---
 name: implement
-description: Implementer session protocol. Takes a task card (backend / frontend / ui-ux role tag), implements test-first, touches only the card's Files list, never changes test files, runs the verification command and records the evidence, opens a PR and fills .delix/report.md per the contract. The dispatch prompt calls this skill; also use when the user says "implement the card" or "/delix:implement <card>".
+description: Implementer session protocol. Takes a task card (backend / frontend / ui-ux / devops / docs role tag), implements test-first, touches only the card's Files list, never changes test files, runs the verification command and records the evidence, opens a PR and fills .delix/report.md per the contract. The dispatch prompt calls this skill; also use when the user says "implement the card" or "/delix:implement <card>".
 argument-hint: [card-path]
 ---
 
