@@ -1,4 +1,4 @@
-# STATUS — prj_Ekip (plugin `ekip`)
+# STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
 **Son güncelleme:** 2026-11-02 · **Faz:** 4 — doğrulama-yalnız kipi `/ekip:dogrula` (4.1 ✔, K44); A2 ölçüldü ve kapandı (4.2 ✔, K45): headless düzeltme turu varsayılanı yeni `-p` oturumu; retro A1–A13 tamamı kapalı; `dogrulama.birim_test` test başına env (4.3 ✔, K46)
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
@@ -248,6 +248,30 @@ A2 ölçümü (4.2, 2026-11-02, LLMPortal `docs/ekip/olcum.md` "A2"):
   `ekip.json` düzeltmesidir (korunan yol). LLMPortal `session_unit` `PORTAL_MODE=admin ADMIN_SECRET ADMIN_PUBLIC_URL` ile
   GTR9 izole koşuda 8/8 (toplam 165/165, 8 dosya). Yan bulgu: LLMPortal `tests/run_all.sh` birim listesinde `keys_unit` yok
   (döngü 27/27 geçirdi); LLMPortal'da ayrı iş.
+
+## 5. delix'e geçiş (2026-11-02, dal `claude/delix-rename-e7f96a`, PR açılmadı)
+Hazırlık [docs/rename/delix-hazirlik.md](docs/rename/delix-hazirlik.md) §4 sırasıyla; kullanıcı kararları: plugin adı `delix`
+(şirket markasıyla aynı; public öncesi yeniden bakılır), komutlar rename ile aynı anda İngilizce.
+- **K47** Tanımlayıcı rename tek commit (655e01f): plugin `delix` 0.2.0, marketplace `delix-local`; komutlar
+  `/delix:start|spec|dispatch|implement|review|verify|status|close`; ajanlar `architect|qa|security|scout`; hedef proje
+  `docs/delix/{delix.json,STATE.json,tasks,verifications,BOARD.md,metrics.md}`, worktree `.delix/{card,report.md,test-result.txt,evidence,warnings.log}`;
+  JSON anahtarları, durum değerleri (`open|in_progress|in_review|fixing|accepted|rejected|escalated`), karar kelimeleri
+  (`ACCEPT|ACCEPT_WITH_NOTES|REJECT|ESCALATE`, `CLEAN|FIX|🔐 HUMAN_APPROVAL`, `READY|FIX`, `PASS|FAIL|not run|pre-existing failure|not measured`),
+  makine okunan başlıklar (`**🔐 Approved:**`, `**Status:**`, `## Evidence`, `## Concerns / remaining work`, `## Verification command → expected output`,
+  `## Don'ts`, `## Report contract`), betikler `common.py write_gate.py bash_gate.py stop_gate.py board.py` (`--project`, `--write`),
+  testler `tests/hook_tests.sh tests/board_tests.sh`, eval adları; `/delix:verify` bayrakları `--request --tier --full --keep`.
+  Yer tutucular `{name} {dir} {image}` (hazırlıkta yoktu; config sözleşmesinin parçası). Testler ve fixture'lar aynı commit'te.
+- **K48** Metin çevirisi ayrı commit (bf29ce6): skill, ajan, rol notu, şablon ve eval prompt'ları İngilizce; her skill
+  "kullanıcının dilinde cevap ver, etiket/durum/karar kelimeleri aynen" kuralı taşır; `/delix:start` description'ı TR+EN
+  tetik cümlesi ("delix ile başla", "start with delix"). README İngilizce, `README.tr.md` Türkçe; slogan "Spec first. Agents
+  build. You hold the gates." (hazırlık §2 önerisi, geri alınır). STATUS, docs/spec, docs/retro, docs/research, docs/runbooks
+  Türkçe kaldı; `docs/spec/ekip-tech-spec.md` dosya adı değişmedi (tarihsel).
+- **K49** LLMPortal göçü ayrı worktree/dal `delix-migration` (ae82488, push yok): `docs/ekip → docs/delix`, STATE/delix.json
+  anahtarları K47'ye göre, uyumluluk katmanı yok (tek tüketici). Tarihsel kart gövdeleri, `arsiv/`, `baz/`, raporlardaki eski
+  komut adları Türkçe/aynen; yalnız yollar, makine okunan token'lar ve `🔐 Approved` satırı değişti. Pano 9 kart + 5 verification.
+- Bekleyen: Mac kurulumu `ekip@ekip-local` → `delix@delix-local` (`/mac-change` R1) **merge sonrası**: marketplace yolu ana
+  checkout'u okur, main'de hâlâ `ekip-local`. Eval süiti (`claude plugin eval . --trust-plugin --no-publish --max-cost-usd 5`)
+  koşulmadı (maliyet kararı kullanıcıda). Repo/klasör adı (`prj_Ekip`) ve public yapma ayrı oturum (hazırlık §4.6–4.7).
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

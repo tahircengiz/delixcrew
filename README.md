@@ -1,76 +1,80 @@
-# ekip — Claude Code için ekip düzeni
+# delix — a team workflow for Claude Code
 
-`ekip`, tek oturumda "aç, klasör seç, geçmişi oku, devam et" döngüsünü gerçek bir yazılım ekibinin iş bölümüne
-çevirir: **orkestratör** oturum grill ile tech spec yazar, işi görev kartlarına böler, her kartı kendi worktree'sinde
-çalışan bir **uygulayıcı** oturumuna verir, **salt-okunur inceleyicilerle** (kalite, güvenlik) denetler. İnsan yalnız iki
-kapıda devrededir: **spec onayı** ve **PR merge**. Kısıtlar prompt'ta değil harness'tadır: inceleyici rollerin `tools`
-listesinde yazma aracı yoktur, plugin hook'ları korunan yollara yazmayı ve test dosyası değiştirmeyi engeller, Stop
-hook'u testler geçmeden uygulayıcı turunu kapatmaz.
+**Spec first. Agents build. You hold the gates.**
 
-Tasarım ve kanıt: [tech spec](docs/spec/ekip-tech-spec.md) · [araştırma raporu](docs/research/reports/Çoklu%20ajan%20yazılım%20ekibi%20orkestrasyonu.md) · kararlar [STATUS.md](STATUS.md).
+`delix` turns the single-session loop of "open, pick a folder, read the history, continue" into the division of labour
+of a real software team: an **orchestrator** session writes a tech spec through a grill interview, splits the work into
+task cards, hands each card to an **implementer** session running in its own worktree, and has **read-only reviewers**
+(qa, security) check the result. A human is involved at exactly two gates: **spec approval** and **PR merge**. The
+constraints live in the harness, not in the prompt: reviewer roles have no write tool in their `tools` list, plugin hooks
+block writes to protected paths and changes to test files, and the Stop hook does not close an implementer turn until the
+tests pass.
 
-## Kurulum
+Türkçe sürüm: [README.tr.md](README.tr.md). Design and evidence (Turkish): [tech spec](docs/spec/ekip-tech-spec.md) ·
+[research report](docs/research/reports/Çoklu%20ajan%20yazılım%20ekibi%20orkestrasyonu.md) · decisions [STATUS.md](STATUS.md).
+The skills reply in the user's language; labels, status values and verdict tokens stay in English.
 
-Kalıcı (Desktop ve terminal, `--plugin-dir` gerekmez; repo yerinde okunur, kopya yok):
+## Installation
+
+Permanent (Desktop and terminal, no `--plugin-dir` needed; the repo is read in place, no copy):
 
 ```bash
 claude plugin marketplace add ~/Documents/projects/prj_Ekip
 ```
 
 ```bash
-claude plugin install ekip@ekip-local
+claude plugin install delix@delix-local
 ```
 
-Marketplace tanımı [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json); güncelleme `git pull` sonrası
-`claude plugin update ekip@ekip-local`. Tek seferlik deneme için `claude --plugin-dir ~/Documents/projects/prj_Ekip`
-da çalışır. Mac'te kurulum `/mac-change` R1 kaydıyla yapıldı (2026-11-01, K38). Doğrulama: `claude plugin validate .`;
-hook testleri: `bash tests/hook_testleri.sh`; davranış testleri: `claude plugin eval . --trust-plugin --no-publish`
-(model çağrısı yapar, maliyeti vardır).
+The marketplace definition is [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json); after `git pull`,
+update with `claude plugin update delix@delix-local`. For a one-off trial, `claude --plugin-dir ~/Documents/projects/prj_Ekip`
+also works. Checks: `claude plugin validate .`; hook tests: `bash tests/hook_tests.sh`; board tests:
+`bash tests/board_tests.sh`; behaviour evals: `claude plugin eval . --trust-plugin --no-publish` (calls the model, costs money).
 
-## Akış
+## Flow
 
-| Adım | Komut | Ne olur |
+| Step | Command | What happens |
 |---|---|---|
-| 1 | `/ekip:basla <istek>` | Bağlam okunur; **boy** (S/M/L: süreç ağırlığı) ve **kademe** (1/2/3: kapılar) önerilir; `docs/ekip/` kurulur. S ise tek kart. |
-| 2 | `/ekip:spec` | Grill (tek soru, önerili) → `docs/ekip/SPEC.md` (SHALL + WHEN/THEN); `mimar` (+ Kademe 3'te `guvenlik`) inceler; L'de EGM. **Kapı 1.** |
-| 3 | `/ekip:dagit` | `mimar` kartları ve wave planını yazar; çakışma kontrolü; dispatch prompt'ları; uygulayıcı oturumları (en çok 3 paralel). |
-| 4 | `/ekip:uygula <kart>` | Uygulayıcı oturumda: test-first, yalnız kartın dosyaları, PR, `.ekip/rapor.md`. |
-| 5 | `/ekip:denetle <kart>` | Deterministik kapılar → `kalite` (+ `guvenlik`) sıfır bağlamla → ≤ 3 düzeltme turu → **Kapı 2 (merge, insan).** |
-| 6 | `/ekip:kapat` | STATUS/CHANGELOG, ölçüm (maliyet, tur), drift kontrolü, onaylı bellek yazımı, worktree temizliği. |
-| kısa yol | `/ekip:dogrula <dal\|commit\|dizin>` | Kartsız yapılmış işi (tek oturum ya da sen) **yalnız doğrular** (K43): gitleaks, yerel test, uzak **izole** birim testi (ayrı dizin + ayrı imaj, canlı stack'e dokunmaz), istenirse `--tam`; `kalite` (+ `guvenlik`) **tek geçiş**, düzeltme turu yok → `docs/ekip/dogrulama/<tarih>-<ad>.md` raporu (KABUL / DÜZELT, 🔐) ve `STATE.json.dogrulama`. S/M + iyi tarif + Kademe ≤ 2 işte `/ekip:basla` bunu önerir; tam akış Kademe 3 / paralel kart / belirsiz spec'e. |
-| her an | `/ekip:durum` | Salt-okunur pano: wave · kart · rol · kademe · status · tur · PR · maliyet · son rapor · bekleyen kapı (🔐, merge) tablosu sohbete; istenirse (`--dosya`) `docs/ekip/PANO.md`'ye (git'e girmez). |
+| 1 | `/delix:start <request>` | Context is read; **size** (S/M/L: process weight) and **tier** (1/2/3: gates) are proposed; `docs/delix/` is set up. For S, a single card. |
+| 2 | `/delix:spec` | Grill (one question at a time, with a pick) → `docs/delix/SPEC.md` (SHALL + WHEN/THEN); `architect` (+ `security` at Tier 3) reviews; EGM at size L. **Gate 1.** |
+| 3 | `/delix:dispatch` | `architect` writes the cards and the wave plan; conflict check; dispatch prompts; implementer sessions (at most 3 in parallel). |
+| 4 | `/delix:implement <card>` | In the implementer session: test-first, only the card's files, a PR, `.delix/report.md`. |
+| 5 | `/delix:review <card>` | Deterministic gates → `qa` (+ `security`) with zero context → ≤ 3 fix rounds → **Gate 2 (merge, human).** |
+| 6 | `/delix:close` | STATUS/CHANGELOG, metrics (cost, rounds), drift check, approved memory writes, worktree cleanup. |
+| shortcut | `/delix:verify <branch\|commit\|dir>` | **Only verifies** work done without a card (a single session or you) (K43): gitleaks, local tests, a remote **isolated** unit test (separate directory + separate image, never touches the live stack), `--full` on request; `qa` (+ `security`) in a **single pass**, no fix rounds → a `docs/delix/verifications/<date>-<name>.md` report (ACCEPT / FIX, 🔐) and `STATE.json.verifications`. For S/M + well-described + Tier ≤ 2 work, `/delix:start` proposes this; the full flow is for Tier 3 / parallel cards / an unclear spec. |
+| any time | `/delix:status` | Read-only board: wave · card · role · tier · status · rounds · PR · cost · last report · pending gate (🔐, merge) table in the chat; on request (`--write`) to `docs/delix/BOARD.md` (not committed). |
 
-## Roller
+## Roles
 
-| Rol | Birim | Yetki | Model |
+| Role | Unit | Permissions | Model |
 |---|---|---|---|
-| orkestratör | ana oturum | kod yazmaz | üst |
-| `ekip:mimar` | subagent | Read, Grep, Glob | opus |
-| uygulayıcı (backend / frontend / ui-ux rol notu) | ayrı oturum, worktree | tümü; korunan yol ve var olan test dosyası yalnız kartın Files listesinde (korunan yol ek olarak 🔐 Onay satırıyla) açık, kart ve `docs/ekip/**` hook'la engelli | sonnet |
-| `ekip:kalite` | subagent | Read, Grep, Glob | sonnet |
-| `ekip:guvenlik` | subagent | Read, Grep, Glob + salt-okunur tarayıcı Bash | opus |
-| `ekip:arayici` | subagent | Read, Grep, Glob | haiku |
+| orchestrator | main session | writes no code | top |
+| `delix:architect` | subagent | Read, Grep, Glob | opus |
+| implementer (backend / frontend / ui-ux role note) | separate session, worktree | everything; a protected path or an existing test file only when listed in the card's Files (a protected path additionally needs a 🔐 Approved line); the card and `docs/delix/**` blocked by hook | sonnet |
+| `delix:qa` | subagent | Read, Grep, Glob | sonnet |
+| `delix:security` | subagent | Read, Grep, Glob + read-only scanner Bash | opus |
+| `delix:scout` | subagent | Read, Grep, Glob | haiku |
 
-## Proje tarafı dosyalar
+## Files on the project side
 
-`docs/ekip/ekip.json` (test komutu, korunan yollar, test yolları, paralel üst sınır, `dogrulama` uzak izole koşu bloğu),
-`docs/ekip/SPEC.md`, `docs/ekip/tasks/T<nnn>-<slug>.md`, `docs/ekip/STATE.json` (kartlar + `dogrulama` kayıtları),
-`docs/ekip/dogrulama/<tarih>-<ad>.md|.patch` (`/ekip:dogrula` raporu ve yaması), `docs/ekip/PANO.md` (yalnız istenince
-üretilir, `.gitignore`'da). Uygulayıcı worktree'sinde `.ekip/kart` (hook'ları
-aktifleştirir), `.ekip/rapor.md`, `.ekip/test-sonucu.txt`, `.ekip/kanit/`.
+`docs/delix/delix.json` (test command, protected paths, test paths, max parallel, the `verify` remote isolated-run block),
+`docs/delix/SPEC.md`, `docs/delix/tasks/T<nnn>-<slug>.md`, `docs/delix/STATE.json` (cards + `verifications` records),
+`docs/delix/verifications/<date>-<name>.md|.patch` (`/delix:verify` report and patch), `docs/delix/BOARD.md` (generated only
+on request, in `.gitignore`). In the implementer worktree: `.delix/card` (activates the hooks), `.delix/report.md`,
+`.delix/test-result.txt`, `.delix/evidence/`.
 
-## Bilinen sınırlar
+## Known limits
 
-Plugin agent'ları `permissionMode`, `hooks`, `mcpServers` alanlarını yok sayar (kısıt `tools` + `hooks/hooks.json`).
-Hook'lar plugin kurulu her oturumda yüklenir; uygulayıcı kapıları yalnız `cwd/.ekip/kart` varsa, inceleyici kapıları
-yalnız `agent_type` `ekip:*` ise çalışır. Deneysel Agent Teams kullanılmaz. Plugin monitor'ı yok: `ekip-izleyici` pilotta ve 3 teşhis koşusunda hiç başlamadı, 2026-11-01'de kaldırıldı (retro A9, K35).
-kapatılan plugin'le durmaz (oturum sonunda durur); `/ekip:durum` ise `-p`'de de çalışır. `gitleaks` kuruluysa commit öncesi sır
-taraması yapılır; yoksa `.ekip/uyarilar.log`'a not düşer.
+Plugin agents ignore the `permissionMode`, `hooks` and `mcpServers` fields (the constraint is `tools` + `hooks/hooks.json`).
+Hooks load in every session where the plugin is installed; the implementer gates run only when `cwd/.delix/card` exists,
+the reviewer gates only when `agent_type` is `delix:*`. Experimental Agent Teams are not used. There is no plugin monitor:
+the former watcher never started in the pilot and 3 diagnostic runs and was removed on 2026-11-01 (retro A9, K35).
+`/delix:status` also works under `-p`. When `gitleaks` is installed, a secret scan runs before every commit; otherwise a
+note is appended to `.delix/warnings.log`.
 
-Yazma kapısı (`scripts/yazma_kapisi.py`) yalnız Write/Edit/MultiEdit/NotebookEdit araçlarını görür; uygulayıcının Bash
-ile dosya yazması (`echo >`, `sed -i`, `tee`) bu hook'un kapsamı dışıdır (`bash_kapisi.py` yalnız `.env` yönlendirmesini
-ve inceleyici Bash'ini keser). Worktree (cwd) dışına çıkan yol her zaman reddedilir (A13, K42); yol eşleşmeleri cwd'ye
-göredir. Bu yüzden kart dosyası, `docs/ekip/**` ya da kartta onaysız korunan yol değişikliği
-`ekip:kalite` incelemesinde diff'ten bulgu sayılır. Kademe 3 izni kartın başlık tablosundan sonraki
-`**🔐 Onay:** <YYYY-MM-DD> <kim>` satırıyla açılır; bu satırı yalnız orkestratör, kullanıcının sohbetteki açık "evet"inden
-sonra yazar ve main'e commit eder.
+The write gate (`scripts/write_gate.py`) sees only the Write/Edit/MultiEdit/NotebookEdit tools; an implementer writing
+files through Bash (`echo >`, `sed -i`, `tee`) is outside this hook (`bash_gate.py` intercepts only `.env` redirects and
+reviewer Bash). A path escaping the worktree (cwd) is always rejected (A13, K42); path matching is relative to cwd. For
+that reason a change to the card file, `docs/delix/**` or an unapproved protected path in the card counts as a finding in
+the `delix:qa` review of the diff. Tier 3 permission is opened by the `**🔐 Approved:** <YYYY-MM-DD> <who>` line after
+the card's header table; only the orchestrator writes it, after the user's explicit "yes" in chat, and commits it to main.

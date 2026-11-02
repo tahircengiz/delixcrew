@@ -1,14 +1,14 @@
 {
-  "name": "ekip-local",
+  "name": "delix-local",
   "owner": {
     "name": "tahircengiz"
   },
-  "description": "Yerel Claude Code plugin'i: ekip (orkestratör + rol oturumları + salt-okunur inceleyiciler). Kaynak bu repo; güncelleme git pull + claude plugin update.",
+  "description": "Local Claude Code plugin: delix (orchestrator + role sessions + read-only reviewers). Source is this repo; update with git pull + claude plugin update.",
   "plugins": [
     {
-      "name": "ekip",
+      "name": "delix",
       "source": "./",
-      "description": "Ekip düzeni: grill ile spec, görev kartları, worktree'li uygulayıcı oturumları, kalite/guvenlik incelemesi; iki insan kapısı."
+      "description": "Team workflow: spec through a grill interview, task cards, worktree-isolated implementer sessions, qa/security review; two human gates."
     }
   ]
 }
