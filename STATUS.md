@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `ekip`)
 
-**Son güncelleme:** 2026-11-02 · **Faz:** 4 — K43 sonucu: doğrulama-yalnız kipi `/ekip:dogrula` (4.1 ✔, K44); retro A1–A13 kapalı, A2 (headless düzeltme turu ölçümü) ilk gerçek kartta açık
+**Son güncelleme:** 2026-11-02 · **Faz:** 4 — doğrulama-yalnız kipi `/ekip:dogrula` (4.1 ✔, K44); A2 ölçüldü ve kapandı (4.2 ✔, K45): headless düzeltme turu varsayılanı yeni `-p` oturumu; retro A1–A13 tamamı kapalı
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -32,6 +32,7 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 3.4 | A12 tutarlılıklar (spec §7 pytest, `kalite` tests/** kuralı, LLMPortal gitleaks allowlist) | ✔ 2026-11-01 (K41) |
 | 3.5 | A13 yazma kapısı: cwd (worktree) dışı yol → deny | ✔ 2026-11-02 (K42), hook testleri 31/31 |
 | 4.1 | Doğrulama-yalnız kipi: `skills/ekip-dogrula` (`/ekip:dogrula <dal\|commit\|dizin>`), `/ekip:basla` kip önerisi, pano "Doğrulamalar" tablosu, spec §15, `templates/ekip.json` `dogrulama` bloğu | ✔ 2026-11-02 (K44): validate ✔, hook 31/31, pano 12/12; LLMPortal A10-c yaması üzerinde kuru koşu 1,38 USD / 3 dk 21 sn, rapor `docs/ekip/dogrulama/2026-11-02-a10c-e7.md` |
+| 4.2 | A2 ölçümü ilk gerçek kartta: LLMPortal T009 (B04 rotate spend, S · K2) tam akış; gerçek Orta bulguda düzeltme turu `--resume` vs yeni `-p` | ✔ 2026-11-02 (K45): yeni `-p` **0,44 USD** / 5 tur / 40 sn, `--resume` 1,11 / 7 / 40 sn, ikisi yeşil; kart toplamı ≈ 9,3 USD (Opus eşdeğeri), kart onayı → merge 14 dk, kapı dışı müdahale 0; `ekip-denetle`/`ekip-dagit` reçetesi güncellendi; LLMPortal `olcum.md` "A2" |
 
 ## Kararlar
 
@@ -220,6 +221,24 @@ Faz 4 (doğrulama-yalnız kipi, 2026-11-02, dal `claude/bold-swanson-53241b`):
   (2,79) + doğrulama (1,38) = 4,17 USD, ekip E.7'nin %18'i; eksik kalan kırmızı koşu kanıtı ve smoke (`--tam`). A2 ölçümü
   kısmen karşılandı (düzeltme turu olmadığı için `--resume` kıyası yok). Ayrıntı LLMPortal `docs/ekip/olcum.md`
   "Doğrulama-yalnız kipi"; LLMPortal main commit'i ekip.json `dogrulama` bloğunu, raporu ve STATE kaydını taşır.
+
+A2 ölçümü (4.2, 2026-11-02, LLMPortal `docs/ekip/olcum.md` "A2"):
+- **K45** Headless düzeltme turu varsayılanı **yeni `-p` oturumu** (cwd = worktree; prompt = dispatch + "kart uygulandı, yalnız şu
+  P0/P1'ler" + kartın bulgu metni aynen + `git diff --stat`). Ölçüm: LLMPortal T009 (B04 "rotate'te harcama taşıma", S · K2, K43
+  önerisine rağmen tam akış bilerek), `guvenlik` tur 0 gerçek **Orta** bulgu (SECURITY.md "fazlalık en çok bir kalan" yanlış güvence;
+  zincirleme rotate `status()` yalnız `rotated_to`'ya bakar). Aynı worktree durumundan (895c6ed) aynı bulgu metniyle: `--resume`
+  **1,11 USD / 7 API turu / 40 sn** (cache okuma 1,74M, çıktı 10,6K), yeni `-p` **0,44 USD / 5 / 40 sn** (218K, 2,4K); ikisi yeşil,
+  eşdeğer metin; yeni `-p` tutuldu (498e2c1), merge 722479e. Hedef < 1 USD/tur yalnız yeni `-p`'de. n = 1, doküman düzeltmesi; kod
+  düzeltmesinde fark ölçülmedi. `--resume` yalnız `NEEDS_CONTEXT` cevabı gibi yarım bağlam gerektiğinde. Kart toplamı: uygulayıcı
+  0,94 + 0,44, alt ajan 2,51 (Opus fiyatı üst sınır), orkestratör Fable 5.1 **ölçülmedi** (fiyat listesi doğrulanmadı; 11,2M cache
+  okuma / 63,8K çıktı, Opus eşdeğeri 5,41) → ≈ 9,3 USD, baz çizgi B04 1,81'in ≈ 5,1×; kart onayı → merge 14 dk 22 sn, kapı 2, kapı
+  dışı müdahale 0. K43'ü doğrular: iyi tarif edilmiş S işte tam akışın bedeli orkestratör payı; kazanç `guvenlik`'in gerçek bulgusu
+  (tek oturum bunu yazmazdı: referans 49dca6c aynı yanlış güvenceyi içeriyor). Yan bulgular: (1) `claude -p --worktree` dalı güncel
+  main'den değil bir önceki commit'ten açtı, uygulayıcı fast-forward etti → `ekip-dagit`'e uyarı; (2) orkestratör cwd'si worktree'ye
+  kayınca yazma kapısı `.ekip/kart` ile orkestratörü uygulayıcı saydı ve kart düzenlemesini reddetti (A13 doğru çalıştı; orkestratör
+  ana checkout'tan yazar); (3) LLMPortal `dogrulama.birim_test` döngüsünde `session_unit` 4/8 **eksik ortam değişkeninden**
+  (`PORTAL_MODE=admin`, `ADMIN_PUBLIC_URL`), `run_all.sh` env'iyle 8/8: K44'teki "miras kırmızı" yorumu yanlış; `templates/ekip.json`
+  ve LLMPortal `ekip.json` için test başına env desteği açık iş. Koşulmadı: canlı smoke (LiteLLM `spend` kabulü), `--tam`.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

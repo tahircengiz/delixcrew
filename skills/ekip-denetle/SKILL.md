@@ -37,10 +37,13 @@ boşsa `STATE.json`'da `incelemede` olan kartlar).
 - Yalnız P0/P1 (ve Kritik/Yüksek/Orta güvenlik) düzeltme ister; P2'ler karta not, düzeltme yok ("her bulguyu düzeltme").
 - Bulguları kartın `## İnceleme bulguları` bölümüne tur numarasıyla yaz; `STATE.json` → `duzeltme`, `tur += 1`.
 - Düzeltmeyi **uygulayıcı oturumuna** gönder (`SendMessage` / oturuma mesaj ya da dispatch'i yeniden ver); kendin
-  düzeltme. Headless (`claude -p`) kartta `--resume` kullanma: pilotta tek satırlık düzeltme turu 1,8–2,1 USD tuttu
-  (her turda ≈ 760K cache okuma). Bunun yerine aynı worktree'de **yeni** `-p` oturumu: prompt = dispatch dosyası +
-  `Düzeltme turu n` + kartın "İnceleme bulguları" bölümü + `git diff <varsayilan_dal>...<sha> --stat` özeti
-  (`/ekip:dagit` adım 4 komutu). İlk projede iki yöntem bir kartta ölçülüp `olcum.md`'ye yazılır.
+  düzeltme. Headless (`claude -p`) kartta varsayılan: aynı worktree'de **yeni** `-p` oturumu (cwd = worktree, `-w` yok):
+  prompt = dispatch dosyası + `Düzeltme turu n: kart zaten uygulandı ve commit edildi (<sha>); yalnız aşağıdaki P0/P1'leri
+  düzelt` + kartın "İnceleme bulguları" bölümü + `git diff <varsayilan_dal>...<sha> --stat` özeti (`/ekip:dagit` adım 4
+  komutu). `--resume` kullanma: ölçüldü (LLMPortal T009, A2, 2026-11-02): aynı bulguda `--resume` 1,11 USD / 1,74M cache okuma,
+  yeni `-p` **0,44 USD** / 218K; ikisi yeşil ve eşdeğer (pilot T004 `--resume` 1,8–2,1 USD). `--resume` yalnız uygulayıcının
+  yarım kalmış bağlamı gerekiyorsa (`NEEDS_CONTEXT` cevabı). Bulgu metnini prompt'a **tam** yaz: worktree'deki kart dosyası
+  main'deki güncel bulguları içermez (dal kart commit'inden sonra güncellenen `docs/ekip/**`'i görmez).
   Düzeltme sonrası **kapsamlı** yeniden inceleme (yalnız bulgulara bakmak yetmez).
 - Tur üst sınırı `ekip.json.inceleme_tur_ust_sinir` (3): aşılırsa `eskale` → kullanıcıya özet ve seçenekler (güçlü
   modelle yeniden dene / kapsamı daralt / kabul et).

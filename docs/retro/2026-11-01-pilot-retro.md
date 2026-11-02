@@ -86,7 +86,7 @@ Spec §12 "bir bileşeni çıkar" turunun cevabı: pilottan **`ekip-izleyici` mo
 | # | Aksiyon | Yer | Not |
 |---|---|---|---|
 | A1 | Grill şablonuna soru: dış sisteme (Keycloak, DB) birden çok yazım varsa "sıra ve yarım kalma: fail-closed mu?" | `skills/ekip-spec/SKILL.md` | K28 sınıfı bulgu spec'e çekilir |
-| A2 | Headless düzeltme turu: `--resume` yerine yeni `-p` oturum + kart + inceleme bulgusu + `git diff` özeti; ilk kartta ikisi ölçülür | `skills/ekip-denetle`, `ekip-dagit` | hedef < 1 USD/tur |
+| A2 | Headless düzeltme turu: `--resume` yerine yeni `-p` oturum + kart + inceleme bulgusu + `git diff` özeti; ilk kartta ikisi ölçülür | `skills/ekip-denetle`, `ekip-dagit` | **Yapıldı 2026-11-02 (K45):** LLMPortal T009 (B04 rotate spend, S/K2) gerçek Orta bulguda aynı worktree durumundan iki yol: `--resume` 1,11 USD / 7 tur / 40 sn (cache okuma 1,74M), yeni `-p` **0,44 USD** / 5 tur / 40 sn (218K); ikisi yeşil ve eşdeğer; yeni `-p` tutuldu, varsayılan oldu; hedef < 1 USD/tur yalnız yeni `-p`'de tutuyor. n = 1 (doküman düzeltmesi). LLMPortal `docs/ekip/olcum.md` "A2" |
 | A3 | `ekip.json.test_komutu` kapsamı: Mac'te koşabilen birim testleri varsa dahil; yoksa kartta "Stop kapısı yalnız derleme" notu | `templates/ekip.json`, LLMPortal `docs/ekip/ekip.json` | T004 P0 dersi |
 | A4 | Denetim sırası skill'e yazılır: deterministik kapı (test koşusu, `py_compile`, gitleaks) → ancak geçerse LLM inceleyiciler | `skills/ekip-denetle/SKILL.md` | E.7'de fiilen uygulandı |
 | A5 | Test ortamı kilidi: `STATE.json.ortam_sahibi` (kart id + zaman); `ekip-denetle` kilit doluysa bekler | `templates/STATE.json`, `ekip-denetle`, `ekip-uygula` | K23 |

@@ -37,9 +37,16 @@ Kullanıcıya her kart için tek satır: kart, rol, kademe, nasıl açılacağı
   `claude -p --worktree ekip-T<nnn> --plugin-dir <plugin kökü> --permission-mode auto --max-turns 60 --max-budget-usd <bütçe> "$(cat docs/ekip/tasks/T<nnn>.dispatch.md)"`;
   Kademe 3 için `claude -w ekip-T<nnn> --plugin-dir <plugin kökü> --permission-mode auto` interaktif. `--plugin-dir`
   yalnız plugin kalıcı kurulu değilse gerekir (yoksa uygulayıcı `ekip-uygula` skill'ini ve hook'ları bulamaz).
-  `--bare` kullanılmaz. Düzeltme turu (headless kart): `--resume` değil, aynı worktree'de yeni oturum
-  `claude -p -w ekip-T<nnn> --plugin-dir <plugin kökü> --permission-mode auto --max-turns 30 --max-budget-usd <bütçe> "$(cat docs/ekip/tasks/T<nnn>.dispatch.md) Düzeltme turu <n>: kartın 'İnceleme bulguları' bölümündeki P0/P1'leri düzelt; diff özeti: $(git diff <varsayilan_dal>...<dal> --stat)"`.
+  `--bare` kullanılmaz. Düzeltme turu (headless kart): `--resume` değil, aynı worktree'de yeni oturum (ölçüm A2: 0,44 vs
+  1,11 USD, ikisi yeşil):
+  `cd <worktree> && claude -p --permission-mode auto --max-budget-usd <bütçe> --output-format json "$(cat <kök>/docs/ekip/tasks/T<nnn>.dispatch.md)
+  Düzeltme turu <n>: kart zaten uygulandı ve commit edildi (<sha>); yalnız aşağıdaki P0/P1'leri düzelt. ## İnceleme bulguları
+  <bulgu metni, kartın main'deki bölümünden aynen> ## Diff özeti $(git diff <varsayilan_dal>...<dal> --stat)"`.
+  Sonuç JSON'undaki `total_cost_usd`, `num_turns`, `duration_ms` ölçüme girer.
 - Worktree varsayılan daldan dallanır; kartın bağımlı olduğu kart merge edilmemişse interface-first çalışılır.
+  **Dikkat:** `claude -p --worktree` dalı her zaman güncel yerel `main`'den açmayabilir (T009'da bir commit geriden açıldı,
+  uygulayıcı fast-forward etti). Kart commit'ini atmadan dispatch verme; dispatch'e "taban: <main SHA>" yaz ya da worktree'yi
+  `git worktree add .claude/worktrees/ekip-T<nnn> -b worktree-ekip-T<nnn> main` ile kendin açıp `cd` + `claude -p` ile koş.
 Açılan her kart için `STATE.json` status → `suruyor`.
 
 ## 5. Bekle ve topla
