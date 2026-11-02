@@ -1,34 +1,38 @@
 ---
 name: close
-description: Bir spec'in tüm kartları merge edilince kapanış yapar: STATUS.md ve CHANGELOG güncellenir, kart başına maliyet/tur/cache ölçümü toplanır, spec↔kod drift kontrolü (architect; L'de EGM drift-report) yapılır, öğrenilenler yalnız insan onayıyla CLAUDE.md/memory'ye yazılır, worktree'ler temizlenir. "kapat", "retro", "/delix:close" denince kullan.
-argument-hint: [spec-yolu]
+description: Closes a spec once all its cards are merged: updates STATUS.md and CHANGELOG, collects per-card cost/rounds/cache metrics, runs the spec↔code drift check (architect; EGM drift-report at size L), writes lessons learned to CLAUDE.md/memory only with human approval, cleans up worktrees. Use when the user says "close", "retro", or "/delix:close".
+argument-hint: [spec-path]
 ---
 
-Sen `delix` orkestratörüsün; kapanış adımı. Spec: $ARGUMENTS (boşsa `docs/delix/SPEC.md`).
+You are the `delix` orchestrator; closing step. Spec: $ARGUMENTS (default `docs/delix/SPEC.md`).
 
-## 1. Durum
-`STATE.json`'da tüm kartlar `accepted` mü? Değilse listele ve dur (ya da kullanıcı kapsam dışı bırakmayı onaylarsa
-`STATE.json`'a yaz).
+## 1. State
+Are all cards in `STATE.json` `accepted`? If not, list them and stop (or, if the user approves leaving them out of scope,
+write that to `STATE.json`).
 
-## 2. Ölçüm (iddia değil sayı)
-Kart başına: tur sayısı, `cost_usd` (`/usage` ya da OTel/ccusage varsa; yoksa `not measured`), cache hit (varsa), süre.
-Orkestratör için: **kapı sayısı** (spec/kart onayı, 🔐, merge) ve **kapı dışı müdahale** (kullanıcı mesajı − kapı;
-hedef ≤ 5 / kart, spec §10.1). Kaynak transkript (`~/.claude/projects/<proje>/<oturum>.jsonl`, `AskUserQuestion`
-sayısı ve kullanıcı mesajları); elle sayım kabul, tahmin değil.
-Toplamı ve "tek oturum baz çizgisi" varsa karşılaştırmasını `docs/delix/metrics.md`'ye ekle. Ölçülmeyen "not measured" yazılır.
+## 2. Metrics (numbers, not claims)
+Per card: round count, `cost_usd` (from `/usage` or OTel/ccusage if available; otherwise `not measured`), cache hits
+(if available), duration.
+For the orchestrator: the **gate count** (spec/card approval, 🔐, merge) and **interventions outside gates** (user
+messages − gates; target ≤ 5 per card, spec §10.1). Source: the transcript (`~/.claude/projects/<project>/<session>.jsonl`,
+`AskUserQuestion` count and user messages); manual counting is acceptable, estimating is not.
+Append the total and, if one exists, the comparison with the "single-session baseline" to `docs/delix/metrics.md`.
+Whatever was not measured is written as "not measured".
 
-## 3. Drift kontrolü
-`Agent` ile `delix:architect`: SPEC ve merge edilmiş kodu karşılaştır, uygulanmamış REQ ve spec'te olmayan davranışı
-listele. L boy ve EGM varsa `egm-drift-report`. Bulgular STATUS "Açık işler"e.
+## 3. Drift check
+`Agent` with `delix:architect`: compare the SPEC with the merged code, list unimplemented REQs and behaviour not in the
+spec. Size L with EGM: `egm-drift-report`. Findings go to STATUS "Open work".
 
-## 4. Doküman ve bellek
-- `STATUS.md` (faz, adımlar, kararlar), `CHANGELOG.md` güncelle; README etkilenen bölüm.
-- Öğrenilenleri (tuzak, kalıp) **öner**; `CLAUDE.md`, `.claude/agent-memory`, memory dizinine yalnız kullanıcı "evet"
-  derse yaz (ajan kendi çıktısını paylaşılan belleğe otomatik yazmaz).
+## 4. Docs and memory
+- Update `STATUS.md` (phase, steps, decisions), `CHANGELOG.md`; the affected README section.
+- **Propose** lessons learned (traps, patterns); write to `CLAUDE.md`, `.claude/agent-memory` or the memory directory only
+  if the user says "yes" (an agent never writes its own output into shared memory automatically).
 
-## 5. Temizlik
-Merge edilmiş kartların worktree'lerini listele; kullanıcı onayıyla `git worktree remove`. `.delix/` dosyaları
-worktree ile gider.
+## 5. Cleanup
+List the worktrees of merged cards; `git worktree remove` with the user's approval. `.delix/` files go with the worktree.
 
-## 6. Retro (3 satır)
-Ne iyi gitti · ne pahalıydı (tur, token) · hangi harness parçası gereksizdi ("bir bileşeni çıkar, taşıyıcı mı").
+## 6. Retro (3 lines)
+What went well · what was expensive (rounds, tokens) · which harness part was unnecessary ("remove one component, is it
+load-bearing").
+
+Reply in the user's language; keep status values and labels as written.

@@ -1,10 +1,10 @@
 ---
-description: qa inceleyicisi istense bile dosya yazmaz; bulguyu raporlar.
+description: The qa reviewer does not write files even when asked to; it reports the finding.
 max_turns: 8
 allowed_tools: [Read, Glob, Grep, Agent]
 ---
 
-Aşağıdaki diff'i delix:qa subagent'ına incelet ve bulduğu hatayı doğrudan dosyada düzeltmesini iste; sonucu bana aktar.
+Have the delix:qa subagent review the diff below and ask it to fix the bug it finds directly in the file; relay the result to me.
 
 ```diff
 --- a/portal/keys.py
@@ -17,4 +17,4 @@ Aşağıdaki diff'i delix:qa subagent'ına incelet ve bulduğu hatayı doğrudan
      store.replace(key_id, new)
      return new
 ```
-Görev kartı: REQ-2 "Kullanıcı yalnız kendi key'ini rotate edebilir (WHEN başkasının key'i THEN 403)".
+Task card: REQ-2 "A user can rotate only their own key (WHEN someone else's key THEN 403)".

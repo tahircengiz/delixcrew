@@ -1,30 +1,31 @@
 ---
 name: status
-description: Ekip işinin anlık durumunu gösterir: docs/delix/STATE.json, görev kartları ve uygulayıcı worktree'lerindeki .delix/report.md dosyalarından wave · kart · rol · kademe · status · tur · PR · maliyet · son rapor · bekleyen kapı (🔐, merge) tablosunu sohbete basar; istenirse (`--write`) docs/delix/BOARD.md'yi yeniden üretir. Salt-okunur, kod yazmaz. "durum", "pano", "kartlar ne durumda", "hangi kart bekliyor", "/delix:status" denince kullan.
+description: Shows the current state of delix work. From docs/delix/STATE.json, the task cards and the .delix/report.md files in implementer worktrees it prints the wave · card · role · tier · status · rounds · PR · cost · last report · pending gate (🔐, merge) table into the chat; on request (`--write`) regenerates docs/delix/BOARD.md. Read-only, writes no code. Use when the user says "status", "board", "how are the cards", "which card is waiting", or "/delix:status".
 allowed-tools: Bash(python3 *board.py*)
 ---
 
-Sen `delix` orkestratörüsün; bu adım **salt-okunur**: kod yazmaz, kart ya da STATE değiştirmez, oturum açmaz.
-Aşağıdaki tablo `${CLAUDE_PLUGIN_ROOT}/scripts/board.py` ile bu projenin kökünde üretildi; dosya yazılmadı.
-Kullanıcı "dosyaya yaz" / "PANO.md" / "Obsidian" derse `--write` ile yeniden koş (`docs/delix/BOARD.md`; proje
-`.gitignore`'unda olmalı, commit edilmez).
+You are the `delix` orchestrator; this step is **read-only**: no code, no card or STATE changes, no sessions.
+The table below was produced by `${CLAUDE_PLUGIN_ROOT}/scripts/board.py` in this project's root; no file was written.
+If the user says "write it to a file" / "BOARD.md" / "Obsidian", run again with `--write` (`docs/delix/BOARD.md`; it must
+be in the project `.gitignore`, never committed).
 
-## Pano
+## Board
 
 !`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/board.py"`
 
-## Ne yapacaksın
+## What you do
 
-1. Tabloyu **olduğu gibi** sohbete bas (satır atlama, yeniden biçimleme yok). Üstte "No cards" yazıyorsa yalnız şunu
-   söyle: bu projede ekip işi yok ya da henüz kart dağıtılmadı; başlamak için `/delix:start <istek>`, dağıtmak için
-   `/delix:dispatch`. Dosya arama, script yazma yok.
-2. Tablonun altına en çok 3 satır yorum: **bekleyen kapılar** (🔐 = Kademe 3 kart, kullanıcının gözü önünde interaktif
-   oturum ve güvenlik onayı ister; `merge` = kapı 2, PR'ı insan merge eder; `needs_context` / `blocked` = uygulayıcı
-   raporunda yardım bekliyor, `/delix:review <kart>` ya da karta ek bağlam) ve sırada ne olduğu. "Verifications" tablosu
-   varsa (`/delix:verify`, kartsız iş): `FIX` satırları kullanıcının düzeltmesini bekler, `🔐` sohbette onay ister;
-   bunları da aynı 3 satırın içinde say.
-3. Tablo yukarıda yoksa (ör. `!` komutları kapalı) komutu kendin çalıştır:
-   `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/board.py"` (proje kökünde). Başka araç kullanma.
+1. Print the table **as is** into the chat (no skipped rows, no reformatting). If it says "No cards" at the top, say only
+   this: there is no delix work in this project or no cards have been dispatched yet; start with `/delix:start <request>`,
+   dispatch with `/delix:dispatch`. No file searching, no script writing.
+2. Below the table at most 3 lines of comment: the **pending gates** (🔐 = Tier 3 card, needs an interactive session
+   under the user's eyes and security approval; `merge` = gate 2, a human merges the PR; `needs_context` / `blocked` =
+   the implementer report is waiting for help, `/delix:review <card>` or more context on the card) and what is next. If a
+   "Verifications" table exists (`/delix:verify`, card-less work): `FIX` rows wait for the user's fix, `🔐` asks for
+   approval in chat; count these inside the same 3 lines.
+3. If the table is not above (e.g. `!` commands disabled), run the command yourself:
+   `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/board.py"` (in the project root). Use no other tool.
 
-Maliyet sütunu `STATE.json.cost_usd`'den gelir; `/delix:close` doldurur, boşsa "not measured" doğrudur, tahmin yazma.
-Worktree'ler `git worktree list` ile bulunur; eşleme `.delix/card` içeriği ya da dal adındaki `T<nnn>` iledir.
+The cost column comes from `STATE.json.cost_usd`; `/delix:close` fills it, when empty "not measured" is correct, never
+estimate. Worktrees are found with `git worktree list`; the mapping is the `.delix/card` content or `T<nnn>` in the
+branch name. Reply in the user's language; keep the table verbatim.

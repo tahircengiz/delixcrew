@@ -1,57 +1,67 @@
 ---
 name: review
-description: Bir görev kartının PR'ını denetler. Önce deterministik kapıların kanıtını (test sonucu, CI) kontrol eder; sonra qa (ve Kademe ≥ 2'de security) subagent'larını sıfır bağlamla paralel çalıştırır, yalnız high-confidence bulguları karta yazar, en çok 3 düzeltme turu yönetir, sonra kapı 2 (merge) için kullanıcıya sunar. "PR'ı denetle", "incele", "/delix:review T003" denince kullan.
-argument-hint: [kart-id-veya-pr]
+description: Reviews a task card's PR. First checks the evidence of the deterministic gates (test result, CI); then runs the qa (and, at Tier ≥ 2, security) subagents in parallel with zero context, writes only high-confidence findings to the card, manages at most 3 fix rounds, then presents gate 2 (merge) to the user. Use when the user says "review the PR", "review", or "/delix:review T003".
+argument-hint: [card-id-or-pr]
 ---
 
-Sen `delix` orkestratörüsün; bu adımda **denetlersin, düzeltmezsin**. Hedef: $ARGUMENTS (kart id ya da PR numarası;
-boşsa `STATE.json`'da `in_review` olan kartlar).
+You are the `delix` orchestrator; in this step **you review, you do not fix**. Target: $ARGUMENTS (card id or PR number;
+if empty, the cards in `in_review` in `STATE.json`).
 
-## 1. Deterministik kapılar önce (ucuz)
-- Kartın worktree'sinde `.delix/report.md` ve `.delix/test-result.txt` var mı; rapor sözleşmeye uyuyor mu
-  (`DONE|DONE_WITH_CONCERNS|NEEDS_CONTEXT|BLOCKED`). `NEEDS_CONTEXT`/`BLOCKED` ise inceleme açma: cevabı ver ya da
-  kullanıcıya taşı.
-- Doğrulama komutu çıktısı kartın beklenen çıktısıyla eşleşiyor mu; CI varsa yeşil mi (`gh pr checks`). Stop kapısı
-  yalnız `delix.json.test_command`nu koşar (çoğu projede derleme + hızlı kontroller); kartın **Verification command**nu ve
-  tam test takımını (uzak test ortamı dahil) burada **sen koşarsın** ya da kanıtını doğrularsın. **Kırmızıyken LLM
-  incelemesi açılmaz** (token israfı): bulguyu karta `Tur n (deterministik kapı)` olarak yaz, uygulayıcıya gönder.
-  Pilot: T004'ün `TypeError` P0'ı Stop kapısından geçti, burada yakalandı.
-- **Her şey kartın dal commit'inden** (`git rev-parse <dal>`): diff `git diff <default_branch>...<sha> > .delix/diff.patch`,
-  uzak test ortamına gönderim `git archive <sha>` ile; **worktree dizininden değil** (Desktop worktree dizin adlarını
-  yeniden kullanır, dizin başka karta ait içerik taşıyabilir). Kabul kaydına ve `STATE.json.pr`'a SHA yazılır.
-  Uzak izole birim testi için `delix.json.verify` bloğu varsa `/delix:verify` adım 3 reçetesi (ayrı dizin ve imaj,
-  `{name}` = kart no); **test başına env** `unit_test` komutunun içindeki `case $t in …` ile gelir (K46), komutu elle
-  tamamlama; bir test yalnız eksik env'den kırmızıysa bu uygulayıcı bulgusu değil `delix.json` düzeltmesidir (korunan yol, 🔐).
-- **Tek test ortamı = tek sahip (K23):** paylaşımlı test ortamında koşmadan önce `STATE.json.env_owner` boş mu bak;
-  doluysa bekle, zorla alma. Koşarken `{"card": "T<nnn>", "who": "orchestrator", "since": "<ISO>"}` yaz; bitince
-  ortamı varsayılan dala döndür ve alanı `null` yap. Uygulayıcı oturumları bu ortama dokunmaz (kart aksini yazmadıkça).
-- Dokunulan yolları `delix.json` (`protected_paths`, `test_paths`) ile karşılaştır: korunan yola dokunulduysa kademe
-  3'e yükselt ve 🔐 işaretle; test dosyası değiştirilmişse (yeni test ekleme hariç) doğrudan **REJECT**.
+## 1. Deterministic gates first (cheap)
+- Does the card's worktree have `.delix/report.md` and `.delix/test-result.txt`; does the report follow the contract
+  (`DONE|DONE_WITH_CONCERNS|NEEDS_CONTEXT|BLOCKED`). On `NEEDS_CONTEXT`/`BLOCKED` open no review: answer, or take it to
+  the user.
+- Does the verification command output match the card's expected output; if there is CI, is it green (`gh pr checks`).
+  The Stop gate runs only `delix.json.test_command` (in most projects build + quick checks); the card's **Verification
+  command** and the full test suite (remote test environment included) **you run here**, or you verify their evidence.
+  **No LLM review while red** (token waste): write the finding to the card as `Round n (deterministic gate)` and send it
+  to the implementer. Pilot: T004's `TypeError` P0 passed the Stop gate and was caught here.
+- **Everything from the card's branch commit** (`git rev-parse <branch>`): diff with
+  `git diff <default_branch>...<sha> > .delix/diff.patch`, shipping to the remote test environment with
+  `git archive <sha>`; **never from the worktree directory** (Desktop reuses worktree directory names; a directory may
+  hold another card's content). The SHA goes into the acceptance record and `STATE.json.pr`.
+  For the remote isolated unit test, if the `delix.json.verify` block exists, use the `/delix:verify` step 3 recipe
+  (separate directory and image, `{name}` = card number); **per-test env** comes from the `case $t in …` inside the
+  `unit_test` command (K46), do not complete the command by hand; a test red only from a missing env is not an
+  implementer finding but a `delix.json` fix (protected path, 🔐).
+- **One test environment = one owner (K23):** before running in the shared test environment check that
+  `STATE.json.env_owner` is empty; if taken, wait, never seize it. While running write
+  `{"card": "T<nnn>", "who": "orchestrator", "since": "<ISO>"}`; when done, return the environment to the default
+  branch and set the field to `null`. Implementer sessions do not touch this environment (unless the card says so).
+- Compare the touched paths with `delix.json` (`protected_paths`, `test_paths`): if a protected path was touched, raise
+  to Tier 3 and mark 🔐; if a test file was changed (other than adding new tests), **REJECT** directly.
 
-## 2. Bağımsız inceleme (paralel, sıfır sohbet bağlamı)
-`Agent` aracıyla aynı anda:
-- `delix:qa` — diff yolu, kart yolu, SPEC yolu, test sonucu dosyası, tur sayısı. Beklenen: `ACCEPT | ACCEPT_WITH_NOTES |
+## 2. Independent review (parallel, zero chat context)
+With the `Agent` tool, at the same time:
+- `delix:qa` — diff path, card path, SPEC path, test result file, round count. Expected: `ACCEPT | ACCEPT_WITH_NOTES |
   REJECT | ESCALATE`.
-- Kademe ≥ 2: `delix:security` — aynı girdiler + kademe + korunan yollar. Beklenen: `CLEAN | FIX | 🔐 HUMAN_APPROVAL`.
-- Kademe 3 ve `/security-review` skill'i varsa onu da çalıştır; Claude Security kuruluysa L boyda "scan changes".
-İnceleyicilere **kendi görüşünü ya da uygulayıcının gerekçesini verme**; yalnız dosya yolları.
+- Tier ≥ 2: `delix:security` — same inputs + tier + protected paths. Expected: `CLEAN | FIX | 🔐 HUMAN_APPROVAL`.
+- Tier 3 with the `/security-review` skill available: run it too; with Claude Security installed, "scan changes" at
+  size L.
+Give the reviewers **neither your own opinion nor the implementer's reasoning**; file paths only.
 
-## 3. Bulguları işle
-- Yalnız P0/P1 (ve Kritik/Yüksek/Orta güvenlik) düzeltme ister; P2'ler karta not, düzeltme yok ("her bulguyu düzeltme").
-- Bulguları kartın `## Review findings` bölümüne tur numarasıyla yaz; `STATE.json` → `fixing`, `tur += 1`.
-- Düzeltmeyi **uygulayıcı oturumuna** gönder (`SendMessage` / oturuma mesaj ya da dispatch'i yeniden ver); kendin
-  düzeltme. Headless (`claude -p`) kartta varsayılan: aynı worktree'de **yeni** `-p` oturumu (cwd = worktree, `-w` yok):
-  prompt = dispatch dosyası + `Düzeltme turu n: kart zaten uygulandı ve commit edildi (<sha>); yalnız aşağıdaki P0/P1'leri
-  düzelt` + kartın "Review findings" bölümü + `git diff <default_branch>...<sha> --stat` özeti (`/delix:dispatch` adım 4
-  komutu). `--resume` kullanma: ölçüldü (LLMPortal T009, A2, 2026-11-02): aynı bulguda `--resume` 1,11 USD / 1,74M cache okuma,
-  yeni `-p` **0,44 USD** / 218K; ikisi yeşil ve eşdeğer (pilot T004 `--resume` 1,8–2,1 USD). `--resume` yalnız uygulayıcının
-  yarım kalmış bağlamı gerekiyorsa (`NEEDS_CONTEXT` cevabı). Bulgu metnini prompt'a **tam** yaz: worktree'deki kart dosyası
-  main'deki güncel bulguları içermez (dal kart commit'inden sonra güncellenen `docs/delix/**`'i görmez).
-  Düzeltme sonrası **kapsamlı** yeniden inceleme (yalnız bulgulara bakmak yetmez).
-- Tur üst sınırı `delix.json.max_review_rounds` (3): aşılırsa `escalated` → kullanıcıya özet ve seçenekler (güçlü
-  modelle yeniden dene / kapsamı daralt / kabul et).
+## 3. Process the findings
+- Only P0/P1 (and Critical/High/Medium security) ask for a fix; P2s are noted on the card, no fix ("do not fix every
+  finding").
+- Write the findings to the card's `## Review findings` section with the round number; `STATE.json` → `fixing`,
+  `rounds += 1`.
+- Send the fix to the **implementer session** (`SendMessage` / a message to the session, or re-issue the dispatch); do not
+  fix it yourself. Default for a headless (`claude -p`) card: a **new** `-p` session in the same worktree (cwd = worktree,
+  no `-w`): prompt = dispatch file + `Fix round n: the card is already implemented and committed (<sha>); fix only the
+  P0/P1s below` + the card's "Review findings" section + a `git diff <default_branch>...<sha> --stat` summary (the
+  `/delix:dispatch` step 4 command). Do not use `--resume`: measured (LLMPortal T009, A2, 2026-11-02): same finding,
+  `--resume` 1.11 USD / 1.74M cache reads, new `-p` **0.44 USD** / 218K; both green and equivalent (pilot T004 `--resume`
+  1.8–2.1 USD). `--resume` only when the implementer's half-finished context is needed (a `NEEDS_CONTEXT` answer). Put
+  the finding text into the prompt **in full**: the card file in the worktree does not contain the current findings on
+  main (the branch does not see `docs/delix/**` updated after the card commit).
+  After the fix, a **comprehensive** re-review (looking only at the findings is not enough).
+- Round cap `delix.json.max_review_rounds` (3): when exceeded, `escalated` → summary and options to the user (retry with
+  a stronger model / narrow the scope / accept).
 
-## 4. Kapı 2
-Tüm inceleyiciler ACCEPT/CLEAN ise kullanıcıya tek ekran: PR linki, kartın DoD'si ✔/✘, inceleyici kararları, 🔐 notu
-varsa güvenlik onay mesajı (global CLAUDE.md biçimi). **Merge kullanıcıda**; sen `gh pr merge` çalıştırmazsın.
-Merge sonrası `STATE.json` → `accepted`; bağımlı wave varsa `/delix:dispatch` adım 4 ile sonraki wave'i aç.
+## 4. Gate 2
+When all reviewers say ACCEPT/CLEAN, one screen for the user: PR link, the card's DoD ✔/✘, reviewer verdicts, and the
+security approval message (global CLAUDE.md format) if there is a 🔐 note. **The merge is the user's**; you do not run
+`gh pr merge`. After the merge `STATE.json` → `accepted`; if a dependent wave exists, open the next wave with
+`/delix:dispatch` step 4.
+
+Reply in the user's language; keep status values and verdict tokens as written.

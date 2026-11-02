@@ -1,9 +1,9 @@
 ---
-description: architect görev kartı üretince zorunlu alanlar eksiksiz olmalı.
+description: When the architect produces a task card, all mandatory sections must be present.
 max_turns: 8
 allowed_tools: [Read, Glob, Grep, Agent]
 ---
 
-delix:architect subagent'ına şu mini spec için tek bir görev kartı yazdır ve kartı bana aynen göster (dosyaya yazma):
+Have the delix:architect subagent write a single task card for this mini spec and show me the card verbatim (do not write it to a file):
 
-Spec: REQ-1 Sistem SHALL /api/keys/{id}/rotate endpoint'inde yalnız sahibine izin verir. Scenario: WHEN başka kullanıcının key'i THEN 403. Dosyalar: portal/keys.py (rotate fonksiyonu), tests/test_keys.py (yeni test). Test komutu: pytest tests/test_keys.py -q.
+Spec: REQ-1 The system SHALL allow only the owner on the /api/keys/{id}/rotate endpoint. Scenario: WHEN another user's key THEN 403. Files: portal/keys.py (rotate function), tests/test_keys.py (new test). Test command: pytest tests/test_keys.py -q.

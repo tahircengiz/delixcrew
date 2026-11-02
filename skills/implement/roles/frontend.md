@@ -1,7 +1,8 @@
-# Rol notu — frontend
-- Sözleşme önce: Interfaces'teki API şekline karşı yaz; backend bitmemişse sahte veriyle, ama şekil aynen.
-- Erişilebilirlik: etiketli form alanları, klavye ile gezilebilirlik, kontrast; CSP'ye uy (satır içi stil/betik yok ise
-  ekleme).
-- Durumlar: yükleniyor / boş / hata ekranları kartta yoksa bile en az boş ve hata.
-- Kanıt: ekran görüntüsü (masaüstü + mobil) `.delix/evidence/`; e2e varsa Playwright.
-- Metinler proje dilinde; sabit metin bileşen içine gömülmez (mevcut i18n/şablon kalıbına uy).
+# Role note — frontend
+- Contract first: write against the API shape in Interfaces; if the backend is unfinished, use fake data, but keep the
+  shape exact.
+- Accessibility: labelled form fields, keyboard navigation, contrast; respect the CSP (no inline style/script if none
+  exist).
+- States: loading / empty / error screens, at least empty and error even if the card does not list them.
+- Evidence: screenshots (desktop + mobile) in `.delix/evidence/`; Playwright if e2e exists.
+- Copy in the project's language; no hardcoded strings inside components (follow the existing i18n/template pattern).
