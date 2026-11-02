@@ -57,6 +57,12 @@ deny  "reviewer denied even when listed+approved" write_gate.py "{\"tool_name\":
 allow "inactive without card (docs/delix)" write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"/tmp\",\"tool_input\":{\"file_path\":\"/tmp/docs/delix/x.md\"}}"
 deny  "implementer .env redirect"         bash_gate.py  "{\"tool_name\":\"Bash\",\"cwd\":\"$T\",\"tool_input\":{\"command\":\"echo X=1 >> .env\"}}"
 allow "security git diff"                 bash_gate.py  "{\"tool_name\":\"Bash\",\"agent_type\":\"delix:security\",\"cwd\":\"$T\",\"tool_input\":{\"command\":\"git diff main...HEAD\"}}"
+allow "security git -C diff"              bash_gate.py  "{\"tool_name\":\"Bash\",\"agent_type\":\"delix:security\",\"cwd\":\"$T\",\"tool_input\":{\"command\":\"git -C /tmp/wt diff main...HEAD\"}}"
+allow "security git -C log"               bash_gate.py  "{\"tool_name\":\"Bash\",\"agent_type\":\"delix:security\",\"cwd\":\"$T\",\"tool_input\":{\"command\":\"git -C /tmp/wt log --oneline -5\"}}"
+deny  "security git -C commit"            bash_gate.py  "{\"tool_name\":\"Bash\",\"agent_type\":\"delix:security\",\"cwd\":\"$T\",\"tool_input\":{\"command\":\"git -C /tmp/wt commit -m x\"}}"
+deny  "security git -C checkout"          bash_gate.py  "{\"tool_name\":\"Bash\",\"agent_type\":\"delix:security\",\"cwd\":\"$T\",\"tool_input\":{\"command\":\"git -C /tmp/wt checkout main\"}}"
+deny  "security git -C chained push"      bash_gate.py  "{\"tool_name\":\"Bash\",\"agent_type\":\"delix:security\",\"cwd\":\"$T\",\"tool_input\":{\"command\":\"git -C /tmp/wt diff && git -C /tmp/wt push\"}}"
+deny  "security git -C diff redirect"     bash_gate.py  "{\"tool_name\":\"Bash\",\"agent_type\":\"delix:security\",\"cwd\":\"$T\",\"tool_input\":{\"command\":\"git -C /tmp/wt diff > out.patch\"}}"
 deny  "security sed -i"                   bash_gate.py  "{\"tool_name\":\"Bash\",\"agent_type\":\"delix:security\",\"cwd\":\"$T\",\"tool_input\":{\"command\":\"sed -i s/a/b/ x.py\"}}"
 deny  "qa Bash"                           bash_gate.py  "{\"tool_name\":\"Bash\",\"agent_type\":\"delix:qa\",\"cwd\":\"$T\",\"tool_input\":{\"command\":\"ls\"}}"
 # Stop

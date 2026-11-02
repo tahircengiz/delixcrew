@@ -287,6 +287,19 @@ Hazırlık [docs/rename/delix-hazirlik.md](docs/rename/delix-hazirlik.md) §4 s�
   çalıştırılarak doğrulanır, dil çiftleri aynı commit'te" kuralı da yoktu. Yeni ajan (tester, debugger, release, pm)
   eklenmedi: yazan rol = oturum, okuyan rol = ajan (K11, K17); rol notlarının etkisi hâlâ ölçülmedi (retro), ilk devops
   kartında retro satırı yazılacak.
+- **K52** Sürüm 0.2.2 (2026-11-02, dal `claude/delix-0-2-2-84f358`, push/PR yok): LLMPortal T010 kabul koşusunun F1–F7
+  bulguları. F1 devops operasyonel kanıtı yalıtılmış, geçici koşudan (kendi compose proje adı/dizini, sonra söküm);
+  ortak ortam orkestratörde kalır (`implement` §3 + `roles/devops.md` aynı kural). F2 PR'sız projede (remote yok ya da
+  kart/dispatch "no PR") push yok, rapor `**PR:** none (<branch> @ <sha>)`, `pr` `null`; yeni `delix.json` anahtarı
+  eklenmedi (review zaten dal SHA'sından çalışır). F3 dispatch adım 1 S boyda atlanır. F4 `board.py` nesne biçimli
+  `waves` (`{wave, cards, note}`) okur, dalga no `wave` alanından (delix-board `parse.ts` ile aynı; eski Türkçe anahtarlar
+  yok). F5 Desktop: `user_asked` yalnız kullanıcı bu sohbette istediyse, aksi ve başka oturumdan başlatılan orkestratörde
+  `own_initiative` kartı; dal adı rapordan alınır. F6 `bash_gate.py` security allowlist'i `git -C <dir>` okumalarına
+  izin verir; yazan git alt komutları `-C` ile de reddedilir. F7 geçici HOME'da ölçüldü (claude 2.1.309): yerel yol
+  kurulumu da `~/.claude/plugins/cache/<mp>/<plugin>/<sürüm>/` kopyası; sürüm artmadan `marketplace update` + `plugin
+  update` "already at the latest version", sürüm artınca yalnız `plugin update` yeni klasör açar. README/README.tr ve
+  marketplace açıklaması düzeltildi; satır 171'deki eski "yerinde okunur" notu tarihsel bırakıldı. Ekler:
+  `CHANGELOG.md` (yeni), F4/F6 için önce kırmızı testler.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

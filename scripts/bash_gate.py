@@ -14,16 +14,17 @@ cmd = ((g.get("tool_input") or {}).get("command") or "").strip()
 agent = (g.get("agent_type") or "").strip()
 cwd = g.get("cwd") or os.getcwd()
 
-WRITING = re.compile(r"(^|[\s;&|(])(rm|mv|cp|tee|sed\s+-i|chmod|chown|truncate|mkdir|touch|dd|git\s+(add|commit|push|"
+GIT = r"git\s+(?:-C\s+(?:\"[^\"]*\"|'[^']*'|\S+)\s+)?"  # `git -C <worktree>`: the reviewer reads another checkout
+WRITING = re.compile(r"(^|[\s;&|(])(rm|mv|cp|tee|sed\s+-i|chmod|chown|truncate|mkdir|touch|dd|" + GIT + r"(add|commit|push|"
                      r"checkout|switch|reset|rebase|merge|stash|apply|cherry-pick|tag|branch\s+-[dD]))\b|>>?\s*[^&\s]|"
                      r"\bpip\s+install\b|\bnpm\s+(i|install|ci)\b|\buv\s+(add|sync|pip)\b|\bbrew\s+install\b")
 if agent in REVIEWERS:
     if agent.endswith("security"):
-        allowed = re.compile(r"^(gitleaks|semgrep|pip-audit|trivy|osv-scanner|bandit|git\s+(diff|log|show|status|"
+        allowed = re.compile(r"^(gitleaks|semgrep|pip-audit|trivy|osv-scanner|bandit|" + GIT + r"(diff|log|show|status|"
                              r"ls-files|grep)|rg|grep|cat|head|tail|wc|ls|find|jq|python3?\s+-m\s+pip\s+index)\b")
         if WRITING.search(cmd) or not allowed.match(cmd):
             deny("delix: role 'security' may run only read-only scanners and git read commands "
-                 "(gitleaks, semgrep, pip-audit, trivy, git diff/log/show, rg/grep/cat).")
+                 "(gitleaks, semgrep, pip-audit, trivy, git [-C <dir>] diff/log/show, rg/grep/cat).")
         sys.exit(0)
     deny(f"delix: role '{agent}' is read-only; it cannot run Bash.")
 

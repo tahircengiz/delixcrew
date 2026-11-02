@@ -6,5 +6,6 @@ You are a `delix` implementer session; role: **<backend|frontend|ui-ux|devops|do
 - Interface decisions from earlier cards: <signature / endpoint / shape; or "none">
 - Orchestrator's resolutions of ambiguities: <…; or "none">
 - Work: run `/delix:implement docs/delix/tasks/T<nnn>-<slug>.md` and follow the protocol (test-first, stay inside
-  Files, do not change test files, do not finish before the Stop hook passes, open a PR).
+  Files, do not change test files, do not finish before the Stop hook passes, open a PR; in a project without PRs
+  leave the branch, implement §4).
 - Report: `.delix/report.md` (contract in the card). When done, summarise only the report; include the PR number.

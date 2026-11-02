@@ -53,4 +53,14 @@ rm -f docs/delix/tasks/*.md
 out=$(python3 "$S/board.py")
 echo "$out" | grep -q "No cards" && echo "$out" | grep -qF "| 2026-11-02 | a10c-e7 |" && ok "verifications: visible without cards too" || { bad "verifications without cards"; echo "$out"; }
 
+# 4) object-shaped waves ([{wave, cards, note}]) → the wave number comes from the "wave" field
+python3 - <<'PYS'
+import json; p="docs/delix/STATE.json"; d=json.load(open(p)); d["verifications"]=[]
+d["waves"]=[{"wave":3,"cards":["T004"],"note":"db"},{"wave":5,"cards":["T005"],"note":""}]
+d["cards"]={"T004":{"role":"devops","tier":3,"status":"open"},"T005":{"role":"docs","tier":1,"status":"open"}}
+json.dump(d,open(p,"w"),ensure_ascii=False)
+PYS
+out=$(python3 "$S/board.py")
+echo "$out" | grep -qF "| 3 | T004 | devops | 3 | open |" && echo "$out" | grep -qF "| 5 | T005 | docs | 1 | open |" && ok "object waves: wave field" || { bad "object waves"; echo "$out"; }
+
 cd /; rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

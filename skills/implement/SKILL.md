@@ -39,12 +39,17 @@ role tag.
   tricks.
 - Do **not** touch the shared remote test environment (rsync, image build, compose); that run belongs to the orchestrator
   (K23). If the card explicitly allows it, `STATE.json.env_owner` must be your card first; otherwise write "remote run
-  belongs to the orchestrator" in the report.
+  belongs to the orchestrator" in the report. Operational evidence a role note asks for (a container healthy, a probe)
+  comes from an **isolated, throwaway** run you own (its own compose project name and directory, torn down afterwards;
+  the teardown is evidence too); if no isolated run is possible, write the commands for the orchestrator's remote run
+  under Concerns instead.
 
 ## 4. Deliver
 - Commit message: `T<nnn>: <what>`; add only the files you touched, by name.
 - Open a PR (`gh pr create`): title `T<nnn> <short>`; body with the card link, `## How I tested` (command + output),
   assumptions, reason for any new dependency. **You do not merge and do not request review**; gate 2 is human.
+  Project without PRs (no git remote, or the card / dispatch says "no PR"): do not push; leave the commits on the card
+  branch, write `**PR:** none (<branch> @ <sha>)` in the report and keep `pr` `null` (the review reads the branch SHA).
 - Fill `.delix/report.md` from `${CLAUDE_PLUGIN_ROOT}/templates/report.md` (≤ 1–2K tokens); in `STATE.json` update only
   your own card's `status: in_review` and `pr` fields.
 - Your last message: the report summary + the PR number. If a fix round arrives (an orchestrator message or the card's

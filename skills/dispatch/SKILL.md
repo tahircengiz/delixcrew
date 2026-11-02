@@ -9,7 +9,8 @@ You are the `delix` orchestrator; in this step **you split and dispatch, you wri
 approved card is enough).
 
 ## 1. Have the cards written
-`Agent` with `delix:architect`: the SPEC path, `docs/delix/delix.json` (protected paths, test paths, max parallel), "job B:
+Size S with an approved card from `/delix:start`: skip this step (the card is the plan; put it into `STATE.json`
+as a single wave and go to step 2). Otherwise `Agent` with `delix:architect`: the SPEC path, `docs/delix/delix.json` (protected paths, test paths, max parallel), "job B:
 task card production". Write every card in the output to `docs/delix/tasks/T<nnn>-<slug>.md` (all fields of
 `templates/task-card.md`; if a field is missing, ask the architect again, do not fill it with your own guess). Put
 `## Wave plan` into `STATE.json.waves`, the cards into `STATE.json.cards` (status `open`, rounds 0).
@@ -32,9 +33,12 @@ full plan is passed.**
 
 ## 4. Open the sessions (in wave order)
 One line per card for the user: card, role, tier, how to open it.
-- **Claude Desktop (Code tab):** if the `start_session` tool exists, `initiation: user_asked`, `use_worktree: true`,
-  `context: fresh`, prompt = the dispatch file content; for Tier 3 cards tell the user to open the session themselves
-  (under their eyes).
+- **Claude Desktop (Code tab):** if the `start_session` tool exists, `use_worktree: true`, `context: fresh`, prompt =
+  the dispatch file content; `initiation: user_asked` only when the user asked in this chat to open the sessions,
+  otherwise (and always when this orchestrator was itself started by another session, where the app refuses a start)
+  `initiation: own_initiative`: a card the user starts with one click. For Tier 3 cards always the card, the user opens
+  the session (under their eyes). Desktop names the worktree branch itself (e.g. `claude/<random>`), not
+  `worktree-delix-T<nnn>`: take the branch from the implementer's report and do not look it up by name.
 - **Terminal:** Tier 1–2:
   `claude -p --worktree delix-T<nnn> --plugin-dir <plugin root> --permission-mode auto --max-turns 60 --max-budget-usd <budget> "$(cat docs/delix/tasks/T<nnn>.dispatch.md)"`;
   Tier 3: `claude -w delix-T<nnn> --plugin-dir <plugin root> --permission-mode auto` interactively. `--plugin-dir` is

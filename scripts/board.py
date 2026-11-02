@@ -143,6 +143,9 @@ def collect(root):
 
     wave_no = {}
     for i, w in enumerate(state.get("waves") or [], 1):
+        if isinstance(w, dict):  # {"wave": 2, "cards": [...], "note": ...}; the template's shape is [["T001"], ...]
+            i = w.get("wave") if isinstance(w.get("wave"), int) else i
+            w = w.get("cards") or []
         for cid in w:
             wave_no.setdefault(cid, i)
 

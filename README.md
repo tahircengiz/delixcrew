@@ -26,11 +26,13 @@ claude plugin marketplace add tahircengiz/delixcrew
 claude plugin install delix@delix-local
 ```
 
-From a local clone the repo is read in place, no copy: `claude plugin marketplace add /path/to/delix`, then the same
-`install` command. The marketplace definition is [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json);
-a GitHub install updates only when the version in `plugin.json` changes: run `claude plugin marketplace update delix-local`,
-then `claude plugin update delix@delix-local`, and restart Claude. A local-path install is read in place: `git pull` is enough, no
-`update` needed. For a one-off trial, `claude --plugin-dir /path/to/delix` also works. Checks: `claude plugin validate .`; hook tests: `bash tests/hook_tests.sh`; board tests:
+From a local clone: `claude plugin marketplace add /path/to/delix`, then the same `install` command. The marketplace
+definition is [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json). Both installs copy the plugin into
+Claude's plugin cache, one folder per version, so an install updates only when the version in `plugin.json` changes:
+run `claude plugin marketplace update delix-local` (GitHub; a local folder is read directly), then
+`claude plugin update delix@delix-local`, and restart Claude. A local change without a version bump does not reach the
+installed copy, `git pull` alone is not enough; to try one, `claude --plugin-dir /path/to/delix` reads the folder in place.
+Checks: `claude plugin validate .`; hook tests: `bash tests/hook_tests.sh`; board tests:
 `bash tests/board_tests.sh`; behaviour evals: `claude plugin eval . --trust-plugin --no-publish` (calls the model, costs money).
 
 ### Companion: delix-board
