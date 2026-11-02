@@ -33,6 +33,18 @@ Tek seferlik deneme için `claude --plugin-dir /path/to/delix` da çalışır. D
 `bash tests/board_tests.sh`; davranış testleri: `claude plugin eval . --trust-plugin --no-publish` (model çağrısı yapar,
 maliyeti vardır).
 
+### Eşlikçi: delix-board
+
+[`delix-board`](plugins/delix-board/README.md) aynı marketplace'te ayrı, salt-okunur bir mod: sohbetin yanında canlı
+pane (pano, uzun koşular, kart ayrıntısı, ölçüm grafikleri), istem üstünde band ve koşu bitince toast. delix'in çalışması
+için gerekmez; headless oturumlarda hiçbir şey çizmez.
+
+```bash
+claude plugin install delix-board@delix-local
+```
+
+![Terminalde delix-board](plugins/delix-board/assets/board-terminal-pano.png)
+
 ## Akış
 
 | Adım | Komut | Ne olur |

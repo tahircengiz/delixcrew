@@ -33,6 +33,18 @@ then `claude plugin update delix@delix-local`, and restart Claude. A local-path 
 `update` needed. For a one-off trial, `claude --plugin-dir /path/to/delix` also works. Checks: `claude plugin validate .`; hook tests: `bash tests/hook_tests.sh`; board tests:
 `bash tests/board_tests.sh`; behaviour evals: `claude plugin eval . --trust-plugin --no-publish` (calls the model, costs money).
 
+### Companion: delix-board
+
+[`delix-board`](plugins/delix-board/README.md) is a separate, read-only mod in the same marketplace: a live pane with the
+board, long runs, card details and metrics, a band above the prompt and a toast when a run ends. It is not needed for
+delix to work and draws nothing in headless sessions.
+
+```bash
+claude plugin install delix-board@delix-local
+```
+
+![delix-board in the terminal](plugins/delix-board/assets/board-terminal-pano.png)
+
 ## Flow
 
 | Step | Command | What happens |

@@ -1,0 +1,21 @@
+{
+  "name": "delix-board",
+  "displayName": "Delix Board",
+  "version": "0.1.0",
+  "description": "Live board for delix: cards, gates, long runs and metrics in a pane beside the chat, a band above the prompt, toasts when a run ends. Read-only; does nothing in headless sessions.",
+  "author": {
+    "name": "Tahir Cengiz"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/tahircengiz/delixcrew",
+  "keywords": ["delix", "board", "dashboard", "pane", "mod"],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "extraPatterns": {
+      "type": "string",
+      "title": "Extra wait patterns",
+      "description": "Comma-separated regular expressions; a Bash command matching one is tracked in the Wait view, beside the built-in run_all.sh, build.sh, release.sh, gh run watch and docker build.",
+      "default": ""
+    }
+  }
+}

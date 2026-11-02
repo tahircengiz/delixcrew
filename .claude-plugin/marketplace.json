@@ -3,12 +3,17 @@
   "owner": {
     "name": "tahircengiz"
   },
-  "description": "Claude Code plugin: delix (orchestrator + role sessions + read-only reviewers). Source is this repo. A GitHub install updates only when plugin.json's version changes: claude plugin marketplace update delix-local, then claude plugin update delix@delix-local. A local-path install is read in place; git pull is enough.",
+  "description": "Claude Code plugins: delix (orchestrator + role sessions + read-only reviewers) and its companion board, delix-board. Source is this repo. A GitHub install updates only when plugin.json's version changes: claude plugin marketplace update delix-local, then claude plugin update delix@delix-local. A local-path install is read in place; git pull is enough.",
   "plugins": [
     {
       "name": "delix",
       "source": "./",
       "description": "Team workflow: spec through a grill interview, task cards, worktree-isolated implementer sessions, qa/security review; two human gates."
+    },
+    {
+      "name": "delix-board",
+      "source": "./plugins/delix-board",
+      "description": "Companion mod for delix: a live board pane (cards, gates, long runs, metrics), a band above the prompt and toasts when a run ends. Read-only; idle in headless sessions."
     }
   ]
 }
