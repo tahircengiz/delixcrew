@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540.24 256">
+<g transform="translate(0 48) scale(0.625)"><g transform="translate(0 0) scale(1.0)"><path d="M40 48H88V72H64V184H88V208H40Z"/><path d="M216 48H168V72H192V184H168V208H216Z"/><rect x="95" y="116" width="18" height="72"/><rect x="119" y="100" width="18" height="72"/><rect x="143" y="84" width="18" height="72"/></g></g><g transform="translate(176 24) scale(0.82)"><path d="M20 144a38 38 0 1 0 76 0a38 38 0 1 0 -76 0M96 48V192M136 144H212A38 38 0 1 0 202.2 169.4M252 48V192M300 96V192M340 96L420 192M420 96L340 192" fill="none" stroke="#000" stroke-width="20"/><circle cx="300" cy="62" r="13"/></g>
+</svg>
