@@ -1,20 +1,20 @@
 {
-  "$comment": "docs/ekip/STATE.json. Orkestratör yazar; uygulayıcı yalnız kendi kartının status ve pr alanını değiştirir.",
-  "spec": "docs/ekip/SPEC.md",
-  "boy": "M",
-  "guncelleme": "2026-01-01T00:00:00Z",
-  "ortam_sahibi": null,
-  "$comment_ortam_sahibi": "Paylaşımlı test ortamının kilidi (K23): null ya da {\"kart\": \"T001\", \"kim\": \"orkestratör\", \"baslangic\": \"<ISO>\"}; yalnız orkestratör yazar.",
+  "$comment": "docs/delix/STATE.json. The orchestrator writes it; the implementer changes only its own card's status and pr fields.",
+  "spec": "docs/delix/SPEC.md",
+  "size": "M",
+  "updated": "2026-01-01T00:00:00Z",
+  "env_owner": null,
+  "$comment_env_owner": "Lock of the shared test environment (K23): null or {\"card\": \"T001\", \"who\": \"orchestrator\", \"since\": \"<ISO>\"}; only the orchestrator writes it.",
   "waves": [["T001", "T002"], ["T003"]],
-  "kartlar": {
-    "T001": { "dosya": "docs/ekip/tasks/T001-ornek.md", "rol": "backend", "kademe": 2, "status": "acik", "pr": null, "tur": 0, "maliyet_usd": null }
+  "cards": {
+    "T001": { "file": "docs/delix/tasks/T001-example.md", "role": "backend", "tier": 2, "status": "open", "pr": null, "rounds": 0, "cost_usd": null }
   },
-  "status_degerleri": ["acik", "suruyor", "incelemede", "duzeltme", "kabul", "ret", "eskale"],
-  "$comment_dogrulama": "/ekip:dogrula kayıtları (kartsız iş, K43); yalnız orkestratör yazar, /ekip:durum 'Doğrulamalar' tablosunda gösterir.",
-  "dogrulama": [
-    { "ad": "ornek-dal", "tarih": "2026-01-01", "sha": "0000000", "taban": "0000000", "girdi": "ornek-dal", "kademe": 2, "karar": "KABUL",
-      "rapor": "docs/ekip/dogrulama/2026-01-01-ornek-dal.md",
-      "kapilar": { "gitleaks": "GEÇTİ", "yerel": "GEÇTİ", "uzak_birim": "GEÇTİ 10/10", "tam": "koşulmadı: --tam yok" },
-      "kalite": "KABUL", "guvenlik": "TEMİZ", "maliyet_usd": null }
+  "status_values": ["open", "in_progress", "in_review", "fixing", "accepted", "rejected", "escalated"],
+  "$comment_verifications": "/delix:verify records (card-less work, K43); only the orchestrator writes them, /delix:status shows them in the 'Verifications' table.",
+  "verifications": [
+    { "name": "example-branch", "date": "2026-01-01", "sha": "0000000", "base": "0000000", "input": "example-branch", "tier": 2, "verdict": "ACCEPT",
+      "report": "docs/delix/verifications/2026-01-01-example-branch.md",
+      "gates": { "gitleaks": "PASS", "local": "PASS", "remote_unit": "PASS 10/10", "full": "not run: no --full" },
+      "qa": "ACCEPT", "security": "CLEAN", "cost_usd": null }
   ]
 }

@@ -34,8 +34,8 @@ Dokunulan korunan yollar (Kademe 3 ise 🔐 insan onayı); yetki, girdi doğrula
 
 ## 7. Kabul ölçütleri (DoD)
 - [ ] Her REQ için geçen test; doğrulama komutu: `<komut>` → `<beklenen>`
-- [ ] Kademe ≥ 2: `kalite` KABUL; Kademe 3: `guvenlik` TEMİZ + insan onayı
-- [ ] PR açıklamasında "Nasıl test ettim"
+- [ ] Kademe ≥ 2: `qa` ACCEPT; Kademe 3: `security` CLEAN + insan onayı
+- [ ] PR açıklamasında "How I tested"
 
 ## 8. Açık sorular
 - `[NEEDS CLARIFICATION: …]` kalmamalı; kalan varsa kapı 1'den önce sor.

@@ -4,20 +4,20 @@
       {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit",
         "hooks": [
-          { "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/scripts/yazma_kapisi.py", "timeout": 10, "onFailure": "block" }
+          { "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/scripts/write_gate.py", "timeout": 10, "onFailure": "block" }
         ]
       },
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/scripts/bash_kapisi.py", "timeout": 60, "onFailure": "block" }
+          { "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/scripts/bash_gate.py", "timeout": 60, "onFailure": "block" }
         ]
       }
     ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/scripts/stop_kapisi.py", "timeout": 600 }
+          { "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/scripts/stop_gate.py", "timeout": 600 }
         ]
       }
     ]
