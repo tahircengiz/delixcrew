@@ -20,7 +20,9 @@ Kullanıcı "dosyaya yaz" / "PANO.md" / "Obsidian" derse `--dosya` ile yeniden k
    `/ekip:dagit`. Dosya arama, script yazma yok.
 2. Tablonun altına en çok 3 satır yorum: **bekleyen kapılar** (🔐 = Kademe 3 kart, kullanıcının gözü önünde interaktif
    oturum ve güvenlik onayı ister; `merge` = kapı 2, PR'ı insan merge eder; `needs_context` / `blocked` = uygulayıcı
-   raporunda yardım bekliyor, `/ekip:denetle <kart>` ya da karta ek bağlam) ve sırada ne olduğu.
+   raporunda yardım bekliyor, `/ekip:denetle <kart>` ya da karta ek bağlam) ve sırada ne olduğu. "Doğrulamalar" tablosu
+   varsa (`/ekip:dogrula`, kartsız iş): `DÜZELT` satırları kullanıcının düzeltmesini bekler, `🔐` sohbette onay ister;
+   bunları da aynı 3 satırın içinde say.
 3. Tablo yukarıda yoksa (ör. `!` komutları kapalı) komutu kendin çalıştır:
    `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/pano_uret.py"` (proje kökünde). Başka araç kullanma.
 

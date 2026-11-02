@@ -14,5 +14,19 @@
 6. İnceleyiciler KABUL/TEMİZ ise PR'ı **sen merge et** (kapı 2). Sonraki wave için `/ekip:dagit` devam.
 7. Tüm kartlar kabul → `/ekip:kapat`: ölçüm, drift, STATUS, worktree temizliği.
 
+## Kısa yol — tek oturum + `/ekip:dogrula` (K43)
+
+İş S/M boy, Kademe ≤ 2 ve iyi tarif edilmişse (`/ekip:basla` bunu kendisi önerir) tam akış yerine:
+1. İşi tek oturumda yap (ya da kendin): belirti + istenen davranış + kabul testi tek istekte; dalda ya da commit'te bitir.
+2. Orkestratör oturumunda `/ekip:dogrula <dal> --istek <istek-dosyası>`: kabul ölçütü istek metninden alınır; `--kademe`
+   zorlamak, `--tam` tam takımı (ortam kilidi boşken) koşmak, `--tut` uzak dizini bırakmak için.
+3. Kapılar: gitleaks (diff + arşiv) → `ekip.json.test_komutu` → GTR9'da **ayrı dizin + ayrı imaj** birim testi
+   (`ekip.json.dogrulama`; LLMPortal: `~/projects/llm-portal-dogrula/<ad>`, imaj `llm-portal:dogrula-<ad>`, canlı stack'e
+   dokunmaz) → `kalite` + `guvenlik` tek geçiş. Düzeltme turu yok.
+4. Rapor `docs/ekip/dogrulama/<tarih>-<ad>.md`: KABUL ya da DÜZELT (+ 🔐 korunan yolda). DÜZELT ise düzelt, yeniden
+   `/ekip:dogrula`. Merge sende. `/ekip:durum` "Doğrulamalar" tablosunda görünür.
+Headless: `claude -p --permission-mode auto --output-format json "/ekip:dogrula <dal> --istek <dosya>"` → `total_cost_usd`
+rapora yazılır.
+
 Baz çizgi (K16): ilk 10 görevi önce tek oturum Opus medium ile yap ve `docs/ekip/olcum.md`'ye maliyet/tur yaz;
 ekip akışı buna karşı raporlanır.

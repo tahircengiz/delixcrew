@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `ekip`)
 
-**Son güncelleme:** 2026-11-02 · **Faz:** 3 — retro aksiyonları: A1–A9 main'de (2690003), A11 ✔ (K38), A10 + A10-b ✔ (K39–K40), A12 ✔ (K41), A13 ✔ (K42), A10-c ✔ (K43); yalnız A2 (ilk gerçek kartta ölçüm) açık
+**Son güncelleme:** 2026-11-02 · **Faz:** 4 — K43 sonucu: doğrulama-yalnız kipi `/ekip:dogrula` (4.1 ✔, K44); retro A1–A13 kapalı, A2 (headless düzeltme turu ölçümü) ilk gerçek kartta açık
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -31,6 +31,7 @@ oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insa
 | 3.3 | A11 plugin'i Mac'e kalıcı kur (yerel marketplace, `/mac-change` R1) | ✔ 2026-11-01 `ekip@ekip-local` user kapsamı, gerçek rollback denendi (K38) |
 | 3.4 | A12 tutarlılıklar (spec §7 pytest, `kalite` tests/** kuralı, LLMPortal gitleaks allowlist) | ✔ 2026-11-01 (K41) |
 | 3.5 | A13 yazma kapısı: cwd (worktree) dışı yol → deny | ✔ 2026-11-02 (K42), hook testleri 31/31 |
+| 4.1 | Doğrulama-yalnız kipi: `skills/ekip-dogrula` (`/ekip:dogrula <dal\|commit\|dizin>`), `/ekip:basla` kip önerisi, pano "Doğrulamalar" tablosu, spec §15, `templates/ekip.json` `dogrulama` bloğu | ✔ 2026-11-02 (K44): validate ✔, hook 31/31, pano 12/12; LLMPortal A10-c yaması üzerinde kuru koşu 1,38 USD / 3 dk 21 sn, rapor `docs/ekip/dogrulama/2026-11-02-a10c-e7.md` |
 
 ## Kararlar
 
@@ -202,6 +203,23 @@ Faz 3 (retro aksiyonları, 2026-11-01, dal `retro-aksiyonlar`):
   S/M işte tek oturum + orkestratörün yalnız doğrulama adımı (GTR9 koşusu, `guvenlik` tek geçiş); tam ekip akışı Kademe 3 +
   paralel kart + belirsiz spec'e. A10 serisi kapandı; ilk gerçek kartta A2 ile birlikte "doğrulama-yalnız" kipinin
   maliyeti ölçülür.
+
+Faz 4 (doğrulama-yalnız kipi, 2026-11-02, dal `claude/goofy-hugle-87d0ae`):
+- **K44** `/ekip:dogrula` (K43'ün uygulaması): kartsız iş için orkestratör yalnız doğrular; girdi dal/commit (`git archive
+  <sha>`, K37) ya da dizin; kapılar gitleaks (diff + arşiv) → `ekip.json.test_komutu` arşivde → uzak **izole** birim testi
+  (`ekip.json.dogrulama`: `{ad}/{dizin}/{imaj}` şablonu, ayrı dizin + ayrı imaj, canlı stack'e dokunmaz, kilit gerekmez) →
+  tam takım yalnız `--tam` + `ortam_sahibi` boşken; `kalite` + (Kademe ≥ 2) `guvenlik` paralel **tek geçiş**, düzeltme turu
+  yok; karar `KABUL`/`DÜZELT` (+🔐 korunan yolda), rapor `docs/ekip/dogrulama/<tarih>-<ad>.md` + `.patch`,
+  `STATE.json.dogrulama[]`, `/ekip:durum` tablosu. `/ekip:basla` S/M + Kademe ≤ 2 + iyi tarif edilmiş işte "tek oturum +
+  `/ekip:dogrula`" önerir; tam akış Kademe 3 / paralel kart / belirsiz spec'e. Kuru koşu (LLMPortal, A10-c yaması, dal
+  `a10c-e7` = `40735be` + patch, headless Opus medium, `--plugin-dir` worktree): **1,38 USD, 3 dk 21 sn**, gitleaks 0, yerel
+  7/7, GTR9 izole birim 6/7 dosya yeşil + `teamguard_unit` 41/41, `session_unit` 4/8 tabanda da 4/8 (orkestratör kendiliğinden
+  ayırdı), `kalite` KABUL_ÇEKİNCELİ (P0/P1 0), `guvenlik` 🔐 İNSAN ONAYI (Orta+ 0); karar DÜZELT 🔐 (kırmızı kapı kuralı).
+  Koşudan skill'e alınan iki kural: kırmızı uzak kapıda taban ayrı imajla ayrılır, "önceden kırmızı" kararı düşürmez (bu
+  kuralla aynı koşu KABUL 🔐 olurdu, yeniden koşulmadı); `/security-review` ana checkout'u incelediği için atlanır. Tek oturum
+  (2,79) + doğrulama (1,38) = 4,17 USD, ekip E.7'nin %18'i; eksik kalan kırmızı koşu kanıtı ve smoke (`--tam`). A2 ölçümü
+  kısmen karşılandı (düzeltme turu olmadığı için `--resume` kıyası yok). Ayrıntı LLMPortal `docs/ekip/olcum.md`
+  "Doğrulama-yalnız kipi"; LLMPortal main commit'i ekip.json `dogrulama` bloğunu, raporu ve STATE kaydını taşır.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

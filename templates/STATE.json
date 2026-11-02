@@ -9,5 +9,12 @@
   "kartlar": {
     "T001": { "dosya": "docs/ekip/tasks/T001-ornek.md", "rol": "backend", "kademe": 2, "status": "acik", "pr": null, "tur": 0, "maliyet_usd": null }
   },
-  "status_degerleri": ["acik", "suruyor", "incelemede", "duzeltme", "kabul", "ret", "eskale"]
+  "status_degerleri": ["acik", "suruyor", "incelemede", "duzeltme", "kabul", "ret", "eskale"],
+  "$comment_dogrulama": "/ekip:dogrula kayıtları (kartsız iş, K43); yalnız orkestratör yazar, /ekip:durum 'Doğrulamalar' tablosunda gösterir.",
+  "dogrulama": [
+    { "ad": "ornek-dal", "tarih": "2026-01-01", "sha": "0000000", "taban": "0000000", "girdi": "ornek-dal", "kademe": 2, "karar": "KABUL",
+      "rapor": "docs/ekip/dogrulama/2026-01-01-ornek-dal.md",
+      "kapilar": { "gitleaks": "GEÇTİ", "yerel": "GEÇTİ", "uzak_birim": "GEÇTİ 10/10", "tam": "koşulmadı: --tam yok" },
+      "kalite": "KABUL", "guvenlik": "TEMİZ", "maliyet_usd": null }
+  ]
 }
