@@ -11,5 +11,14 @@
   "paralel_ust_sinir": 3,
   "inceleme_tur_ust_sinir": 3,
   "varsayilan_dal": "main",
-  "pr_aciklama_bolumu": "## Nasıl test ettim"
+  "pr_aciklama_bolumu": "## Nasıl test ettim",
+  "$comment_dogrulama": "/ekip:dogrula (kartsız doğrulama, K43) uzak izole birim testi. Yer tutucular: {ad} doğrulama adı, {dizin} uzak dizin, {imaj} imaj etiketi. Canlı dizine ve canlı imaj etiketine dokunmaz; blok yoksa kapı 'koşulmadı' yazılır. Komutlar uzak makinede `ssh <uzak> '<komut>'` ile koşar.",
+  "dogrulama": {
+    "uzak": "gtr9",
+    "dizin": "projects/<proje>-dogrula/{ad}",
+    "imaj": "<proje>:dogrula-{ad}",
+    "hazirlik": "cd {dizin} && docker build -q --build-arg VERSION=dogrula-{ad} -t {imaj} .",
+    "birim_test": "cd {dizin} && docker run --rm -v $PWD/tests:/tests:ro {imaj} pytest -q /tests",
+    "temizlik": "docker rmi -f {imaj}; rm -rf {dizin}"
+  }
 }

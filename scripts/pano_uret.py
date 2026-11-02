@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""ekip panosu: docs/ekip/STATE.json + kartlar + worktree .ekip/rapor.md → tek Markdown tablo.
+"""ekip panosu: docs/ekip/STATE.json + kartlar + worktree .ekip/rapor.md → tek Markdown tablo
+(+ STATE.json.dogrulama varsa "Doğrulamalar" tablosu: /ekip:dogrula kartsız kayıtları, K43).
 
 Kullanım (proje kökünde):
     python3 pano_uret.py             # tabloyu stdout'a basar (dosya yazmaz)
@@ -134,9 +135,11 @@ def topla(kok):
                     k[alan] = yedek[alan]
             if k.get("wave") is None and yedek.get("wave", "").isdigit():
                 k["wave"] = int(yedek["wave"])
+    dogrulama = [d for d in (state.get("dogrulama") or []) if isinstance(d, dict)]
     if not kartlar:
         return {"proje": kok, "spec": state.get("spec"), "boy": state.get("boy"),
-                "guncelleme": state.get("guncelleme"), "kartlar": [], "worktree_sayisi": 0}
+                "guncelleme": state.get("guncelleme"), "kartlar": [], "worktree_sayisi": 0,
+                "dogrulama": dogrulama}
 
     wave_no = {}
     for i, w in enumerate(state.get("waves") or [], 1):
@@ -194,7 +197,33 @@ def topla(kok):
         })
     satirlar.sort(key=lambda s: (s["wave"] if isinstance(s["wave"], int) else 99, s["id"]))
     return {"proje": kok, "spec": state.get("spec"), "boy": state.get("boy"),
-            "guncelleme": state.get("guncelleme"), "kartlar": satirlar, "worktree_sayisi": len(wts)}
+            "guncelleme": state.get("guncelleme"), "kartlar": satirlar, "worktree_sayisi": len(wts),
+            "dogrulama": dogrulama}
+
+
+def dogrulama_tablosu(kayitlar):
+    """STATE.json.dogrulama → Markdown tablo satırları (/ekip:dogrula, kartsız iş). Boşsa []."""
+    if not kayitlar:
+        return []
+    def h(x):
+        return str(x if x not in (None, "") else "-").replace("|", "/").replace("\n", " ")
+    sat = ["", "## Doğrulamalar (kartsız, `/ekip:dogrula`)", "",
+           "| tarih | ad | sha | kademe | gitleaks | yerel | uzak birim | tam | kalite | guvenlik | karar | maliyet | rapor |",
+           "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    for d in kayitlar:
+        k = d.get("kapilar") or {}
+        m = d.get("maliyet_usd")
+        maliyet = f"${m:.2f}" if isinstance(m, (int, float)) else "ölçülmedi"
+        sha = h(d.get("sha"))[:7]
+        rapor = f"`{d['rapor']}`" if d.get("rapor") else "-"
+        sat.append(f"| {h(d.get('tarih'))} | {h(d.get('ad'))} | {sha} | {h(d.get('kademe'))} | {h(k.get('gitleaks'))} | "
+                   f"{h(k.get('yerel'))} | {h(k.get('uzak_birim'))} | {h(k.get('tam'))} | {h(d.get('kalite'))} | "
+                   f"{h(d.get('guvenlik'))} | {h(d.get('karar'))} | {maliyet} | {rapor} |")
+    duzelt = [d.get("ad") for d in kayitlar if str(d.get("karar", "")).startswith("DÜZELT")]
+    sat.append("")
+    sat.append("**Bekleyen düzeltme:** " + (", ".join(map(str, duzelt)) if duzelt else "yok") +
+               " · karar KABUL/DÜZELT, uygulama ve merge kullanıcıda; 🔐 = korunan yola dokunuldu, sohbette onay ister.")
+    return sat
 
 
 def tablo(veri):
@@ -207,6 +236,7 @@ def tablo(veri):
     if not veri["kartlar"]:
         bas += ["**Kart yok.** `docs/ekip/STATE.json` ya da `docs/ekip/tasks/` bulunamadı ya da boş. "
                 "Başlamak için `/ekip:basla <istek>`, kartlar için `/ekip:dagit`.", ""]
+        bas += dogrulama_tablosu(veri.get("dogrulama"))
         return "\n".join(bas)
     say = {}
     for s in veri["kartlar"]:
@@ -231,6 +261,7 @@ def tablo(veri):
     bas.append("")
     bas.append("**Bekleyen kapılar:** " + ("; ".join(bekleyen) if bekleyen else "yok") +
                "  \n🔐 = Kademe 3, interaktif oturum + güvenlik onayı · merge = kapı 2, insan merge eder.")
+    bas += dogrulama_tablosu(veri.get("dogrulama"))
     return "\n".join(bas) + "\n"
 
 

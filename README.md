@@ -37,6 +37,7 @@ hook testleri: `bash tests/hook_testleri.sh`; davranış testleri: `claude plugi
 | 4 | `/ekip:uygula <kart>` | Uygulayıcı oturumda: test-first, yalnız kartın dosyaları, PR, `.ekip/rapor.md`. |
 | 5 | `/ekip:denetle <kart>` | Deterministik kapılar → `kalite` (+ `guvenlik`) sıfır bağlamla → ≤ 3 düzeltme turu → **Kapı 2 (merge, insan).** |
 | 6 | `/ekip:kapat` | STATUS/CHANGELOG, ölçüm (maliyet, tur), drift kontrolü, onaylı bellek yazımı, worktree temizliği. |
+| kısa yol | `/ekip:dogrula <dal\|commit\|dizin>` | Kartsız yapılmış işi (tek oturum ya da sen) **yalnız doğrular** (K43): gitleaks, yerel test, uzak **izole** birim testi (ayrı dizin + ayrı imaj, canlı stack'e dokunmaz), istenirse `--tam`; `kalite` (+ `guvenlik`) **tek geçiş**, düzeltme turu yok → `docs/ekip/dogrulama/<tarih>-<ad>.md` raporu (KABUL / DÜZELT, 🔐) ve `STATE.json.dogrulama`. S/M + iyi tarif + Kademe ≤ 2 işte `/ekip:basla` bunu önerir; tam akış Kademe 3 / paralel kart / belirsiz spec'e. |
 | her an | `/ekip:durum` | Salt-okunur pano: wave · kart · rol · kademe · status · tur · PR · maliyet · son rapor · bekleyen kapı (🔐, merge) tablosu sohbete; istenirse (`--dosya`) `docs/ekip/PANO.md`'ye (git'e girmez). |
 
 ## Roller
@@ -52,8 +53,10 @@ hook testleri: `bash tests/hook_testleri.sh`; davranış testleri: `claude plugi
 
 ## Proje tarafı dosyalar
 
-`docs/ekip/ekip.json` (test komutu, korunan yollar, test yolları, paralel üst sınır), `docs/ekip/SPEC.md`,
-`docs/ekip/tasks/T<nnn>-<slug>.md`, `docs/ekip/STATE.json`, `docs/ekip/PANO.md` (yalnız istenince üretilir, `.gitignore`'da). Uygulayıcı worktree'sinde `.ekip/kart` (hook'ları
+`docs/ekip/ekip.json` (test komutu, korunan yollar, test yolları, paralel üst sınır, `dogrulama` uzak izole koşu bloğu),
+`docs/ekip/SPEC.md`, `docs/ekip/tasks/T<nnn>-<slug>.md`, `docs/ekip/STATE.json` (kartlar + `dogrulama` kayıtları),
+`docs/ekip/dogrulama/<tarih>-<ad>.md|.patch` (`/ekip:dogrula` raporu ve yaması), `docs/ekip/PANO.md` (yalnız istenince
+üretilir, `.gitignore`'da). Uygulayıcı worktree'sinde `.ekip/kart` (hook'ları
 aktifleştirir), `.ekip/rapor.md`, `.ekip/test-sonucu.txt`, `.ekip/kanit/`.
 
 ## Bilinen sınırlar

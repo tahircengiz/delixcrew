@@ -34,4 +34,23 @@ echo "$out" | grep -q "| 2 | T003 | frontend | 1 | acik | 0 | - | ölçülmedi |
 [ -f docs/ekip/PANO.md ] && grep -q "T001" docs/ekip/PANO.md && ok "--dosya: PANO.md yazıldı" || bad "PANO.md yok"
 python3 "$S/pano_uret.py" --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert len(d["kartlar"])==3 and d["kartlar"][0]["worktree"], d' && ok "--json çıktısı" || bad "--json"
 
+# 3) /ekip:dogrula kaydı (STATE.json.dogrulama) → "Doğrulamalar" tablosu; kartlı ve kartsız projede
+python3 - <<'PYS'
+import json; p="docs/ekip/STATE.json"; d=json.load(open(p))
+d["dogrulama"]=[{"ad":"a10c-e7","tarih":"2026-11-02","sha":"abcdef0123","taban":"40735be","girdi":"a10c-e7","kademe":"3 🔐","karar":"DÜZELT 🔐",
+ "rapor":"docs/ekip/dogrulama/2026-11-02-a10c-e7.md","kapilar":{"gitleaks":"GEÇTİ","yerel":"GEÇTİ","uzak_birim":"GEÇTİ 41/41","tam":"koşulmadı: --tam yok"},
+ "kalite":"KABUL_ÇEKİNCELİ","guvenlik":"🔐 İNSAN ONAYI","maliyet_usd":1.25}]
+json.dump(d,open(p,"w"),ensure_ascii=False)
+PYS
+out=$(python3 "$S/pano_uret.py")
+echo "$out" | grep -qF "| 2026-11-02 | a10c-e7 | abcdef0 | 3 🔐 | GEÇTİ | GEÇTİ | GEÇTİ 41/41 | koşulmadı: --tam yok | KABUL_ÇEKİNCELİ | 🔐 İNSAN ONAYI | DÜZELT 🔐 | \$1.25 | \`docs/ekip/dogrulama/2026-11-02-a10c-e7.md\` |" && ok "dogrulama satırı (kartlı proje)" || { bad "dogrulama satırı"; echo "$out"; }
+echo "$out" | grep -qF "Bekleyen düzeltme:** a10c-e7" && ok "dogrulama: bekleyen düzeltme" || bad "dogrulama: bekleyen düzeltme"
+python3 "$S/pano_uret.py" --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d["dogrulama"][0]["ad"]=="a10c-e7", d' && ok "--json dogrulama" || bad "--json dogrulama"
+python3 - <<'PYS'
+import json; p="docs/ekip/STATE.json"; d=json.load(open(p)); d["kartlar"]={}; json.dump(d,open(p,"w"),ensure_ascii=False)
+PYS
+rm -f docs/ekip/tasks/*.md
+out=$(python3 "$S/pano_uret.py")
+echo "$out" | grep -q "Kart yok" && echo "$out" | grep -qF "| 2026-11-02 | a10c-e7 |" && ok "dogrulama: kartsız projede de görünür" || { bad "dogrulama kartsız"; echo "$out"; }
+
 cd /; rm -rf "$T"; [ $FAIL -eq 0 ] && echo "TÜMÜ GEÇTİ" || { echo "BAŞARISIZ"; exit 1; }

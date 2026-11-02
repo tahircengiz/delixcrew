@@ -124,6 +124,8 @@ Kademe 1'de insan onayı istenmez: onay yorgunluğu Kademe 3 onayını değersiz
    kapsamlı yeniden inceleme; orkestratör **kendisi düzeltmez**. **Kapı 2: merge (kullanıcı).**
 6. **`/ekip:kapat`** — STATUS.md, CHANGELOG, doküman; karta `maliyet_usd`, `cache_hit`, `tur`; paylaşılan bellek
    (CLAUDE.md, agent-memory) yazımı yalnız burada, insan onayıyla (OWASP ASI06 memory poisoning).
+7. **`/ekip:dogrula <dal|commit|dizin>`** — kartsız yapılmış işi (tek oturum ya da kullanıcı) yalnız doğrular: deterministik
+   kapılar + `kalite`/`guvenlik` tek geçiş, düzeltme turu yok; rapor ve `STATE.json.dogrulama`. §15 (K43, K44).
 
 ## 6. Artefaktlar
 
@@ -253,3 +255,30 @@ ucuz ve ajanın kapatamayacağı yerde:
 
 Kurallar: pano salt-okunurdur, ajan panodan komut almaz; ajanların kendi durumunu yazdığı tek alan kendi kartının
 `status`/`pr`/`tur`; orkestratör kalanını yazar. Uzun vadede prj_Ortak (görev yöneticisi) ile entegrasyon aday, v1 dışı.
+
+## 15. Doğrulama-yalnız kipi (`/ekip:dogrula`, K43–K44, 2026-11-02 eklendi)
+
+**Neden:** A10 serisi (K39, K40, K43) iyi tarif edilmiş S/M işte plugin'siz tek Opus oturumunun ekip akışının %4–12'si
+maliyetle aynı test sonucuna ulaştığını gösterdi. Ekip akışının o işlerde fiilen sağladığı dört şey uygulama değil
+doğrulamadır: uzak ortamda koşu kanıtı, sır taraması, `guvenlik` incelemesi (gerçek bulgular: fail-open sıra, sessiz geri
+yükleme) ve insan kararı. Bu kip o dördünü kart, spec, dispatch ve düzeltme döngüsü olmadan verir.
+
+**Ne zaman (`/ekip:basla` önerisi):** boy S/M **ve** kademe ≤ 2 **ve** iş iyi tarif edilmiş (belirti + istenen davranış +
+kabul ölçütü kullanıcı sözüyle; açık grill dalı yok; paralel kart yok) → "tek oturum + `/ekip:dogrula`". Tam akış
+Kademe 3, paralel kart (≥ 2 bağımsız) ya da belirsiz spec'te. Kademe 3'e doğrulama sırasında yükselen iş (korunan yola
+dokunulmuş) kipi değiştirmez; karara 🔐 eklenir ve merge sohbette onay ister.
+
+| Adım | Ne | Kaynak |
+|---|---|---|
+| 0 Girdi | dal/commit → `git rev-parse`; dizin → HEAD (+ kirli yama, "tekrarlanamaz" notu); taban `merge-base`; arşiv `git archive <sha>` (worktree'den değil, K28/K37); kademe = korunan yol varsa 3, yoksa `--kademe` ya da 2; kabul ölçütü `--istek <dosya>` / sohbet / SPEC REQ / commit mesajı | §6 artefaktlar yok; yama `docs/ekip/dogrulama/<tarih>-<ad>.patch` |
+| 1 Deterministik | gitleaks (diff + arşiv) → `ekip.json.test_komutu` arşivde → uzak **izole** birim testi (`ekip.json.dogrulama`: ayrı dizin `{dizin}`, ayrı imaj `{imaj}`, hazırlık/birim_test/temizlik; canlı dizin ve etiket yasak, kilit gerekmez) → tam takım yalnız `--tam` + `ortam_sahibi` boşken (K23 kilidi `dogrula:<ad>`) | §7 reçeteleri; `templates/ekip.json` `dogrulama` bloğu |
+| 2 İnceleme | `kalite` (+ kademe ≥ 2 `guvenlik`, kademe 3 `/security-review`) paralel, sıfır bağlam, yalnız yollar; **tek geçiş**, düzeltme turu ve `SendMessage` yok; kartsız kipte Files kuralı yok, test zayıflatma P0 | agents/kalite.md, agents/guvenlik.md |
+| 3 Karar | `KABUL` = koşulan kapılar GEÇTİ (ya da "önceden kırmızı": aynı test tabanda da kırmızı, tabanı ayrı imajla ayırarak) ∧ P0/P1 yok ∧ güvenlik Orta+ yok; aksi `DÜZELT`; koşulmayan ve önceden kırmızı kapı kararı düşürmez, ayrı listelenir; korunan yol → 🔐 | rapor `docs/ekip/dogrulama/<tarih>-<ad>.md`, `STATE.json.dogrulama[]`, `/ekip:durum` "Doğrulamalar" tablosu |
+
+**Sınırlar:** düzeltme döngüsü yok (uygulama kullanıcıda; düzeltince yeniden `/ekip:dogrula`); kırmızı koşu kanıtı
+üretilmez (test-first kartın işi, A10-c'de de yoktu); smoke/ekran görüntüsü DoD'si yalnız `--tam` ile; paralel iş
+için uygun değil (sözleşme adları sabitlenmez). Maliyet: headless koşuda `total_cost_usd` rapora sonradan yazılır,
+yoksa `ölçülmedi`. İlk ölçüm (K44, LLMPortal `docs/ekip/olcum.md` "Doğrulama-yalnız kipi"): A10-c yaması üzerinde headless
+Opus medium **1,38 USD / 3 dk 21 sn**, `kalite` + `guvenlik` paralel, GTR9 izole birim 6/7 dosya yeşil + `session_unit`
+önceden kırmızı; tek oturum + doğrulama toplamı 4,17 USD = ekip E.7'nin %18'i.
+
