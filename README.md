@@ -16,19 +16,20 @@ The skills reply in the user's language; labels, status values and verdict token
 
 ## Installation
 
-Permanent (Desktop and terminal, no `--plugin-dir` needed; the repo is read in place, no copy):
+From GitHub (Desktop and terminal, no `--plugin-dir` needed):
 
 ```bash
-claude plugin marketplace add ~/Documents/projects/prj_Ekip
+claude plugin marketplace add tahircengiz/delix
 ```
 
 ```bash
 claude plugin install delix@delix-local
 ```
 
-The marketplace definition is [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json); after `git pull`,
-update with `claude plugin update delix@delix-local`. For a one-off trial, `claude --plugin-dir ~/Documents/projects/prj_Ekip`
-also works. Checks: `claude plugin validate .`; hook tests: `bash tests/hook_tests.sh`; board tests:
+From a local clone the repo is read in place, no copy: `claude plugin marketplace add /path/to/delix`, then the same
+`install` command. The marketplace definition is [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json);
+after `claude plugin marketplace update delix-local` (or `git pull` in a local clone), run
+`claude plugin update delix@delix-local`. For a one-off trial, `claude --plugin-dir /path/to/delix` also works. Checks: `claude plugin validate .`; hook tests: `bash tests/hook_tests.sh`; board tests:
 `bash tests/board_tests.sh`; behaviour evals: `claude plugin eval . --trust-plugin --no-publish` (calls the model, costs money).
 
 ## Flow
@@ -78,3 +79,7 @@ reviewer Bash). A path escaping the worktree (cwd) is always rejected (A13, K42)
 that reason a change to the card file, `docs/delix/**` or an unapproved protected path in the card counts as a finding in
 the `delix:qa` review of the diff. Tier 3 permission is opened by the `**🔐 Approved:** <YYYY-MM-DD> <who>` line after
 the card's header table; only the orchestrator writes it, after the user's explicit "yes" in chat, and commits it to main.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Source and issues: <https://github.com/tahircengiz/delix>.

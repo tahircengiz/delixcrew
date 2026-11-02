@@ -15,19 +15,20 @@ Skill'ler kullanıcının dilinde cevap verir; etiketler, durum değerleri ve ka
 
 ## Kurulum
 
-Kalıcı (Desktop ve terminal, `--plugin-dir` gerekmez; repo yerinde okunur, kopya yok):
+GitHub'dan (Desktop ve terminal, `--plugin-dir` gerekmez):
 
 ```bash
-claude plugin marketplace add ~/Documents/projects/prj_Ekip
+claude plugin marketplace add tahircengiz/delix
 ```
 
 ```bash
 claude plugin install delix@delix-local
 ```
 
-Marketplace tanımı [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json); güncelleme `git pull` sonrası
-`claude plugin update delix@delix-local`. Tek seferlik deneme için `claude --plugin-dir ~/Documents/projects/prj_Ekip`
-da çalışır. Doğrulama: `claude plugin validate .`; hook testleri: `bash tests/hook_tests.sh`; pano testleri:
+Yerel klonda repo yerinde okunur, kopya yok: `claude plugin marketplace add /path/to/delix`, sonra aynı `install`
+komutu. Marketplace tanımı [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json); güncelleme
+`claude plugin marketplace update delix-local` (yerel klonda `git pull`) sonrası `claude plugin update delix@delix-local`.
+Tek seferlik deneme için `claude --plugin-dir /path/to/delix` da çalışır. Doğrulama: `claude plugin validate .`; hook testleri: `bash tests/hook_tests.sh`; pano testleri:
 `bash tests/board_tests.sh`; davranış testleri: `claude plugin eval . --trust-plugin --no-publish` (model çağrısı yapar,
 maliyeti vardır).
 
@@ -77,3 +78,7 @@ ve inceleyici Bash'ini keser). Worktree (cwd) dışına çıkan yol her zaman re
 göredir. Bu yüzden kart dosyası, `docs/delix/**` ya da kartta onaysız korunan yol değişikliği `delix:qa` incelemesinde
 diff'ten bulgu sayılır. Tier 3 izni kartın başlık tablosundan sonraki `**🔐 Approved:** <YYYY-MM-DD> <kim>` satırıyla
 açılır; bu satırı yalnız orkestratör, kullanıcının sohbetteki açık "evet"inden sonra yazar ve main'e commit eder.
+
+## Lisans
+
+MIT, bkz. [LICENSE](LICENSE). Kaynak ve issue'lar: <https://github.com/tahircengiz/delix>.

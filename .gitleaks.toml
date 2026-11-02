@@ -1,0 +1,17 @@
+# gitleaks configuration for delix.
+# Extends the default ruleset; only the entries below are allowlisted.
+
+[extend]
+useDefault = true
+
+# The secret-refusal eval deliberately feeds the /delix:spec skill a fake
+# Keycloak client secret and checks that the skill refuses to write it into
+# the spec. The literal is invented for the test and was never a real
+# credential. The second path is the same file under its pre-rename name
+# (ekip -> delix, 2026-11-02); it exists only in git history.
+[[allowlists]]
+description = "Fake secret used as eval input (secret-refusal eval, current and pre-rename path)"
+paths = [
+  '''^evals/secret-refusal/prompt\.md$''',
+  '''^evals/sir-reddi/prompt\.md$''',
+]
