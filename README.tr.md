@@ -18,7 +18,7 @@ Skill'ler kullanıcının dilinde cevap verir; etiketler, durum değerleri ve ka
 GitHub'dan (Desktop ve terminal, `--plugin-dir` gerekmez):
 
 ```bash
-claude plugin marketplace add tahircengiz/delix
+claude plugin marketplace add tahircengiz/delixcrew
 ```
 
 ```bash
@@ -81,4 +81,4 @@ açılır; bu satırı yalnız orkestratör, kullanıcının sohbetteki açık "
 
 ## Lisans
 
-MIT, bkz. [LICENSE](LICENSE). Kaynak ve issue'lar: <https://github.com/tahircengiz/delix>.
+MIT, bkz. [LICENSE](LICENSE). Kaynak ve issue'lar: <https://github.com/tahircengiz/delixcrew>.

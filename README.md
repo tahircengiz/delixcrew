@@ -19,7 +19,7 @@ The skills reply in the user's language; labels, status values and verdict token
 From GitHub (Desktop and terminal, no `--plugin-dir` needed):
 
 ```bash
-claude plugin marketplace add tahircengiz/delix
+claude plugin marketplace add tahircengiz/delixcrew
 ```
 
 ```bash
@@ -82,4 +82,4 @@ the card's header table; only the orchestrator writes it, after the user's expli
 
 ## License
 
-MIT, see [LICENSE](LICENSE). Source and issues: <https://github.com/tahircengiz/delix>.
+MIT, see [LICENSE](LICENSE). Source and issues: <https://github.com/tahircengiz/delixcrew>.
