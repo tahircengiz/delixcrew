@@ -18,10 +18,10 @@ cwd = g.get("cwd") or os.getcwd()
 FEEDBACK_DENY = "delixcrew: feedback is sent only by the user from their own terminal"
 # (a) and (b) skip a heredoc body only when the whole command is exactly one capture call (allowlist):
 # `python3 <path>/feedback.py add <<'DELIM'` (quoted delimiter: no expansion), body, `DELIM` as the last line.
-# The path may use $VAR/${VAR}, nothing else that the shell expands. Any other shape is checked as full text.
-_VAR = r"\$\{?[A-Za-z_]\w*\}?"
-_QPATH = r"\"(?:(?:[^\"\n$`\\]|" + _VAR + r")*/)?feedback\.py\""
-_PATH = r"(?:(?:[^\s'\"$`\\;&|<>(){}#*?\[\]~]|" + _VAR + r")*/)?feedback\.py"
+# The path is literal (no `$`, nothing the shell expands); each path part is one repeated character class, so a
+# failing fullmatch cannot backtrack exponentially (ReDoS). Any other shape is checked as full text.
+_QPATH = r"\"(?:[^\"\n$`\\]*/)?feedback\.py\""
+_PATH = r"(?:[^\s'\"$`\\;&|<>(){}#*?\[\]~]*/)?feedback\.py"
 ADD_HEREDOC = re.compile(r"(python3[ \t]+(?:" + _QPATH + "|" + _PATH + r")[ \t]+add[ \t]+<<(['\"])([A-Za-z_][\w.-]*)\2)"
                          r"\n(.*)\n\3", re.S)
 m = ADD_HEREDOC.fullmatch(cmd.strip())

@@ -127,6 +127,23 @@ fbdeny "command on the delimiter line"        bash_gate.py "$(hd "python3 script
 fbdeny "line after the delimiter"             bash_gate.py "$(hd "python3 scripts/feedback.py add <<'EOF'" '{"t":"x"}' 'EOF' "$SND")"
 fbdeny "early delimiter inside the body"      bash_gate.py "$(hd "python3 scripts/feedback.py add <<'EOF'" '{"t":"x"}' 'EOF' "$SND" 'EOF')"
 T3B='{"title": "feedback.py send under script prints $( and `x`", "body": "send"}'
-T3O='python3 "${CLAUDE_PLUGIN_ROOT}/scripts/feedback.py" add <<'"'EOF'"
+T3O='python3 "/opt/plugins/delixcrew/scripts/feedback.py" add <<'"'EOF'"
 allow  "T003 add heredoc, risky words in body" bash_gate.py "$(hd "$T3O" "$T3B" 'EOF')"
+# REQ-7 fix round 4: no $VAR in the exempt path (ReDoS); the gate returns fast on long $-runs
+T3V='python3 "${CLAUDE_PLUGIN_ROOT}/scripts/feedback.py" add <<'"'EOF'"
+fbdeny "\${VAR} path gets no exemption"     bash_gate.py "$(hd "$T3V" '{"title": "feedback.py send prints wrong hash"}' 'EOF')"
+timed(){ # name, json → bash_gate.py must answer in < 1 s
+  python3 - "$S/bash_gate.py" "$2" <<'PYT' && echo "✔ $1" || { echo "✘ $1 (expected < 1 s)"; FAIL=1; }
+import subprocess, sys, time
+t = time.monotonic()
+try:
+    subprocess.run([sys.executable, sys.argv[1]], input=sys.argv[2], capture_output=True, text=True, timeout=5)
+except subprocess.TimeoutExpired:
+    sys.exit(1)
+sys.exit(0 if time.monotonic() - t < 1 else 1)
+PYT
+}
+DOL=$(printf '$aaaaaaaaaaaaaaa%.0s' $(seq 12))
+timed "12 x \$aaa run, fast"                 "$(bashjson "$N" "python3 $DOL x")"
+timed "12 x \$aaa in add heredoc path, fast" "$(hd "python3 \"$DOL/feedback.py\" add <<'EOF'" '{"t":"x"}' 'EOF')"
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
