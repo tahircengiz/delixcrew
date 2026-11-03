@@ -310,7 +310,8 @@ def build(n, rec, live_sha):
     user = [y for x in [reason] + questions for y in (x, unicodedata.normalize("NFKC", x))]
     if any(HTML_RE.search(x) or "<!--" in x for x in user):
         reasons.append("HTML in reason or questions")
-    if any(MENTION_RE.search(x) for x in user):
+    # also on the comment: a placeholder ending in ">" can sit right before "@" (no placeholder contains "@")
+    if any(MENTION_RE.search(x) for x in user + [comment]):
         reasons.append("@mention in reason or questions")
     canon = json.dumps({"repo": REPO, "issue": n, "issue_sha": rec["issue_sha"], "decision": decision, "comment": comment,
                         "sanitizer_version": SANITIZER_VERSION}, sort_keys=True, ensure_ascii=False, separators=(",", ":"))

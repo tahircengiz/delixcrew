@@ -301,6 +301,14 @@ blocked "fullwidth @ (U+FF20)" 'd["reason"]="Ask ＠alice"'                     
 blocked "small-form @ (U+FE6B)" 'd["reason"]="Ask ﹫alice"'                                    mention
 blocked "fullwidth <b>"        'd["reason"]="＜b＞x"'                                      HTML
 blocked "fullwidth <!--"       'd["reason"]="＜!-- x"'                                         HTML
+# Review round 2: a placeholder ending in ">" right before "@" exposes a mention only after sanitizing.
+blocked "extra term before @"  'd["reason"]="Ask acme@carol"'                                      mention
+blocked "host before @"        'd["reason"]="Ask acme.io@alice"'                                   mention
+blocked "USER term before @"   'd["reason"]="Ask alice-test@dave"'                                 mention
+printf '%s' "$J17" | tr_ record 17 >/dev/null; pv=$(tr_ preview 17); rc=$?
+[ $rc -eq 0 ] && echo "$pv" | grep -q "^VERDICT: CLEAN" && echo "$pv" | grep -qF "mail <redacted:email>." \
+  && ok "R2 email (bob@example.com) still CLEAN" || bad "R2 email blocked (rc=$rc, $(echo "$pv" | grep VERDICT))"
+blocked "zero-width char again" 'd["reason"]="a​b"'                                           unicode
 
 # --- REQ-6 apply -------------------------------------------------------------
 mkdir -p "$T/fake/scripts" "$T/fake/.claude-plugin"; cp "$S/triage.py" "$S/feedback.py" "$T/fake/scripts/"
