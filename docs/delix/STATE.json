@@ -1,10 +1,54 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T21:30:00Z",
+  "updated": "2026-11-03T22:00:00Z",
   "env_owner": null,
-  "waves": [],
-  "cards": {},
+  "waves": [
+    {
+      "wave": 1,
+      "cards": [
+        "T016",
+        "T017"
+      ],
+      "note": "SPEC feedback redaction (gate 1 2026-11-03, K134-K148). Parallel, no shared files, either merge order; rebase on main before merge. Both 🔐: Approved line before dispatch."
+    },
+    {
+      "wave": 2,
+      "cards": [
+        "T018"
+      ],
+      "note": "after T016 AND T017 merged (CHANGELOG bullet describes REQ-6, README the merged T016 behaviour). Tier 1 docs."
+    }
+  ],
+  "cards": {
+    "T016": {
+      "file": "docs/delix/tasks/T016-feedback-url-allowlist.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T017": {
+      "file": "docs/delix/tasks/T017-write-gate-queue-casefold.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T018": {
+      "file": "docs/delix/tasks/T018-feedback-docs-url-rule.md",
+      "role": "docs",
+      "tier": 1,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    }
+  },
   "status_values": [
     "open",
     "in_progress",

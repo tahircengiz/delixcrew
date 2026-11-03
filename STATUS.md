@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-03 · **Faz:** 8 — triage spec'i onaylı (kapı 1), kartlar T010–T013 hazır, 🔐 onay ve dalga 1 dispatch bekliyor (§8). §7: 0.5.0 öz-besleme rev 3 kapandı (T001–T009 main'de, arşiv `docs/delix/archive/0.5.0-self-feeding/`); K104 sızıntıları, 0.5.0 etiketi, W0 ve uçtan uca test açık
+**Son güncelleme:** 2026-11-03 · **Faz:** 9 — feedback temizliği spec'i onaylı (kapı 1), kartlar T016–T018 hazır, 🔐 onay ve dalga 1 dispatch bekliyor (§9). §8: 0.6.0 triage kapandı, arşiv `docs/delix/archive/0.6.0-triage/`; W0 ve uçtan uca test açık
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -427,6 +427,26 @@ Kararlar: `docs/delix/archive/0.6.0-triage/SPEC.md` §9 (kullanıcı K106–K110
 - **K127** Kart numaraları proje boyunca tekil (arşivde T001–T009 var; triage T010'dan başlar).
 - Yan bulgu: Desktop bu worktree dizinini (T005'ten) yeniden kullandı; kalan `.delix/card` yazma kapısını uygulayıcı
   kipine soktu. Dosya silinmeden kenara alındı. close'un worktree temizliği `.delix/`'i silmiyor olabilir; takip işi.
+
+## 9. Feedback temizliği (2026-11-03, SPEC `docs/delix/SPEC.md`, kartlar `docs/delix/tasks/T016–T018`)
+
+`feedback.sanitize()` (public issue ve triage yorumu süzgeci) main `79ef030`'da yönlendirme sonrası yolu, JSON kaçışlı yolu,
+tek etiketli/şemalı host'lu URL'yi, sayısal ve Unicode host'u değiştirmeden geçiriyordu (K104, K115 kapsamı; ölçüldü);
+yazma kapısı feedback kuyruğunu harf büyüklüğüne duyarlı karşılaştırıyordu (K129).
+
+| # | Adım | Durum |
+|---|---|---|
+| 9.1 | `/delixcrew:start` (M · Tier 3) + grill (1 soru) + spec; architect FIX, security FIX işlendi | ✔ K134–K148 |
+| 9.2 | Kapı 1 | ✔ 2026-11-03 |
+| 9.3 | Dispatch: T016 `feedback.py` 🔐, T017 `write_gate.py` 🔐 (dalga 1, paralel), T018 README/CHANGELOG (dalga 2) | ✔ kartlar ve dispatch dosyaları |
+| 9.4 | 🔐 Kart başına Approved satırı (T016, T017) | ◻ kullanıcıda |
+| 9.5 | Dalga 1, inceleme, kapı 2 | ◻ |
+| 9.6 | Dalga 2 (T018), kapanış | ◻ |
+
+Kararlar: SPEC §9. Öne çıkanlar: **K134** (kullanıcı) URL'de izin listesi, github.com'da yalnız `tahircengiz/delixcrew` ve
+`anthropics/*` yolu · **K146** izinli URL'nin kuyruğu da karakter izin listesinden geçer, `%` reddedilir · **K147**
+`*.test`/`*.invalid`/`*.localhost` artık izinli değil · **K140** sürüm artmaz, CHANGELOG `## Unreleased` · **K143** #12
+(`purge`) kapsam dışı (triage kaydı `accepted` değil).
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
