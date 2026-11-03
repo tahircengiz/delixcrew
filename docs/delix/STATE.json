@@ -65,8 +65,8 @@
       "file": "docs/delix/tasks/T004-github-forms-ci-version.md",
       "role": "devops",
       "tier": 3,
-      "status": "open",
-      "pr": null,
+      "status": "in_review",
+      "pr": 18,
       "rounds": 0,
       "cost_usd": null
     },
@@ -74,9 +74,9 @@
       "file": "docs/delix/tasks/T005-docs-feedback.md",
       "role": "docs",
       "tier": 1,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
+      "status": "in_review",
+      "pr": 19,
+      "rounds": 2,
       "cost_usd": null
     },
     "T006": {
