@@ -47,6 +47,8 @@ SHA_RE = re.compile(r"[0-9a-f]{12}")
 HTML_COMMENT_RE = re.compile(r"<!--.*?(?:-->|\Z)", re.S)
 HTML_RE = re.compile(r"<[A-Za-z/!]")
 MENTION_RE = re.compile(r"(?<![\w.])@[A-Za-z0-9]")
+COMMENT_MENTION_RE = re.compile(r"@[A-Za-z0-9]")
+CHAR_REF_RE = re.compile(r"&(#[0-9]+|#[xX][0-9A-Fa-f]+|[A-Za-z][A-Za-z0-9]*);")
 VERSION_RE = re.compile(r"\bplugin[ \t]+([^\s,]+)")
 SEMVER_RE = re.compile(r"\d+\.\d+\.\d+")
 
@@ -308,10 +310,11 @@ def build(n, rec, live_sha):
     # K122: checked on the raw text (sanitize adds <redacted:…> placeholders) and on its NFKC form, which sanitize
     # publishes: fullwidth / small-form characters become @ and <.
     user = [y for x in [reason] + questions for y in (x, unicodedata.normalize("NFKC", x))]
-    if any(HTML_RE.search(x) or "<!--" in x for x in user):
+    if any(HTML_RE.search(x) or "<!--" in x for x in user) or CHAR_REF_RE.search(comment):
         reasons.append("HTML in reason or questions")
-    # also on the comment: a placeholder ending in ">" can sit right before "@" (no placeholder contains "@")
-    if any(MENTION_RE.search(x) for x in user + [comment]):
+    # K131: any "@" + ASCII alnum in the published comment, no lookbehind; emails are already <redacted:email> and no
+    # placeholder contains "@" or "&".
+    if any(MENTION_RE.search(x) for x in user) or COMMENT_MENTION_RE.search(comment):
         reasons.append("@mention in reason or questions")
     canon = json.dumps({"repo": REPO, "issue": n, "issue_sha": rec["issue_sha"], "decision": decision, "comment": comment,
                         "sanitizer_version": SANITIZER_VERSION}, sort_keys=True, ensure_ascii=False, separators=(",", ":"))

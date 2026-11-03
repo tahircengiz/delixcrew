@@ -305,6 +305,13 @@ blocked "fullwidth <!--"       'd["reason"]="＜!-- x"'                         
 blocked "extra term before @"  'd["reason"]="Ask acme@carol"'                                      mention
 blocked "host before @"        'd["reason"]="Ask acme.io@alice"'                                   mention
 blocked "USER term before @"   'd["reason"]="Ask alice-test@dave"'                                 mention
+# Review round 3 (K131): any "@" + ASCII alnum in the published comment, and HTML character references.
+blocked "dot before @"         'd["reason"]="Ask .@alice"'                                         mention
+blocked "word dot before @"    'd["reason"]="x.@alice"'                                            mention
+blocked "accented letter before @" 'd["reason"]="Café@alice"'                                 mention
+blocked "CJK letter before @"  'd["reason"]="中@alice"'                                        mention
+blocked "numeric char reference" 'd["reason"]="&#64;alice"'                                        HTML
+blocked "named char reference" 'd["reason"]="a &amp; b"'                                           HTML
 printf '%s' "$J17" | tr_ record 17 >/dev/null; pv=$(tr_ preview 17); rc=$?
 [ $rc -eq 0 ] && echo "$pv" | grep -q "^VERDICT: CLEAN" && echo "$pv" | grep -qF "mail <redacted:email>." \
   && ok "R2 email (bob@example.com) still CLEAN" || bad "R2 email blocked (rc=$rc, $(echo "$pv" | grep VERDICT))"
