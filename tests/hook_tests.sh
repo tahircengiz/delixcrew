@@ -74,4 +74,12 @@ printf '{"cwd":"%s","stop_hook_active":false}' "$T" | python3 "$S/stop_gate.py" 
 printf '{"cwd":"%s","stop_hook_active":true}' "$T" | python3 "$S/stop_gate.py" 2>/dev/null; [ $? -eq 0 ] && echo "✔ stop: stop_hook_active → stops" || { echo "✘ stop_hook_active"; FAIL=1; }
 echo "NEEDS_CONTEXT: card unclear" > "$T/.delix/report.md"
 printf '{"cwd":"%s","stop_hook_active":false}' "$T" | python3 "$S/stop_gate.py" 2>/dev/null; [ $? -eq 0 ] && echo "✔ stop: NEEDS_CONTEXT report → stops" || { echo "✘ NEEDS_CONTEXT"; FAIL=1; }
+# No python3 on PATH: each PreToolUse hook still blocks (exit 2) and says why in one line
+mkdir -p "$T/empty-path"
+python3 -c 'import json,sys; [print(h["command"]) for e in json.load(open(sys.argv[1]))["hooks"]["PreToolUse"] for h in e["hooks"]]' "$ROOT/hooks/hooks.json" |
+while IFS= read -r cmd; do
+  err=$(env -i PATH="$T/empty-path" CLAUDE_PLUGIN_ROOT="$ROOT" /bin/sh -c "$cmd" </dev/null 2>&1); rc=$?
+  if [ $rc -eq 2 ] && [ "$(printf '%s\n' "$err" | wc -l)" -eq 1 ] && echo "$err" | grep -q '^delix: python3 not found'; then echo "✔ no python3: blocks with message (${cmd##*/})"
+  else echo "✘ no python3 (${cmd##*/}): rc=$rc, stderr: $err"; exit 1; fi
+done || FAIL=1
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

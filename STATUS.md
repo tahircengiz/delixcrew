@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-02 · **Faz:** 4 — doğrulama-yalnız kipi `/ekip:dogrula` (4.1 ✔, K44); A2 ölçüldü ve kapandı (4.2 ✔, K45): headless düzeltme turu varsayılanı yeni `-p` oturumu; retro A1–A13 tamamı kapalı; `dogrulama.birim_test` test başına env (4.3 ✔, K46)
+**Son güncelleme:** 2026-11-03 · **Faz:** 6 — 0.3.0 dış kullanıcı: gereksinimler, python3 hata mesajı, CI, eval grader düzeltmesi, marketplace `delixcrew` (K55–K59; push/PR/release kullanıcıda)
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -309,6 +309,39 @@ Hazırlık [docs/rename/delix-hazirlik.md](docs/rename/delix-hazirlik.md) §4 s�
   `board.py` `accepted + pr` için `merge` kapısı gösteriyordu; LLMPortal panosunda 7 merge edilmiş kart "bekliyor"
   göründü. Kapı artık `in_review + pr`'de. Doğrulama kayıtlarına isteğe bağlı `resolution`: düzeltilip merge edilen ya da
   bırakılan `FIX` kaydı "Pending fixes"ten çıkar (LLMPortal goofy-dijkstra merge 5ea299f, a10c-e7 ölçüm deneyi).
+
+## 6. 0.3.0 — dış kullanıcı (2026-11-03, dal `claude/delix-0-3-0-d8ad62`, push/PR/tag yok)
+- **K55** README/README.tr "Requirements/Gereksinimler": Claude Code (2.1.309 ile denendi; eskisi denenmedi), `python3`
+  (3.9 ile denendi), `git`; isteğe bağlı `gh`, `gitleaks`. Geçici HOME'da ölçüldü (claude 2.1.309): GitHub'dan
+  `marketplace add tahircengiz/delixcrew` + `install delix@delix-local` (yayımlı 0.2.4) rc=0; SSH anahtarı bozulunca
+  "SSH clone failed, retrying with HTTPS" ve yine rc=0, bu yüzden README "SSH anahtarı gerekmez" der. Yerel yoldan yeni
+  adla `install delix@delixcrew` 0.3.0 rc=0, kopya `cache/delixcrew/delix/0.3.0/` (K52 F7 ile tutarlı).
+- **K56** python3 yokken (PATH'ten çıkarılmış, `claude -p` haiku, 0,013 USD) Bash çağrısı
+  `/bin/sh: python3: command not found` ve `blocking because onFailure is "block"` ile engelleniyordu; delix'in adı ve
+  çözüm yoktu. Write/Edit ve Bash hook komutlarının başına `command -v python3 || { echo 'delix: python3 not found on
+  PATH; …' >&2; exit 2; }`: davranış aynı (block), mesaj tek satır ve çözümü söylüyor. Önce kırmızı test
+  (`hook_tests.sh`, hooks.json'daki komutu boş PATH'le koşar: rc=127), sonra yeşil; dash'te (Ubuntu `sh`) rc=2; gerçek
+  oturumda mesaj göründü (0,007 USD). Stop hook'una dokunulmadı: python3 yokken engellemiyor, yalnız "Stop hook error"
+  bildirimi veriyor; exit 2 ona turu bitirmeme anlamı katardı.
+- **K57** CI `.github/workflows/tests.yml`: hook testleri, board testleri, `claude plugin validate .`;
+  `actions/checkout` v7.0.1 ve `actions/setup-node` v7.1.0 commit SHA'sına sabit, `permissions: contents: read`,
+  `persist-credentials: false`, sır yok; CLI `npm install -g @anthropic-ai/claude-code@2.1.309` (Anthropic'in npm
+  paketi, Node ≥ 22 istiyor). Eval CI'da yok (maliyet). Yerelde `act` yok: YAML yalnız ayrıştırıldı, **CI'da koşulmadı**;
+  `validate`'in CI'da oturumsuz çalıştığı doğrulanmadı.
+- **K58** K50 oynak eval'leri, koşu kayıtlarından (`evals/results/2026-11-02T15-33-11-204Z/aggregate-result.json`):
+  `reviewer-cannot-write` düşen koşuda bulgu doğruydu ama "two blocking findings" diye etiketlenmişti, P0/P1 yoktu;
+  jüri (haiku, 3 oy) 1 PASS 2 FAIL verdi. Kriter artık şiddet etiketini istemiyor (blocking/critical/REJECT da sayılır);
+  dosya düzenlenmediğini zaten `no-edit`/`no-write` ölçüyor. `task-card-format` düşen koşunun metni saklanmamış (trace
+  silinmiş); K50 teşhisi bölüm sırası. Regex sıra bağımsız oldu (lookahead), eksik bölüm yine düşer; JavaScriptCore'da
+  4 örnekle denendi (sıralı ✔, sırası bozuk eski ✘ yeni ✔, Interfaces ya da Don'ts eksik ikisi de ✘). Eşik 1,0
+  bırakıldı: oynaklık grader'dan geliyordu, eşiği düşürmek gerçek gerilemeyi de saklardı. **Eval koşulmadı**; komut ve
+  tahmini maliyet raporda (iki vaka, 5 tekrar, baseline'sız ≈ 1,5 USD, ≈ 6 dk).
+- **K59** Marketplace adı `delix-local` → `delixcrew` (repo adıyla aynı). Geçici HOME'da ölçüldü: eski adla kurulu
+  kullanıcı kırılmıyor (`marketplace update delix-local` + `plugin update` 0.2.4 → 0.3.0, kayıt eski adla kalıyor; yerel
+  klasör kaynağıyla ölçüldü, GitHub kaynağında ölçülmedi). Yeni ada geçiş `uninstall` → `marketplace remove` →
+  `marketplace add` → `install delix@delixcrew` (+ `delix-board`), 5/5 rc=0; CHANGELOG'da. Tarihsel dokümanlar
+  (`docs/spec`, `docs/rename`) ve `docs/runbooks/kullanim.md`'deki Mac kurulum satırı eski adla bırakıldı; Mac geçişi
+  ana oturumda `/mac-change` R1.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

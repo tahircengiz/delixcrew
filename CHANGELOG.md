@@ -2,6 +2,25 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## 0.3.0 — 2026-11-03
+
+For users outside the author's machine: requirements, clearer failure, CI.
+
+- **Marketplace renamed `delix-local` → `delixcrew`.** New installs: `claude plugin install delix@delixcrew`
+  (and `delix-board@delixcrew`). An existing `delix-local` install keeps working and keeps updating under its old name
+  (`claude plugin marketplace update delix-local`, then `claude plugin update delix@delix-local`); to move to the new
+  name, so the README commands match:
+  `claude plugin uninstall delix@delix-local` (and `delix-board@delix-local` if installed),
+  `claude plugin marketplace remove delix-local`, `claude plugin marketplace add tahircengiz/delixcrew`,
+  `claude plugin install delix@delixcrew`, then restart Claude.
+- README: a Requirements section (Claude Code, `python3`, `git`; optional `gh`, `gitleaks`).
+- Hooks: without `python3` on `PATH` the Write/Edit and Bash hooks still block, now with one line,
+  `delix: python3 not found on PATH; …`, instead of `/bin/sh: python3: command not found`.
+- CI (`.github/workflows/tests.yml`): hook tests, board tests and `claude plugin validate .` on every push to main and
+  every PR; actions pinned to commit SHAs, read-only token, no secrets. Evals stay local (they cost money).
+- Evals: `task-card-format` checks that each required section is present, in any order; `reviewer-cannot-write` no
+  longer fails a correct finding for a missing P0/P1 label.
+
 ## 0.2.4 — 2026-11-03
 
 - `board.py`: an `accepted` card is merged (review §4), so it no longer shows a `merge` gate; the gate now shows on an

@@ -1,9 +1,9 @@
 {
-  "name": "delix-local",
+  "name": "delixcrew",
   "owner": {
     "name": "tahircengiz"
   },
-  "description": "Claude Code plugins: delix (orchestrator + role sessions + read-only reviewers) and its companion board, delix-board. Source is this repo. A GitHub install updates only when plugin.json's version changes: claude plugin marketplace update delix-local, then claude plugin update delix@delix-local. A local-path install is a cached copy too and updates the same way (claude plugin update after a version bump); claude --plugin-dir reads a folder in place.",
+  "description": "Claude Code plugins: delix (orchestrator + role sessions + read-only reviewers) and its companion board, delix-board. Source is this repo. A GitHub install updates only when plugin.json's version changes: claude plugin marketplace update delixcrew, then claude plugin update delix@delixcrew. A local-path install is a cached copy too and updates the same way (claude plugin update after a version bump); claude --plugin-dir reads a folder in place.",
   "plugins": [
     {
       "name": "delix",

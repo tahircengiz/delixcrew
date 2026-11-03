@@ -13,6 +13,18 @@ English version: [README.md](README.md). Tasarım ve kanıt: [tech spec](docs/sp
 [araştırma raporu](docs/research/reports/Çoklu%20ajan%20yazılım%20ekibi%20orkestrasyonu.md) · kararlar [STATUS.md](STATUS.md).
 Skill'ler kullanıcının dilinde cevap verir; etiketler, durum değerleri ve karar kelimeleri İngilizce kalır.
 
+## Gereksinimler
+
+- **Claude Code** (plugin marketplace desteğiyle); 2.1.309 ile denendi, eski sürümler denenmedi.
+- `PATH`'te **`python3`** (3.9 ile denendi). Hook'lar Python betiğidir ve hata olunca engeller; python3 yoksa her
+  oturumda her Write, Edit ve Bash çağrısı `delix: python3 not found on PATH …` satırıyla engellenir.
+- **`git`**: uygulayıcı oturumlar kart dallarında, worktree'lerde çalışır.
+- İsteğe bağlı: **`gh`** (GitHub CLI, oturum açık) PR açmak ve okumak için; remote yoksa commit'ler kart dalında kalır ve
+  rapor `**PR:** none` yazar. **`gitleaks`**: uygulayıcının her commit'inden önce sır taraması; yoksa
+  `.delix/warnings.log`'a not düşülür.
+
+GitHub SSH anahtarı gerekmez: `marketplace add` önce SSH'ı dener, olmazsa HTTPS'e geçer.
+
 ## Kurulum
 
 GitHub'dan (Desktop ve terminal, `--plugin-dir` gerekmez):
@@ -22,16 +34,17 @@ claude plugin marketplace add tahircengiz/delixcrew
 ```
 
 ```bash
-claude plugin install delix@delix-local
+claude plugin install delix@delixcrew
 ```
 
 Yerel klondan: `claude plugin marketplace add /path/to/delix`, sonra aynı `install` komutu. Marketplace tanımı
 [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json). İki kurulum da plugin'i Claude'un plugin
 cache'ine sürüm başına bir klasör olarak kopyalar; kurulum yalnız `plugin.json` sürümü değişince güncellenir:
-`claude plugin marketplace update delix-local` (GitHub; yerel klasör doğrudan okunur), sonra
-`claude plugin update delix@delix-local`, ardından Claude'u yeniden başlat. Sürüm artmadan yapılan yerel değişiklik
+`claude plugin marketplace update delixcrew` (GitHub; yerel klasör doğrudan okunur), sonra
+`claude plugin update delix@delixcrew`, ardından Claude'u yeniden başlat. Sürüm artmadan yapılan yerel değişiklik
 kurulu kopyaya ulaşmaz, `git pull` tek başına yetmez; denemek için `claude --plugin-dir /path/to/delix` klasörü yerinde okur.
-Doğrulama: `claude plugin validate .`; hook testleri: `bash tests/hook_tests.sh`; pano testleri:
+0.3.0'dan önce `delix-local` marketplace adıyla kurduysan: [CHANGELOG](CHANGELOG.md#030--2026-11-03).
+Doğrulama (CI her push ve PR'da da koşar): `claude plugin validate .`; hook testleri: `bash tests/hook_tests.sh`; pano testleri:
 `bash tests/board_tests.sh`; davranış testleri: `claude plugin eval . --trust-plugin --no-publish` (model çağrısı yapar,
 maliyeti vardır).
 
@@ -42,7 +55,7 @@ pane (pano, uzun koşular, kart ayrıntısı, ölçüm grafikleri), istem üstü
 için gerekmez; headless oturumlarda hiçbir şey çizmez.
 
 ```bash
-claude plugin install delix-board@delix-local
+claude plugin install delix-board@delixcrew
 ```
 
 ![Terminalde delix-board](plugins/delix-board/assets/board-terminal-pano.png)

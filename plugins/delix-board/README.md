@@ -14,7 +14,7 @@ claude plugin marketplace add tahircengiz/delixcrew
 ```
 
 ```bash
-claude plugin install delix-board@delix-local
+claude plugin install delix-board@delixcrew
 ```
 
 delix and delix-board are independent: either can be installed without the other. For a one-off trial from a clone,

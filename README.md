@@ -14,6 +14,18 @@ Türkçe sürüm: [README.tr.md](README.tr.md). Design and evidence (Turkish): [
 [research report](docs/research/reports/Çoklu%20ajan%20yazılım%20ekibi%20orkestrasyonu.md) · decisions [STATUS.md](STATUS.md).
 The skills reply in the user's language; labels, status values and verdict tokens stay in English.
 
+## Requirements
+
+- **Claude Code** with plugin marketplaces; tested with 2.1.309, older versions not tested.
+- **`python3`** on `PATH` (tested with 3.9). The hooks are Python scripts and block on failure, so without it every
+  Write, Edit and Bash call is blocked, in every session, with the line `delix: python3 not found on PATH …`.
+- **`git`**: implementer sessions work in worktrees on card branches.
+- Optional: **`gh`** (GitHub CLI, signed in) to open and read PRs; without a remote the commits stay on the card branch
+  and the report says `**PR:** none`. **`gitleaks`**: a secret scan before every implementer commit; without it a note
+  goes to `.delix/warnings.log`.
+
+No GitHub SSH key is needed: `marketplace add` tries SSH and falls back to HTTPS.
+
 ## Installation
 
 From GitHub (Desktop and terminal, no `--plugin-dir` needed):
@@ -23,16 +35,17 @@ claude plugin marketplace add tahircengiz/delixcrew
 ```
 
 ```bash
-claude plugin install delix@delix-local
+claude plugin install delix@delixcrew
 ```
 
 From a local clone: `claude plugin marketplace add /path/to/delix`, then the same `install` command. The marketplace
 definition is [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json). Both installs copy the plugin into
 Claude's plugin cache, one folder per version, so an install updates only when the version in `plugin.json` changes:
-run `claude plugin marketplace update delix-local` (GitHub; a local folder is read directly), then
-`claude plugin update delix@delix-local`, and restart Claude. A local change without a version bump does not reach the
+run `claude plugin marketplace update delixcrew` (GitHub; a local folder is read directly), then
+`claude plugin update delix@delixcrew`, and restart Claude. A local change without a version bump does not reach the
 installed copy, `git pull` alone is not enough; to try one, `claude --plugin-dir /path/to/delix` reads the folder in place.
-Checks: `claude plugin validate .`; hook tests: `bash tests/hook_tests.sh`; board tests:
+Installed before 0.3.0 under the marketplace name `delix-local`: see the [CHANGELOG](CHANGELOG.md#030--2026-11-03).
+Checks (also run by CI on every push and PR): `claude plugin validate .`; hook tests: `bash tests/hook_tests.sh`; board tests:
 `bash tests/board_tests.sh`; behaviour evals: `claude plugin eval . --trust-plugin --no-publish` (calls the model, costs money).
 
 ### Companion: delix-board
@@ -42,7 +55,7 @@ board, long runs, card details and metrics, a band above the prompt and a toast 
 delix to work and draws nothing in headless sessions.
 
 ```bash
-claude plugin install delix-board@delix-local
+claude plugin install delix-board@delixcrew
 ```
 
 ![delix-board in the terminal](plugins/delix-board/assets/board-terminal-pano.png)
