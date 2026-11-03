@@ -4,6 +4,8 @@
 |---|---|---|---|---|---|
 | T004 | S | 3 | devops | 2 | open |
 
+**🔐 Approved:** 2026-11-03 tahircengiz
+
 > 🔐 Tier 3 (`.github/**`, `.claude-plugin/**`). The orchestrator adds the Approved line after the human's "yes".
 
 **Goal (1 sentence):** Web issue forms with the same headings as the CLI body, a CI step for feedback tests, and the version bump. · **Spec:** `docs/delix/SPEC.md` §4 (issue body, file row), §5, §7

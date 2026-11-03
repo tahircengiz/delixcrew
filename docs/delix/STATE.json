@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T10:56:06Z",
+  "updated": "2026-11-03T11:37:56Z",
   "env_owner": null,
   "waves": [
     {
@@ -20,6 +20,13 @@
         "T005"
       ],
       "note": "after T001 merged (CI step needs tests/feedback_tests.sh; docs need final CLI messages). T004 🔐."
+    },
+    {
+      "wave": 3,
+      "cards": [
+        "T006"
+      ],
+      "note": "independent S card (design-system step, request approved in chat 2026-11-03); not part of SPEC.md; no file overlap with T001–T005."
     }
   ],
   "cards": {
@@ -27,26 +34,27 @@
       "file": "docs/delix/tasks/T001-feedback-script.md",
       "role": "backend",
       "tier": 3,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
-      "cost_usd": null
+      "status": "accepted",
+      "pr": 6,
+      "rounds": 1,
+      "cost_usd": null,
+      "merge": "850fa34"
     },
     "T002": {
       "file": "docs/delix/tasks/T002-hook-rules.md",
       "role": "backend",
       "tier": 3,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
+      "status": "fixing",
+      "pr": 4,
+      "rounds": 3,
       "cost_usd": null
     },
     "T003": {
       "file": "docs/delix/tasks/T003-feedback-skills.md",
       "role": "docs",
       "tier": 3,
-      "status": "open",
-      "pr": null,
+      "status": "in_review",
+      "pr": 5,
       "rounds": 0,
       "cost_usd": null
     },
@@ -64,6 +72,15 @@
       "role": "docs",
       "tier": 1,
       "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T006": {
+      "file": "docs/delix/tasks/T006-design-system-step.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "in_progress",
       "pr": null,
       "rounds": 0,
       "cost_usd": null
