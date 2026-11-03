@@ -56,11 +56,12 @@
       "file": "docs/delix/tasks/T019-ci-run-all-tests.md",
       "role": "devops",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 37,
       "rounds": 0,
       "cost_usd": null,
-      "sha": "8da9dc2"
+      "sha": "8da9dc2",
+      "merged": "3ab269a"
     }
   },
   "status_values": [
