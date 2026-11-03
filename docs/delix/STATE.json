@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T12:45:00Z",
+  "updated": "2026-11-03T18:00:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -28,6 +28,14 @@
         "T007"
       ],
       "note": "independent S card (design-system step, request approved in chat 2026-11-03); not part of SPEC.md; no file overlap with T001–T005. T007: S card from issue #8 (security), 🔐; overlaps T002 only on tests/hook_tests.sh line 5."
+    },
+    {
+      "wave": 4,
+      "cards": [
+        "T008",
+        "T009"
+      ],
+      "note": "SPEC rev 3 (gate 1 2026-11-03, K93-K103). Parallel; no code interface. T008 🔐: Approved line before dispatch. T009 paid eval runs, cap 6 USD. Merge order free (title marker survives sanitizer v1 and v2)."
     }
   ],
   "cards": {
@@ -99,6 +107,24 @@
       "rounds": 2,
       "cost_usd": null,
       "merge": "b22f45a"
+    },
+    "T008": {
+      "file": "docs/delix/tasks/T008-feedback-rev3.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T009": {
+      "file": "docs/delix/tasks/T009-feedback-eval.md",
+      "role": "devops",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
     }
   },
   "status_values": [
