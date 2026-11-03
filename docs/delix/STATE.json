@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T17:03:18Z",
+  "updated": "2026-11-03T17:18:23Z",
   "env_owner": null,
   "waves": [
     {
@@ -107,6 +107,44 @@
       "qa": "ACCEPT_WITH_NOTES",
       "security": "🔐 HUMAN_APPROVAL",
       "cost_usd": null
+    },
+    {
+      "name": "github-pages",
+      "date": "2026-11-03",
+      "input": "claude/github-pages",
+      "tier": "3 🔐",
+      "verdict": "ACCEPT 🔐",
+      "report": "docs/delix/verifications/2026-11-03-github-pages.md",
+      "gates": {
+        "gitleaks": "PASS (archive: pre-existing finding, also on base)",
+        "local": "PASS",
+        "remote_unit": "not run: no delix.json.verify",
+        "full": "not run: no --full"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "🔐 HUMAN_APPROVAL",
+      "cost_usd": null,
+      "sha": "effc814e24f979d03de8b01831426fbf8531f43c",
+      "base": "9dfc83d42ebd22e3f89112ee061cabe311a55783"
+    },
+    {
+      "name": "github-pages",
+      "date": "2026-11-03",
+      "input": "claude/github-pages",
+      "tier": "3 🔐",
+      "verdict": "ACCEPT 🔐",
+      "report": "docs/delix/verifications/2026-11-03-github-pages.md",
+      "gates": {
+        "gitleaks": "PASS (archive: pre-existing finding, also on base)",
+        "local": "PASS",
+        "remote_unit": "not run: no delix.json.verify",
+        "full": "not run: no --full"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "🔐 HUMAN_APPROVAL",
+      "cost_usd": null,
+      "sha": "f6c2d0adae2ff3fbb5085a396629a7137532eebe",
+      "base": "9dfc83d42ebd22e3f89112ee061cabe311a55783"
     }
   ],
   "archive": [

@@ -1,6 +1,6 @@
 diff --git a/.github/workflows/site.yml b/.github/workflows/site.yml
 new file mode 100644
-index 0000000..161b50f
+index 0000000..38534c9
 --- /dev/null
 +++ b/.github/workflows/site.yml
 @@ -0,0 +1,46 @@
@@ -9,8 +9,8 @@ index 0000000..161b50f
 +  push:
 +    branches: [main]
 +    paths: ["site/**", ".claude-plugin/plugin.json", "tests/site_tests.sh", ".github/workflows/site.yml"]
++  # every PR: the check stays a reliable status, and a version bump anywhere is caught
 +  pull_request:
-+    paths: ["site/**", ".claude-plugin/plugin.json", "tests/site_tests.sh", ".github/workflows/site.yml"]
 +  workflow_dispatch:
 +permissions:
 +  contents: read
@@ -52,7 +52,7 @@ index 0000000..161b50f
 +        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 diff --git a/CLAUDE.md b/CLAUDE.md
 new file mode 100644
-index 0000000..d783ab8
+index 0000000..4ce0812
 --- /dev/null
 +++ b/CLAUDE.md
 @@ -0,0 +1,16 @@
@@ -69,8 +69,8 @@ index 0000000..d783ab8
 +  and the "coming in" / "ile gelecek" labels that the release turns into shipped features;
 +- a command, hook rule, role, gate or project file is added, removed or renamed (README Flow, Roles, Files, Known limits).
 +
-+`bash tests/site_tests.sh` fails when a page's version differs from `plugin.json`, a TR/EN twin is missing, a page loads
-+a script or a third-party asset, or a local link, anchor or icon does not resolve. Every claim on the site comes from a
++`bash tests/site_tests.sh` fails when a page's version differs from `plugin.json`, a TR/EN twin is missing, a page or an
++asset has a script, an event handler, a form or a third-party asset, or a local link, anchor or icon does not resolve. Every claim on the site comes from a
 +repo file; each section names its sources in its `Source:` / `Kaynak:` line.
 diff --git a/site/assets/favicon.svg b/site/assets/favicon.svg
 new file mode 100644
@@ -357,7 +357,7 @@ index 0000000..1b22712
 +}
 diff --git a/site/index.html b/site/index.html
 new file mode 100644
-index 0000000..f4993c6
+index 0000000..f369b1f
 --- /dev/null
 +++ b/site/index.html
 @@ -0,0 +1,698 @@
@@ -1053,7 +1053,7 @@ index 0000000..f4993c6
 +</section>
 +
 +<footer>
-+  <p>delixcrew 0.6.0 · as of 2026-11-03. Compiled from the repository files; each section lists its sources.</p>
++  <p><span data-version="0.6.0">delixcrew 0.6.0</span> · as of 2026-11-03. Compiled from the repository files; each section lists its sources.</p>
 +  <p>Source code and issues: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="tr/index.html" hreflang="tr">Türkçe</a></p>
 +</footer>
 +</main>
@@ -1061,7 +1061,7 @@ index 0000000..f4993c6
 +</html>
 diff --git a/site/tr/index.html b/site/tr/index.html
 new file mode 100644
-index 0000000..fb49bf4
+index 0000000..be3105e
 --- /dev/null
 +++ b/site/tr/index.html
 @@ -0,0 +1,698 @@
@@ -1757,7 +1757,7 @@ index 0000000..fb49bf4
 +</section>
 +
 +<footer>
-+  <p>delixcrew 0.6.0 · durum 2026-11-03. İçerik repo dosyalarından derlendi; her bölümün altında kaynağı yazar.</p>
++  <p><span data-version="0.6.0">delixcrew 0.6.0</span> · durum 2026-11-03. İçerik repo dosyalarından derlendi; her bölümün altında kaynağı yazar.</p>
 +  <p>Kaynak kod ve issue'lar: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="../index.html" hreflang="en">English</a></p>
 +</footer>
 +</main>
@@ -1765,7 +1765,7 @@ index 0000000..fb49bf4
 +</html>
 diff --git a/site/tr/usage.html b/site/tr/usage.html
 new file mode 100644
-index 0000000..fea6012
+index 0000000..bb687ab
 --- /dev/null
 +++ b/site/tr/usage.html
 @@ -0,0 +1,245 @@
@@ -2008,7 +2008,7 @@ index 0000000..fea6012
 +</section>
 +
 +<footer>
-+  <p>delixcrew 0.6.0 · durum 2026-11-03. Bu sayfa README'den ve skill dosyalarından derlendi. MIT lisansı.</p>
++  <p><span data-version="0.6.0">delixcrew 0.6.0</span> · durum 2026-11-03. Bu sayfa README'den ve skill dosyalarından derlendi. MIT lisansı.</p>
 +  <p>Kaynak kod ve issue'lar: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="../usage.html" hreflang="en">English</a></p>
 +</footer>
 +</main>
@@ -2016,7 +2016,7 @@ index 0000000..fea6012
 +</html>
 diff --git a/site/usage.html b/site/usage.html
 new file mode 100644
-index 0000000..0a6f3c6
+index 0000000..e666828
 --- /dev/null
 +++ b/site/usage.html
 @@ -0,0 +1,245 @@
@@ -2259,7 +2259,7 @@ index 0000000..0a6f3c6
 +</section>
 +
 +<footer>
-+  <p>delixcrew 0.6.0 · as of 2026-11-03. Compiled from the README and the skill files. MIT licence.</p>
++  <p><span data-version="0.6.0">delixcrew 0.6.0</span> · as of 2026-11-03. Compiled from the README and the skill files. MIT licence.</p>
 +  <p>Source code and issues: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="tr/usage.html" hreflang="tr">Türkçe</a></p>
 +</footer>
 +</main>
@@ -2267,10 +2267,10 @@ index 0000000..0a6f3c6
 +</html>
 diff --git a/tests/site_tests.sh b/tests/site_tests.sh
 new file mode 100644
-index 0000000..becfeea
+index 0000000..7ec705b
 --- /dev/null
 +++ b/tests/site_tests.sh
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,70 @@
 +#!/usr/bin/env bash
 +# Deterministic checks for the GitHub Pages site (site/). Run: bash tests/site_tests.sh
 +# Every page shows the plugin.json version, has its other-language twin, loads nothing from third parties,
@@ -2291,20 +2291,36 @@ index 0000000..becfeea
 +icons_path = os.path.join(site, "assets", "icons.svg")
 +symbols = set(re.findall(r'<symbol id="([^"]+)"', open(icons_path, encoding="utf-8").read())) if os.path.isfile(icons_path) else set()
 +
-+expected = ["index.html", "usage.html", "tr/index.html", "tr/usage.html"]
-+missing = [p for p in expected if p not in text]
-+ok("4 pages: EN and TR, what-is and usage") if not missing else bad(f"missing pages: {missing}")
++en = {p for p in pages if not p.startswith("tr/")}
++tr = {p[len("tr/"):] for p in pages if p.startswith("tr/")}
++if {"index.html", "usage.html"} <= en and en == tr:
++    ok(f"{len(pages)} pages: every English page has its Turkish twin")
++else:
++    bad(f"pages without a twin: EN only {sorted(en - tr)}, TR only {sorted(tr - en)} (index.html and usage.html are required)")
++
++# active content or anything loaded from another host; a plain <a href> to another site is allowed.
++# Tag scans are bounded ({0,4096}) so a long unclosed tag cannot make them backtrack polynomially.
++ACTIVE = re.compile(r"<(?:script|iframe|object|embed|video|audio|source|base|form)\b|@import|@font-face|javascript:"
++                    r"|url\(\s*['\"]?(?:https?:)?//|<[a-z][^>]{0,4096}?\s(?:on[a-z]+\s*=|http-equiv\s*=\s*['\"]?refresh)", re.I)
++EXT_REF = re.compile(r"<(?!a\b)[a-z][^>]{0,4096}?\b(?:href|src|srcset|poster|data)\s*=\s*(?:['\"]\s*)?(?:https?:)?//", re.I)
++assets = sorted(os.path.relpath(os.path.join(d, f), site) for d, _, fs in os.walk(os.path.join(site, "assets"))
++                for f in fs if f.endswith((".css", ".svg")))
++for a in assets:
++    s = open(os.path.join(site, a), encoding="utf-8").read()
++    hits = [m.group(0) for m in ACTIVE.finditer(s)] + [m.group(0) for m in EXT_REF.finditer(s)]
++    ok(f"{a}: no scripts or third-party assets") if not hits else bad(f"{a}: scripts or third-party assets: {hits}")
 +
 +for p, t in text.items():
 +    marks = re.findall(r'data-version="([^"]*)"[^>]*>([^<]*)<', t)
-+    if marks and all(v == version and s.strip() == f"delixcrew {version}" for v, s in marks):
-+        ok(f"{p}: version {version}")
++    if len(marks) >= 2 and all(v == version and s.strip() == f"delixcrew {version}" for v, s in marks):
++        ok(f"{p}: version {version} ({len(marks)} marks)")
 +    else:
-+        bad(f"{p}: version marks {marks or 'none'} do not match plugin.json {version}; update the site with the release")
++        bad(f"{p}: version marks {marks or 'none'} do not match plugin.json {version} (need the header and the footer "
++            "mark); update the site with the release")
 +    lang = re.search(r'<html lang="(en|tr)">', t)
 +    want = "tr" if p.startswith("tr/") else "en"
 +    ok(f"{p}: lang={want}") if lang and lang.group(1) == want else bad(f"{p}: <html lang> should be {want}")
-+    ext = re.findall(r'<script\b|<link\b[^>]*rel="stylesheet"[^>]*href="(?:https?:)?//|<img\b[^>]*src="(?:https?:)?//|@import', t)
++    ext = [m.group(0) for m in ACTIVE.finditer(t)] + [m.group(0) for m in EXT_REF.finditer(t)]
 +    ok(f"{p}: no scripts or third-party assets") if not ext else bad(f"{p}: scripts or third-party assets: {ext}")
 +    broken = []
 +    for attr, ref in re.findall(r'\b(href|src)="([^"]+)"', t):
