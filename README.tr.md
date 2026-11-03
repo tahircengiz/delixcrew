@@ -187,8 +187,9 @@ Claude yayın yapmaz: karar yorumunu ve etiket değişikliklerini siz kendi term
 **Akış.**
 1. `/delixcrew:triage` `triage.py index` çalıştırır ve bekleyen issue'ları (açık, karar etiketi yok) en küçük numaradan
    başlayarak tek tek alır; `/delixcrew:triage #12` tek bir issue alır. `triage.py show <n>` issue'yu temizlenmiş okur:
-   kontrol ve görünmez karakterler ile HTML yorumları çıkarılır ve sayılır (`removed:`), sabit alanlar (`url`, `state`,
-   `author`, `source`, `labels`, `decision`, `reported-version`, `issue-sha`) en başta gelir.
+   Unicode kontrol, biçim ve özel kullanım karakterleri (yeni satır ve tab dışındaki Cc, Cf, Co) ile HTML yorumları
+   çıkarılır ve sayılır (`removed:`); diğer görünmez karakterler (ör. Hangul dolgu karakterleri) kalır. Sabit alanlar
+   (`url`, `state`, `author`, `source`, `labels`, `decision`, `reported-version`, `issue-sha`) en başta gelir.
 2. Salt-okunur `delixcrew:architect` bir kontrol listesi çalıştırır (job D) ve gerekçeli tek bir karar önerir: hata,
    bildirilen sürümün ağacına (o sürümün `v<X.Y.Z>` etiketi, etiket yoksa `main`) karşı, özellik isteği delix ilkelerine
    karşı, her issue da kopya olup olmadığı, kaynağı (`external` issue'dan somut bir kullanım senaryosu beklenir) ve eksik
@@ -201,7 +202,9 @@ Claude yayın yapmaz: karar yorumunu ve etiket değişikliklerini siz kendi term
    yayınlanacak yorum, bir `VERDICT:` ve bir `HASH:` satırı.
 5. `VERDICT: CLEAN` ise Claude size tek bir komut verir:
    `python3 <plugin dizini>/scripts/triage.py apply 12 --confirm <hash>`. Bunu **kendi terminalinizde** çalıştırın.
-   Her şeyi yeniden basar ve `APPLY <hash>` yazmanızı bekler; önizlemeden sonra bir şey değiştiyse durur.
+   Her şeyi yeniden basar ve `APPLY <hash>` yazmanızı bekler. Bundan önce yorumu yeniden kurar; hash artık tutmuyorsa
+   (exit 5) ya da yorum artık engelleniyorsa, ör. issue'nun başlığı veya gövdesi kayıttan sonra değiştiyse (exit 4),
+   durur. Etiketler, yorumlar ve issue'nun durumu `APPLY`'dan sonra yeniden okunur, önizlemeyle karşılaştırılmaz.
 
 **Etiketler.** Beş karar etiketi: `accepted`, `needs-info`, `duplicate`, `wontfix`, `deferred` (`defer` kararı
 `deferred` koyar). `apply` eksik etiketi oluşturur, karar etiketini ekler, diğer dördünü kaldırır ve yorumu yazar; yorumun
@@ -220,7 +223,8 @@ maintainer'ın triage yorumu yoksa veya metin kabulden sonra değiştiyse bu kom
 `/delixcrew:triage #12`'yi yeniden çalıştırın. Issue alımı yalnız delixcrew reposunda çalışır ve en az Tier 2'dir.
 
 **Kayıtlar.** Kararlar `~/.claude/delixcrew/triage/<n>.json` altında tutulur (`DELIXCREW_TRIAGE_DIR` ile değişir), asla
-proje reposunda değil; oraya yalnız `triage.py` yazar. `apply` kaydı uygulanmış olarak işaretler. `preview` ve `apply`
+proje reposunda değil; oraya yalnız `triage.py`'nin yazması beklenir: hook'lar Write/Edit'i reddeder, ama shell ile
+yazım (yönlendirme, `cp`, `tee`) reddedilmez. `apply` kaydı uygulanmış olarak işaretler. `preview` ve `apply`
 için `PATH`'te `gitleaks` gerekir; `apply` ayrıca bu repoya yazma yetkisi olan, oturum açılmış bir `gh` ister.
 
 Claude için bilinen yayın yolları kapalıdır: hook'lar her oturumda `triage.py apply`'ı, `triage.py`'yi `script`,

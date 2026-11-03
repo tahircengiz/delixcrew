@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T18:30:00Z",
+  "updated": "2026-11-03T21:00:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -20,6 +20,13 @@
         "T014"
       ],
       "note": "after T010 merged (CI step needs tests/triage_tests.sh); merged last, 0.6.0 must not reach main before its features. 🔐. T014 (K132, from T010 round 6) parallel with T013, no shared files; both after T010 merged (556189f)."
+    },
+    {
+      "wave": 3,
+      "cards": [
+        "T015"
+      ],
+      "note": "S follow-up from triage closure (SPEC §10 doc errors); docs only, Tier 1, done in a single session (K43)."
     }
   ],
   "cards": {
@@ -77,6 +84,17 @@
       "cost_usd": null,
       "sha": "963ddb7",
       "merged": "e549d17"
+    },
+    "T015": {
+      "file": "docs/delix/tasks/T015-triage-doc-statements.md",
+      "role": "docs",
+      "tier": 1,
+      "status": "in_progress",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "sha": null,
+      "merged": null
     }
   },
   "status_values": [
