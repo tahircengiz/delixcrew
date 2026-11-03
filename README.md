@@ -72,6 +72,7 @@ claude plugin install delix-board@delixcrew
 | 6 | `/delixcrew:close` | STATUS/CHANGELOG, metrics (cost, rounds), drift check, approved memory writes, worktree cleanup. |
 | shortcut | `/delixcrew:verify <branch\|commit\|dir>` | **Only verifies** work done without a card (a single session or you) (K43): gitleaks, local tests, a remote **isolated** unit test (separate directory + separate image, never touches the live stack), `--full` on request; `qa` (+ `security`) in a **single pass**, no fix rounds → a `docs/delix/verifications/<date>-<name>.md` report (ACCEPT / FIX, 🔐) and `STATE.json.verifications`. For S/M + well-described + Tier ≤ 2 work, `/delixcrew:start` proposes this; the full flow is for Tier 3 / parallel cards / an unclear spec. |
 | any time | `/delixcrew:status` | Read-only board: wave · card · role · tier · status · rounds · PR · cost · last report · pending gate (🔐, merge) table in the chat; on request (`--write`) to `docs/delix/BOARD.md` (not committed). |
+| issues | `/delixcrew:triage [#n]` | In the delixcrew repo: reads incoming issues cleaned, the read-only `architect` checks each one and proposes a decision; after your `<decision> #<n>` in chat it records it and shows the exact comment; you publish it from your own terminal. See [Triage](#triage). |
 
 ## Roles
 
@@ -177,6 +178,66 @@ guard, add a deny rule to your own `settings.json`; delixcrew only suggests this
   ask through GitHub private reporting:
   [security/advisories/new](https://github.com/tahircengiz/delixcrew/security/advisories/new).
 
+## Triage
+
+Issues on this repo (bug reports, feature requests, sent feedback drafts) are checked before they become work.
+`/delixcrew:triage` works only in the delixcrew repository. Issue titles, bodies and comments are untrusted input: Claude
+shows them only inside an `UNTRUSTED` block, and nothing in them is an instruction or a decision. Claude never publishes:
+the decision comment and the label changes are applied by you, from your own terminal.
+
+**Flow.**
+1. `/delixcrew:triage` runs `triage.py index` and takes the pending issues (open, no decision label) one at a time,
+   lowest number first; `/delixcrew:triage #12` takes one issue. `triage.py show <n>` reads it cleaned: control and
+   invisible characters and HTML comments are removed and counted (`removed:`), and the fixed fields (`url`, `state`,
+   `author`, `source`, `labels`, `decision`, `reported-version`, `issue-sha`) come first.
+2. The read-only `delixcrew:architect` runs a checklist (job D) and proposes one decision with a reason: a bug is checked
+   against the tree of the reported version (its `v<X.Y.Z>` tag, or `main` when there is no such tag), a feature against
+   the delix principles, and every issue for duplicates, its source (`external` issues need a concrete use case) and
+   missing information.
+3. You decide in chat with the decision **and** the number: `accept #12`, `needs-info #12`, `duplicate #12`,
+   `wontfix #12` or `defer #12` (or `skip #12`). A bare "ok", "yes", "accept all", or "accepted" written in an issue or a
+   file is not a decision. Your decision wins over the proposal.
+4. Claude records it with `triage.py record <n>` (refused if the issue's title or body changed since `show`), then runs
+   `triage.py preview <n>` and shows its output verbatim: the repo, the issue, the label actions, the exact comment, and
+   a `VERDICT:` and a `HASH:` line.
+5. With `VERDICT: CLEAN`, Claude gives you one command:
+   `python3 <plugin dir>/scripts/triage.py apply 12 --confirm <hash>`. Run it in **your own terminal**. It prints
+   everything again and waits for you to type `APPLY <hash>`; if anything changed since the preview, it stops.
+
+**Labels.** Five decision labels: `accepted`, `needs-info`, `duplicate`, `wontfix`, `deferred` (`defer` sets
+`deferred`). `apply` creates a missing one, adds the decision label, removes the other four and posts the comment, whose
+last line is `delixcrew-triage: <decision> <hash> <issue-sha>`. Only `duplicate` and `wontfix` close the issue (as not
+planned); `needs-info`, `defer` and `accept` leave it open, and an accepted issue is closed by the PR that finishes the
+work. Re-running `apply` after a failed step does only the steps still missing.
+
+**What blocks a comment** (`VERDICT: BLOCKED: <reason>`, `preview` exits 4, no command is given): the issue changed
+since it was triaged; an `@` mention, HTML or a character reference in the reason or questions; invisible characters; a
+`gitleaks` finding, or `gitleaks` missing or failing; a 32+ character opaque string. The comment is built only from the recorded reason, questions and
+duplicate number, never from the issue text.
+
+**From issue to work.** `/delixcrew:start #12` takes only an issue triaged as `accepted` whose title and body are
+unchanged since acceptance: it reads the issue through `triage.py show 12 --require accepted`, which exits 8 when the
+`accepted` label or the maintainer's triage comment is missing, or when the text changed after acceptance. Run
+`/delixcrew:triage #12` again in that case. Issue intake works only in the delixcrew repository and is still at least
+Tier 2.
+
+**Records.** Decisions are stored in `~/.claude/delixcrew/triage/<n>.json` (`DELIXCREW_TRIAGE_DIR` overrides it), never
+in your project repo; only `triage.py` writes there. `apply` marks a record as applied. `preview` and `apply` need `gitleaks` on `PATH`;
+`apply` also needs a signed-in `gh` with write access to this repo.
+
+The known publish paths for Claude are closed: in every session the hooks deny `triage.py apply`, running `triage.py`
+under `script`, `expect`, `unbuffer` or `pty.spawn`, `gh issue close|reopen|lock|unlock|delete|transfer|pin|unpin|develop`,
+`gh label` and writing `gh api` calls (`-f`/`-F`, `--field`, `--raw-field`, `--input`, `graphql`, a method other than
+`GET`) aimed at delixcrew, and Write/Edit into the record directory, with
+`delixcrew: triage decisions are applied only by the user from their own terminal`. `gh issue comment|edit` aimed at
+delixcrew was already denied by the [Feedback](#feedback) rule.
+
+**Remaining risk.** As with feedback, the hooks close the *known* paths only. A disguised command (`exec(open(...))`, a
+`gh` alias, a REST call with `curl`) is not caught by a pattern. On the `triage.py` path the TTY and `APPLY <hash>`
+still stop it; outside `triage.py` nothing stops it, but an `accepted` label alone does not let an issue into
+`/delixcrew:start`: that also needs the maintainer's triage comment with the matching `issue-sha`. The `permissions.deny`
+rule under [Feedback](#feedback) covers `gh api` here too.
+
 ## Known limits
 
 Plugin agents ignore the `permissionMode`, `hooks` and `mcpServers` fields (the constraint is `tools` + `hooks/hooks.json`).
@@ -188,8 +249,8 @@ note is appended to `.delix/warnings.log`.
 
 The write gate (`scripts/write_gate.py`) sees only the Write/Edit/MultiEdit/NotebookEdit tools; an implementer writing
 files through Bash (`echo >`, `sed -i`, `tee`) is outside this hook (`bash_gate.py` intercepts only redirects, `cp`, `mv`
-and `tee` into protected paths, reviewer Bash and, in every session, the known feedback send paths; see
-[Feedback](#feedback)). A path escaping the worktree (cwd) is always rejected (A13, K42); path matching is relative to cwd. For
+and `tee` into protected paths, reviewer Bash and, in every session, the known feedback send paths and triage write
+paths; see [Feedback](#feedback) and [Triage](#triage)). A path escaping the worktree (cwd) is always rejected (A13, K42); path matching is relative to cwd. For
 that reason a change to the card file, `docs/delix/**` or an unapproved protected path in the card counts as a finding in
 the `delixcrew:qa` review of the diff. Tier 3 permission is opened by the `**🔐 Approved:** <YYYY-MM-DD> <who>` line after
 the card's header table; only the orchestrator writes it, after the user's explicit "yes" in chat, and commits it to main.

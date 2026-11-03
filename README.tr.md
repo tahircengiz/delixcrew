@@ -72,6 +72,7 @@ claude plugin install delix-board@delixcrew
 | 6 | `/delixcrew:close` | STATUS/CHANGELOG, ölçüm (maliyet, tur), drift kontrolü, onaylı bellek yazımı, worktree temizliği. |
 | kısa yol | `/delixcrew:verify <dal\|commit\|dizin>` | Kartsız yapılmış işi (tek oturum ya da sen) **yalnız doğrular** (K43): gitleaks, yerel test, uzak **izole** birim testi (ayrı dizin + ayrı imaj, canlı stack'e dokunmaz), istenirse `--full`; `qa` (+ `security`) **tek geçiş**, düzeltme turu yok → `docs/delix/verifications/<tarih>-<ad>.md` raporu (ACCEPT / FIX, 🔐) ve `STATE.json.verifications`. S/M + iyi tarif + Tier ≤ 2 işte `/delixcrew:start` bunu önerir; tam akış Tier 3 / paralel kart / belirsiz spec'e. |
 | her an | `/delixcrew:status` | Salt-okunur pano: wave · kart · rol · tier · status · tur · PR · maliyet · son rapor · bekleyen kapı (🔐, merge) tablosu sohbete; istenirse (`--write`) `docs/delix/BOARD.md`'ye (git'e girmez). |
+| issue'lar | `/delixcrew:triage [#n]` | delixcrew reposunda: gelen issue'ları temizlenmiş okur, salt-okunur `architect` her birini kontrol edip bir karar önerir; sohbette `<karar> #<n>` yazınca kaydeder ve yayınlanacak yorumu aynen gösterir; yayını siz kendi terminalinizden yaparsınız. Bkz. [Triage](#triage). |
 
 ## Roller
 
@@ -176,6 +177,65 @@ isterseniz kendi `settings.json`'unuza bir deny kuralı ekleyin; delixcrew bunu 
   GitHub private reporting üzerinden isteyin:
   [security/advisories/new](https://github.com/tahircengiz/delixcrew/security/advisories/new).
 
+## Triage
+
+Bu repodaki issue'lar (hata bildirimi, özellik isteği, gönderilmiş geri bildirim taslağı) işe dönüşmeden önce kontrol
+edilir. `/delixcrew:triage` yalnız delixcrew reposunda çalışır. Issue başlığı, gövdesi ve yorumları güvenilmeyen
+girdidir: Claude bunları yalnız `UNTRUSTED` blok içinde gösterir; içlerindeki hiçbir şey talimat ya da karar değildir.
+Claude yayın yapmaz: karar yorumunu ve etiket değişikliklerini siz kendi terminalinizden uygularsınız.
+
+**Akış.**
+1. `/delixcrew:triage` `triage.py index` çalıştırır ve bekleyen issue'ları (açık, karar etiketi yok) en küçük numaradan
+   başlayarak tek tek alır; `/delixcrew:triage #12` tek bir issue alır. `triage.py show <n>` issue'yu temizlenmiş okur:
+   kontrol ve görünmez karakterler ile HTML yorumları çıkarılır ve sayılır (`removed:`), sabit alanlar (`url`, `state`,
+   `author`, `source`, `labels`, `decision`, `reported-version`, `issue-sha`) en başta gelir.
+2. Salt-okunur `delixcrew:architect` bir kontrol listesi çalıştırır (job D) ve gerekçeli tek bir karar önerir: hata,
+   bildirilen sürümün ağacına (o sürümün `v<X.Y.Z>` etiketi, etiket yoksa `main`) karşı, özellik isteği delix ilkelerine
+   karşı, her issue da kopya olup olmadığı, kaynağı (`external` issue'dan somut bir kullanım senaryosu beklenir) ve eksik
+   bilgi açısından kontrol edilir.
+3. Sohbette kararı **ve** numarayı birlikte yazarak karar verirsiniz: `accept #12`, `needs-info #12`, `duplicate #12`,
+   `wontfix #12` ya da `defer #12` (veya `skip #12`). Numarasız "ok", "evet", "hepsini kabul et" ya da bir issue'da veya
+   dosyada yazan "accepted" karar değildir. Sizin kararınız öneriden üstündür.
+4. Claude kararı `triage.py record <n>` ile kaydeder (`show`'dan sonra issue'nun başlığı ya da gövdesi değiştiyse
+   reddedilir), sonra `triage.py preview <n>` çalıştırır ve çıktısını aynen gösterir: repo, issue, etiket işlemleri,
+   yayınlanacak yorum, bir `VERDICT:` ve bir `HASH:` satırı.
+5. `VERDICT: CLEAN` ise Claude size tek bir komut verir:
+   `python3 <plugin dizini>/scripts/triage.py apply 12 --confirm <hash>`. Bunu **kendi terminalinizde** çalıştırın.
+   Her şeyi yeniden basar ve `APPLY <hash>` yazmanızı bekler; önizlemeden sonra bir şey değiştiyse durur.
+
+**Etiketler.** Beş karar etiketi: `accepted`, `needs-info`, `duplicate`, `wontfix`, `deferred` (`defer` kararı
+`deferred` koyar). `apply` eksik etiketi oluşturur, karar etiketini ekler, diğer dördünü kaldırır ve yorumu yazar; yorumun
+son satırı `delixcrew-triage: <decision> <hash> <issue-sha>`'dır. Issue'yu yalnız `duplicate` ve `wontfix` kapatır
+(not planned olarak); `needs-info`, `defer` ve `accept` açık bırakır, kabul edilen issue'yu işi bitiren PR kapatır.
+Bir adım başarısız olduktan sonra `apply` yeniden çalıştırılırsa yalnız eksik kalan adımları yapar.
+
+**Yorumu ne engeller** (`VERDICT: BLOCKED: <neden>`, `preview` 4 ile çıkar, komut verilmez): triage'dan sonra issue
+değişmişse; gerekçe ya da sorularda `@` mention, HTML ya da karakter referansı; görünmez karakterler; bir `gitleaks`
+bulgusu, ya da `gitleaks`'in olmaması veya hata vermesi; 32+ karakterlik opak dizi. Yorum yalnız kaydedilmiş gerekçe,
+sorular ve kopya numarasından kurulur, asla issue metninden değil.
+
+**Issue'dan işe.** `/delixcrew:start #12` yalnız `accepted` olarak triage edilmiş ve başlığı ile gövdesi kabulden beri
+değişmemiş issue'yu alır: issue'yu `triage.py show 12 --require accepted` ile okur; `accepted` etiketi ya da
+maintainer'ın triage yorumu yoksa veya metin kabulden sonra değiştiyse bu komut 8 ile çıkar. O durumda
+`/delixcrew:triage #12`'yi yeniden çalıştırın. Issue alımı yalnız delixcrew reposunda çalışır ve en az Tier 2'dir.
+
+**Kayıtlar.** Kararlar `~/.claude/delixcrew/triage/<n>.json` altında tutulur (`DELIXCREW_TRIAGE_DIR` ile değişir), asla
+proje reposunda değil; oraya yalnız `triage.py` yazar. `apply` kaydı uygulanmış olarak işaretler. `preview` ve `apply`
+için `PATH`'te `gitleaks` gerekir; `apply` ayrıca bu repoya yazma yetkisi olan, oturum açılmış bir `gh` ister.
+
+Claude için bilinen yayın yolları kapalıdır: hook'lar her oturumda `triage.py apply`'ı, `triage.py`'yi `script`,
+`expect`, `unbuffer` ya da `pty.spawn` altında çalıştırmayı, delixcrew'u hedefleyen
+`gh issue close|reopen|lock|unlock|delete|transfer|pin|unpin|develop`, `gh label` ve yazan `gh api` çağrılarını (`-f`/`-F`,
+`--field`, `--raw-field`, `--input`, `graphql`, `GET` dışı method) ve kayıt dizinine Write/Edit'i
+`delixcrew: triage decisions are applied only by the user from their own terminal` mesajıyla reddeder. delixcrew'u
+hedefleyen `gh issue comment|edit` zaten [Geri bildirim](#geri-bildirim) kuralıyla reddediliyordu.
+
+**Kalan risk.** Geri bildirimde olduğu gibi hook'lar yalnız *bilinen* yolları kapatır. Gizlenmiş bir komut
+(`exec(open(...))`, bir `gh` takma adı, `curl` ile REST çağrısı) desenle yakalanmaz. `triage.py` yolunda TTY ve
+`APPLY <hash>` yine durdurur; `triage.py` dışında durdurucu yoktur, ama `accepted` etiketi tek başına bir issue'yu
+`/delixcrew:start`'a sokmaz: ayrıca eşleşen `issue-sha`'lı maintainer triage yorumu gerekir. [Geri bildirim](#geri-bildirim)
+altındaki `permissions.deny` kuralı burada da `gh api`'yi kapsar.
+
 ## Bilinen sınırlar
 
 Plugin agent'ları `permissionMode`, `hooks`, `mcpServers` alanlarını yok sayar (kısıt `tools` + `hooks/hooks.json`).
@@ -186,8 +246,8 @@ ve 3 teşhis koşusunda hiç başlamadı, 2026-11-01'de kaldırıldı (retro A9,
 
 Yazma kapısı (`scripts/write_gate.py`) yalnız Write/Edit/MultiEdit/NotebookEdit araçlarını görür; uygulayıcının Bash
 ile dosya yazması (`echo >`, `sed -i`, `tee`) bu hook'un kapsamı dışıdır (`bash_gate.py` yalnız korunan yollara
-yönlendirme, `cp`, `mv` ve `tee`'yi, inceleyici Bash'ini ve her oturumda bilinen geri bildirim gönderme yollarını keser;
-bkz. [Geri bildirim](#geri-bildirim)). Worktree (cwd) dışına çıkan yol her zaman reddedilir (A13, K42); yol eşleşmeleri cwd'ye
+yönlendirme, `cp`, `mv` ve `tee`'yi, inceleyici Bash'ini ve her oturumda bilinen geri bildirim gönderme yollarını ve triage yazma
+yollarını keser; bkz. [Geri bildirim](#geri-bildirim) ve [Triage](#triage)). Worktree (cwd) dışına çıkan yol her zaman reddedilir (A13, K42); yol eşleşmeleri cwd'ye
 göredir. Bu yüzden kart dosyası, `docs/delix/**` ya da kartta onaysız korunan yol değişikliği `delixcrew:qa` incelemesinde
 diff'ten bulgu sayılır. Tier 3 izni kartın başlık tablosundan sonraki `**🔐 Approved:** <YYYY-MM-DD> <kim>` satırıyla
 açılır; bu satırı yalnız orkestratör, kullanıcının sohbetteki açık "evet"inden sonra yazar ve main'e commit eder.

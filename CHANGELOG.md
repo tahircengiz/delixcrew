@@ -2,6 +2,34 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## 0.6.0 — 2026-11-03
+
+Issue triage: incoming delixcrew issues are checked before they become work, and the decision comment is published
+only by you, from your own terminal.
+
+- **Triage script** (`scripts/triage.py`, stdlib only): `show <n>` reads an issue cleaned (control and invisible
+  characters and HTML comments removed and counted) with fixed fields and an `issue-sha` of the title and body; `index`
+  lists every issue with its state, decision label and source (`maintainer` or `external`); `record <n>` stores a
+  decision (JSON on stdin) only if the issue is unchanged since `show`; `preview <n>` builds the exact comment and label
+  actions with a `VERDICT:` and a `HASH:` line; `apply <n> --confirm <hash>` runs only on a TTY, prints everything again
+  and waits for `APPLY <hash>`. Records live in `~/.claude/delixcrew/triage/` (`DELIXCREW_TRIAGE_DIR`). A comment is
+  `BLOCKED` on a mention, HTML, a character reference, invisible characters, a `gitleaks` finding or a 32+ character
+  opaque string. See README → Triage.
+- **Five labels**: `accepted`, `needs-info`, `duplicate`, `wontfix`, `deferred`; a missing one is created on the first
+  `apply`. Only `duplicate` and `wontfix` close the issue (as not planned); `accepted` stays open until the PR that
+  finishes the work closes it.
+- **`/delixcrew:triage [#n]`**: without an argument it walks the pending issues one at a time; the read-only architect
+  runs a checklist (job D: bug against the reported version's tree, feature against the delix principles, duplicates,
+  source) and proposes a decision. A decision is recorded only after you name it with the issue number in chat
+  (`accept #12`); Claude then shows the preview verbatim and gives you the one-line `apply` command.
+- **Hook rules** (every session): `bash_gate.py` denies `triage.py apply`, `triage.py` under `script` / `expect` /
+  `unbuffer` / `pty.spawn`, and `gh issue close|reopen|…`, `gh label` and writing `gh api` calls aimed at delixcrew;
+  `write_gate.py` denies Write/Edit into the triage record directory. Known paths only, as in 0.5.0.
+- **`/delixcrew:start #<n>`** takes only an issue triaged as `accepted` whose title and body are unchanged since
+  acceptance (`triage.py show <n> --require accepted`, exit 8 otherwise). This also fixes the 0.5.0 issue intake (§1a),
+  which asked `gh issue view` for a field it does not return and failed.
+- **CI** runs `tests/triage_tests.sh`.
+
 ## 0.5.0 — 2026-11-03
 
 Self-feeding feedback: problems with delixcrew itself become sanitized GitHub issues, sent from your own terminal after you review them.
