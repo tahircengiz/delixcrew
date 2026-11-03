@@ -1,5 +1,6 @@
 // Reads a delix project through `$` into one Snapshot. Files are parsed again
-// only when their mtime moved; the worktree list is asked every 20 seconds.
+// only when their mtime moved; the worktree list, and with it the checkout whose
+// STATE.json is read, is asked every 20 seconds.
 
 import type { EngineInterface } from 'claude-code'
 
@@ -22,31 +23,19 @@ type Cached<T> = { mtimeMs: number; value: T }
 
 export type Cache = {
   files: Map<string, Cached<unknown>>
-  worktrees: { at: number; list: { path: string; branch: string }[] }
+  worktrees: { at: number; list: { path: string; branch: string }[]; root: string | null }
 }
 
-export const newCache = (): Cache => ({ files: new Map(), worktrees: { at: 0, list: [] } })
+export const newCache = (): Cache => ({ files: new Map(), worktrees: { at: 0, list: [], root: null } })
 
 const join = (...parts: string[]) => parts.join('/').replace(/\/+/g, '/')
-const dirname = (p: string) => p.replace(/\/[^/]*\/?$/, '') || '/'
 const basename = (p: string) => p.replace(/\/+$/, '').split('/').pop() ?? p
 
-/** The project root: the main checkout when it holds docs/delix/STATE.json (the orchestrator writes it there), else the toplevel. */
-export async function findRoot($: EngineInterface, cwd: string): Promise<string> {
-  const has = (dir: string) => $.fs.exists(join(dir, 'docs/delix/STATE.json')).catch(() => false)
-  const git = await $.process
-    .run(['git', 'rev-parse', '--show-toplevel', '--git-common-dir'], { cwd, timeoutMs: 5000 })
-    .catch(() => undefined)
-  if (git?.exitCode === 0) {
-    const [top, common] = git.stdout.trim().split('\n')
-    if (top && common) {
-      const commonAbs = common.startsWith('/') ? common : join(cwd, common)
-      const main = /\/\.git\/?$/.test(commonAbs) ? dirname(commonAbs.replace(/\/$/, '')) : null
-      if (main !== null && main !== top && (await has(main))) return main
-      return top
-    }
-  }
-  return cwd
+/** The session's checkout: the git toplevel of `cwd`, else `cwd` itself. */
+export async function findTop($: EngineInterface, cwd: string): Promise<string> {
+  const git = await $.process.run(['git', 'rev-parse', '--show-toplevel'], { cwd, timeoutMs: 5000 }).catch(() => undefined)
+  const top = git?.exitCode === 0 ? git.stdout.trim().split('\n')[0] : undefined
+  return top || cwd
 }
 
 async function readIfChanged<T>($: EngineInterface, cache: Cache, path: string, mtimeMs: number | null, parse: (text: string) => T): Promise<T | null> {
@@ -68,17 +57,41 @@ async function readIfChanged<T>($: EngineInterface, cache: Cache, path: string, 
   return value
 }
 
-async function worktrees($: EngineInterface, cache: Cache, root: string, now: number) {
-  if (now - cache.worktrees.at < 20_000 && cache.worktrees.at !== 0) return cache.worktrees.list
-  const run = await $.process.run(['git', 'worktree', 'list', '--porcelain'], { cwd: root, timeoutMs: 5000 }).catch(() => undefined)
-  cache.worktrees = { at: now, list: run?.exitCode === 0 ? parseWorktrees(run.stdout) : [] }
-  return cache.worktrees.list
+/**
+ * The checkout whose STATE.json is live. The orchestrator may write it in its own worktree (the desktop app opens
+ * one per session) while the main checkout stays behind, and every implementer worktree holds the copy of its
+ * dispatch. Among the worktrees holding one, implementer worktrees (`.delix/card`) left out: the newest `updated`;
+ * on a tie the session's own checkout, then the main checkout (listed first), then the newest mtime. A fresh
+ * checkout has a fresh mtime, so mtime only breaks ties.
+ */
+async function chooseRoot($: EngineInterface, cache: Cache, top: string, trees: { path: string }[]): Promise<string> {
+  const found: { path: string; updated: number; rank: number; mtimeMs: number }[] = []
+  for (const [i, tree] of trees.entries()) {
+    const path = join(tree.path, 'docs/delix/STATE.json')
+    const stat = await $.fs.stat(path).catch(() => undefined)
+    if (!stat || stat.kind !== 'file') continue
+    if (await $.fs.exists(join(tree.path, '.delix/card')).catch(() => false)) continue
+    const state = await readIfChanged<ParsedState | null>($, cache, path, stat.mtimeMs, parseState)
+    const updated = Date.parse(state?.updated ?? '')
+    found.push({ path: tree.path, updated: Number.isNaN(updated) ? 0 : updated, rank: tree.path === top ? 0 : i === 0 ? 1 : 2, mtimeMs: stat.mtimeMs })
+  }
+  found.sort((a, b) => b.updated - a.updated || a.rank - b.rank || b.mtimeMs - a.mtimeMs)
+  return found[0]?.path ?? top
+}
+
+async function worktrees($: EngineInterface, cache: Cache, top: string, now: number) {
+  if (now - cache.worktrees.at < 20_000 && cache.worktrees.at !== 0) return cache.worktrees
+  const run = await $.process.run(['git', 'worktree', 'list', '--porcelain'], { cwd: top, timeoutMs: 5000 }).catch(() => undefined)
+  const list = run?.exitCode === 0 ? parseWorktrees(run.stdout) : []
+  cache.worktrees = { at: now, list, root: await chooseRoot($, cache, top, list) }
+  return cache.worktrees
 }
 
 const emptySnapshot = (root: string): Snapshot => ({
   isDelix: false,
   root,
   project: basename(root),
+  source: null,
   spec: null,
   previous: null,
   size: null,
@@ -90,8 +103,12 @@ const emptySnapshot = (root: string): Snapshot => ({
   worktreeCount: 0,
 })
 
-/** One pass over the project: STATE, cards, metrics, worktrees and their .delix files. */
-export async function readSnapshot($: EngineInterface, root: string, cache: Cache, now: number): Promise<Snapshot> {
+/** One pass over the project seen from the session's checkout `top`: STATE, cards, metrics, worktrees and their .delix files. */
+export async function readSnapshot($: EngineInterface, top: string, cache: Cache, now: number): Promise<Snapshot> {
+  const seen = await worktrees($, cache, top, now)
+  const trees = seen.list
+  const root = seen.root ?? top
+  const main = trees[0]?.path ?? root
   const delix = join(root, 'docs/delix')
   const state = await readIfChanged<ParsedState | null>($, cache, join(delix, 'STATE.json'), null, parseState)
   const taskEntries = await $.fs.list(join(delix, 'tasks')).catch(() => [])
@@ -110,7 +127,6 @@ export async function readSnapshot($: EngineInterface, root: string, cache: Cach
   }
 
   const reports: Record<string, { path: string; branch: string; report: CardReport | null; test: TestResult | null }> = {}
-  const trees = await worktrees($, cache, root, now)
   for (const tree of trees) {
     const dot = join(tree.path, '.delix')
     const entries = await $.fs.list(dot).catch(() => [])
@@ -177,7 +193,8 @@ export async function readSnapshot($: EngineInterface, root: string, cache: Cach
   return {
     isDelix: true,
     root,
-    project: basename(root),
+    project: basename(main),
+    source: root === main ? null : basename(root),
     spec: state?.spec ?? null,
     previous: state?.previous ?? null,
     size: state?.size ?? null,

@@ -5,6 +5,11 @@ A companion mod for [delix](../../README.md). It reads a delix project (`docs/de
 above the prompt while a long run is going, a status line entry and a toast when the run ends. It only reads; it writes
 no project file and changes nothing in delix itself.
 
+The orchestrator may write `STATE.json` in a worktree of its own (Claude Desktop opens one per session) while the main
+checkout stays behind. The board therefore reads the copy with the newest `updated` among the worktrees that hold one,
+leaving out implementer worktrees (those with `.delix/card`), and names that worktree in its header when it is not the
+main checkout. It looks again every 20 seconds.
+
 ![Board view in the terminal](assets/board-terminal-pano.png)
 
 ## Installation
