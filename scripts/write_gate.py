@@ -6,8 +6,15 @@ outside cwd (the worktree) is writable (A13). The implementer gate is active onl
 import os
 import re
 import sys
+import unicodedata
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import REVIEWERS, card_path, delix_json, deny, matches, read_input  # noqa: E402
+
+
+def _fold(p):
+    """REQ-6 (K129): APFS ignores letter case and Unicode normalization; realpath keeps both as given."""
+    return unicodedata.normalize("NFD", os.path.realpath(p)).casefold()
+
 
 g = read_input()
 
@@ -15,15 +22,13 @@ g = read_input()
 _ti = g.get("tool_input") or {}
 _path = _ti.get("file_path") or _ti.get("notebook_path") or ""
 if _path:
-    queue = os.path.realpath(os.path.expanduser(os.environ.get("DELIXCREW_FEEDBACK_DIR") or "~/.claude/delixcrew/feedback"))
-    target = os.path.realpath(os.path.join(g.get("cwd") or os.getcwd(), os.path.expanduser(_path)))
+    queue = _fold(os.path.expanduser(os.environ.get("DELIXCREW_FEEDBACK_DIR") or "~/.claude/delixcrew/feedback"))
+    target = _fold(os.path.join(g.get("cwd") or os.getcwd(), os.path.expanduser(_path)))
     if os.path.commonpath([queue, target]) == queue:
         deny("delixcrew: feedback is sent only by the user from their own terminal")
-    # REQ-7 (0.6.0): same for the triage record dir (triage.py record via Bash is the only writer); casefold, since
-    # realpath keeps the given letter case and a case-insensitive filesystem (APFS default) maps TRIAGE to triage
-    triage = os.path.realpath(os.path.expanduser(os.environ.get("DELIXCREW_TRIAGE_DIR") or "~/.claude/delixcrew/triage"))
-    triage = triage.casefold()
-    if os.path.commonpath([triage, target.casefold()]) == triage:
+    # REQ-7 (0.6.0): same for the triage record dir (triage.py record via Bash is the only writer)
+    triage = _fold(os.path.expanduser(os.environ.get("DELIXCREW_TRIAGE_DIR") or "~/.claude/delixcrew/triage"))
+    if os.path.commonpath([triage, target]) == triage:
         deny("delixcrew: triage decisions are applied only by the user from their own terminal")
 
 agent = (g.get("agent_type") or "").strip()
