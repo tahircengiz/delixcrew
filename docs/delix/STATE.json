@@ -26,11 +26,12 @@
       "file": "docs/delix/tasks/T010-triage-script.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 24,
       "rounds": 6,
       "cost_usd": null,
-      "sha": "f805e17"
+      "sha": "f805e17",
+      "merged": "556189f"
     },
     "T011": {
       "file": "docs/delix/tasks/T011-triage-hooks.md",
