@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T11:55:05Z",
+  "updated": "2026-11-03T13:10:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -90,9 +90,9 @@
       "file": "docs/delix/tasks/T007-stop-hook-trust.md",
       "role": "backend",
       "tier": 3,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
+      "status": "in_review",
+      "pr": 16,
+      "rounds": 2,
       "cost_usd": null
     }
   },
