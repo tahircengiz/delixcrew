@@ -348,6 +348,11 @@ Hazırlık [docs/rename/delix-hazirlik.md](docs/rename/delix-hazirlik.md) §4 s�
   kurulum satırları. Proje dosyaları (`docs/delix/`, `delix.json`, `.delix/`) ve ürün adı "delix" düzyazıda aynı kaldı:
   LLMPortal'da veri taşıma yok. `delix-board` adı kaldı, 0.1.2 yeni ajan önekini izler. Geçmiş kayıtlar (STATUS,
   CHANGELOG eski bölümleri, `docs/retro/`, `docs/rename/`) değişmedi.
+- **K92** 0.5.0 kapsamı (2026-11-03, kullanıcı kararı): issue #7 (P0, veri ve gizlilik bölümü) T005'e katıldı, ayrı kart
+  yok (aynı README dosyaları, aynı commit şartı). Gönderilmiş issue'nun silinme kanalı GitHub özel bildirimi
+  (`security/advisories/new`); repoda private vulnerability reporting açıldı. #8 düzeltmesi (T007, `b22f45a`) ayrı 0.4.1
+  olmadan 0.5.0 ile yayınlanır; CHANGELOG girdisi T005'te. Öz-besleme kartları ve kararları: `docs/delix/SPEC.md` §9
+  (K61–K82), `docs/delix/tasks/`.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
