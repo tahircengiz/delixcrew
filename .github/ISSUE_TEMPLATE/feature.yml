@@ -1,0 +1,56 @@
+name: Feature request
+description: Suggest a change or a new capability for delixcrew.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The headings below match the body that `/delixcrew:feedback` sends, so web and CLI requests read the same.
+        Do not paste secrets, tokens, internal hostnames or private paths.
+  - type: textarea
+    id: component
+    attributes:
+      label: Component
+      description: The skill, hook, script or agent name this request is about.
+      placeholder: "skill review"
+    validations:
+      required: true
+  - type: textarea
+    id: version
+    attributes:
+      label: Version
+      description: Plugin version, Claude Code version and OS name.
+      placeholder: "plugin 0.5.0, Claude Code 2.1.309, macOS"
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: How it works today, or what you tried to do and could not.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+      description: How you would like it to work.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The workflow where you hit the gap, if there is one.
+      placeholder: |
+        1. Run /delixcrew:dispatch on a spec with 5 cards
+        2. ...
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Anything else that helps (alternatives you considered, related issues). Use example.com for addresses.
+    validations:
+      required: false

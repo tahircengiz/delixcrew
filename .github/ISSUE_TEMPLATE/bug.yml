@@ -1,0 +1,56 @@
+name: Bug report
+description: Something in delixcrew does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The headings below match the body that `/delixcrew:feedback` sends, so web and CLI reports read the same.
+        Do not paste secrets, tokens, internal hostnames or private paths.
+  - type: textarea
+    id: component
+    attributes:
+      label: Component
+      description: The skill, hook, script or agent name.
+      placeholder: "skill implement"
+    validations:
+      required: true
+  - type: textarea
+    id: version
+    attributes:
+      label: Version
+      description: Plugin version, Claude Code version and OS name.
+      placeholder: "plugin 0.5.0, Claude Code 2.1.309, macOS"
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: What you saw, including the exact error message.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+      description: What you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a project at ~/projects/example-app
+        2. Run /delixcrew:start
+        3. ...
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Anything else that helps (project size, tier, related card). Use example.com for addresses.
+    validations:
+      required: false

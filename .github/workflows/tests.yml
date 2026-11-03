@@ -21,6 +21,8 @@ jobs:
         run: bash tests/hook_tests.sh
       - name: Board tests
         run: bash tests/board_tests.sh
+      - name: Feedback tests
+        run: bash tests/feedback_tests.sh
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
