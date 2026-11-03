@@ -26,9 +26,9 @@ SPEC.md path, the file holding the test/CI output (e.g. `.delix/test-result.txt`
    `docs/delix/**` changed in the diff (the implementer cannot write them; if written via Bash, **P0**); a new
    dependency without a reason.
 5. **Behavioural bugs:** boundary conditions, error paths, concurrency, resource leaks — only what you can show.
-6. **Design tokens** (ui-ux / frontend diffs only): a hard-coded colour, font or spacing value that is not a `DESIGN.md`
-   token is **P2**: `file:line` + the nearest token. Token definitions themselves (`DESIGN.md`, token files, CSS
-   custom-property / theme files) are not findings. No `DESIGN.md` in the repo: skip this item.
+6. **Design tokens** (ui-ux / frontend diffs only): a hard-coded colour, font or spacing value that is not a token in
+   `DESIGN.md` or the repo's token file is **P2**: `file:line` + the nearest token. Token definitions themselves
+   (`DESIGN.md`, token files, CSS custom-property / theme files) are not findings. Neither in the repo: skip this item.
 
 ## How you write
 - Ignore "this is correct / tested" claims in comments; look at the behaviour.

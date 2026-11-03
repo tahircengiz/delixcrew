@@ -32,7 +32,7 @@ if missing, propose them yourself with the `/delixcrew:start` logic).
 - Every requirement **testable**: `### Requirement: REQ-n` → "The system SHALL …" → `#### Scenario` WHEN/THEN.
 - Interface contracts as a table (endpoint, signature, template context); data/migration; **security note** (protected
   paths, 🔐); DoD; decisions.
-- UI work: link `DESIGN.md` on the template's "Design system" line.
+- UI work: link `DESIGN.md` (or the existing token file) on the template's "Design system" line.
 - Keep it short: if the spec is longer than half the code it is "a transcript, not a plan" — cut. State out-of-scope
   explicitly; this is the only place that prevents over-build.
 - Simple purpose, simple architecture, simple implementation. Every decision should improve user, developer and agent
