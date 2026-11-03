@@ -25,11 +25,13 @@ if {"index.html", "usage.html"} <= en and en == tr:
 else:
     bad(f"pages without a twin: EN only {sorted(en - tr)}, TR only {sorted(tr - en)} (index.html and usage.html are required)")
 
-# active content or anything loaded from another host; a plain <a href> to another site is allowed
-ACTIVE = re.compile(r"<(?:script|iframe|object|embed|video|audio|source|base)\b|@import|@font-face|url\(\s*['\"]?(?:https?:)?//", re.I)
-EXT_REF = re.compile(r"<(?!a\b)[a-z][^>]*?\b(?:href|src|srcset|poster|data)\s*=\s*['\"]?\s*(?:https?:)?//", re.I)
-assets = sorted(os.path.join("assets", f) for f in os.listdir(os.path.join(site, "assets"))
-                if f.endswith((".css", ".svg"))) if os.path.isdir(os.path.join(site, "assets")) else []
+# active content or anything loaded from another host; a plain <a href> to another site is allowed.
+# Tag scans are bounded ({0,4096}) so a long unclosed tag cannot make them backtrack polynomially.
+ACTIVE = re.compile(r"<(?:script|iframe|object|embed|video|audio|source|base|form)\b|@import|@font-face|javascript:"
+                    r"|url\(\s*['\"]?(?:https?:)?//|<[a-z][^>]{0,4096}?\s(?:on[a-z]+\s*=|http-equiv\s*=\s*['\"]?refresh)", re.I)
+EXT_REF = re.compile(r"<(?!a\b)[a-z][^>]{0,4096}?\b(?:href|src|srcset|poster|data)\s*=\s*(?:['\"]\s*)?(?:https?:)?//", re.I)
+assets = sorted(os.path.relpath(os.path.join(d, f), site) for d, _, fs in os.walk(os.path.join(site, "assets"))
+                for f in fs if f.endswith((".css", ".svg")))
 for a in assets:
     s = open(os.path.join(site, a), encoding="utf-8").read()
     hits = [m.group(0) for m in ACTIVE.finditer(s)] + [m.group(0) for m in EXT_REF.finditer(s)]

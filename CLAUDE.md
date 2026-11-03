@@ -11,6 +11,6 @@ Update the site in the same change when:
   and the "coming in" / "ile gelecek" labels that the release turns into shipped features;
 - a command, hook rule, role, gate or project file is added, removed or renamed (README Flow, Roles, Files, Known limits).
 
-`bash tests/site_tests.sh` fails when a page's version differs from `plugin.json`, a TR/EN twin is missing, a page loads
-a script or a third-party asset, or a local link, anchor or icon does not resolve. Every claim on the site comes from a
+`bash tests/site_tests.sh` fails when a page's version differs from `plugin.json`, a TR/EN twin is missing, a page or an
+asset has a script, an event handler, a form or a third-party asset, or a local link, anchor or icon does not resolve. Every claim on the site comes from a
 repo file; each section names its sources in its `Source:` / `Kaynak:` line.
