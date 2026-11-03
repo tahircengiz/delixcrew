@@ -1,8 +1,8 @@
 # SPEC — Triage (gelen bug ve önerilerin kontrolü)
 
-> Size: **M** · Tier: 3 · Date: 2026-11-03 · Status: **approved (gate 1, 2026-11-03)** (rev 2: architect FIX + security FIX işlendi)
+> Size: **M** · Tier: 3 · Date: 2026-11-03 · Status: **closed (0.6.0, T010–T015 merged, main `11bfb41`; arşiv)** · approved (gate 1, 2026-11-03) (rev 2: architect FIX + security FIX işlendi)
 > Source: grill kararları K106–K110 (kullanıcı), K111–K127 (orkestratör, geri alınır). STATUS.md K numaralarının devamıdır.
-> Önceki spec (öz-besleme, 0.5.0, kapalı): [`archive/0.5.0-self-feeding/SPEC.md`](archive/0.5.0-self-feeding/SPEC.md).
+> Önceki spec (öz-besleme, 0.5.0, kapalı): [`../0.5.0-self-feeding/SPEC.md`](../0.5.0-self-feeding/SPEC.md).
 
 ## 1. Goal
 delixcrew reposuna gelen her issue (öz-besleme ile, web formuyla ya da elle açılmış bug ve feature request) doğrudan işe

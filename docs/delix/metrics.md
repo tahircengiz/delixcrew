@@ -51,7 +51,7 @@ Orchestrator session (start, spec, dispatch, reviews, close): output 89K, cache 
 **Eval discrimination:** `feedback-file-approval` with 1.00 / without 0.50 (pass rate 1.00 / 0.00); before rev 3:
 1.00 / 1.00.
 
-## Triage 0.6.0 (closed 2026-11-03; SPEC `docs/delix/SPEC.md`, cards T010–T014)
+## Triage 0.6.0 (closed 2026-11-03; SPEC `docs/delix/archive/0.6.0-triage/SPEC.md`, cards T010–T015)
 
 Source: `STATE.json`, `gh pr view` (createdAt → mergedAt), the orchestrator transcript (`message.usage`, deduplicated
 by message id). Session cost in USD: not measured. Implementer and subagent tokens: not measured.

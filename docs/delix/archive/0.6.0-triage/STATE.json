@@ -1,0 +1,111 @@
+{
+  "spec": "docs/delix/archive/0.6.0-triage/SPEC.md",
+  "size": "M",
+  "updated": "2026-11-03T21:00:00Z",
+  "env_owner": null,
+  "waves": [
+    {
+      "wave": 1,
+      "cards": [
+        "T010",
+        "T011",
+        "T012"
+      ],
+      "note": "SPEC triage (gate 1 2026-11-03, K106-K127). Parallel against SPEC §4. Merge order T010 -> T011 -> T012 (start §1a calls triage.py show; 'the hook denies it' holds only after T011). After T011+T012: integration check that the rendered record command is allowed by the merged hook. All 🔐: Approved line before dispatch."
+    },
+    {
+      "wave": 2,
+      "cards": [
+        "T013",
+        "T014"
+      ],
+      "note": "after T010 merged (CI step needs tests/triage_tests.sh); merged last, 0.6.0 must not reach main before its features. 🔐. T014 (K132, from T010 round 6) parallel with T013, no shared files; both after T010 merged (556189f)."
+    },
+    {
+      "wave": 3,
+      "cards": [
+        "T015"
+      ],
+      "note": "S follow-up from triage closure (SPEC §10 doc errors); docs only, Tier 1, done in a single session (K43)."
+    }
+  ],
+  "cards": {
+    "T010": {
+      "file": "docs/delix/archive/0.6.0-triage/tasks/T010-triage-script.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "accepted",
+      "pr": 24,
+      "rounds": 6,
+      "cost_usd": null,
+      "sha": "f805e17",
+      "merged": "556189f"
+    },
+    "T011": {
+      "file": "docs/delix/archive/0.6.0-triage/tasks/T011-triage-hooks.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "accepted",
+      "pr": 23,
+      "rounds": 2,
+      "cost_usd": null,
+      "sha": "b409295",
+      "merged": "109c894"
+    },
+    "T012": {
+      "file": "docs/delix/archive/0.6.0-triage/tasks/T012-triage-skill.md",
+      "role": "docs",
+      "tier": 3,
+      "status": "accepted",
+      "pr": 22,
+      "rounds": 2,
+      "cost_usd": null,
+      "sha": "1816d01",
+      "merged": "557f485"
+    },
+    "T013": {
+      "file": "docs/delix/archive/0.6.0-triage/tasks/T013-triage-docs-ci-version.md",
+      "role": "devops",
+      "tier": 3,
+      "status": "accepted",
+      "pr": 27,
+      "rounds": 1,
+      "cost_usd": null,
+      "sha": "9fea6dc",
+      "merged": "375623f"
+    },
+    "T014": {
+      "file": "docs/delix/archive/0.6.0-triage/tasks/T014-triage-invisible-hardening.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "accepted",
+      "pr": 28,
+      "rounds": 1,
+      "cost_usd": null,
+      "sha": "963ddb7",
+      "merged": "e549d17"
+    },
+    "T015": {
+      "file": "docs/delix/archive/0.6.0-triage/tasks/T015-triage-doc-statements.md",
+      "role": "docs",
+      "tier": 1,
+      "status": "accepted",
+      "pr": 29,
+      "rounds": 0,
+      "cost_usd": null,
+      "sha": "4f7e62e",
+      "merged": "11bfb41"
+    }
+  },
+  "status_values": [
+    "open",
+    "in_progress",
+    "in_review",
+    "fixing",
+    "accepted",
+    "rejected",
+    "escalated"
+  ],
+  "verifications": [],
+  "archived": "2026-11-03: 0.6.0 triage closed; T010–T015 accepted"
+}

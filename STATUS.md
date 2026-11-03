@@ -393,7 +393,7 @@ rev 3'te kapandı):
   tutmadı; feedback taslağı yazılamadı).
 - SPEC §4'te olmayan davranış: BLOCKED `preview` HASH/gövde basmıyor, bilinmeyen id exit 2, `send` kontrol sırası repo→id→BLOCKED→hash→TTY.
 
-## 8. 0.6.0 — triage (2026-11-03, SPEC `docs/delix/SPEC.md`, kartlar `docs/delix/tasks/T010–T014`; kapandı, main `375623f`)
+## 8. 0.6.0 — triage (2026-11-03, arşiv `docs/delix/archive/0.6.0-triage/`: SPEC, kartlar T010–T015, STATE; kapandı, main `375623f`)
 
 Gelen her bug ve öneri issue'su önce kontrol edilir: architect (job D) gerekçeli karar önerir, kararı insan verir, karar
 issue'ya kullanıcının terminalinde `triage.py apply` ile yazılır; start yalnız geçerli `accepted` issue'yu alır.
@@ -420,7 +420,7 @@ yazar", exit 8, 300 issue sınırı, önizleme sonrası değişiklik), takip kar
 sayfalaması doğrulanmadı; W0 kullanıcıda; IDN ve ondalık IP adresli bağlantılar `feedback.py` temizliğinden kaçabilir
 (K115 kapsamı, doğrulanmadı).
 
-Kararlar: `docs/delix/SPEC.md` §9 (kullanıcı K106–K110, orkestratör K111–K127). Öne çıkanlar:
+Kararlar: `docs/delix/archive/0.6.0-triage/SPEC.md` §9 (kullanıcı K106–K110, orkestratör K111–K127). Öne çıkanlar:
 - **K126** `gh` 2.86.0'da `gh issue view|list --json` issue düzeyinde `authorAssociation` vermiyor (`Unknown JSON field`).
   0.5.0 start §1a komutu bu yüzden bugün hata verir; T012 onu `triage.py show` ile değiştirir. 0.5.0 etiketinden önce
   bilinmesi gereken açık.
