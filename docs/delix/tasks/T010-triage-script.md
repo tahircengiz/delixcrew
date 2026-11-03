@@ -145,3 +145,9 @@ Unsure (security, not verified): Markdown links to `github.com` survive host red
 U+3002-dot and decimal-IP hosts may escape `feedback.py` host redaction (K115 scope).
 Decision (user, chat, 2026-11-03; K132): one more round, limited to the invisible-character finding → fixing
 (round 5). Any new finding after it goes to a separate card, not another round.
+Decision (user, main session, relayed 2026-11-03: "Narrow round, allowlist"; K133): the round 5 fix uses an
+allowlist, not the code-point blocklist. Rule: in the final text (the NFKC form of `raw` and the sanitized `comment`)
+only Unicode categories L*, N*, P*, S*, Zs and `\n` pass; every other character (Mn/Mc/Me, Cf, Cc, Co, Cn, Zl, Zp, …)
+is BLOCKED `invisible character`. Known invisible code points inside allowed categories are excluded explicitly:
+U+115F, U+1160, U+3164, U+FFA0 (Lo fillers), U+2800 (So). Exception: a single U+FE0E/U+FE0F right after a visible
+character. U+200D (ZWJ) stays BLOCKED (existing Cf rule). The first round 5 commit (7c915eb, blocklist) is replaced.
