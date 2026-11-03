@@ -1,7 +1,7 @@
 # SPEC — Feedback temizliği: URL izin listesi, yol bağlamları, kuyruk kapısında harf büyüklüğü
 
 > Size: **M** · Tier: 3 · Date: 2026-11-03 · Status: **approved (gate 1, 2026-11-03)** (architect FIX + security FIX işlendi)
-> Source: grill kararı K134 (kullanıcı), K135–K148 (lead, geri alınır). STATUS.md K numaralarının devamıdır.
+> Source: grill kararı K134 (kullanıcı), K135–K149 (lead, geri alınır). STATUS.md K numaralarının devamıdır.
 > Önceki spec'ler (kapalı): [`archive/0.6.0-triage/SPEC.md`](archive/0.6.0-triage/SPEC.md),
 > [`archive/0.5.0-self-feeding/SPEC.md`](archive/0.5.0-self-feeding/SPEC.md) (REQ-3, REQ-12, K94, K101, K104).
 
@@ -217,5 +217,7 @@ yeniden `preview` alır. Göç yok.
   host, `local_terms`, `origin_terms`) aynı kuralı kullanır. 0.5.0 K97'yi daraltır.
 - **K148** (geri alınır) Spec incelemesi: architect FIX (1 P0, 4 P1, 2 P2) ve security FIX (2 High, 2 Medium, 3 Low) işlendi;
   `<ad>:/yol` (K101) ve `http:\\nas` bugünkü yol kuralında kalır, URL biçimine alınmadı (mevcut test birebir bekliyor).
+- **K149** (geri alınır; T017 round 0 P2, kullanıcı onayı 2026-11-03) CI `tests` işi `delix.json` `test_command` döngüsünün
+  aynısını çalıştırır (T019, 🔐); yeni test dosyaları otomatik kapsanır. Kullanıcıya görünmez, CHANGELOG'a girmez.
 - **K145** (geri alınır) Önceki triage spec'i ve T010–T015 `archive/0.6.0-triage/`'a taşındı (`ff79206`); STATE boş,
   github-pages doğrulama kaydı yerinde.

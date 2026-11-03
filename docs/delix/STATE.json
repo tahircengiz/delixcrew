@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T22:55:00Z",
+  "updated": "2026-11-03T23:10:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -15,9 +15,10 @@
     {
       "wave": 2,
       "cards": [
-        "T018"
+        "T018",
+        "T019"
       ],
-      "note": "after T016 AND T017 merged (CHANGELOG bullet describes REQ-6, README the merged T016 behaviour). Tier 1 docs."
+      "note": "after T016 AND T017 merged (CHANGELOG bullet describes REQ-6, README the merged T016 behaviour). Tier 1 docs. T019 (K149, CI loop, 🔐) parallel with T018, no shared files; T019 may start as soon as approved (no dependency on T016)."
     }
   ],
   "cards": {
@@ -45,6 +46,15 @@
       "file": "docs/delix/tasks/T018-feedback-docs-url-rule.md",
       "role": "docs",
       "tier": 1,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T019": {
+      "file": "docs/delix/tasks/T019-ci-run-all-tests.md",
+      "role": "devops",
+      "tier": 3,
       "status": "open",
       "pr": null,
       "rounds": 0,
