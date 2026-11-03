@@ -153,6 +153,24 @@ isterseniz kendi `settings.json`'unuza bir deny kuralı ekleyin; delixcrew bunu 
 { "permissions": { "deny": ["Bash(gh issue create:*)", "Bash(gh api:*)"] } }
 ```
 
+### Veri ve gizlilik
+
+- **Ne gönderilir** (redaksiyondan sonra, başka hiçbir şey değil): başlık, label (`bug` ya da `enhancement`) ve şu
+  başlıkları taşıyan gövde: `### Component`, `### Version` (plugin sürümü, Claude Code sürümü, `Darwin` ya da `Linux`
+  gibi OS adı), `### What happened`, `### Expected`, `### Steps to reproduce`, `### Context` ve son satır
+  `delixcrew-fp: <fingerprint>`. Bu metni önizlemede ve `SEND <hash>`'ten önce terminalinizde aynen görürsünüz.
+- **Ne gönderilmez**: her taslakla tutulan proje terimleri (`origin_terms`), kullanıcı ve makine adınız, ev dizini
+  yollarının kullanıcı kısmı, diğer mutlak yollar, e-posta adresleri ve izinli liste dışındaki host'lar redakte edilir;
+  sır içeren taslak redakte edilip gönderilmez, engellenir.
+- **Nereye gider**: `tahircengiz/delixcrew` üzerinde **public** bir issue; `gh` ile **sizin kendi** GitHub hesabınızla
+  açılır. Dayanak sizin açık eyleminizdir: siz açana kadar geri bildirim kapalıdır, kendi terminalinizde `SEND <hash>`
+  yazana kadar hiçbir şey gönderilmez.
+- **Yerel kuyruk**: `~/.claude/delixcrew/feedback/` (ya da `DELIXCREW_FEEDBACK_DIR`). `feedback.py drop <id>` taslağı
+  bırakılmış olarak işaretler ve bir daha önerilmez (dosya kalır); bütün taslakları ve ayarı silmek için dizini silin.
+- **Gönderilmiş issue'yu sildirmek**: yazarı olarak düzenleyebilirsiniz ama GitHub silmenize izin vermez. Kaldırılmasını
+  GitHub private reporting üzerinden isteyin:
+  [security/advisories/new](https://github.com/tahircengiz/delixcrew/security/advisories/new).
+
 ## Bilinen sınırlar
 
 Plugin agent'ları `permissionMode`, `hooks`, `mcpServers` alanlarını yok sayar (kısıt `tools` + `hooks/hooks.json`).

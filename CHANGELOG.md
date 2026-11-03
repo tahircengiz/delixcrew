@@ -28,6 +28,11 @@ Self-feeding feedback: problems with delixcrew itself become sanitized GitHub is
   you approve the rewritten request.
 - **Design-system step in `/delixcrew:spec`** (UI work only): the spec links `DESIGN.md` (or the repo's token file) and
   produces `DESIGN.md` when neither exists; the `spec-M` / `spec-L` templates say the same.
+- **Security fix (T007, #16, issue #8):** the hooks trust only a local, git-untracked `.delix/card` at the root of a git
+  work tree, not reached through a symlink. Before, a card that came with a cloned repo or an archive could turn on the Stop gate and run
+  that repo's test command. The remaining case, an archive that brings its own `.git`, is tracked in issue #17.
+- README → Feedback → Data & privacy: what is sent, what is not, where it goes (a public issue under your own GitHub
+  account), the local queue and how to delete it, and how to ask for a sent issue to be removed.
 
 ## 0.4.0 — 2026-11-03
 

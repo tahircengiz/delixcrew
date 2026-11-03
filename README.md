@@ -154,6 +154,24 @@ guard, add a deny rule to your own `settings.json`; delixcrew only suggests this
 { "permissions": { "deny": ["Bash(gh issue create:*)", "Bash(gh api:*)"] } }
 ```
 
+### Data & privacy
+
+- **What is sent**, after redaction, and nothing else: the title, the label (`bug` or `enhancement`) and a body with
+  `### Component`, `### Version` (plugin version, Claude Code version, OS name such as `Darwin` or `Linux`),
+  `### What happened`, `### Expected`, `### Steps to reproduce`, `### Context`, and the last line
+  `delixcrew-fp: <fingerprint>`. You see this exact text in the preview and again in your terminal before `SEND <hash>`.
+- **What is not sent**: the project terms kept with each draft (`origin_terms`), your user and machine names, the user
+  part of home paths, other absolute paths, e-mail addresses and hosts outside the allowlist are redacted; a draft with a
+  secret is blocked, not redacted and sent.
+- **Where it goes**: a **public** issue on `tahircengiz/delixcrew`, opened with **your own** GitHub account through
+  `gh`. The basis is your explicit action: feedback is off until you enable it, and nothing is sent until you type
+  `SEND <hash>` in your own terminal.
+- **Local queue**: `~/.claude/delixcrew/feedback/` (or `DELIXCREW_FEEDBACK_DIR`). `feedback.py drop <id>` marks a draft
+  as dropped so it is not offered again (the file stays); delete the directory to remove every draft and the setting.
+- **Deleting a sent issue**: as its author you can edit it, but GitHub does not let you delete it. To have it removed,
+  ask through GitHub private reporting:
+  [security/advisories/new](https://github.com/tahircengiz/delixcrew/security/advisories/new).
+
 ## Known limits
 
 Plugin agents ignore the `permissionMode`, `hooks` and `mcpServers` fields (the constraint is `tools` + `hooks/hooks.json`).
