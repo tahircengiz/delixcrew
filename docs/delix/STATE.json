@@ -28,9 +28,9 @@
       "tier": 3,
       "status": "fixing",
       "pr": 33,
-      "rounds": 2,
+      "rounds": 3,
       "cost_usd": null,
-      "sha": "f60dd67"
+      "sha": "842707d"
     },
     "T017": {
       "file": "docs/delix/tasks/T017-write-gate-queue-casefold.md",
