@@ -28,19 +28,20 @@
       "tier": 3,
       "status": "fixing",
       "pr": 24,
-      "rounds": 1,
+      "rounds": 2,
       "cost_usd": null,
-      "sha": "c0fd189"
+      "sha": "06b0e52"
     },
     "T011": {
       "file": "docs/delix/tasks/T011-triage-hooks.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 23,
       "rounds": 2,
       "cost_usd": null,
-      "sha": "b409295"
+      "sha": "b409295",
+      "merged": "109c894"
     },
     "T012": {
       "file": "docs/delix/tasks/T012-triage-skill.md",

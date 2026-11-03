@@ -92,3 +92,22 @@ Noted, no fix:
 - `apply` without a record exits 2 (shared `prepare()`), outside the card's apply set 0·4·5·6·7; tested, accepted.
 - Unsure (security): U+2028/U+2029 in `index` titles not escaped; a fake `--- comment by … | OWNER` line inside a body
   in `show` output (shown in an UNTRUSTED block; `--require accepted` reads raw gh data).
+
+### Round 2 (06b0e52) — qa REJECT (1 P1) · security FIX with 1 Medium → fixing
+Deterministic gates: CI `test` pass; from `git archive 06b0e52`: 5× `ALL PASSED`; validate passed; `feedback.py`
+unchanged. Round 1 fixed: HTML and mention checks run on the raw and the NFKC text (4 tests); the stub logs names only.
+To fix (round 2):
+- [P1 / Medium] `scripts/triage.py:310-314`: the mention check still has a bypass of the same class. `sanitize` can put
+  a placeholder ending in `>` right before `@`, and `MENTION_RE`'s lookbehind `(?<![\w.])` hides the `@` only in the
+  raw text. Reproduced by the orchestrator against the archive tree: `sanitize("Ask acme@carol", term_regex(["acme"]))`
+  gives `Ask <redacted:term>@carol`; `sanitize("Ask acme.io@alice", term_regex([]))` gives `Ask <redacted:host>@alice`;
+  `MENTION_RE` matches both outputs and neither input. The local USER or hostname term works the same way. Preview says
+  `VERDICT: CLEAN` and apply publishes the mention. Fix: also run `MENTION_RE` on the sanitized `comment` (no
+  placeholder, `**Triage: …**`, `Questions:` or `Duplicate of #N` contains `@`, so K122 holds). Keep the HTML check on
+  raw + NFKC only (placeholders start with `<r`). Tests (append in `blocked`, reason `mention`): `Ask acme@carol` with
+  extra term `acme`; `Ask acme.io@alice`; a USER-term case with a test USER of ≥ 3 characters. Check that
+  `bob@example.com` still gives CLEAN.
+Noted, no fix (carried over): makedirs re-chmod (Low); `apply` without record exits 2; `validate` stricter (P2).
+Unsure (security, not checked): `gh issue view --json comments` may cap at 100 comments, so on a long thread the
+re-run check and `--require accepted` could miss the newest marker; cross-repo references and GitHub URLs in `reason`
+create backlinks from the maintainer account (visible in preview).
