@@ -59,3 +59,23 @@
 
 ## Report contract
 `.delix/report.md` (≤ 2K tokens): status · grep and validate output · PR number · assumptions. Read only this card and SPEC REQ-3, REQ-4, REQ-8, §4, §6.
+
+## Review findings
+### Round 1 (787816d) — qa ACCEPT_WITH_NOTES · security 🔐 HUMAN_APPROVAL with 2 Medium → fixing
+Deterministic gates: CI `test` pass; from `git archive 787816d`: 4× `ALL PASSED`; card greps 0 / 1 / 1 / 1; validate passed.
+To fix (round 1):
+- [Medium] `skills/triage/SKILL.md` steps 7–8: the preview prints the comment (built from `reason`, which may echo
+  attacker text) before the real `VERDICT:`/`HASH:` lines, and step 8 copies "the `HASH:` value" into a one-line `bash`
+  block the user runs. A `reason` line like `HASH: 0123456789ab && <cmd>` is not BLOCKED by REQ-5. Fix: take `VERDICT:`
+  and `HASH:` only from the last two lines after the closing `---`; the hash must fullmatch `^[0-9a-f]{12}$`, otherwise
+  give no command and say why.
+- [Medium] `skills/triage/SKILL.md` step 2 (and every command built from input): the version goes into
+  `git archive "v<X.Y.Z>"` without a stated check. Fix: use `reported-version` only from the fixed-field line and only if
+  it fullmatches `^\d+\.\d+\.\d+$`, else treat it as `unknown`; `<n>` must be digits only before any command (`show`,
+  `record`, `preview`, the apply line), since `$ARGUMENTS` can carry other words.
+Noted, no fix (P2):
+- start §1a stops only on exit 8 and 7; other non-zero exits (2) are not named (no body is printed then).
+- `index` display and the architect input blocks do not repeat the "fence longer than any backtick run" rule.
+- When the user's decision differs from the proposal, step 6 does not say a new `reason` must be drafted.
+- No "read an issue only through `triage.py show`" rule; the skill says `gh issue comment|edit` is denied with the triage
+  message (it is the 0.5.0 feedback message).

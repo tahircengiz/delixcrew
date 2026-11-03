@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T17:45:00Z",
+  "updated": "2026-11-03T18:30:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -35,19 +35,21 @@
       "file": "docs/delix/tasks/T011-triage-hooks.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_progress",
-      "pr": null,
-      "rounds": 0,
-      "cost_usd": null
+      "status": "fixing",
+      "pr": 23,
+      "rounds": 1,
+      "cost_usd": null,
+      "sha": "4016a4c"
     },
     "T012": {
       "file": "docs/delix/tasks/T012-triage-skill.md",
       "role": "docs",
       "tier": 3,
-      "status": "in_progress",
-      "pr": null,
-      "rounds": 0,
-      "cost_usd": null
+      "status": "fixing",
+      "pr": 22,
+      "rounds": 1,
+      "cost_usd": null,
+      "sha": "787816d"
     },
     "T013": {
       "file": "docs/delix/tasks/T013-triage-docs-ci-version.md",

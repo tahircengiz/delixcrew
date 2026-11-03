@@ -55,3 +55,20 @@
 
 ## Report contract
 `.delix/report.md` (≤ 2K tokens): status · command + output (with timing numbers) · PR number · assumptions. Read only this card and SPEC REQ-7, §6.
+
+## Review findings
+### Round 1 (4016a4c) — qa ACCEPT · security 🔐 HUMAN_APPROVAL with 1 Medium → fixing
+Deterministic gates: CI `test` pass; from `git archive 4016a4c`: 4× `ALL PASSED`; test file diff 99 insertions, 0 deletions;
+`bash_gate.py` lines 17–41 byte-identical.
+To fix (round 1):
+- [Medium] `scripts/write_gate.py:23-25`: write-gate bypass on a case-insensitive filesystem (APFS default).
+  `os.path.realpath` keeps the given letter case, so a Write to `~/.CLAUDE/delixcrew/TRIAGE/12.json` (or
+  `.../delixcrew/Triage/...`) fails the `commonpath` check yet lands in the real triage dir. Fix: compare the
+  `.casefold()` of both realpaths before `commonpath`, for the triage check only. Test (append): a Write to an
+  upper-case variant (`$T/home/.CLAUDE/delixcrew/TRIAGE/12.json` with `HOME=$T/home`, and an upper-cased segment of
+  `$DELIXCREW_TRIAGE_DIR`) is denied with the triage message; the `tqx` lookalike allow test stays green.
+Noted, no fix:
+- Pre-existing (K129, follow-up): the 0.5.0 feedback-queue check (`write_gate.py:18-21`) has the same case flaw.
+- [Low] (c)/(d) look at the hook's cwd: a leading `cd <delixcrew checkout> &&` from another project, or GraphQL with an
+  opaque node id from a non-delixcrew cwd, passes. Same class as the 0.5.0 rule (K125); residual.
+- P2 (qa): the issues-path `-X POST` test asserts deny with the feedback message (rule order); covered separately.
