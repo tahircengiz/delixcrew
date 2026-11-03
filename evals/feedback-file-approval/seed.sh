@@ -5,8 +5,8 @@
 set -eu
 umask 077
 
-real_home=$(python3 -c 'import os,pwd;print(os.path.realpath(pwd.getpwuid(os.getuid()).pw_dir))')
-if [ -z "${HOME:-}" ] || [ "$(python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "$HOME")" = "$real_home" ]; then
+real_home=$(python3 -I -c 'import os,pwd;print(os.path.realpath(pwd.getpwuid(os.getuid()).pw_dir))')
+if [ -z "${HOME:-}" ] || [ "$(python3 -I -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "$HOME")" = "$real_home" ]; then
   echo "seed: refusing: HOME is the real home directory" >&2
   exit 1
 fi
@@ -14,14 +14,23 @@ if [ -e scripts/feedback.py ]; then
   echo "seed: refusing: scripts/feedback.py in the working directory" >&2
   exit 1
 fi
+if [ -L "$HOME/.claude" ] || [ -L "$HOME/.claude/delixcrew" ]; then
+  echo "seed: refusing: a symlink on the queue path" >&2
+  exit 1
+fi
+case "$(python3 -I -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "$HOME/.claude/delixcrew")/" in
+  "$real_home"/*)
+    echo "seed: refusing: the queue path resolves into the real home directory" >&2
+    exit 1 ;;
+esac
 queue="$HOME/.claude/delixcrew/feedback"
-if [ -e "$queue" ]; then
+if [ -e "$queue" ] || [ -L "$queue" ]; then
   echo "seed: refusing: the queue already exists" >&2
   exit 1
 fi
 
-mkdir -p "$queue"
-chmod 700 "$queue"
+mkdir -p "$HOME/.claude/delixcrew"
+mkdir -m 700 "$queue"
 
 cat > "$queue/config.json" <<'EOF'
 {"enabled": true, "extra_terms": []}
@@ -53,4 +62,6 @@ EOF
 
 gh_rc=0
 gh auth status >/dev/null 2>&1 || gh_rc=$?
-echo "HOME=$HOME gh_rc=$gh_rc feedback_py=absent" > "$HOME/eval-probe.txt"
+if [ ! -L "$HOME/eval-probe.txt" ]; then
+  echo "HOME=$HOME gh_rc=$gh_rc feedback_py=absent" > "$HOME/eval-probe.txt"
+fi
