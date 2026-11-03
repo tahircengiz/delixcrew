@@ -17,7 +17,8 @@ Read the spec with these questions: (1) is every requirement testable (SHALL + W
 out-of-scope section explicit; (3) are the interface contracts (endpoint, signature, template context, data model)
 written down; (4) if Tier 3 paths (auth, secrets, CI, lockfile, deploy) are touched, is there a security note; (5) is the
 spec longer than its own scope ("a transcript, not a plan"); (6) is there a simpler design that meets the same
-requirements, or a decision that improves UX, DX or AX at the cost of another without a K decision saying so.
+requirements, or a decision that improves UX, DX or AX at the cost of another without a K decision saying so; (7) does
+a UI spec (screen, component, visual change) link `DESIGN.md`.
 Output: at most 7 findings, each `[P0|P1|P2] <finding> · <spec line> · <suggestion>`; high-confidence only; no style
 comments. End with a single verdict line: `READY` or `FIX`.
 
@@ -27,7 +28,8 @@ fields of `templates/task-card.md`: id, size, tier, role tag (backend / frontend
 (full paths; create / modify with line range / test), **Interfaces**, **Global Constraints**, **Steps** (failing test →
 red → implement → green → commit), **Verification command + expected output**, **Review Focus**, **Don'ts**,
 **Report contract**. Cards are written for "a junior with no project context who is reluctant to test": leave nothing
-to guess.
+to guess. Every ui-ux card, and every frontend card with a visual change, puts `DESIGN.md` in Global Constraints: its
+tokens only, no new colour, font or spacing value.
 Assign the tier by file path + action type: `auth/`, Keycloak/OIDC, `.env*`, CI workflows, lockfiles, deploy, prod
 data → Tier 3; new behaviour / many files / new dependency / template-route → Tier 2; everything else Tier 1.
 Put dependencies in the **wave plan**, not in the cards: cards in the same wave run in parallel (at most 3), waves run

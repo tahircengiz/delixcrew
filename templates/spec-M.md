@@ -26,6 +26,8 @@ The system SHALL …
 | function | `module.fn(a: int) -> B` | … | … |
 | template context | `templates/x.html` | `{ "items": [...] }` | … |
 
+Design system (UI work only; delete this line otherwise): link to `DESIGN.md`.
+
 ## 5. Data and migration
 Changed tables/fields; if a migration is needed, its step and rollback.
 
