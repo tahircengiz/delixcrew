@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>delixCrew nasıl kullanılır</title>
+<meta name="description" content="delixCrew kurulumu, ilk iş, komutlar, proje dosyaları, feedback ve bilinen sınırlar.">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="alternate" hreflang="en" href="../usage.html">
+</head>
+<body>
+<a class="skip" href="#main">İçeriğe geç</a>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html">delix<span>Crew</span></a>
+    <nav class="pages" aria-label="Sayfalar">
+      <a href="index.html">Nedir</a>
+      <a href="usage.html" aria-current="page">Nasıl kullanılır</a>
+      <a href="https://github.com/tahircengiz/delixcrew"><svg class="ico" aria-hidden="true"><use href="../assets/icons.svg#i-code"/></svg>GitHub</a>
+    </nav>
+    <a class="lang" href="../usage.html" hreflang="en" lang="en" title="English">EN</a>
+  </div>
+</header>
+<main id="main" class="wrap">
+<header class="hero sm">
+  <div class="kicker"><span class="ver" data-version="0.6.0">delixcrew 0.6.0</span><span>Kurulum ve günlük kullanım</span></div>
+  <h1>Nasıl kullanılır</h1>
+  <p class="lede">delixCrew bir Claude Code plugin'idir. Kurduktan sonra işi tek bir istekle başlatırsın. Ekip lideri sonraki adımı her seferinde önerir ve iki kapıda senin kararını bekler. Bu sayfa kurulumu, ilk işi, komutları, projede oluşan dosyaları ve bilinen sınırları anlatır. Sistemin nasıl çalıştığı <a href="index.html">Nedir</a> sayfasında.</p>
+</header>
+
+<nav class="nav" aria-label="Bölümler">
+  <a href="#gereksinimler">Gereksinimler</a><a href="#kurulum">Kurulum</a><a href="#ilk-is">İlk iş</a><a href="#komutlar">Komutlar</a><a href="#dosyalar">Proje dosyaları</a><a href="#feedback">Feedback</a><a href="#board">delix-board</a><a href="#sinirlar">Sınırlar</a>
+</nav>
+
+<section id="gereksinimler">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-grid"/></svg>Gereksinimler</div>
+    <h2>Üç zorunlu araç, iki isteğe bağlı</h2>
+  </div>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Araç</th><th>Gerekli mi</th><th>Neden</th></tr></thead>
+      <tbody>
+        <tr><th>Claude Code</th><td><span class="pill ag">zorunlu</span></td><td>Plugin marketplace desteği olan bir sürüm. 2.1.309 ile test edildi; daha eski sürümler test edilmedi.</td></tr>
+        <tr><th><code>python3</code></th><td><span class="pill ag">zorunlu</span></td><td>Hook'lar Python betiğidir (3.9 ile test edildi) ve hata verince işlemi engeller. <code>python3</code> PATH'te yoksa her oturumda Write, Edit ve Bash engellenir.</td></tr>
+        <tr><th><code>git</code></th><td><span class="pill ag">zorunlu</span></td><td>Uygulayıcı oturumları kart dallarında, ayrı worktree'lerde çalışır.</td></tr>
+        <tr><th><code>gh</code></th><td><span class="pill">isteğe bağlı</span></td><td>Giriş yapılmış GitHub CLI; PR açmak ve okumak için. Yoksa commit'ler kart dalında kalır ve rapor <code>**PR:** none</code> der.</td></tr>
+        <tr><th><code>gitleaks</code></th><td><span class="pill">isteğe bağlı</span></td><td>Her uygulayıcı commit'inden önce sır taraması. Yoksa <code>.delix/warnings.log</code>'a not düşülür. Feedback göndermek için zorunludur.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="src"><b>Kaynak:</b> README.md (Requirements) · hooks/hooks.json</p>
+</section>
+
+<section id="kurulum">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-down"/></svg>Kurulum</div>
+    <h2>İki komutla kur, iki komutla güncelle</h2>
+    <p>Kurulum hem masaüstü uygulamasında hem terminalde çalışır; <code>--plugin-dir</code> gerekmez. GitHub SSH anahtarı da gerekmez: <code>marketplace add</code> önce SSH dener, olmazsa HTTPS'e geçer.</p>
+  </div>
+  <div class="grid2">
+    <ol class="steps">
+      <li><h3>Marketplace'i ekle</h3><pre><code>claude plugin marketplace add tahircengiz/delixcrew</code></pre></li>
+      <li><h3>Plugin'i kur</h3><pre><code>claude plugin install delixcrew@delixcrew</code></pre><p>Yerel bir klondan kurmak için önce <code>claude plugin marketplace add /yol/delix</code>, sonra aynı <code>install</code> komutu.</p></li>
+    </ol>
+    <div class="stack">
+      <div class="note">
+        <h3><svg class="ico"><use href="../assets/icons.svg#i-loop"/></svg>Güncelleme</h3>
+        <pre><code>claude plugin marketplace update delixcrew
+claude plugin update delixcrew@delixcrew</code></pre>
+        <p>Ardından Claude'u yeniden başlat. Kurulum, plugin'i Claude'un önbelleğine sürüm başına bir klasör olarak kopyalar. Bu yüzden güncelleme yalnız <code>plugin.json</code>'daki sürüm değişince gelir; tek başına <code>git pull</code> yetmez.</p>
+      </div>
+      <div class="note limit">
+        <h3><svg class="ico"><use href="../assets/icons.svg#i-code"/></svg>Yerel değişikliği denemek</h3>
+        <p>Sürüm artırmadan bir klasörü yerinde okutmak için: <code>claude --plugin-dir /yol/delix</code>. 0.4.0'dan önce <code>delix</code> adıyla kurduysan geçiş adımları <a href="https://github.com/tahircengiz/delixcrew/blob/main/CHANGELOG.md#040--2026-11-03">CHANGELOG 0.4.0</a>'da.</p>
+      </div>
+    </div>
+  </div>
+  <p class="src"><b>Kaynak:</b> README.md (Installation)</p>
+</section>
+
+<section id="ilk-is">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-flow"/></svg>İlk iş</div>
+    <h2>Bir istekten merge'e: adım adım</h2>
+    <p>Komutları projenin ana checkout'unda, ekip lideri oturumunda yazarsın. Ekip lideri her adımın sonunda bir sonrakini önerir; sıra aşağıdaki gibidir. Kehribar renkli adımlar senin kararındır.</p>
+  </div>
+  <ol class="steps">
+    <li><h3><code>/delixcrew:start &lt;istek&gt;</code></h3><p>Ekip lideri <code>CLAUDE.md</code>, <code>STATUS.md</code> ve <code>docs/delix/</code>'i okur. <strong>Boy</strong> (S/M/L, süreç ağırlığı) ve <strong>kademe</strong> (1/2/3, risk) önerir ve <code>docs/delix/</code> klasörünü kurar. S için tek bir kart yazılır. İyi tarif edilmiş S ya da M boyunda, en çok Tier 2 bir iş için tam akış yerine tek oturum ve <code>/delixcrew:verify</code> önerilir.</p></li>
+    <li><h3><code>/delixcrew:spec</code> · boy M ve L</h3><p>Grill her seferinde tek soru sorar ve her soruya önerisini ekler. Sonuç <code>docs/delix/SPEC.md</code>'dir: gereksinimler <code>SHALL</code> ve <code>WHEN/THEN</code> biçiminde. Spec'i architect inceler, Tier 3'te security de. UI işinde spec <code>DESIGN.md</code>'ye ya da reponun token dosyasına bağlanır; ikisi de yoksa <code>DESIGN.md</code> üretilir.</p></li>
+    <li class="gate"><h3>Kapı 1 · spec onayı</h3><p>Spec'i (S'de kartı) sen onaylarsın. Tier 3 kartlar için ayrıca sohbette açıkça "evet" dersin; ekip lideri kartın başına <code>**🔐 Approved:** &lt;tarih&gt; &lt;kim&gt;</code> satırını yazar ve main'e commit eder.</p></li>
+    <li><h3><code>/delixcrew:dispatch</code></h3><p>architect kartları ve wave planını yazar, Files listelerinin çakışmadığını denetler. Her kart için bir dispatch prompt'u (<code>docs/delix/tasks/T&lt;nnn&gt;.dispatch.md</code>) üretilir ve oturumun nasıl açılacağı söylenir. Aynı anda en çok 3 kart çalışır. Tier 1–2 kartlar terminalde headless <code>claude -p</code> ile, Tier 3 kartlar etkileşimli bir oturumda açılır.</p></li>
+    <li><h3><code>/delixcrew:implement &lt;kart&gt;</code> · uygulayıcı oturumu</h3><p>Dispatch prompt'u bu skill'i çağırır; elle yazman gerekmez. Uygulayıcı önce başarısız bir test yazar, yalnız kartın Files listesine dokunur, doğrulama komutunu koşar, PR açar ve <code>.delix/report.md</code>'yi doldurur. Stop hook, testler geçmeden turu kapatmaz.</p></li>
+    <li><h3><code>/delixcrew:review &lt;kart&gt;</code></h3><p>Önce deterministik kapılar: test sonucu, CI, gitleaks. Sonra sıfır bağlamla qa, Tier 2 ve üstünde security de. Yalnız ciddi bulgular (P0/P1) düzeltme turu açar; en çok 3 tur, sonra karar sende.</p></li>
+    <li class="gate"><h3>Kapı 2 · merge</h3><p>PR'ı sen merge edersin; ekip lideri <code>gh pr merge</code> çalıştırmaz. Kart <code>accepted</code> olur ve sıradaki wave açılır.</p></li>
+    <li><h3><code>/delixcrew:close</code></h3><p>Bütün kartlar merge edilince: STATUS ve CHANGELOG, kart başına maliyet ve tur metrikleri, spec ile kod arasındaki sapma kontrolü, worktree temizliği. Çıkan dersler CLAUDE.md'ye ya da hafızaya yalnız senin onayınla yazılır.</p></li>
+  </ol>
+  <div class="callout ag" style="margin-top:18px">
+    <p><strong>Kısa yol: <code>/delixcrew:verify &lt;dal|commit|dizin&gt;</code>.</strong> Kartsız yapılmış bir işi yalnız doğrular. Sırasıyla gitleaks, yerel testler, uzak ve izole bir unit test (<code>delix.json</code>'da <code>verify</code> bloğu varsa), istenirse <code>--full</code> ile tam suite koşar. Sonra qa (Tier 2 ve üstünde security de) tek geçişte inceler; düzeltme turu yoktur. Sonuç <code>docs/delix/verifications/&lt;tarih&gt;-&lt;ad&gt;.md</code> raporuna ACCEPT ya da FIX olarak yazılır.</p>
+  </div>
+  <p class="src"><b>Kaynak:</b> README.md (Flow) · skills/start, spec, dispatch, implement, review, close, verify (SKILL.md)</p>
+</section>
+
+<section id="komutlar">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-term"/></svg>Komutlar</div>
+    <h2>Bütün komutlar tek tabloda</h2>
+    <p>Skill'ler kullanıcının dilinde cevap verir. Etiketler, durum değerleri ve karar sözcükleri (<code>ACCEPT</code>, <code>FIX</code>, <code>accepted</code>…) İngilizce kalır.</p>
+  </div>
+  <div class="tbl">
+    <table class="mx">
+      <thead><tr><th>Komut</th><th>Ne zaman</th><th>Ne yapar</th></tr></thead>
+      <tbody>
+        <tr><th><code>/delixcrew:start</code></th><td>Her yeni istek</td><td>Bağlamı okur, boy ve kademe önerir, <code>docs/delix/</code>'i kurar; S için tek kart.</td></tr>
+        <tr><th><code>/delixcrew:spec</code></th><td>Boy M ve L</td><td>Grill ile <code>SPEC.md</code>; architect (+ Tier 3'te security) incelemesi; Kapı 1.</td></tr>
+        <tr><th><code>/delixcrew:dispatch</code></th><td>Kapı 1'den sonra</td><td>Kartlar, wave planı, çakışma kontrolü, dispatch prompt'ları.</td></tr>
+        <tr><th><code>/delixcrew:implement</code></th><td>Uygulayıcı oturumunda</td><td>Önce test, yalnız Files, PR ve rapor. Dispatch prompt'u çağırır.</td></tr>
+        <tr><th><code>/delixcrew:review</code></th><td>PR açılınca</td><td>Deterministik kapılar, qa (+ security), en çok 3 düzeltme turu; Kapı 2.</td></tr>
+        <tr><th><code>/delixcrew:close</code></th><td>Bütün kartlar merge edilince</td><td>STATUS, CHANGELOG, metrikler, sapma kontrolü, worktree temizliği.</td></tr>
+        <tr><th><code>/delixcrew:verify</code></th><td>Kartsız iş</td><td>Yalnız doğrular: gitleaks, testler, tek geçiş inceleme; ACCEPT ya da FIX raporu.</td></tr>
+        <tr><th><code>/delixcrew:status</code></th><td>Her zaman</td><td>Salt-okunur pano: wave, kart, rol, tier, durum, tur, PR, maliyet, son rapor, bekleyen kapı. <code>--write</code> ile <code>docs/delix/BOARD.md</code> (commit edilmez). <code>-p</code> altında da çalışır.</td></tr>
+        <tr><th><code>/delixcrew:feedback</code></th><td>Plugin hata yapınca</td><td><code>note</code>: sorunu yerel taslağa yazar. <code>review</code>: taslakları gönderilecekleri haliyle gösterir. Kendisi hiçbir şey göndermez.</td></tr>
+        <tr><th><code>/delixcrew:triage</code></th><td>Yalnız delixcrew reposunda, issue gelince</td><td>Issue'ları temizleyerek okur; architect bir karar önerir. Kararı sen sohbette numarasıyla verirsin (<code>accept #12</code>); yorum ve etiketi kendi terminalinde yayımlarsın. Yalnız triage'da kabul edilen issue <code>/delixcrew:start #&lt;n&gt;</code> ile işe dönüşür.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="src"><b>Kaynak:</b> README.md (Flow) · skills/*/SKILL.md (description) · README.md (Triage)</p>
+</section>
+
+<section id="dosyalar">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-doc"/></svg>Proje dosyaları</div>
+    <h2>delixCrew projende neyi oluşturur</h2>
+    <p>Ortak hafıza dosyalardadır. Ana dalda <code>docs/delix/</code>, her uygulayıcı worktree'sinde <code>.delix/</code> bulunur.</p>
+  </div>
+  <div class="grid2">
+    <div class="note">
+      <h3>Ana dalda · <code>docs/delix/</code></h3>
+      <ul>
+        <li><code>delix.json</code>: test komutu, korumalı yollar, test yolları, paralel kart sınırı, <code>verify</code> bloğu</li>
+        <li><code>SPEC.md</code>: onaylı tech spec</li>
+        <li><code>tasks/T&lt;nnn&gt;-&lt;slug&gt;.md</code>: kartlar ve dispatch prompt'ları</li>
+        <li><code>STATE.json</code>: kart durumları, wave'ler, <code>verifications</code> kayıtları</li>
+        <li><code>verifications/&lt;tarih&gt;-&lt;ad&gt;.md</code>: verify raporları</li>
+        <li><code>BOARD.md</code>: yalnız istenince üretilir, <code>.gitignore</code>'da</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>Uygulayıcı worktree'sinde · <code>.delix/</code></h3>
+      <ul>
+        <li><code>card</code>: hook'ları açar; yerel olmalı, git'te izlenmez</li>
+        <li><code>report.md</code>: <code>DONE</code>, <code>DONE_WITH_CONCERNS</code>, <code>NEEDS_CONTEXT</code> ya da <code>BLOCKED</code></li>
+        <li><code>test-result.txt</code>: Stop hook'un test çıktısı</li>
+        <li><code>evidence/</code>: doğrulama kanıtları</li>
+      </ul>
+    </div>
+  </div>
+  <figure class="dgm" style="margin-top:18px">
+    <pre><code>{
+  "test_command": "pytest -q",
+  "extra_checks": ["ruff check .", "mypy ."],
+  "protected_paths": ["auth/**", ".env*", ".github/workflows/**", "*.lock", "docs/delix/delix.json"],
+  "test_paths": ["tests/**"],
+  "max_parallel": 3,
+  "max_review_rounds": 3,
+  "default_branch": "main"
+}</code></pre>
+    <figcaption><strong><code>docs/delix/delix.json</code>, kısaltılmış örnek.</strong> Stop hook yalnız <code>test_command</code> ve <code>extra_checks</code>'i koşar; bu yüzden yerelde çalışabilen unit testler burada olmalı. <code>protected_paths</code>'e dokunan her kart Tier 3 olur. Tam şablon: <a href="https://github.com/tahircengiz/delixcrew/blob/main/templates/delix.json">templates/delix.json</a>.</figcaption>
+  </figure>
+  <p class="src"><b>Kaynak:</b> README.md (Files on the project side) · templates/delix.json · templates/report.md</p>
+</section>
+
+<section id="feedback">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-loop"/></svg>Feedback</div>
+    <h2>Plugin'in hatasını bildirmek: varsayılan kapalı, gönderen sen</h2>
+    <p>delixCrew bir hook doğru işi reddettiğinde, bir skill adımı yazıldığı gibi uygulanamadığında ya da bir sınırı elle aştığında bunun taslağını tutabilir. Kendi başına hiçbir şey göndermez. Taslaklar <code>~/.claude/delixcrew/feedback/</code>'de durur, proje reposunda değil.</p>
+  </div>
+  <ol class="steps">
+    <li><h3>Kendi terminalinde aç</h3><pre><code>python3 &lt;plugin dizini&gt;/scripts/feedback.py enable --terms acme,example-corp</code></pre><p>Marketplace kurulumunda betik <code>~/.claude/plugins/cache/delixcrew/delixcrew/&lt;sürüm&gt;/scripts/feedback.py</code>'dedir. <code>--terms</code>, temizlenecek kendi kelimelerini ekler (müşteri adı, kod adı). <code>status</code> durumu gösterir, <code>disable</code> kapatır.</p></li>
+    <li><h3>Taslak oluşur</h3><p>Sohbette <code>/delixcrew:feedback note</code> dersin ya da close ve review yukarıdaki üç durumdan biri olunca taslak ekler. Aynı bulgu tekrar ederse yeni taslak açılmaz, sayaç artar.</p></li>
+    <li><h3>Tam metni gör</h3><p><code>/delixcrew:feedback review</code> her taslağı yayımlanacağı haliyle gösterir: repo, etiket, başlık, gövde, <code>VERDICT:</code> ve <code>HASH:</code> satırı.</p></li>
+    <li class="gate"><h3>Sohbette id ile onayla</h3><p>Göndermek istediğin taslağın id'sini yaz: <code>yes F003</code> (ya da <code>evet F003</code>). Çıplak "evet", "hepsini gönder" ya da bir dosyadaki "approved" onay sayılmaz. Claude sana tek satırlık komutu verir.</p></li>
+    <li class="gate"><h3>Kendi terminalinde gönder</h3><pre><code>python3 &lt;plugin dizini&gt;/scripts/feedback.py send F003 --confirm &lt;hash&gt;</code></pre><p>Komut metni bir kez daha basar ve <code>SEND &lt;hash&gt;</code> yazmanı bekler. Metin preview'dan sonra değiştiyse durur.</p></li>
+  </ol>
+  <div class="grid2" style="margin-top:18px">
+    <div class="callout hk">
+      <p><strong>Issue public'tir ve senin GitHub hesabınla açılır.</strong> Gönderim için <code>gitleaks</code> ve giriş yapılmış <code>gh</code> gerekir. Sır içeren taslak temizlenip gönderilmez, engellenir. GitHub, yazarın issue'yu silmesine izin vermez; kaldırma talebi için <a href="https://github.com/tahircengiz/delixcrew/security/advisories/new">özel bildirim</a> kullanılır. Neyin temizlendiği <a href="index.html#oz-besleme">Nedir sayfasında</a>.</p>
+    </div>
+    <div class="note limit">
+      <h3><svg class="ico"><use href="../assets/icons.svg#i-shield"/></svg>Kalan risk</h3>
+      <p>Hook'lar gönderimin bilinen yollarını kapatır, hepsini değil. Daha sıkı bir koruma istersen kendi <code>settings.json</code>'una şunu ekleyebilirsin; delixCrew ayarlarını değiştirmez:</p>
+      <pre><code>{ "permissions": { "deny": ["Bash(gh issue create:*)", "Bash(gh api:*)"] } }</code></pre>
+    </div>
+  </div>
+  <p class="src"><b>Kaynak:</b> README.md (Feedback, Data &amp; privacy) · skills/feedback/SKILL.md</p>
+</section>
+
+<section id="board">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-card"/></svg>delix-board</div>
+    <h2>İsteğe bağlı canlı pano</h2>
+    <p><code>delix-board</code> aynı marketplace'te ayrı ve salt-okunur bir moddur. Panoyu, uzun koşuları, kart ayrıntılarını ve metrikleri canlı gösterir; prompt'un üstüne bir bant koyar ve bir koşu bitince bildirim verir. delixCrew çalışmak için ona ihtiyaç duymaz; headless oturumlarda bir şey çizmez.</p>
+  </div>
+  <pre><code>claude plugin install delix-board@delixcrew</code></pre>
+  <p class="src"><b>Kaynak:</b> README.md (Companion: delix-board) · <a href="https://github.com/tahircengiz/delixcrew/blob/main/plugins/delix-board/README.md">plugins/delix-board/README.md</a></p>
+</section>
+
+<section id="sinirlar">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-alert"/></svg>Sınırlar ve sorun giderme</div>
+    <h2>Bilmen gerekenler</h2>
+  </div>
+  <div class="grid2">
+    <div class="note limit">
+      <h3><svg class="ico"><use href="../assets/icons.svg#i-shield"/></svg>Bilinen sınırlar</h3>
+      <ul>
+        <li>Hook'lar plugin'in kurulu olduğu her oturumda yüklenir. Uygulayıcı kuralları yalnız <code>cwd/.delix/card</code> varken, reviewer kuralları yalnız <code>agent_type</code> <code>delixcrew:*</code> iken çalışır.</li>
+        <li>write_gate yalnız Write, Edit, MultiEdit ve NotebookEdit araçlarını görür; Bash ile yazılanı görmez. Bu yüzden diff'te kart, <code>docs/delix/**</code> ya da onaysız korumalı yol değişikliği qa incelemesinde bulgu sayılır.</li>
+        <li>Plugin ajanları <code>permissionMode</code>, <code>hooks</code> ve <code>mcpServers</code> alanlarını yok sayar; kısıt <code>tools</code> listesinde ve <code>hooks/hooks.json</code>'da durur.</li>
+        <li>Deneysel Agent Teams kullanılmaz. Plugin'in bir monitor'ü yoktur.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3><svg class="ico"><use href="../assets/icons.svg#i-alert"/></svg>Sorun giderme</h3>
+      <ul>
+        <li><code>delixcrew: python3 not found on PATH</code> görüyorsan Python 3'ü kur ya da plugin'i kapat: <code>claude plugin disable delixcrew@delixcrew</code>.</li>
+        <li>Güncelleme gelmiyorsa: kurulu kopya yalnız sürüm değişince yenilenir. <code>marketplace update</code>, <code>plugin update</code> ve yeniden başlatma üçlüsünü yap.</li>
+        <li>PR açılmıyorsa: <code>gh</code> kurulu ve giriş yapılmış mı bak. Uzak repo yoksa commit'ler kart dalında kalır.</li>
+        <li>Plugin'in kendisinde bir hata bulduysan <a href="#feedback">feedback</a> akışını kullan ya da GitHub'da elle bir <a href="https://github.com/tahircengiz/delixcrew/issues">issue</a> aç.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="src"><b>Kaynak:</b> README.md (Known limits, Requirements) · hooks/hooks.json</p>
+</section>
+
+<footer>
+  <p>delixcrew 0.6.0 · durum 2026-11-03. Bu sayfa README'den ve skill dosyalarından derlendi. MIT lisansı.</p>
+  <p>Kaynak kod ve issue'lar: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="../usage.html" hreflang="en">English</a></p>
+</footer>
+</main>
+</body>
+</html>
