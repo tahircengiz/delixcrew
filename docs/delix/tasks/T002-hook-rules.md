@@ -4,6 +4,8 @@
 |---|---|---|---|---|---|
 | T002 | M | 3 | backend | 1 | open |
 
+**🔐 Approved:** 2026-11-03 tahircengiz
+
 > 🔐 Tier 3 (protected hook scripts). The orchestrator adds the Approved line after the human's "yes".
 
 **Goal (1 sentence):** Session-wide deny rules for feedback send paths and for queue-dir writes. · **Spec:** `docs/delix/SPEC.md#REQ-7`

@@ -4,6 +4,8 @@
 |---|---|---|---|---|---|
 | T003 | M | 3 | docs | 1 | open |
 
+**🔐 Approved:** 2026-11-03 tahircengiz
+
 > 🔐 Tier 3 (the consent step of the send path and intake of untrusted issues). The orchestrator adds the Approved line after the human's "yes".
 
 **Goal (1 sentence):** Skill text for note/review, the capture step at the end of close/review, and issue intake in start. · **Spec:** `docs/delix/SPEC.md#REQ-9`, `#REQ-10`
