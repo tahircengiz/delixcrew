@@ -10,6 +10,16 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from common import REVIEWERS, card_path, delix_json, deny, matches, read_input  # noqa: E402
 
 g = read_input()
+
+# REQ-7: no direct write into the feedback queue dir, in every session (feedback.py add via Bash is the only writer)
+_ti = g.get("tool_input") or {}
+_path = _ti.get("file_path") or _ti.get("notebook_path") or ""
+if _path:
+    queue = os.path.realpath(os.path.expanduser(os.environ.get("DELIXCREW_FEEDBACK_DIR") or "~/.claude/delixcrew/feedback"))
+    target = os.path.realpath(os.path.join(g.get("cwd") or os.getcwd(), os.path.expanduser(_path)))
+    if os.path.commonpath([queue, target]) == queue:
+        deny("delixcrew: feedback is sent only by the user from their own terminal")
+
 agent = (g.get("agent_type") or "").strip()
 if agent in REVIEWERS:
     deny(f"delixcrew: role '{agent}' is read-only; it cannot write files. Put the finding in your report, the orchestrator applies it.")

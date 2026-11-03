@@ -82,4 +82,25 @@ while IFS= read -r cmd; do
   if [ $rc -eq 2 ] && [ "$(printf '%s\n' "$err" | wc -l)" -eq 1 ] && echo "$err" | grep -q '^delixcrew: python3 not found'; then echo "✔ no python3: blocks with message (${cmd##*/})"
   else echo "✘ no python3 (${cmd##*/}): rc=$rc, stderr: $err"; exit 1; fi
 done || FAIL=1
+# REQ-7: known feedback send paths and queue-dir writes are denied in every session (no card, any agent_type)
+N="$T/nocard"; mkdir -p "$N/repo" "$T/home" "$T/q"
+FBMSG="delixcrew: feedback is sent only by the user from their own terminal"
+fbdeny(){ # name, script, json[, env…] → deny with the exact feedback message
+  out=$(echo "$3" | env ${4:+"$4"} python3 "$S/$2"); if echo "$out" | grep -q '"permissionDecision": "deny"' && echo "$out" | grep -qF "$FBMSG"; then echo "✔ $1"; else echo "✘ $1 (expected feedback deny): $out"; FAIL=1; fi; }
+for a in "" "delixcrew:qa"; do
+  fbdeny "feedback.py send denied ${a:-no agent}"   bash_gate.py "{\"tool_name\":\"Bash\",\"agent_type\":\"$a\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"cd scripts && python3 feedback.py send F001 --confirm abc\"}}"
+  fbdeny "pty wrapper send denied ${a:-no agent}"   bash_gate.py "{\"tool_name\":\"Bash\",\"agent_type\":\"$a\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"printf 'SEND x' | script -q /dev/null python3 scripts/feedback.py send F001\"}}"
+  fbdeny "gh issue create delixcrew ${a:-no agent}" bash_gate.py "{\"tool_name\":\"Bash\",\"agent_type\":\"$a\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"gh issue create -R tahircengiz/delixcrew -t x -b y\"}}"
+done
+fbdeny "unbuffer + feedback.py denied"     bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"unbuffer python3 scripts/feedback.py list\"}}"
+fbdeny "gh api issues delixcrew denied"    bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"gh api repos/tahircengiz/delixcrew/issues -f title=x\"}}"
+git -C "$N/repo" init -q && git -C "$N/repo" remote add origin https://github.com/tahircengiz/delixcrew.git
+fbdeny "gh issue create, cwd remote delixcrew" bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N/repo\",\"tool_input\":{\"command\":\"gh issue create -t x\"}}"
+allow "gh pr view not affected"           bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"gh pr view 12\"}}"
+allow "gh issue create other repo"        bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"gh issue create -R example/other -t x\"}}"
+allow "feedback.py add is free"           bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"python3 scripts/feedback.py add < d.json\"}}"
+fbdeny "queue dir write (default ~)"      write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/home/.claude/delixcrew/feedback/config.json\"}}" "HOME=$T/home"
+fbdeny "queue dir edit (env dir)"         write_gate.py "{\"tool_name\":\"Edit\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/q/F001.json\"}}" "DELIXCREW_FEEDBACK_DIR=$T/q"
+fbdeny "queue dir write, reviewer too"    write_gate.py "{\"tool_name\":\"MultiEdit\",\"agent_type\":\"delixcrew:qa\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/q/F001.json\"}}" "DELIXCREW_FEEDBACK_DIR=$T/q"
+DELIXCREW_FEEDBACK_DIR="$T/q" allow "queue lookalike dir is free" write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"${T}/qx/F001.json\"}}"
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
