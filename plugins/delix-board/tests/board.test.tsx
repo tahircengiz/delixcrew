@@ -2,7 +2,7 @@ import type { On } from 'claude-code'
 import { expect, mock, test } from 'claude-code/testing'
 
 import { cut, minutes, parseCard, parseMetrics, parseState, runProgress } from '../hooks/parse'
-import { FILES, ROOT, RUN_ALL, TEMPLATE_STATE, WORKTREES } from './fixtures'
+import { FILES, IMPL, LAYOUT, LAYOUT_TREES, MAIN, MAIN_TREE, ORCH, ROOT, RUN_ALL, TEMPLATE_STATE, WORKTREES } from './fixtures'
 
 const SURFACES = ['terminal', 'desktop'] as const
 
@@ -19,16 +19,16 @@ const BAND = {
   props: { hasSurvey: false, isWorking: false, maxRows: 6, bodyColumns: 80, scroll: { offset: 0, bodyRows: 6 }, view: {} },
 } as const
 
-/** The engine beneath the plugin: a project on disk, git, commands, panes, toasts. */
-function world(on: On, files: Record<string, string>) {
+/** The engine beneath the plugin: a project on disk, git, commands, panes, toasts. `git` may change mid-test. */
+function world(on: On, files: Record<string, string>, git = { top: ROOT, common: '.git', trees: WORKTREES }) {
   const toasts: string[] = []
   const now = mock.clock(on, { now: 1_000_000 })
   mock.store(on)
   const missing = (path: string) => new Error(`ENOENT: ${path}`)
   on('process.run', (_, e) => ({
     value: e.argv.includes('rev-parse')
-      ? { exitCode: 0, stdout: `${ROOT}\n.git\n`, stderr: '', isStdoutTruncated: false, isStderrTruncated: false }
-      : { exitCode: 0, stdout: WORKTREES, stderr: '', isStdoutTruncated: false, isStderrTruncated: false },
+      ? { exitCode: 0, stdout: `${git.top}\n${git.common}\n`, stderr: '', isStdoutTruncated: false, isStderrTruncated: false }
+      : { exitCode: 0, stdout: git.trees, stderr: '', isStdoutTruncated: false, isStderrTruncated: false },
   }))
   on('fs.exists', (_, e) => ({ value: e.path in files }))
   on('fs.stat', (_, e) => {
@@ -234,4 +234,39 @@ test('a desktop session (SDK, not interactive at start) starts when the desktop 
   const band = await $.ui.mount({ ...BAND, surface: 'desktop' })
   expect((await band.find({ type: 'Text', text: /kapı bekliyor/ }))?.text).toMatch(/2 kapı bekliyor/)
   await band.unmount()
+})
+
+test('a session in the orchestrator worktree reads that worktree STATE, not the main checkout behind it', async ($, on) => {
+  world(on, LAYOUT, { top: ORCH, common: `${MAIN}/.git`, trees: LAYOUT_TREES })
+  await $.session.start({ cwd: ORCH, surface: 'desktop', isInteractive: true })
+  for (const surface of SURFACES) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    expect(await ui.find({ type: 'Button', key: 'card-T010' })).toBeDefined()
+    expect(await ui.find({ type: 'Button', key: 'card-T001' })).toBeUndefined()
+    expect(await ui.find({ type: 'Text', text: /kaynak: orch/ })).toBeDefined()
+    await ui.unmount()
+  }
+})
+
+test('an implementer worktree session reads the orchestrator STATE, not its own dispatch-time copy', async ($, on) => {
+  world(on, LAYOUT, { top: IMPL, common: `${MAIN}/.git`, trees: LAYOUT_TREES })
+  await $.session.start({ cwd: IMPL, surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(await ui.find({ type: 'Button', key: 'card-T011' })).toBeDefined()
+  await ui.unmount()
+})
+
+test('a main checkout session follows an orchestrator worktree opened after it started', async ($, on) => {
+  const git = { top: MAIN, common: `${MAIN}/.git`, trees: MAIN_TREE }
+  const { now } = world(on, LAYOUT, git)
+  await $.session.start({ cwd: MAIN, surface: 'desktop', isInteractive: true })
+  let ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(await ui.find({ type: 'Button', key: 'card-T001' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /kaynak:/ })).toBeUndefined()
+  await ui.unmount()
+  git.trees = LAYOUT_TREES
+  await now.advance(20_100)
+  ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(await ui.find({ type: 'Button', key: 'card-T010' })).toBeDefined()
+  await ui.unmount()
 })

@@ -37,13 +37,18 @@ Hepsi `$.fs` ve `$.process.run` ile; Node/DOM yok.
 | `<worktree>/.delix/test-result.txt` | son 12 satır + GEÇTİ/KALDI/PASS/FAIL sayısı | Kart ayrıntısında "test sonucu" |
 | STATE `previous` (arşiv STATE yolu) | önceki spec'in kartlarının status, tier, rounds, pr, cost kaydı | Uygulamada eklendi: güncel STATE'te olmayan ama dosyası duran kart **arşiv kartı** sayılır; kaydı arşiv STATE'ten okunur, wave'i yoktur, **kapı tutmaz**, panoda "Önceki spec" grubunda en sonda durur. Eski Türkçe anahtarlar (`kartlar`, `kademe`, `rol`, `tur`, `kabul`…) da okunur |
 
-**Proje kökü:** `session.start`'taki `cwd`'den `git rev-parse --show-toplevel` ve `--git-common-dir`. Ortak dizinin
-üstü (ana checkout) `docs/delix/STATE.json` taşıyorsa o kullanılır (orkestratör STATE'i ana checkout'ta yazar; uygulayıcı
-worktree'deki kopya bayat olabilir), yoksa toplevel. İkisinde de yoksa **boş durum**: "Bu klasör bir delix projesi değil"
-ve `/delixcrew:start` ipucu.
+**Proje kökü (0.1.3):** oturumun checkout'u `cwd`'den `git rev-parse --show-toplevel`. Okunan STATE ise
+`git worktree list`'teki worktree'lerin `docs/delix/STATE.json` taşıyanları arasından seçilir: `.delix/card` taşıyan
+uygulayıcı worktree'leri elenir (dağıtım anındaki kopyayı tutarlar); kalanlardan `updated`'i en yeni olan kazanır,
+eşitlikte oturumun kendi checkout'u, sonra ana checkout (listede ilk), sonra en yeni mtime. Neden: Claude Desktop her
+oturuma worktree açar; orkestratör STATE'i kendi worktree'sinde yazar ve ana checkout geride kalır (0.1.2'de pano ana
+checkout'u seçtiği için yeni spec'in kartlarını hiç göstermiyordu). Yeni açılan worktree'nin dosya mtime'ı tazedir, bu
+yüzden mtime yalnız eşitlik bozar. Seçilen kopya ana checkout değilse başlıkta "kaynak: <worktree> worktree'i" yazar;
+proje adı ana checkout'un adıdır. Hiçbirinde STATE yoksa oturumun checkout'u; orada da kart yoksa **boş durum**: "Bu
+klasör bir delix projesi değil" ve `/delixcrew:start` ipucu.
 
 **Tazeleme:** `$.clock.every(4000)` ile yalnız `stat` (mtime) okunur; değişen dosya yeniden parse edilir. Worktree
-listesi 20 sn'de bir. Ayrıştırılmış görüntü (`Snapshot`) `$.state`'e yazılır; render yalnız onu okur.
+listesi ve onunla okunan STATE'in seçimi 20 sn'de bir; sonradan açılan orkestratör worktree'si en geç 20 sn'de görünür. Ayrıştırılmış görüntü (`Snapshot`) `$.state`'e yazılır; render yalnız onu okur.
 Bütçe: bir tik ≤ ~15 `stat`; LLMPortal'da 22 kart dosyası mtime değişmedikçe tekrar okunmaz.
 
 ## 5. Bekleme görünümü: uzun koşu nasıl yakalanır (karar)

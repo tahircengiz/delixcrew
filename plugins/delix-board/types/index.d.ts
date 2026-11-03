@@ -51,6 +51,8 @@ export type Snapshot = {
   isDelix: boolean
   root: string
   project: string
+  /** The worktree whose STATE.json is read, when it is not the main checkout. */
+  source: string | null
   spec: string | null
   previous: string | null
   size: string | null

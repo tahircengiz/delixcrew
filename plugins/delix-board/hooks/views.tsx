@@ -61,6 +61,7 @@ function header($: EngineInterface, { k, snap, view }: Ctx): RenderElement {
         <Text dimColor>{cut(snap?.project ?? '', Math.max(8, k.cols - 30))}</Text>
         {snap?.updated ? <Text dimColor size="caption">STATE {shortTime(snap.updated)}</Text> : null}
       </Box>
+      {snap?.source ? <Text dimColor size="caption">{cut(`kaynak: ${snap.source} worktree'i`, k.cols)}</Text> : null}
       <Box flexDirection="row" gap={1} flexWrap="wrap">
         {VIEWS.map((v, i) => (
           <Button

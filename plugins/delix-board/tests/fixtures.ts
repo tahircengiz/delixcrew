@@ -92,5 +92,34 @@ export const FILES: Record<string, string> = {
 
 export const WORKTREES = `worktree ${ROOT}\nHEAD 1\nbranch refs/heads/main\n\nworktree /w/t002\nHEAD 2\nbranch refs/heads/delix-T002\n\n`
 
+// The desktop app's layout: the orchestrator writes STATE in its own session worktree, the main checkout is
+// behind on a closed spec, an implementer worktree holds the dispatch-time copy (and may touch `updated`).
+export const MAIN = '/m'
+export const ORCH = '/m/.claude/worktrees/orch'
+export const IMPL = '/m/.claude/worktrees/impl'
+
+const layoutState = (updated: string, cards: Record<string, string>) =>
+  JSON.stringify({
+    spec: 'docs/delix/SPEC.md',
+    updated,
+    waves: [{ wave: 1, cards: Object.keys(cards) }],
+    cards: Object.fromEntries(Object.entries(cards).map(([id, status]) => [id, { role: 'backend', tier: 2, status, rounds: 0 }])),
+  })
+
+export const LAYOUT: Record<string, string> = {
+  [`${MAIN}/docs/delix/STATE.json`]: layoutState('2026-11-03T12:45:00Z', { T001: 'accepted' }),
+  [`${MAIN}/docs/delix/tasks/T001-old.md`]: '# T001 — Closed spec card\n',
+  [`${ORCH}/docs/delix/STATE.json`]: layoutState('2026-11-03T17:45:00Z', { T010: 'in_progress', T011: 'open' }),
+  [`${ORCH}/docs/delix/tasks/T010-script.md`]: '# T010 — Triage script\n',
+  [`${ORCH}/docs/delix/tasks/T011-hooks.md`]: '# T011 — Triage hooks\n',
+  [`${IMPL}/.delix/card`]: 'docs/delix/tasks/T010-script.md\n',
+  [`${IMPL}/docs/delix/STATE.json`]: layoutState('2026-11-03T18:00:00Z', { T010: 'in_review' }),
+  [`${IMPL}/docs/delix/tasks/T010-script.md`]: '# T010 — Triage script\n',
+}
+
+const tree = (path: string, head: number, branch: string) => `worktree ${path}\nHEAD ${head}\nbranch refs/heads/${branch}\n\n`
+export const MAIN_TREE = tree(MAIN, 1, 'main')
+export const LAYOUT_TREES = MAIN_TREE + tree(ORCH, 2, 'claude/orch') + tree(IMPL, 3, 'claude/impl')
+
 /** The template's list-of-lists waves. */
 export const TEMPLATE_STATE = JSON.stringify({ waves: [['T001', 'T002'], ['T003']], cards: { T001: { tier: 2, status: 'open' } } })

@@ -7,14 +7,14 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { Run, View } from '../types'
-import { findRoot, newCache, readSnapshot } from './data'
+import { findTop, newCache, readSnapshot } from './data'
 import { makeKit } from './gfx'
 import { backgroundOutputPath, matchCommand } from './parse'
 import { band, pane, PANE, VIEWS, type Ctx } from './views'
 import { expected, finishRun, onAppended, patchRun, pollRuns, startRun } from './wait'
 
 // The board's values; the same atoms in each file that reads them, as the module scan requires.
-const snapshotAtom = atom({ plugin: 'delix-board', key: 'snapshot' } as const, null, { shape: 'snapshot-2' })
+const snapshotAtom = atom({ plugin: 'delix-board', key: 'snapshot' } as const, null, { shape: 'snapshot-3' })
 const runsAtom = atom({ plugin: 'delix-board', key: 'runs' } as const, [], { shape: 'runs-1' })
 const viewAtom = atom({ plugin: 'delix-board', key: 'view' } as const, 'pano')
 const selectedAtom = atom({ plugin: 'delix-board', key: 'selected' } as const, null)
@@ -22,15 +22,15 @@ const nowAtom = atom({ plugin: 'delix-board', key: 'now' } as const, 0)
 
 const ARG_VIEWS: Record<string, View> = { pano: 'pano', bekleme: 'bekleme', kart: 'kart', olcum: 'olcum', 'ölçüm': 'olcum' }
 
-type Runtime = { isActive: boolean; root: string | null; isRefreshing: boolean; cache: ReturnType<typeof newCache>; extra: string[] }
+type Runtime = { isActive: boolean; top: string | null; isRefreshing: boolean; cache: ReturnType<typeof newCache>; extra: string[] }
 
-const rt: Runtime = { isActive: false, root: null, isRefreshing: false, cache: newCache(), extra: [] }
+const rt: Runtime = { isActive: false, top: null, isRefreshing: false, cache: newCache(), extra: [] }
 
 async function refresh($: EngineInterface) {
-  if (rt.root === null || rt.isRefreshing) return
+  if (rt.top === null || rt.isRefreshing) return
   rt.isRefreshing = true
   try {
-    const next = await readSnapshot($, rt.root, rt.cache, await $.clock.now())
+    const next = await readSnapshot($, rt.top, rt.cache, await $.clock.now())
     const prev = await read($, snapshotAtom)
     if (JSON.stringify(prev) !== JSON.stringify(next)) await update($, snapshotAtom, () => next)
   } catch (error) {
@@ -44,11 +44,11 @@ function openPane($: EngineInterface) {
   return $.ui.open({ id: PANE, title: 'delix' })
 }
 
-/** Starts the board once: project root, refresh and run timers, the pane in a delix project. */
+/** Starts the board once: the session's checkout, refresh and run timers, the pane in a delix project. */
 async function activate($: EngineInterface, cwd: string) {
   if (rt.isActive) return
   rt.isActive = true
-  rt.root = await findRoot($, cwd)
+  rt.top = await findTop($, cwd)
   await refresh($)
   $.clock.every(4000, () => refresh($))
   $.clock.every(2000, () => pollRuns($).catch(() => undefined))
