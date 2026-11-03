@@ -134,10 +134,11 @@ açmadan önce taslağın parmak izi satırını (`delixcrew-fp: …`) arar, bu 
 o URL'yi kaydeder. GitHub'da elle de issue açabilirsiniz; issue formları aynı başlıkları sorar.
 
 **Ne redakte edilir** (önizlemeden önce, başlık dahil): kısa bir izinli liste (`github.com`, `code.claude.com`,
-`docs.anthropic.com`, `anthropic.com`, `example.*`, `*.example`, `*.test`, `*.invalid`, `localhost`) dışındaki her host
+`docs.anthropic.com`, `anthropic.com`, `example.com`, `example.net`, `example.org` ve alt alanları, `*.example`, `*.test`, `*.invalid`, `localhost`) dışındaki her host
 adı, ör. `build.example-corp.dev` → `<redacted:host>`; belge aralıkları ve loopback dışındaki IP adresleri
 (`10.1.2.3` → `<redacted:ip>`); MAC ve e-posta adresleri; ev dizini yollarının kullanıcı kısmı (`/Users/<siz>/x` →
-`~/x`) ve diğer her mutlak yol (`/srv/app` → `<redacted:path>`); kullanıcı adınız ve makine adınız; taslakların geldiği
+`~/x`) ve diğer her mutlak yol, tek parçalı olanlar ve `ad:/yol` dahil (`/srv/app`, `/srv`, `nas:/volume1/x` →
+`<redacted:path>`; yalnız `/delixcrew:<skill>` ve `/compact` gibi Claude Code yerleşik komutları kalır); kullanıcı adınız ve makine adınız; taslakların geldiği
 projelerin adları (klasör adı, git remote sahibi ve repo) ve `--terms` kelimeleriniz.
 
 **Taslağı ne engeller** (`VERDICT: BLOCKED: <neden>`, `send` 4 ile çıkar; sır değeri basılmaz): ham ya da redakte

@@ -228,4 +228,90 @@ out=$(cd "$C" && mk "$J1" 'd["title"]="Owner remote"' | fb add); id=${out%% *}
   && ok "R3 tahircengiz/foo remote: owner left out of origin_terms" || bad "R3 owner in origin_terms ($(jq_ "$Q/$id.json" "d['origin_terms']"))"
 fb preview F002 | grep -qF "github.com/tahircengiz/delixcrew" && ok "R3 github.com/tahircengiz/delixcrew still unchanged" || bad "R3 plugin URL redacted"
 
+# --- rev 3 (REQ-11, REQ-12, REQ-13; missing REQ-2/4/8 tests) -----------------
+export DELIXCREW_FEEDBACK_DIR="$T/q3"; Q="$DELIXCREW_FEEDBACK_DIR"
+fb enable >/dev/null
+add3(){ (cd "$B" && mk "$J1" "$1" | fb add); }   # draft from project B; prints "F<nnn> new"
+# REQ-11: a non-string kind is rejected without a traceback.
+for k in '1' '["bug"]' '{}' 'null'; do
+  n0=$(nfiles); out=$(cd "$B" && mk "$J1" "d['kind']=json.loads('$k')" | fb add 2>&1); rc=$?
+  [ $rc -eq 2 ] && echo "$out" | grep -q "^error: kind: must be bug or feature" && ! echo "$out" | grep -q Traceback && [ "$(nfiles)" -eq "$n0" ] \
+    && ok "REQ-11 kind $k: exit 2, kind message, no traceback, no file" || bad "REQ-11 kind $k (rc=$rc, $(echo "$out" | tail -1))"
+done
+# REQ-12 single segment: every /<segment> is redacted, also after name: (K101) and /<name>:<name> other than /delixcrew:<skill> (K100).
+out=$(add3 'd["title"]="Single segment paths"; d["actual"]="deploy goes to /srv (/acme-builds) /tmp /acme:builds nas:/volume1/acme host:/srv"; d["expected"]="/delixcrew:nosuch and /acme-corp:deploy"'); id=${out%% *}
+pv=$(fb preview "$id"); rc=$?
+leaks=""; for s in /srv /acme-builds /tmp /acme:builds /volume1 /delixcrew:nosuch /acme-corp:deploy; do echo "$pv" | grep -qF -- "$s" && leaks="$leaks $s"; done
+[ $rc -eq 0 ] && echo "$pv" | grep -q "^VERDICT: CLEAN" && [ -z "$leaks" ] && ok "REQ-12 single-segment, name:/path and unknown /x:y paths redacted, CLEAN" || bad "REQ-12 single segment leaks:$leaks (rc=$rc, $(echo "$pv" | head -1))"
+echo "$pv" | grep -qxF "deploy goes to <redacted:path> (<redacted:path>) <redacted:path> <redacted:path> nas:<redacted:path> host:<redacted:path>" \
+  && ok "REQ-12 placeholders keep the surrounding text (host: and parentheses)" || bad "REQ-12 replacement shape ($(echo "$pv" | grep -F 'deploy goes'))"
+# REQ-12 commands: /delixcrew:<skill>, built-in commands, URLs and in-word slashes stay.
+ACT='/delixcrew:spec, /delixcrew:spec. /compact run /plugin. (/review) https://github.com/tahircengiz/delixcrew a/b w/o bug / feature'
+out=$(add3 "d['title']='Commands stay'; d['actual']='$ACT'"); id=${out%% *}
+pv=$(fb preview "$id"); rc=$?
+[ $rc -eq 0 ] && echo "$pv" | grep -qxF -- "$ACT" && ok "REQ-12 /delixcrew:spec, /compact, /plugin., URL, a/b, w/o, bug / feature unchanged" || bad "REQ-12 commands changed ($(echo "$pv" | grep -A1 '^### What happened' | tail -1))"
+pv=$(python3 "$T/fake/scripts/feedback.py" preview "$id" 2>&1)
+echo "$pv" | grep -qF "/delixcrew:spec" && bad "REQ-12 skills dir missing: /delixcrew:spec kept (not fail-closed)" || ok "REQ-12 skills dir missing: /delixcrew:<skill> redacted (fail-closed)"
+python3 -c 'import sys; sys.path.insert(0, sys.argv[1]); import feedback; sys.exit(0 if feedback.SANITIZER_VERSION == "2" else 1)' "$S" \
+  && ok "REQ-12 SANITIZER_VERSION is 2" || bad "REQ-12 SANITIZER_VERSION not 2"
+# REQ-13: send runs only for status == draft; checked before BLOCKED, hash and TTY.
+out=$(add3 'd["title"]="Dropped draft send"'); id=${out%% *}
+H=$(hash_of "$(fb preview "$id")"); fb drop "$id" >/dev/null; : > "$T/gh.log"
+out=$(tty_run "SEND $H" python3 "$S/feedback.py" send "$id" --confirm "$H"); rc=$?
+[ $rc -eq 2 ] && echo "$out" | grep -qF "error: $id is dropped; nothing sent" && [ ! -s "$T/gh.log" ] && [ "$(jq_ "$Q/$id.json" "d['status']")" = dropped ] \
+  && ok "REQ-13 dropped draft, right hash, SEND on TTY: exit 2, gh not called, stays dropped" || bad "REQ-13 dropped send (rc=$rc, $out)"
+out=$(add3 'd["title"]="Status gate"'); id=${out%% *}
+st_case(){ # python mutation, expected printed status
+  python3 -c 'import json,sys; p=sys.argv[1]; d=json.load(open(p)); exec(sys.argv[2]); json.dump(d,open(p,"w"))' "$Q/$id.json" "$1"
+  cp "$Q/$id.json" "$T/st.bak"; : > "$T/gh.log"
+  out=$(fb send "$id" --confirm 000000000000 </dev/null 2>"$T/err"); rc=$?
+  [ $rc -eq 2 ] && [ "$(cat "$T/err")" = "error: $id is $2; nothing sent" ] && [ -z "$out" ] && [ ! -s "$T/gh.log" ] && cmp -s "$Q/$id.json" "$T/st.bak" \
+    && ok "REQ-13 status ($1): exit 2, prints '$2', record unchanged" || bad "REQ-13 status ($1) (rc=$rc, $(cat -v "$T/err"))"; }
+st_case 'd["status"]="sent"'     sent
+st_case 'd["status"]=None'       unknown
+st_case 'del d["status"]'        unknown
+st_case 'd["status"]="x\u001b"'  unknown
+python3 -c 'import json,sys; p=sys.argv[1]; d=json.load(open(p)); d["status"]="sent"; json.dump(d,open(p,"w"))' "$Q/$id.json"
+out=$(GL_RC=1 fb send "$id" --confirm 000000000000 </dev/null 2>&1); rc=$?
+[ $rc -eq 2 ] && ! echo "$out" | grep -q BLOCKED && ok "REQ-13 status sent + gitleaks failing: exit 2 before BLOCKED (order)" || bad "REQ-13 order (rc=$rc, $out)"
+# REQ-4: gitleaks timeout (in process, K102).
+out=$(add3 'd["title"]="Gitleaks timeout"'); id=${out%% *}
+out=$(python3 -c 'import subprocess, sys
+sys.path.insert(0, sys.argv[1]); import feedback
+def run(*a, **k): raise subprocess.TimeoutExpired("gitleaks", 30)
+feedback.subprocess.run = run
+sys.exit(feedback.main(["preview", sys.argv[2]]))' "$S" "$id" 2>&1); rc=$?
+[ $rc -eq 4 ] && echo "$out" | grep -q "^VERDICT: BLOCKED: gitleaks failed (timeout)" && ok "REQ-4 gitleaks timeout: BLOCKED, exit 4" || bad "REQ-4 gitleaks timeout (rc=$rc, $out)"
+# REQ-8: gh missing from PATH.
+out=$(add3 'd["title"]="Gh missing"'); id=${out%% *}; H=$(hash_of "$(fb preview "$id")")
+mkdir -p "$T/nogh"; for b in git script sleep cat sh env grep sed; do ln -s "$(command -v "$b")" "$T/nogh/$b"; done
+ln -s "$(python3 -c 'import sys,os; print(os.path.realpath(sys.executable))')" "$T/nogh/python3"; cp "$T/stub/gitleaks" "$T/stub/claude" "$T/nogh/"
+out=$(PATH="$T/nogh" tty_run "SEND $H" python3 "$S/feedback.py" send "$id" --confirm "$H"); rc=$?
+[ $rc -eq 7 ] && echo "$out" | grep -q "gh not found" && [ "$(jq_ "$Q/$id.json" "d['status']")" = draft ] && ok "REQ-8 gh not on PATH: exit 7, stays draft" || bad "REQ-8 gh missing (rc=$rc, $out)"
+# REQ-8: issue list works, issue create fails.
+mkdir -p "$T/stub2"; cat > "$T/stub2/gh" <<'SH'
+#!/bin/sh
+echo "ARGS: $*" >> "$FBT/gh.log"
+case "$*" in
+  *"issue list"*) echo '[]'; exit 0;;
+  *"issue create"*) echo "create: HTTP 422" >&2; exit 1;;
+esac
+exit 1
+SH
+chmod +x "$T/stub2/gh"
+out=$(add3 'd["title"]="Create fails"'); id=${out%% *}; H=$(hash_of "$(fb preview "$id")"); : > "$T/gh.log"
+out=$(PATH="$T/stub2:$PATH" tty_run "SEND $H" python3 "$S/feedback.py" send "$id" --confirm "$H"); rc=$?
+[ $rc -eq 7 ] && grep -q "issue create" "$T/gh.log" && [ "$(jq_ "$Q/$id.json" "d['status']")" = draft ] && ok "REQ-8 list ok, create fails: exit 7, stays draft" || bad "REQ-8 create fails (rc=$rc, $out)"
+# REQ-2: a repeat keeps first_seen and moves last_seen.
+out=$(add3 'd["title"]="Seen times"'); id=${out%% *}
+python3 -c 'import json,sys; p=sys.argv[1]; d=json.load(open(p)); d["first_seen"]=d["last_seen"]="2000-01-01T00:00:00Z"; json.dump(d,open(p,"w"))' "$Q/$id.json"
+add3 'd["title"]="Seen times"' >/dev/null
+[ "$(jq_ "$Q/$id.json" "d['first_seen']=='2000-01-01T00:00:00Z' and d['last_seen']!='2000-01-01T00:00:00Z'")" = True ] \
+  && ok "REQ-2 repeat: first_seen kept, last_seen updated" || bad "REQ-2 seen times ($(jq_ "$Q/$id.json" "(d['first_seen'], d['last_seen'])"))"
+# REQ-4: residual match after sanitizing (term inside a file-like token).
+fb enable --terms acme >/dev/null
+out=$(add3 'd["title"]="Residual"; d["actual"]="see x.ioacme.md"'); id=${out%% *}
+pv=$(fb preview "$id" 2>&1); rc=$?
+[ $rc -eq 4 ] && echo "$pv" | grep -q "^VERDICT: BLOCKED: .*residual match after sanitizing" && ok "REQ-4 residual match: BLOCKED" || bad "REQ-4 residual (rc=$rc, $(echo "$pv" | head -1))"
+
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
