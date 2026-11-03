@@ -18,6 +18,13 @@ if missing, propose them yourself with the `/delixcrew:start` logic).
    repaired (read-back, idempotent retry, reconciliation at startup). The answer goes into the spec's security note as a
    K decision. Pilot lesson: when not asked, the same finding surfaced in a review round (LLMPortal T002, K28); caught in
    the spec, zero fix rounds (E.7).
+5. **Design system (UI work only):** if the work adds a screen or component or changes visuals AND the repo has no
+   `DESIGN.md` (nor a token file: `tokens.*`, a CSS-variables theme, a Tailwind theme config), produce `DESIGN.md` at the
+   repo root before gate 1: stack (framework, styling, icons) · type scale (display/body font, H1–small sizes) · colour
+   tokens (primary/secondary/accent; 60-30-10 only as a starting point; contrast ≥ 4.5:1) · spacing scale · core
+   components · breakpoints. If the Impeccable plugin is installed (its skill is listed), use its DESIGN.md capability;
+   otherwise ≤ 3 questions, one at a time, each with `My pick`. An existing `DESIGN.md` is linked, not regenerated.
+   Non-UI work: skip this item silently.
 
 ## 2. Write the spec
 - Template: size M → `${CLAUDE_PLUGIN_ROOT}/templates/spec-M.md`; size L → `templates/spec-L.md` (+ `docs/delix/design.md`,
@@ -25,6 +32,7 @@ if missing, propose them yourself with the `/delixcrew:start` logic).
 - Every requirement **testable**: `### Requirement: REQ-n` → "The system SHALL …" → `#### Scenario` WHEN/THEN.
 - Interface contracts as a table (endpoint, signature, template context); data/migration; **security note** (protected
   paths, 🔐); DoD; decisions.
+- UI work: link `DESIGN.md` (or the existing token file) on the template's "Design system" line.
 - Keep it short: if the spec is longer than half the code it is "a transcript, not a plan" — cut. State out-of-scope
   explicitly; this is the only place that prevents over-build.
 - Simple purpose, simple architecture, simple implementation. Every decision should improve user, developer and agent
