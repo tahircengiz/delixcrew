@@ -40,4 +40,22 @@ ran "$R" && ok "local card: Stop gate runs the test command" || ko "local card: 
 out=$(printf '{"tool_name":"Edit","cwd":"%s","tool_input":{"file_path":"docs/delix/delix.json"}}' "$R" | python3 "$S/write_gate.py" 2>/dev/null)
 echo "$out" | grep -q deny && ok "local card: write gate active" || ko "local card: write gate inactive"
 
+# 5) Foreign repo: case variant .Delix/card (case-insensitive file systems see it as .delix/card; git pathspecs do not)
+R="$T/case"; mkrepo "$R"; mkdir -p "$R/.Delix"; echo "docs/delix/tasks/T001-x.md" > "$R/.Delix/card"
+git -C "$R" init -q && $G -C "$R" add -A && $G -C "$R" commit -qm x
+stop "$R"; ran "$R" && ko "case variant .Delix: repo command ran" || ok "case variant .Delix: repo command not run"
+
+# 6) Foreign repo: submodule at .delix whose repo holds 'card' (superproject index only has the gitlink)
+M="$T/subsrc"; mkdir -p "$M"; echo "docs/delix/tasks/T001-x.md" > "$M/card"
+git -C "$M" init -q && $G -C "$M" add -A && $G -C "$M" commit -qm x
+R="$T/submodule"; mkrepo "$R"; git -C "$R" init -q
+$G -C "$R" -c protocol.file.allow=always submodule add -q "$M" .delix 2>/dev/null && $G -C "$R" add -A && $G -C "$R" commit -qm x
+[ -f "$R/.delix/card" ] || ko "submodule fixture not built"
+stop "$R"; ran "$R" && ko "submodule .delix: repo command ran" || ok "submodule .delix: repo command not run"
+
+# 7) Archive extracted inside another git repo: git walks up to the parent, where .delix/card is untracked
+P="$T/parent"; mkdir -p "$P"; git -C "$P" init -q
+R="$P/vendor/pkg"; mkrepo "$R"; mkdir -p "$R/.delix"; echo "docs/delix/tasks/T001-x.md" > "$R/.delix/card"
+stop "$R"; ran "$R" && ko "archive inside a parent repo: repo command ran" || ok "archive inside a parent repo: repo command not run"
+
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
