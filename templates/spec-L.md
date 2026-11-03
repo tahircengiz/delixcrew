@@ -8,7 +8,7 @@
 ## 2. Scope / out of scope
 ## 3. Users and flows (short, bullets)
 ## 4. Requirements (REQ-n, SHALL + Scenario WHEN/THEN) — `spec-M.md` format
-## 5. Architecture (link to design.md): components, data flow, decision rationale (short ADRs); design system (UI work only): link to `DESIGN.md`
+## 5. Architecture (link to design.md): components, data flow, decision rationale (short ADRs); design system (UI work only): link to `DESIGN.md` (or the repo's token file)
 ## 6. Interface contracts → `contracts/` (OpenAPI / type definitions / template contexts)
 ## 7. Data model and migration plan
 ## 8. Security and privacy: threat model (assets, attacker, surface), protected paths, 🔐 points
