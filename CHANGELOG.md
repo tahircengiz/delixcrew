@@ -2,6 +2,33 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## 0.5.0 — 2026-11-03
+
+Self-feeding feedback: problems with delixcrew itself become sanitized GitHub issues, sent only by you.
+
+- **Feedback queue** (`scripts/feedback.py`, stdlib only): off by default (`feedback.py enable [--terms a,b]`,
+  `disable`, `status`); drafts in `~/.claude/delixcrew/feedback/` (`DELIXCREW_FEEDBACK_DIR`), never in the project repo;
+  repeats are folded by fingerprint. `preview` redacts hosts outside an allowlist, private IPs, MAC and e-mail addresses,
+  paths, user and machine names, project names and your extra terms, and blocks (fail-closed) on a `gitleaks` finding or
+  missing `gitleaks`, invisible Unicode controls, 32+ character opaque strings, more than 15 code lines or a body over
+  8 KB. `send` runs only on a TTY, prints the full text and waits for `SEND <hash>`; the target repo is fixed and an
+  existing issue with the same fingerprint is reused. Sending needs `gitleaks` and a signed-in `gh`. See README →
+  Feedback.
+- **`/delixcrew:feedback [note | review]`**: `note` turns a finding from the conversation into a draft; `review` shows
+  each draft exactly as it would be published and, only after `yes F<nnn>` in chat, gives the one-line `send` command for
+  your own terminal. `/delixcrew:close` and `/delixcrew:review` add a draft only after a false-positive hook rejection, an
+  unworkable skill step or a manual workaround of a plugin limit.
+- **Hook rules** (every session): `bash_gate.py` denies `feedback.py send`, `feedback.py` under `script` / `expect` /
+  `unbuffer` / `pty.spawn`, and `gh issue create|comment|edit` / `gh api … issues` aimed at delixcrew; `write_gate.py`
+  denies Write/Edit into the queue directory. These close the known paths only, not every path; README suggests a
+  `permissions.deny` rule for `gh issue create` and `gh api`, and the plugin does not change your settings.
+- **Issue forms** (`.github/ISSUE_TEMPLATE/`): a hand-opened bug or feature issue asks the same headings as a sent draft.
+- **`/delixcrew:start #<n>`** (in the delixcrew repo): takes a GitHub issue as the request; the issue text is treated as
+  untrusted (HTML comments and invisible characters removed and reported, quoted only), and nothing is written before
+  you approve the rewritten request.
+- **Design-system step in `/delixcrew:spec`** (UI work only): the spec links `DESIGN.md` (or the repo's token file) and
+  produces `DESIGN.md` when neither exists; the `spec-M` / `spec-L` templates say the same.
+
 ## 0.4.0 — 2026-11-03
 
 - **Plugin renamed `delix` → `delixcrew`**, the same name as the repo and the marketplace. Commands are now

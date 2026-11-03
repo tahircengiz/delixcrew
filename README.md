@@ -65,7 +65,7 @@ claude plugin install delix-board@delixcrew
 | Step | Command | What happens |
 |---|---|---|
 | 1 | `/delixcrew:start <request>` | Context is read; **size** (S/M/L: process weight) and **tier** (1/2/3: gates) are proposed; `docs/delix/` is set up. For S, a single card. |
-| 2 | `/delixcrew:spec` | Grill (one question at a time, with a pick) → `docs/delix/SPEC.md` (SHALL + WHEN/THEN); `architect` (+ `security` at Tier 3) reviews; EGM at size L. **Gate 1.** |
+| 2 | `/delixcrew:spec` | Grill (one question at a time, with a pick) → `docs/delix/SPEC.md` (SHALL + WHEN/THEN); `architect` (+ `security` at Tier 3) reviews; EGM at size L. For UI work only, a design-system step: the spec links `DESIGN.md` (or the repo's token file), and produces `DESIGN.md` when neither exists. **Gate 1.** |
 | 3 | `/delixcrew:dispatch` | `architect` writes the cards and the wave plan; conflict check; dispatch prompts; implementer sessions (at most 3 in parallel). |
 | 4 | `/delixcrew:implement <card>` | In the implementer session: test-first, only the card's files, a PR, `.delix/report.md`. |
 | 5 | `/delixcrew:review <card>` | Deterministic gates → `qa` (+ `security`) with zero context → ≤ 3 fix rounds → **Gate 2 (merge, human).** |
@@ -92,6 +92,68 @@ claude plugin install delix-board@delixcrew
 on request, in `.gitignore`). In the implementer worktree: `.delix/card` (activates the hooks), `.delix/report.md`,
 `.delix/test-result.txt`, `.delix/evidence/`.
 
+## Feedback
+
+When delixcrew itself misbehaves (a hook rejects correct work, a skill step cannot be followed as written, you work
+around a plugin limit by hand), it can keep a local draft of the problem so you can send it to this repo as a GitHub
+issue. Nothing leaves your machine unless you send it yourself, from your own terminal.
+
+**Off by default.** Turn it on (and off) in your own terminal; the script lives in the plugin's install directory, for
+a marketplace install `~/.claude/plugins/cache/delixcrew/delixcrew/<version>/scripts/feedback.py`:
+
+```bash
+python3 <plugin dir>/scripts/feedback.py enable --terms acme,example-corp
+```
+
+`--terms` adds your own words to redact (customer names, codenames). `status` shows whether it is on, the queue
+directory and the number of drafts; `disable` turns it off. While it is off nothing is written: `/delixcrew:feedback note` shows
+`delixcrew feedback is off; enable: python3 <path>/feedback.py enable` with the real path, and `/delixcrew:close` and
+`/delixcrew:review` stay silent. Drafts live in
+`~/.claude/delixcrew/feedback/` (`DELIXCREW_FEEDBACK_DIR` overrides it), never in your project repo.
+
+**Flow.**
+1. A draft is created by `/delixcrew:feedback note` (a finding from the current conversation), or by `/delixcrew:close`
+   and `/delixcrew:review` when one of the three events above happened. A repeated finding raises the draft's count
+   instead of adding a new one.
+2. `/delixcrew:feedback review` shows each draft **exactly** as it would be published (repo, label, title, body), with a
+   `VERDICT:` and a `HASH:` line.
+3. To send a draft, reply in chat with its id: `yes F003` (or `evet F003`). A bare "yes", "send all" or "approved" in a
+   file is not consent. Claude then gives you one command:
+   `python3 <plugin dir>/scripts/feedback.py send F003 --confirm <hash>`.
+4. Run it in **your own terminal**. It prints the queue directory and the full text again and waits for you to type
+   `SEND <hash>`. If the text changed since the preview, it stops and asks you to preview again.
+
+Claude never sends: in every session the hooks deny `feedback.py send`, running `feedback.py` under `script`, `expect`,
+`unbuffer` or `pty.spawn`, `gh issue create|comment|edit` and `gh api … issues` aimed at delixcrew, and Write/Edit into
+the queue directory, with `delixcrew: feedback is sent only by the user from their own terminal`.
+
+**Requirements for sending:** `gitleaks` on `PATH` and a signed-in `gh`. Without `gitleaks` every draft is `BLOCKED`;
+without `gh` the draft stays queued and `send` exits 7. The target repo is fixed to `tahircengiz/delixcrew`; before
+creating an issue, `send` searches for the draft's fingerprint line (`delixcrew-fp: …`) and, if an issue already has it,
+records that URL instead of opening a second one. You can also open an issue on GitHub by hand; the issue forms ask the
+same headings.
+
+**What is redacted** (before the preview, title included): every host name outside a short allowlist (`github.com`,
+`code.claude.com`, `docs.anthropic.com`, `anthropic.com`, `example.*`, `*.example`, `*.test`, `*.invalid`, `localhost`),
+so `build.example-corp.dev` becomes `<redacted:host>`; IP addresses outside the documentation ranges and loopback
+(`10.1.2.3` → `<redacted:ip>`); MAC and e-mail addresses; the user part of home paths (`/Users/<you>/x` → `~/x`) and
+every other absolute path (`/srv/app` → `<redacted:path>`); your user name and machine name; the names of the projects the drafts came
+from (folder name, git remote owner and repo) and your `--terms`.
+
+**What blocks a draft** (`VERDICT: BLOCKED: <reason>`, `send` exits 4; no secret value is printed): a `gitleaks` finding in
+the raw or the redacted text, or `gitleaks` missing, failing or timing out; an invisible Unicode control character
+(zero-width, bidi); an opaque string of 32+ characters (`[A-Za-z0-9+=_-]`, so a full git SHA is blocked too; use the
+short one); more than 15 code lines; a body over 8 KB; anything still matching the redaction rules after redaction.
+
+**Remaining risk.** The hooks close the *known* ways to send; they do not block everything. Claude runs with your `gh`
+login, and a disguised command (one built from base64, a wrapper written to a file, an HTTP request without `gh`) can get
+past a pattern-matching hook. This is true of any Claude session, with or without delixcrew. If you want a stronger
+guard, add a deny rule to your own `settings.json`; delixcrew only suggests this and does not change your settings:
+
+```json
+{ "permissions": { "deny": ["Bash(gh issue create:*)", "Bash(gh api:*)"] } }
+```
+
 ## Known limits
 
 Plugin agents ignore the `permissionMode`, `hooks` and `mcpServers` fields (the constraint is `tools` + `hooks/hooks.json`).
@@ -102,8 +164,9 @@ the former watcher never started in the pilot and 3 diagnostic runs and was remo
 note is appended to `.delix/warnings.log`.
 
 The write gate (`scripts/write_gate.py`) sees only the Write/Edit/MultiEdit/NotebookEdit tools; an implementer writing
-files through Bash (`echo >`, `sed -i`, `tee`) is outside this hook (`bash_gate.py` intercepts only `.env` redirects and
-reviewer Bash). A path escaping the worktree (cwd) is always rejected (A13, K42); path matching is relative to cwd. For
+files through Bash (`echo >`, `sed -i`, `tee`) is outside this hook (`bash_gate.py` intercepts only redirects, `cp`, `mv`
+and `tee` into protected paths, reviewer Bash and, in every session, the known feedback send paths; see
+[Feedback](#feedback)). A path escaping the worktree (cwd) is always rejected (A13, K42); path matching is relative to cwd. For
 that reason a change to the card file, `docs/delix/**` or an unapproved protected path in the card counts as a finding in
 the `delixcrew:qa` review of the diff. Tier 3 permission is opened by the `**🔐 Approved:** <YYYY-MM-DD> <who>` line after
 the card's header table; only the orchestrator writes it, after the user's explicit "yes" in chat, and commits it to main.
