@@ -1,0 +1,68 @@
+# T010 — 🔐 triage.py: show, index, record, preview, apply
+
+| id | size | tier | role | wave | status |
+|---|---|---|---|---|---|
+| T010 | L | 3 | backend | 1 | open |
+
+> 🔐 Tier 3: the path that writes comments, labels and closes on a public repo. The orchestrator adds the `**🔐 Approved:**` line after the human says "yes".
+
+**Goal (1 sentence):** One stdlib script that reads issues cleanly, records a triage decision and applies it from the user's own terminal. · **Spec:** `docs/delix/SPEC.md#REQ-1`, `#REQ-2`, `#REQ-5`, `#REQ-6`, `#REQ-8` (script side), §4
+
+## Files
+- Create: `scripts/triage.py`
+- Test: `tests/triage_tests.sh` (new)
+
+## Interfaces
+- Produced (exact; T012 and T013 are written against it). All commands exit 7 when `gh` fails.
+  - `show <n> [--require accepted]` (0·7·8)
+  - `index` (0·7)
+  - `record <n>`: JSON on stdin, prints `#<n> recorded <decision>` (0·2·7)
+  - `preview <n>`: prints `REPO:`, `ISSUE: #<n> <url>`, `ACTIONS: …`, `---`, the comment (marker line included), `---`, `VERDICT: CLEAN|BLOCKED: <r>[; …]`, `HASH: <12hex>`. Exit 0·2 (no record)·4·7.
+  - `apply <n> --confirm <hash>` (0·4·5·6·7)
+- `ACTIONS` format: `ACTIONS: ensure-label <L>; comment; add-label <L>; remove-labels <the other 4, comma-joined>; close <not-planned|no>`. Label order is fixed: `accepted,needs-info,duplicate,wontfix,deferred`.
+- Consumed: `import feedback`, with `sys.path.insert(0, <script dir>)`.
+  - Functions: `sanitize`, `term_regex`, `local_terms`, `load_config`, `gitleaks`, `bad_char`, `repo_ok`, `gh`; may also use `write_json`, `read_json`, `now`, `err`.
+  - Constants: `OPAQUE_RE`, `GH_SCRUB`, `REPO`, `SANITIZER_VERSION`.
+  - `feedback.gh(args, env)` puts `-R` after the 2nd argument (`scripts/feedback.py:568-580`). Never use `gh api`.
+
+## Global Constraints (from the spec)
+- REQ-1 to REQ-6 and REQ-8, word for word, including every exit code and every message in the spec.
+- Cleaning order: (1) remove Cc (except `\n` and `\t`), Cf and Co; (2) then HTML comments (`<!--.*?(?:-->|\Z)`, DOTALL); (3) count both over every printed string (title, body, comments, labels, logins).
+- `issue-sha` = `sha256(clean_title + "\n" + clean_body)`, first 12 hex.
+- `reported-version` = the first `plugin <tok>` in the body; `unknown` unless `tok` fullmatches `\d+\.\d+\.\d+`.
+- `source` (K126, measured with gh 2.86.0: `gh issue view|list --json` has no issue-level `authorAssociation`): issue author is `maintainer` iff `author.login` equals the owner part of `feedback.REPO`; otherwise `external`. Comments: use each comment's `authorAssociation` (present in `--json comments`); maintainer = OWNER, MEMBER or COLLABORATOR. Never request `authorAssociation` as a top-level `--json` field.
+- `decision`: the issue's decision label(s), joined with `,` and no spaces; `none` if there is none.
+- Valid triage comment: author association maintainer; last line fullmatches `delixcrew-triage: (accept|needs-info|duplicate|wontfix|defer) [0-9a-f]{12} [0-9a-f]{12}`; the **last** such comment counts; every comment after it gets the header suffix `(after triage, not reviewed)`.
+- `index` line: `#<n> <open|closed> <decision|none> <maintainer|external> <json.dumps(clean_title, ensure_ascii=False)>`, read with `gh issue list --state all --limit 300 --json number,state,labels,author,title`.
+- Hash: `sha256(json.dumps({repo, issue, issue_sha, decision, comment, sanitizer_version}, sort_keys=True, ensure_ascii=False, separators=(",",":")))`, first 12 hex; `comment` is the sanitized text **without** the marker line; published text = `comment + "\n\n" + marker`.
+- BLOCKED checks for HTML (`<[A-Za-z/!]`), `<!--` and `@login` (`(?<![\w.])@[A-Za-z0-9]`) run on the **raw** `reason` and `questions` (sanitize adds `<redacted:…>` placeholders). Residual check: `sanitize(x) != x`, as `scripts/feedback.py:342`.
+- Fixed labels (`label create <L> --color <hex> --description <d>`): `accepted` `0e8a16` `Triaged: accepted` · `needs-info` `fbca04` `Triaged: more information needed` · `deferred` `c5def5` `Triaged: deferred` · `duplicate` `cfd3d7` `This issue or pull request already exists` · `wontfix` `ffffff` `This will not be worked on`.
+- Records: `$DELIXCREW_TRIAGE_DIR` (default `~/.claude/delixcrew/triage`), dir mode 0700, written with `feedback.write_json` (atomic); on read-back in `preview`/`apply` every unknown key or bad type is `invalid record`.
+- `apply`: checks in REQ-6 order; after `APPLY <hash>` read the issue once (`gh issue view <n> --json state,labels,comments`) and run steps 1–4 from that read; on failure one stderr line `delixcrew triage: step <k> (<name>) failed: <err>`, exit 7.
+
+## Steps
+1. Write `tests/triage_tests.sh` in the style of `tests/feedback_tests.sh` (✔/✘ lines, `ALL PASSED` at the end).
+   - Export `DELIXCREW_TRIAGE_DIR`, `HOME`, `USER`, fake `GH_HOST` and `GH_REPO`. Copy `tty_run` (`tests/feedback_tests.sh:17-19`) and the `gitleaks` stub (`:22-29`).
+   - `gh` stub: a **stateful Python script** reading/writing `$TRT/state.json` (issues with title, body, state, url, author, labels, comments with `authorAssociation`; plus repo labels); handles `issue view|list|comment|edit|close` and `label list|create`; rejects a top-level `authorAssociation` field with `Unknown JSON field` like real gh; logs `ARGS:` and `GH_`/`GITHUB_` env lines to `gh.log`; new comments get `${GH_ASSOC:-OWNER}`; `GH_FAIL=close` makes `issue close` fail.
+   - One test per spec scenario in REQ-1, 2, 5, 6 and 8, plus each REQ-5 schema error (exit 2, no file), plus: HTML, `<!--`, `@alice`, `FAKE_SECRET_MARKER` and a runtime-built 32+ opaque string each BLOCKED; `HASH` unchanged after labels change (K121); non-TTY run leaves no write call in `gh.log`; plugin.json mismatch on a copied tree; `--require accepted` pass prints the body, fail leaves stdout empty; issue author `someone-else` → `source: external`.
+   - Run it, see **red**.
+2. Implement `scripts/triage.py`.
+3. Green: `bash tests/triage_tests.sh`, then the full loop.
+4. Commit `T010: triage.py show/index/record/preview/apply`; PR body has "## How I tested".
+
+## Verification command → expected output
+- `bash tests/triage_tests.sh` → `ALL PASSED`
+- `for t in tests/*_tests.sh; do bash "$t" || exit 1; done` → every script `ALL PASSED`
+- `git diff --stat origin/main -- scripts/feedback.py` → empty
+
+## Review Focus
+- After the hash check `apply` re-reads nothing from disk; a re-run makes no second comment and no second edit (REQ-6 scenario).
+- A marker comment from a `NONE` account counts neither for the comment step nor for `--require accepted`.
+- No top-level `authorAssociation` in any `gh` call (K126).
+
+## Don'ts
+- Untouchable: `scripts/feedback.py` (K115), hook scripts, `.github/**`, `.claude-plugin/**`, `docs/delix/**`, existing tests.
+- No real network, no real `gh`, no new dependency, no realistic key literals. Import from `feedback.py`, never copy. Test looks wrong: NEEDS_CONTEXT.
+
+## Report contract
+`.delix/report.md` (≤ 2K tokens): status · command + output · PR number · assumptions · remaining work. Read only this card and SPEC REQ-1, 2, 5, 6, 8, §4, §6.

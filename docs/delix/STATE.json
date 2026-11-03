@@ -1,10 +1,64 @@
 {
-  "spec": null,
-  "size": null,
-  "updated": "2026-11-03T14:30:00Z",
+  "spec": "docs/delix/SPEC.md",
+  "size": "M",
+  "updated": "2026-11-03T16:00:00Z",
   "env_owner": null,
-  "waves": [],
-  "cards": {},
+  "waves": [
+    {
+      "wave": 1,
+      "cards": [
+        "T010",
+        "T011",
+        "T012"
+      ],
+      "note": "SPEC triage (gate 1 2026-11-03, K106-K127). Parallel against SPEC §4. Merge order T010 -> T011 -> T012 (start §1a calls triage.py show; 'the hook denies it' holds only after T011). After T011+T012: integration check that the rendered record command is allowed by the merged hook. All 🔐: Approved line before dispatch."
+    },
+    {
+      "wave": 2,
+      "cards": [
+        "T013"
+      ],
+      "note": "after T010 merged (CI step needs tests/triage_tests.sh); merged last, 0.6.0 must not reach main before its features. 🔐."
+    }
+  ],
+  "cards": {
+    "T010": {
+      "file": "docs/delix/tasks/T010-triage-script.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T011": {
+      "file": "docs/delix/tasks/T011-triage-hooks.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T012": {
+      "file": "docs/delix/tasks/T012-triage-skill.md",
+      "role": "docs",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T013": {
+      "file": "docs/delix/tasks/T013-triage-docs-ci-version.md",
+      "role": "devops",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    }
+  },
   "status_values": [
     "open",
     "in_progress",

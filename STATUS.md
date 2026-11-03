@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-03 · **Faz:** 7 — 0.5.0 öz-besleme rev 3 kapandı (T001–T009 main'de, arşiv `docs/delix/archive/0.5.0-self-feeding/`); K104 sızıntıları, 0.5.0 etiketi, W0 ve uçtan uca test açık
+**Son güncelleme:** 2026-11-03 · **Faz:** 8 — triage spec'i onaylı (kapı 1), kartlar T010–T013 hazır, 🔐 onay ve dalga 1 dispatch bekliyor (§8). §7: 0.5.0 öz-besleme rev 3 kapandı (T001–T009 main'de, arşiv `docs/delix/archive/0.5.0-self-feeding/`); K104 sızıntıları, 0.5.0 etiketi, W0 ve uçtan uca test açık
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -392,6 +392,29 @@ rev 3'te kapandı):
   `gh pr create` gövdesi ve review skill'inin kendi `feedback.py add <<'EOF'` taslak komutu (gövdede "send"/"gh" geçtiği için muafiyet
   tutmadı; feedback taslağı yazılamadı).
 - SPEC §4'te olmayan davranış: BLOCKED `preview` HASH/gövde basmıyor, bilinmeyen id exit 2, `send` kontrol sırası repo→id→BLOCKED→hash→TTY.
+
+## 8. 0.6.0 — triage (2026-11-03, SPEC `docs/delix/SPEC.md`, kartlar `docs/delix/tasks/T010–T013`)
+
+Gelen her bug ve öneri issue'su önce kontrol edilir: architect (job D) gerekçeli karar önerir, kararı insan verir, karar
+issue'ya kullanıcının terminalinde `triage.py apply` ile yazılır; start yalnız geçerli `accepted` issue'yu alır.
+
+| # | Adım | Durum |
+|---|---|---|
+| 8.1 | `/delixcrew:start` (M · Tier 3) + grill (6 soru) + spec, architect FIX ve security FIX işlendi | ✔ K106–K127 |
+| 8.2 | Kapı 1 | ✔ 2026-11-03 |
+| 8.3 | Dispatch: T010 `triage.py`, T011 hook kuralları, T012 skill + architect job D + start §1a, T013 README/CHANGELOG/CI/0.6.0 | ✔ kartlar ve dispatch dosyaları |
+| 8.4 | 🔐 Kart başına Approved satırı (dördü de Tier 3) | ◻ kullanıcıda |
+| 8.5 | Dalga 1: T010, T011, T012 paralel; merge sırası T010 → T011 → T012 | ◻ |
+| 8.6 | Dalga 2: T013, en son merge | ◻ |
+| 8.7 | W0: açık 7 issue'nun toplu triage'ı, gerçek oturum transkripti (REQ-3/4/8) | ◻ kullanıcıda |
+
+Kararlar: `docs/delix/SPEC.md` §9 (kullanıcı K106–K110, orkestratör K111–K127). Öne çıkanlar:
+- **K126** `gh` 2.86.0'da `gh issue view|list --json` issue düzeyinde `authorAssociation` vermiyor (`Unknown JSON field`).
+  0.5.0 start §1a komutu bu yüzden bugün hata verir; T012 onu `triage.py show` ile değiştirir. 0.5.0 etiketinden önce
+  bilinmesi gereken açık.
+- **K127** Kart numaraları proje boyunca tekil (arşivde T001–T009 var; triage T010'dan başlar).
+- Yan bulgu: Desktop bu worktree dizinini (T005'ten) yeniden kullandı; kalan `.delix/card` yazma kapısını uygulayıcı
+  kipine soktu. Dosya silinmeden kenara alındı. close'un worktree temizliği `.delix/`'i silmiyor olabilir; takip işi.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
