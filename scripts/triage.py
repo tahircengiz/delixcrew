@@ -48,6 +48,11 @@ HTML_COMMENT_RE = re.compile(r"<!--.*?(?:-->|\Z)", re.S)
 HTML_RE = re.compile(r"<[A-Za-z/!]")
 MENTION_RE = re.compile(r"(?<![\w.])@[A-Za-z0-9]")
 COMMENT_MENTION_RE = re.compile(r"@[A-Za-z0-9]")
+# K132: invisible code points outside Cc/Cf/Co (bad_char); they survive NFKC and sanitize.
+_INVISIBLE = ("\u034f\u115f\u1160\u180b-\u180d\u180f\u2028\u2029\u2800\u3164\uffa0\ufe00-\ufe0f"
+              "\U000e0100-\U000e01ef")
+INVISIBLE_RE = re.compile("[" + _INVISIBLE + "]")
+EMOJI_VS_RE = re.compile(r"(?<=[^\s" + _INVISIBLE + "])[\ufe0e\ufe0f](?![" + _INVISIBLE + "])")  # one, after a visible char
 CHAR_REF_RE = re.compile(r"&(#[0-9]+|#[xX][0-9A-Fa-f]+|[A-Za-z][A-Za-z0-9]*);")
 VERSION_RE = re.compile(r"\bplugin[ \t]+([^\s,]+)")
 SEMVER_RE = re.compile(r"\d+\.\d+\.\d+")
@@ -303,6 +308,8 @@ def build(n, rec, live_sha):
             reasons.append(r)
     if any(bad_char(c) for c in raw + comment):
         reasons.append("unicode control character (Cc/Cf/Co)")
+    if INVISIBLE_RE.search(EMOJI_VS_RE.sub("", raw + "\n" + comment)):
+        reasons.append("invisible character")
     if OPAQUE_RE.search(raw) or OPAQUE_RE.search(comment):
         reasons.append("opaque string of 32+ characters")
     if sanitize(comment, term_re) != comment:
