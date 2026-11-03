@@ -194,4 +194,38 @@ H=$(hash_of "$(fb preview "$id")")
 out=$(GH_MODE=fail tty_run "SEND $H" python3 "$S/feedback.py" send "$id" --confirm "$H"); rc=$?
 [ $rc -eq 7 ] && [ "$(jq_ "$Q/$id.json" "d['status']")" = draft ] && echo "$out" | grep -q "gh" && ok "REQ-8 gh failure: exit 7, record stays draft" || bad "REQ-8 gh failure (rc=$rc, $out)"
 
+# --- review round 1 ----------------------------------------------------------
+# Finding 1: Cc control characters (ESC, CR) are rejected at add and BLOCKED in build.
+cc_reject(){ # name, python mutation, field
+  n0=$(nfiles); out=$(cd "$A" && mk "$J1" "$2" | fb add 2>&1); rc=$?
+  [ $rc -eq 2 ] && echo "$out" | grep -q "$3" && [ "$(nfiles)" -eq "$n0" ] && ok "R1 add rejects $1 (exit 2, $3)" || bad "R1 add $1 (rc=$rc, $out)"; }
+cc_reject "ESC [2K in actual" 'd["title"]="Esc erase"; d["actual"]="a\u001b[2Kb"' actual
+cc_reject "CR in title"       'd["title"]="Carriage\rreturn"'                     title
+cc_reject "ESC in repro step" 'd["title"]="Esc step"; d["repro"]=["x\u001b[8my"]'  repro
+out=$(cd "$A" && mk "$J1" 'd["title"]="Tabs and newlines ok"; d["actual"]="a\tb\nc"' | fb add); rc=$?
+[ $rc -eq 0 ] && ok "R1 add still accepts \\t and \\n" || bad "R1 tab/newline rejected ($out)"
+out=$(cd "$A" && mk "$J1" 'd["title"]="Tampered control"' | fb add); id=${out%% *}
+python3 -c 'import json,sys; p=sys.argv[1]; d=json.load(open(p)); d["actual"]="a\u001b[2Kb\rc"; json.dump(d,open(p,"w"))' "$Q/$id.json"
+pv=$(fb preview "$id" 2>&1); rc=$?
+[ $rc -eq 4 ] && echo "$pv" | grep -q "^VERDICT: BLOCKED: .*control character" && ! printf '%s' "$pv" | grep -q $'\x1b' \
+  && ok "R1 tampered record with ESC/CR: preview BLOCKED, no raw ESC printed" || bad "R1 tampered control (rc=$rc, $(echo "$pv" | head -1))"
+out=$(fb send "$id" --confirm 000000000000 </dev/null 2>&1); [ $? -eq 4 ] && ok "R1 tampered control: send exit 4" || bad "R1 tampered control send ($out)"
+# Finding 2: the stored fingerprint is recomputed; a tampered one BLOCKS.
+out=$(cd "$A" && mk "$J1" 'd["title"]="Tampered fingerprint"' | fb add); id=${out%% *}
+python3 -c 'import json,sys; p=sys.argv[1]; d=json.load(open(p)); d["fingerprint"]="0123456789abcdef\n### Injected"; json.dump(d,open(p,"w"))' "$Q/$id.json"
+pv=$(fb preview "$id" 2>&1); rc=$?
+[ $rc -eq 4 ] && echo "$pv" | grep -q "^VERDICT: BLOCKED: .*fingerprint" && ! echo "$pv" | grep -q Injected \
+  && ok "R2 tampered fingerprint (injected text): BLOCKED" || bad "R2 tampered fingerprint (rc=$rc, $pv)"
+python3 -c 'import json,sys; p=sys.argv[1]; d=json.load(open(p)); d["fingerprint"]="0123456789abcdef"; json.dump(d,open(p,"w"))' "$Q/$id.json"
+pv=$(fb preview "$id" 2>&1); rc=$?
+[ $rc -eq 4 ] && echo "$pv" | grep -q "^VERDICT: BLOCKED: .*fingerprint" && ok "R2 well-formed but wrong fingerprint: BLOCKED" || bad "R2 wrong fingerprint (rc=$rc, $pv)"
+: > "$T/gh.log"; out=$(fb send "$id" --confirm 000000000000 </dev/null 2>&1); rc=$?
+[ $rc -eq 4 ] && [ ! -s "$T/gh.log" ] && ok "R2 tampered fingerprint: send exit 4, gh not called" || bad "R2 tampered fingerprint send (rc=$rc, $out)"
+# Finding 3: the plugin owner is never an origin term, even from another repo of that owner.
+C="$T/owner-proj"; mkdir -p "$C"; git -C "$C" init -q; git -C "$C" remote add origin git@github.com:tahircengiz/foo.git
+out=$(cd "$C" && mk "$J1" 'd["title"]="Owner remote"' | fb add); id=${out%% *}
+[ "$(jq_ "$Q/$id.json" "'tahircengiz' not in [t.lower() for t in d['origin_terms']] and 'foo' in d['origin_terms']")" = True ] \
+  && ok "R3 tahircengiz/foo remote: owner left out of origin_terms" || bad "R3 owner in origin_terms ($(jq_ "$Q/$id.json" "d['origin_terms']"))"
+fb preview F002 | grep -qF "github.com/tahircengiz/delixcrew" && ok "R3 github.com/tahircengiz/delixcrew still unchanged" || bad "R3 plugin URL redacted"
+
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

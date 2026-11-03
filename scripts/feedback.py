@@ -51,7 +51,7 @@ FILE_EXTS = set("""md markdown txt rst py pyc sh bash zsh fish js mjs cjs ts tsx
 env lock log csv tsv xml html htm css scss sass less svg png jpg jpeg gif webp ico pdf zip tar gz tgz bz2 xz go rs rb java
 kt kts swift c h cc cpp hpp cs php pl lua sql db sqlite ipynb plist patch diff out bak tmp pem crt pub mk gradle vue svelte
 j2 jinja tpl tf hcl wasm so dylib dll exe bin iso img dmg pkg deb rpm whl""".split())
-PLUGIN_TERMS = {"delixcrew", "tahircengiz/delixcrew", "delix"}
+PLUGIN_TERMS = {"delixcrew", "tahircengiz/delixcrew", "delix", "tahircengiz"}  # the plugin owner is never a project term
 
 PLACEHOLDER_RE = re.compile(r"(<redacted:[a-z]+>)")
 _SEG = r"[^\s/`'\"<>()\[\],;]"
@@ -265,6 +265,11 @@ def code_lines(body):
     return n
 
 
+def bad_char(c):
+    """Cc (except newline and tab), Cf and Co can make the terminal show other text than is sent."""
+    return c not in "\n\t" and unicodedata.category(c) in ("Cc", "Cf", "Co")
+
+
 def build(rec, records, config, bad_ids=()):
     """Builds the issue content in memory. Returns (content dict, BLOCKED reasons, 12-hex hash)."""
     terms = set(config["extra_terms"]) | local_terms()
@@ -297,8 +302,14 @@ def build(rec, records, config, bad_ids=()):
     for r in (gitleaks(raw), gitleaks(clean)):
         if r and r not in reasons:
             reasons.append(r)
-    if any(unicodedata.category(c) in ("Cf", "Co") for c in "\n".join(raw_vals) + clean):
-        reasons.append("unicode control character (Cf/Co)")
+    if any(bad_char(c) for c in "\n".join(raw_vals) + clean):
+        reasons.append("unicode control character (Cc/Cf/Co)")
+    try:
+        fp_ok = rec.get("fingerprint") == fingerprint(rec.get("kind"), rec.get("component"), rec.get("title"))
+    except (TypeError, AttributeError):
+        fp_ok = False
+    if not fp_ok:
+        reasons.append("fingerprint mismatch (record changed on disk)")
     if OPAQUE_RE.search(raw) or OPAQUE_RE.search(clean):
         reasons.append("opaque string of 32+ characters")
     if code_lines(main) > CODE_LINES_MAX:
@@ -329,6 +340,12 @@ def validate(d):
     for k in ("component", "title", "actual", "expected", "context"):
         if k in d and not isinstance(d[k], str):
             return "%s: must be a string" % k
+    if not isinstance(d["repro"], list) or not all(isinstance(x, str) for x in d["repro"]):
+        return "repro: must be a list of strings"
+    for k in ("component", "title", "actual", "expected", "context", "repro"):
+        vals = d.get(k) if k == "repro" else [d.get(k) or ""]
+        if any(unicodedata.category(c) == "Cc" and c not in "\n\t" for x in vals for c in x):
+            return "%s: control character (only newline and tab allowed)" % k
     for k in ("component", "title"):
         if not d[k].strip():
             return "%s: must not be empty" % k
@@ -337,8 +354,6 @@ def validate(d):
     for k in ("component", "actual", "expected", "context"):
         if k in d and len(d[k]) > TEXT_MAX:
             return "%s: longer than %d characters" % (k, TEXT_MAX)
-    if not isinstance(d["repro"], list) or not all(isinstance(x, str) for x in d["repro"]):
-        return "repro: must be a list of strings"
     if len(d["repro"]) > STEPS_MAX:
         return "repro: more than %d steps" % STEPS_MAX
     if any(len(x) > TEXT_MAX for x in d["repro"]):
