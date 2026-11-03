@@ -64,12 +64,12 @@ SKILLS_DIR = os.path.join(SCRIPT_DIR, "..", "skills")
 BUILTIN_COMMANDS = set("""/agents /clear /compact /config /context /cost /doctor /exit /export /help /hooks /init /login
 /logout /mcp /memory /model /permissions /plugin /resume /review /status""".split())
 WIN_ABS_RE = re.compile(r"(?<![\w])[A-Za-z]:\\[^\s]+")
-EMAIL_RE = re.compile(r"(?<![A-Za-z0-9._%+-])[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")  # REQ-5: one start per run
+EMAIL_RE = re.compile(r"(?<![\w.%+-])[\w.%+-]+@[\w-]+(?:\.[\w-]+)+")  # REQ-5: one start per run; Unicode
 MAC_RE = re.compile(r"(?<![\w:-])[0-9A-Fa-f]{2}([:-])[0-9A-Fa-f]{2}(?:\1[0-9A-Fa-f]{2}){4}(?![\w:-])")
 IPV4_RE = re.compile(r"(?<![\w.])\d{1,3}(?:\.\d{1,3}){3}(?!\w|\.\d)")
 IPV6_RE = re.compile(r"(?<![\w:.])[0-9A-Fa-f]*:[0-9A-Fa-f:]*:[0-9A-Fa-f]*(?![\w:])")
-TOKEN_RE = re.compile(r"(?<![\w@-])(?<![\w@-]\.)[\w-]+(?:\.[\w-]+)+(?![\w-])")  # REQ-3: Unicode labels; also after ".", ".."
-LAST_LABEL_RE = re.compile(r"[^\W\d_](?:[^\W_]|-)*")  # REQ-3: any letter
+TOKEN_RE = re.compile(r"(?<![\w-])(?<![\w-]\.)[\w-]+(?:\.[\w-]+)+(?![\w-])")  # REQ-3: Unicode labels; also after ".", ".."
+LAST_LABEL_RE = re.compile(r"[^\W\d_][\w-]*")  # REQ-3: any letter first
 DOC_NETS = [ipaddress.ip_network(n) for n in ("192.0.2.0/24", "198.51.100.0/24", "203.0.113.0/24", "2001:db8::/32")]
 UNC_RE = re.compile(r"(?<![\w\\])\\\\[^\s\\]+(?:\\[^\s\\]*)*")
 # REQ-1 URLs (K134, K146): a run of scheme characters or slashes starts a URL only once, so the scan stays linear.
@@ -247,6 +247,9 @@ def _url_allowed(auth, tail, url, term_re):
     segs = [p.lower() for p in path.split("/")]
     if "." in segs or ".." in segs:
         return False
+    for part in re.split(r"[/?#=&+]", tail):  # K146 allowlist: a dotted part is a file name or a version
+        if any(not (lab.lower() in FILE_EXTS or lab.isdigit()) for lab in part.split(".")[1:]):
+            return False
     if host.rstrip(".") == "github.com" and path not in ("", "/") and not (
             segs[1:3] == ["tahircengiz", "delixcrew"] or segs[1] == "anthropics"):
         return False
