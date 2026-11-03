@@ -146,4 +146,107 @@ PYT
 DOL=$(printf '$aaaaaaaaaaaaaaa%.0s' $(seq 12))
 timed "12 x \$aaa run, fast"                 "$(bashjson "$N" "python3 $DOL x")"
 timed "12 x \$aaa in add heredoc path, fast" "$(hd "python3 \"$DOL/feedback.py\" add <<'EOF'" '{"t":"x"}' 'EOF')"
+# REQ-7 (0.6.0): triage write paths; (a)/(b) in every session (K125), (c)/(d) only for delixcrew; record heredoc exempt
+TRMSG="delixcrew: triage decisions are applied only by the user from their own terminal"
+trdeny(){ # name, script, json[, env…] → deny with the exact triage message
+  out=$(echo "$3" | env ${4:+"$4"} python3 "$S/$2"); if echo "$out" | grep -q '"permissionDecision": "deny"' && echo "$out" | grep -qF "$TRMSG"; then echo "✔ $1"; else echo "✘ $1 (expected triage deny): $out"; FAIL=1; fi; }
+bja(){ python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","agent_type":sys.argv[3],"cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2" "$3"; }
+R="$N/repo"
+for a in "" "delixcrew:qa"; do
+  trdeny "gh issue close, delixcrew remote ${a:-no agent}"      bash_gate.py "$(bja "$R" 'gh issue close 12' "$a")"
+  trdeny "triage.py apply, delixcrew remote ${a:-no agent}"     bash_gate.py "$(bja "$R" 'python3 scripts/triage.py apply 12 --confirm abc' "$a")"
+  trdeny "gh api graphql mutation ${a:-no agent}"               bash_gate.py "$(bja "$R" "gh api graphql -f query='mutation{addLabelsToLabelable(x)}'" "$a")"
+  trdeny "gh label create ${a:-no agent}"                       bash_gate.py "$(bja "$R" 'gh label create x' "$a")"
+  deny   "gh api issues labels -X POST (feedback rule first) ${a:-no agent}" bash_gate.py "$(bja "$R" 'gh api repos/x/y/issues/1/labels -X POST' "$a")"
+  trdeny "gh api -X POST ${a:-no agent}"                        bash_gate.py "$(bja "$R" 'gh api repos/x/y/labels -X POST' "$a")"
+  trdeny "gh api --method=PATCH ${a:-no agent}"                 bash_gate.py "$(bja "$R" 'gh api repos/x/y/labels/bug --method=PATCH' "$a")"
+  trdeny "script wrapper triage.py apply ${a:-no agent}"        bash_gate.py "$(bja "$R" 'script -q /dev/null python3 scripts/triage.py apply 1' "$a")"
+done
+trdeny "gh api -XPOST attached"            bash_gate.py "$(bashjson "$R" 'gh api repos/x/y/labels -XPOST')"
+trdeny "gh api --method patch lowercase"   bash_gate.py "$(bashjson "$R" 'gh api repos/x/y/labels/bug --method patch')"
+trdeny "gh api -fq=x attached field"       bash_gate.py "$(bashjson "$R" 'gh api repos/x/y/labels -fq=x')"
+trdeny "gh api -F field"                   bash_gate.py "$(bashjson "$R" 'gh api repos/x/y/labels -F name=bug')"
+trdeny "gh api --raw-field"                bash_gate.py "$(bashjson "$R" 'gh api repos/x/y/labels --raw-field name=bug')"
+trdeny "gh api --input"                    bash_gate.py "$(bashjson "$R" 'gh api repos/x/y/labels --input body.json')"
+trdeny "gh issue reopen -R delixcrew"      bash_gate.py "$(bashjson "$N" 'gh issue reopen 12 -R tahircengiz/delixcrew')"
+trdeny "gh label in a chain, delixcrew"    bash_gate.py "$(bashjson "$R" 'gh pr list && gh label delete bug --yes')"
+trdeny "triage.py apply, no remote (K125)" bash_gate.py "$(bashjson "$N" 'python3 scripts/triage.py apply 12 --confirm abc')"
+trdeny "quoted path, flag before apply"    bash_gate.py "$(bashjson "$N" "python3 \"/x/scripts/triage.py\" -v 'apply' 12")"
+trdeny "expect + triage.py, no remote"     bash_gate.py "$(bashjson "$N" 'expect -c "spawn python3 scripts/triage.py apply 1"')"
+trdeny "pty.spawn + triage.py heredoc"     bash_gate.py "$(hd "python3 - <<'EOF'" 'import pty; pty.spawn(["python3","scripts/triage.py","apply","1"])' 'EOF')"
+# the exempt shape is exactly one quoted-delimiter `python3 …/triage.py record <n> <<'EOF'` call (fix-round tricks above)
+SNT='script -q /dev/null python3 scripts/triage.py apply 12'
+trdeny "record: unquoted <<EOF with \$(… apply)" bash_gate.py "$(hd 'python3 scripts/triage.py record 12 <<EOF' '$(python3 scripts/triage.py apply 12 --confirm abc)' 'EOF')"
+trdeny "record: unquoted <<EOF with backticks"   bash_gate.py "$(hd 'python3 scripts/triage.py record 12 <<EOF' '`python3 scripts/triage.py apply 12`' 'EOF')"
+trdeny "record # <<EOF comment trick"            bash_gate.py "$(hd 'python3 scripts/triage.py record 12 # <<EOF' "$SNT" 'EOF')"
+trdeny "record \\<<EOF escape trick"             bash_gate.py "$(hd 'python3 scripts/triage.py record 12 \<<EOF' "$SNT" 'EOF')"
+trdeny "record \"<<EOF quote trick"              bash_gate.py "$(hd 'python3 scripts/triage.py record 12 "<<EOF' "\"; $SNT" 'EOF')"
+trdeny "record: command on the delimiter line"   bash_gate.py "$(hd "python3 scripts/triage.py record 12 <<'EOF'" '{"t":"x"}' "EOF; $SNT")"
+trdeny "record: line after the delimiter"        bash_gate.py "$(hd "python3 scripts/triage.py record 12 <<'EOF'" '{"t":"x"}' 'EOF' "$SNT")"
+trdeny "record: early delimiter inside the body" bash_gate.py "$(hd "python3 scripts/triage.py record 12 <<'EOF'" '{"t":"x"}' 'EOF' "$SNT" 'EOF')"
+trdeny "record: \${VAR} path gets no exemption"  bash_gate.py "$(hd "python3 \"\${CLAUDE_PLUGIN_ROOT}/scripts/triage.py\" record 12 <<'EOF'" "$SNT" 'EOF')"
+trdeny "record without a number, no exemption"   bash_gate.py "$(hd "python3 scripts/triage.py record <<'EOF'" "$SNT" 'EOF')"
+TRO="python3 \"/opt/delixcrew/scripts/triage.py\" record 12 <<'TRIAGE_EOF'"
+allow "record heredoc, trigger words in body"    bash_gate.py "$(bashjson "$R" "$(printf '%s\n' "$TRO" '{"reason": "does not apply to v0.4, script output"}' 'TRIAGE_EOF')")"
+allow "record heredoc, body names triage.py apply" bash_gate.py "$(hd "$TRO" '{"reason": "maintainer runs triage.py apply 12 under script"}' 'TRIAGE_EOF')"
+allow "unquoted record path, plain body"         bash_gate.py "$(hd "python3 scripts/triage.py record 12 <<'EOF'" '{"t":"x"}' 'EOF')"
+allow "gh issue list, delixcrew remote"          bash_gate.py "$(bashjson "$R" 'gh issue list')"
+allow "gh api pulls, delixcrew remote"           bash_gate.py "$(bashjson "$R" 'gh api repos/x/y/pulls')"
+allow "gh api pulls -X GET"                      bash_gate.py "$(bashjson "$R" 'gh api repos/x/y/pulls -X GET')"
+allow "gh api pulls --method=get"                bash_gate.py "$(bashjson "$R" 'gh api repos/x/y/pulls --method=get')"
+allow "gh api read-only flags (--jq -H --paginate)" bash_gate.py "$(bashjson "$R" "gh api repos/x/y/pulls --paginate -H 'Accept: application/json' --jq '.[].number'")"
+allow "gh issue view, delixcrew remote"          bash_gate.py "$(bashjson "$R" 'gh issue view 12 --json title,body,labels')"
+allow "triage.py show"                           bash_gate.py "$(bashjson "$R" 'python3 scripts/triage.py show 12')"
+allow "triage.py preview / index"                bash_gate.py "$(bashjson "$N" 'python3 scripts/triage.py preview 12 && python3 scripts/triage.py index')"
+mkdir -p "$N/other" && git -C "$N/other" init -q && git -C "$N/other" remote add origin https://example.com/o/other.git
+allow "gh issue close, other repo"               bash_gate.py "$(bashjson "$N/other" 'gh issue close 3')"
+allow "gh label create, other repo"              bash_gate.py "$(bashjson "$N/other" 'gh label create bug')"
+allow "gh api graphql, other repo"               bash_gate.py "$(bashjson "$N/other" "gh api graphql -f query='mutation{x}'")"
+# write gate: no direct write into the triage dir, in every session (triage.py record is the only writer)
+mkdir -p "$T/tq"
+trdeny "triage dir write (default ~)"     write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/home/.claude/delixcrew/triage/12.json\"}}" "HOME=$T/home"
+trdeny "triage dir edit (env dir)"        write_gate.py "{\"tool_name\":\"Edit\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/tq/12.json\"}}" "DELIXCREW_TRIAGE_DIR=$T/tq"
+trdeny "triage dir, relative path"        write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$T/tq\",\"tool_input\":{\"file_path\":\"12.json\"}}" "DELIXCREW_TRIAGE_DIR=$T/tq"
+trdeny "triage dir write, reviewer too"   write_gate.py "{\"tool_name\":\"MultiEdit\",\"agent_type\":\"delixcrew:qa\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/tq/12.json\"}}" "DELIXCREW_TRIAGE_DIR=$T/tq"
+trdeny "triage dir NotebookEdit"          write_gate.py "{\"tool_name\":\"NotebookEdit\",\"cwd\":\"$N\",\"tool_input\":{\"notebook_path\":\"$T/tq/n.ipynb\"}}" "DELIXCREW_TRIAGE_DIR=$T/tq"
+DELIXCREW_TRIAGE_DIR="$T/tq" allow "triage lookalike dir is free" write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"${T}/tqx/12.json\"}}"
+# ReDoS: hook time per probe minus hook time for `ls` < 0.1 s (best of 3 each)
+python3 - "$T" "$N" <<'PYP'
+import json, sys
+t, n = sys.argv[1], sys.argv[2]
+dol = "$aaaaaaaaaaaaaaa" * 12
+probes = {
+    "dol": f"python3 \"{dol}/triage.py\" record 12 <<'EOF'\n{{\"t\":\"x\"}}\nEOF",
+    "flags": "python3 scripts/triage.py " + "-a " * 20000 + "x",
+    "body": "python3 \"/x/scripts/triage.py\" record 12 <<'EOF'\n" + ("triage.py -a gh api -X " * 30 + "\n") * 300 + "EOF",
+    "delim": "python3 scripts/triage.py record 12 <<'EOF'\n" + "EOF\n" * 5000 + "EOF",
+}
+for k, c in probes.items():
+    with open(f"{t}/probe-{k}.json", "w") as f:
+        json.dump({"tool_name": "Bash", "cwd": n, "tool_input": {"command": c}}, f)
+PYP
+rtime(){ # name, probe json file
+  d=$(python3 - "$S/bash_gate.py" "$(bashjson "$N" ls)" "$2" <<'PYT'
+import subprocess, sys, time
+def best(data):
+    ts = []
+    for _ in range(3):
+        t = time.monotonic()
+        subprocess.run([sys.executable, sys.argv[1]], input=data, capture_output=True, text=True, timeout=5)
+        ts.append(time.monotonic() - t)
+    return min(ts)
+base = best(sys.argv[2])
+d = best(open(sys.argv[3]).read()) - base
+print(f"{d:.3f}")
+sys.exit(0 if d < 0.1 else 1)
+PYT
+  ) && echo "✔ $1 (Δ $d s)" || { echo "✘ $1 (Δ ${d:-timeout} s, expected < 0.1)"; FAIL=1; }; }
+rtime "ReDoS: 12 x \$aaa in record path" "$T/probe-dol.json"
+rtime "ReDoS: 20k -a after triage.py"    "$T/probe-flags.json"
+rtime "ReDoS: 200 KB record body"        "$T/probe-body.json"
+rtime "ReDoS: 5k delimiter lines"        "$T/probe-delim.json"
+# T011 fix round 1: the triage dir check ignores letter case (APFS is case-insensitive by default)
+trdeny "triage dir, upper-cased ~ path"   write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/home/.CLAUDE/delixcrew/TRIAGE/12.json\"}}" "HOME=$T/home"
+trdeny "triage dir, upper-cased env dir"  write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/TQ/12.json\"}}" "DELIXCREW_TRIAGE_DIR=$T/tq"
+DELIXCREW_TRIAGE_DIR="$T/tq" allow "triage lookalike dir still free (case fix)" write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"${T}/TQX/12.json\"}}"
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

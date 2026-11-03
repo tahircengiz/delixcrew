@@ -40,6 +40,34 @@ if re.search(r"\bgh\s+issue\s+(create|new|comment|edit)\b", cmd) or (re.search(r
     if re.search(r"[/:]tahircengiz/delixcrew(\.git)?/?\s", remotes, re.I):
         deny(FEEDBACK_DENY)
 
+# REQ-7 (0.6.0): known triage write paths, in every session; (a)/(b) unconditional, (c)/(d) only for delixcrew (K125)
+TRIAGE_DENY = "delixcrew: triage decisions are applied only by the user from their own terminal"
+# (a) and (b) skip a heredoc body only for exactly one `python3 <path>/triage.py record <n> <<'DELIM'` call, the
+# ADD_HEREDOC shape above (literal path, no `$`, non-overlapping classes: no ReDoS). (c) and (d) see the full text.
+_TQPATH = r"\"(?:[^\"\n$`\\]*/)?triage\.py\""
+_TPATH = r"(?:[^\s'\"$`\\;&|<>(){}#*?\[\]~]*/)?triage\.py"
+RECORD_HEREDOC = re.compile(r"(python3[ \t]+(?:" + _TQPATH + "|" + _TPATH + r")[ \t]+record[ \t]+\d+[ \t]+<<(['\"])"
+                            r"([A-Za-z_][\w.-]*)\2)\n(.*)\n\3", re.S)
+tm = RECORD_HEREDOC.fullmatch(cmd.strip())
+tchecked = tm.group(1) if tm and tm.group(3) not in tm.group(4).split("\n") else cmd
+if re.search(r"\btriage\.py['\"]?\s+(?:-\S+\s+)*['\"]?apply\b", tchecked) or (
+        re.search(r"\btriage\.py\b", tchecked) and re.search(r"\b(script|expect|unbuffer)\b|\bpty\.spawn\b", tchecked)):
+    deny(TRIAGE_DENY)
+# (d) write flags: -f/-F (also attached, `-fq=x`), --field, --raw-field, --input, -X/--method other than GET
+GH_API_WRITE = re.compile(r"\bgraphql\b|(?:^|\s)['\"]?(?:-i*[fF]|--(?:field|raw-field|input)\b)")
+GH_API_METHOD = re.compile(r"(?:^|\s)['\"]?(?:-i*X|--method\b)[\s=]*['\"]?([A-Za-z]*)")
+if re.search(r"\bgh\s+issue\s+(close|reopen|lock|unlock|delete|transfer|pin|unpin|develop)\b|\bgh\s+label\b", cmd) or (
+        re.search(r"\bgh\s+api\b", cmd) and (GH_API_WRITE.search(cmd)
+                                            or any(v.upper() != "GET" for v in GH_API_METHOD.findall(cmd)))):
+    if "delixcrew" in cmd.lower():
+        deny(TRIAGE_DENY)
+    try:
+        remotes = subprocess.run(["git", "-C", cwd, "remote", "-v"], capture_output=True, text=True, timeout=5).stdout
+    except (OSError, subprocess.SubprocessError):
+        remotes = ""
+    if re.search(r"[/:]tahircengiz/delixcrew(\.git)?/?\s", remotes, re.I):
+        deny(TRIAGE_DENY)
+
 GIT = r"git\s+(?:-C\s+(?:\"[^\"]*\"|'[^']*'|\S+)\s+)?"  # `git -C <worktree>`: the reviewer reads another checkout
 WRITING = re.compile(r"(^|[\s;&|(])(rm|mv|cp|tee|sed\s+-i|chmod|chown|truncate|mkdir|touch|dd|" + GIT + r"(add|commit|push|"
                      r"checkout|switch|reset|rebase|merge|stash|apply|cherry-pick|tag|branch\s+-[dD]))\b|>>?\s*[^&\s]|"
