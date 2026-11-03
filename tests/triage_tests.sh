@@ -344,6 +344,24 @@ clean "emoji selector after U+2764 (So)"     'd["reason"]="I "+chr(0x2764)+chr(0
 printf '%s' "$J17" | tr_ record 17 >/dev/null; pv=$(tr_ preview 17); rc=$?
 [ $rc -eq 0 ] && echo "$pv" | grep -q "^VERDICT: CLEAN" && echo "$pv" | grep -qF "mail <redacted:email>." \
   && ok "R2 email (bob@example.com) still CLEAN" || bad "R2 email blocked (rc=$rc, $(echo "$pv" | grep VERDICT))"
+# T014 (K132): conjoining Hangul jamo, U+1D159 and trailing spaces left open after review round 6.
+blocked "jongseong jamo (U+11A8)"            'd["reason"]="a"+chr(0x11a8)+"b"'                     invisible
+blocked "jungseong jamo run (U+1161 x8)"     'd["reason"]="x"+chr(0x1161)*8'                       invisible
+blocked "extended-B jamo (U+D7B0)"           'd["reason"]="x"+chr(0xd7b0)+"y"'                     invisible
+blocked "null notehead (U+1D159)"            'd["reason"]="x"+chr(0x1d159)+"y"'                    invisible
+blocked "choseong filler (U+115F)"           'd["reason"]="a"+chr(0x115f)+"b"'                     invisible
+blocked "jungseong filler (U+1160)"          'd["reason"]="a"+chr(0x1160)+"b"'                     invisible
+blocked "halfwidth filler (U+FFA0)"          'd["reason"]="a"+chr(0xffa0)+"b"'                     invisible
+blocked "jamo in questions (U+11A8)"         'd["decision"]="needs-info"; d["questions"]=["Which"+chr(0x11a8)+" OS?"]' invisible
+blocked "filler in questions (U+3164)"       'd["decision"]="needs-info"; d["questions"]=["Which"+chr(0x3164)+"OS?"]' invisible
+blocked "two spaces before a line break"     'd["reason"]="a  \nb"'                                "trailing space"
+blocked "one space before a line break"      'd["reason"]="a \nb"'                                 "trailing space"
+blocked "line of only a space"               'd["reason"]="a\n \nb"'                               "trailing space"
+blocked "space at the end of reason"         'd["reason"]="Done. "'                                "trailing space"
+blocked "space at the end of a question"     'd["decision"]="needs-info"; d["questions"]=["Which OS? "]' "trailing space"
+clean "Hangul syllables (U+D55C U+AD6D)"     'd["reason"]=chr(0xd55c)+chr(0xad6d)+" text"'
+clean "jamo pair NFKC-composed (U+1100 U+1161)" 'd["reason"]=chr(0x1100)+chr(0x1161)+" text"'
+clean "spaces between words on two lines"    'd["reason"]="a b\nc d"'
 blocked "zero-width char again" 'd["reason"]="a\u200bb"'                                           unicode
 
 # --- REQ-6 apply -------------------------------------------------------------

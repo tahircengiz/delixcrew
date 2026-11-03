@@ -49,8 +49,10 @@ HTML_RE = re.compile(r"<[A-Za-z/!]")
 MENTION_RE = re.compile(r"(?<![\w.])@[A-Za-z0-9]")
 COMMENT_MENTION_RE = re.compile(r"@[A-Za-z0-9]")
 # K133: allowlist. Every character is a newline, L*, N*, P*, S* or Zs; minus these invisible ones (Hangul fillers,
-# blank Braille). One emoji selector (U+FE0E/U+FE0F) may follow a visible So symbol (emoji such as U+2764).
-INVISIBLE_IN_ALLOWED = {chr(c) for c in (0x115F, 0x1160, 0x3164, 0xFFA0, 0x2800)}
+# blank Braille, null notehead U+1D159) and the conjoining Hangul jungseong/jongseong ranges (inclusive) that NFKC
+# leaves uncomposed. One emoji selector (U+FE0E/U+FE0F) may follow a visible So symbol (emoji such as U+2764).
+INVISIBLE_IN_ALLOWED = {chr(c) for c in (0x115F, 0x1160, 0x3164, 0xFFA0, 0x2800, 0x1D159)}
+INVISIBLE_RANGES = ((0x1160, 0x11FF), (0xD7B0, 0xD7FF))
 SELECTORS = (chr(0xFE0E), chr(0xFE0F))
 CHAR_REF_RE = re.compile(r"&(#[0-9]+|#[xX][0-9A-Fa-f]+|[A-Za-z][A-Za-z0-9]*);")
 VERSION_RE = re.compile(r"\bplugin[ \t]+([^\s,]+)")
@@ -284,7 +286,9 @@ def load_record(n):
 
 def visible(c):
     cat = unicodedata.category(c)
-    return c == "\n" or cat == "Zs" or (cat[0] in "LNPS" and c not in INVISIBLE_IN_ALLOWED)
+    o = ord(c)
+    return c == "\n" or cat == "Zs" or (cat[0] in "LNPS" and c not in INVISIBLE_IN_ALLOWED
+                                        and not any(lo <= o <= hi for lo, hi in INVISIBLE_RANGES))
 
 
 def invisible(text):
@@ -327,6 +331,8 @@ def build(n, rec, live_sha):
         reasons.append("unicode control character (Cc/Cf/Co)")
     if any(invisible(t) for t in (unicodedata.normalize("NFKC", raw), comment)):
         reasons.append("invisible character")
+    if any(line != line.rstrip() for line in comment.split("\n")):
+        reasons.append("trailing space before a line break")
     if OPAQUE_RE.search(raw) or OPAQUE_RE.search(comment):
         reasons.append("opaque string of 32+ characters")
     if sanitize(comment, term_re) != comment:
