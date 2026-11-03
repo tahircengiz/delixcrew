@@ -55,3 +55,14 @@
 
 ## Report contract
 `.delix/report.md` (≤ 1.5K tokens): status · commands + output (number of ✔ lines) · PR number · assumptions. Read only this card, SPEC REQ-5 and §6.
+
+## Review findings
+### Round 1 (963ddb7) — qa ACCEPT · security 🔐 HUMAN_APPROVAL (1 Low) → gate 2
+Deterministic gates: CI `test` pass; from `git archive 963ddb7`: 5× `ALL PASSED`; validate passed; test diff 18
+insertions, 0 deletions; `feedback.py` unchanged; card one-liner gives `True True False True`.
+Noted, no fix (spec note at close):
+- [Low] Hangul compatibility vowels and finals (U+314F–U+3163, e.g. "ㅠㅠ", a lone "ㄳ") NFKC-decompose to conjoining
+  jamo without a leading consonant, so they are now BLOCKED `invisible character` (fails closed; wider than the
+  "archaic Hangul" note).
+- Unsure: repeated spaces between words collapse in rendered Markdown (count channel on the page, visible in the
+  terminal preview); choseong runs may stack in some fonts.

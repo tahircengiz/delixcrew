@@ -47,3 +47,14 @@
 
 ## Report contract
 `.delix/report.md` (≤ 1K tokens): status · command output · PR number + CI link.
+
+## Review findings
+### Round 1 (9fea6dc) — qa ACCEPT · security 🔐 HUMAN_APPROVAL (no findings) → gate 2
+Deterministic gates: CI `test` pass; from `git archive 9fea6dc`: 5× `ALL PASSED`; validate passed; card checks:
+tests.yml triage step 1, version `0.6.0`, `## Triage` 1 in each README, `## 0.6.0` 1; internal-address scan 0 hits.
+Docs match the merged code (commands, exit codes, deny message, labels, skill flow); EN and TR have the same structure.
+CI change keeps `pull_request`, `contents: read`, pinned SHAs; no secrets or new permissions.
+Noted, no fix:
+- README "only triage.py writes there" (record dir): the hooks deny Write/Edit only, not a Bash redirect; wording at close.
+- CHANGELOG "exit 8 otherwise" for `show --require accepted`: a GitHub CLI failure gives exit 7 (SKILL.md has it).
+- `index` pending set has a 300-issue cap that the docs do not mention.

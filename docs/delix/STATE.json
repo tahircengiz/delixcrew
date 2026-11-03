@@ -60,19 +60,21 @@
       "file": "docs/delix/tasks/T013-triage-docs-ci-version.md",
       "role": "devops",
       "tier": 3,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
-      "cost_usd": null
+      "status": "in_review",
+      "pr": 27,
+      "rounds": 1,
+      "cost_usd": null,
+      "sha": "9fea6dc"
     },
     "T014": {
       "file": "docs/delix/tasks/T014-triage-invisible-hardening.md",
       "role": "backend",
       "tier": 3,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
-      "cost_usd": null
+      "status": "in_review",
+      "pr": 28,
+      "rounds": 1,
+      "cost_usd": null,
+      "sha": "963ddb7"
     }
   },
   "status_values": [
