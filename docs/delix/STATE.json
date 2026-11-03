@@ -49,11 +49,12 @@
       "file": "docs/delix/tasks/T012-triage-skill.md",
       "role": "docs",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 22,
       "rounds": 2,
       "cost_usd": null,
-      "sha": "1816d01"
+      "sha": "1816d01",
+      "merged": "557f485"
     },
     "T013": {
       "file": "docs/delix/tasks/T013-triage-docs-ci-version.md",
