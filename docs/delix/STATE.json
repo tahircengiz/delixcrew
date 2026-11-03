@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T22:40:00Z",
+  "updated": "2026-11-03T22:55:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -34,11 +34,12 @@
       "file": "docs/delix/tasks/T017-write-gate-queue-casefold.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 32,
       "rounds": 0,
       "cost_usd": null,
-      "sha": "dd0f1e5"
+      "sha": "dd0f1e5",
+      "merged": "bdfc2f6"
     },
     "T018": {
       "file": "docs/delix/tasks/T018-feedback-docs-url-rule.md",
