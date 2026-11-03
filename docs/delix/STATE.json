@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T11:37:56Z",
+  "updated": "2026-11-03T11:50:09Z",
   "env_owner": null,
   "waves": [
     {
@@ -80,8 +80,8 @@
       "file": "docs/delix/tasks/T006-design-system-step.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_progress",
-      "pr": null,
+      "status": "accepted",
+      "pr": 15,
       "rounds": 0,
       "cost_usd": null
     }
@@ -95,5 +95,46 @@
     "rejected",
     "escalated"
   ],
-  "verifications": []
+  "verifications": [
+    {
+      "name": "delix-t006",
+      "date": "2026-11-03",
+      "sha": "3273b88",
+      "base": "b627fa7",
+      "input": "delix-T006",
+      "tier": 2,
+      "verdict": "ACCEPT",
+      "report": "docs/delix/verifications/2026-11-03-delix-t006.md",
+      "gates": {
+        "gitleaks": "PASS (archive: pre-existing eval fixture)",
+        "local": "PASS",
+        "remote_unit": "not run: no delix.json.verify",
+        "full": "not run"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "CLEAN",
+      "cost_usd": null,
+      "resolution": "superseded by delix-t006-r2 (P2 #1 fixed in 36e4076)"
+    },
+    {
+      "name": "delix-t006-r2",
+      "date": "2026-11-03",
+      "sha": "36e4076",
+      "base": "b627fa7",
+      "input": "delix-T006",
+      "tier": 2,
+      "verdict": "ACCEPT",
+      "report": "docs/delix/verifications/2026-11-03-delix-t006-r2.md",
+      "gates": {
+        "gitleaks": "PASS (archive: pre-existing eval fixture)",
+        "local": "PASS",
+        "remote_unit": "not run: no delix.json.verify",
+        "full": "not run"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "CLEAN",
+      "cost_usd": null,
+      "resolution": "merged f84e675"
+    }
+  ]
 }
