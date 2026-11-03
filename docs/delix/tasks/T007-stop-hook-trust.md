@@ -40,7 +40,7 @@ that repo's `delix.json` commands. · **Spec:** none (S card from GitHub issue #
 
 ## Review Focus
 - Bypasses: symlinked `.delix` or `card`, cwd in a subdirectory, `git` missing, a repo shipped with its own `.git`
-  (archive with `.git/`: out of scope, a malicious `.git/config` already runs code on any git command).
+  (archive with its own `.git/`: residual risk, see Review findings round 2).
 - Running `git` in an untrusted directory: only `ls-files`, fsmonitor off.
 - PR #4 (T002) also touches `tests/hook_tests.sh` (appends at line ~82); line 5 does not conflict textually; verified
   green with PR #4's diff applied.
@@ -54,3 +54,14 @@ that repo's `delix.json` commands. · **Spec:** none (S card from GitHub issue #
 `.delix/report.md` (≤ 2K tokens): status · command + output · PR number · assumptions · remaining work.
 
 ## Review findings (filled by the orchestrator)
+- Round 1 (2026-11-03; qa ACCEPT, security FIX). Fixed in 7d6eeeb, each reproduced red first in `tests/trust_tests.sh`:
+  - [P0] Case variant `.Delix/card`: APFS opens it as `.delix/card`, git pathspecs are case-sensitive. Fix:
+    `git ls-files -- ':(icase).delix'` must be empty.
+  - [P1] Submodule at `.delix`: the superproject index has only the gitlink. Fix: same check (the gitlink is listed).
+  - [P2] Archive extracted inside another repo: `git -C` walks up to the parent. Fix: `--show-toplevel` must be cwd.
+- Round 2 (2026-11-03; security FIX → human decided). Tests added in 619714e (linked worktree positive case,
+  symlinked `card`, Linux note on the case test).
+  - [P2, residual, accepted by the human 2026-11-03] An archive that ships its own `.git/` (plain `git init`, untracked
+    card, payload in `delix.json`) still activates the hooks. Measured: Claude Code 2.1.309 `-p` did not run such a
+    repo's `core.fsmonitor`, so this exposure is plugin-specific. Follow-up issue: approve the Stop gate's commands
+    outside the repo (like `direnv allow`).
