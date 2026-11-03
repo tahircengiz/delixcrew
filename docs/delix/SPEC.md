@@ -246,3 +246,28 @@ Orkestratör (geri alınır):
   komutu bu alanı istediği için bugün hata verir; REQ-8 (T012) onu `triage.py show` ile değiştirir.
 - **K127** (dispatch, geri alınır) Kart numaraları proje boyunca tekil: STATE boş olsa da arşivdeki T001–T009'dan sonra
   T010–T013. Memory, STATUS ve commit atıfları karışmaz.
+
+## 10. Closure notes (drift kontrolü, 2026-11-03, main `375623f`)
+Architect spec ile merge edilmiş kodu karşılaştırdı. Spec metni değişmedi; aşağıdakiler kayıttır.
+
+Spec'te yazmayan, merge edilmiş davranış (bilinçli, kartlarda gerekçeli):
+- `triage.py` yorum kapısı: K131 (`@`+harf, HTML karakter kodu) ve K133 izin listesi (L/N/P/S/Zs, `\n`; T014 ile birleşik
+  Hangul jamo, U+1D159, satır sonu boşluğu) BLOCKED verir. Fazla engelleme bilinçli (fail closed): birleşik işaretli
+  yazılar, ZWJ/bayrak/keycap emojileri, tek başına Korece uyumluluk harfleri ("ㅠㅠ").
+- BLOCKED önizleme yorumu ve `HASH:` satırını göstermez; `apply` hatalı girdide exit 2; birden çok karar etiketi hata.
+- `record` iki mod (yeni / üzerine yazma), gitleaks ve daha sıkı validate adımları, `show` düzeni.
+- Hook (d) bayrak biçimleri (`--flag=x`, kısa bayraklar); `write_gate` casefold edilmiş realpath karşılaştırır.
+- triage skill'i `show` öncesi repo ve `gh` sürümü ön kontrolü yapar.
+
+Kısmi kalan REQ maddeleri:
+- REQ-6 / K112: `apply` issue'yu bir kez okur; her yazma adımından önce yeniden okumaz (iki adım arası değişiklik görülmez).
+- REQ-6: kayıt dosyası güncellemesi başarısız olsa da `apply` exit 0 döner.
+- `gh issue view --json comments` sayfalaması (çok yorumlu issue) doğrulanmadı.
+- W0 (açık issue'ların gerçek oturumda toplu triage'ı, REQ-3/4/8 transkripti) yapılmadı; kullanıcıda.
+
+Doküman yanlışları (README/CHANGELOG, takip kartı):
+- "görünmez karakterleri kaldırır": `show` yalnız Cc/Cf/Co kaldırır.
+- "kayıt dizinine yalnız triage.py yazar": Bash yönlendirmesi hook'la kapalı değil (§8 P2).
+- CHANGELOG "exit 8 otherwise": `gh` hatasında exit 7 (`gh_failed`); 8 yalnız kabul kontrolü düşünce.
+- "her issue'yu listeler": `index` 300 issue ile sınırlı.
+- "önizlemeden sonra bir şey değiştiyse durur": yalnız issue metni (hash) kontrol edilir.

@@ -50,3 +50,29 @@ Orchestrator session (start, spec, dispatch, reviews, close): output 89K, cache 
 
 **Eval discrimination:** `feedback-file-approval` with 1.00 / without 0.50 (pass rate 1.00 / 0.00); before rev 3:
 1.00 / 1.00.
+
+## Triage 0.6.0 (closed 2026-11-03; SPEC `docs/delix/SPEC.md`, cards T010–T014)
+
+Source: `STATE.json`, `gh pr view` (createdAt → mergedAt), the orchestrator transcript (`message.usage`, deduplicated
+by message id). Session cost in USD: not measured. Implementer and subagent tokens: not measured.
+
+| card | tier | PR | review rounds | PR open → merge | note |
+|---|---|---|---|---|---|
+| T010 triage.py | 3 | #24 | 6 | 76 min | same class (mention/HTML) found in three forms, then invisible characters; K131–K133 |
+| T011 hook rules | 3 | #23 | 2 | 32 min | security Medium (case-insensitive write gate) |
+| T012 skill + job D + start §1a | 3 | #22 | 2 | 94 min | security 2 Medium (HASH spoof line, input checks); waited for T010 |
+| T014 invisible hardening | 3 | #28 | 1 | 10 min | split off by K132 |
+| T013 docs, CI, 0.6.0 | 3 | #27 | 1 | 13 min | merged last |
+
+Orchestrator session (spec, dispatch, reviews, close): output 244K, cache read 59.1M, cache write 622K tokens
+(250 assistant messages, both context windows).
+
+**Gates and interventions** (counted from this session's transcript, not estimated):
+- `AskUserQuestion` calls: 8 (grill 6, gate 1, 🔐 T010–T013).
+- Typed user messages: 13. Gates among them: 🔐 T014 (1), round-cap decisions (3: "Son tur", "Dar bir tur daha",
+  "merge + T014"). Merges (5) ran in the user's own terminal and are not counted as messages.
+- Interventions outside gates: 9 (push approvals ×6, "Açık kalsın", two "close if done" questions) → 1.8 per card
+  (target ≤ 5). The T014 approval message also approved a push; it is counted once, as a gate. Messages the user sent through the parent session (allowlist
+  decision K133, merge relays) are not counted here.
+
+**No single-session baseline** exists for this feature.

@@ -393,7 +393,7 @@ rev 3'te kapandı):
   tutmadı; feedback taslağı yazılamadı).
 - SPEC §4'te olmayan davranış: BLOCKED `preview` HASH/gövde basmıyor, bilinmeyen id exit 2, `send` kontrol sırası repo→id→BLOCKED→hash→TTY.
 
-## 8. 0.6.0 — triage (2026-11-03, SPEC `docs/delix/SPEC.md`, kartlar `docs/delix/tasks/T010–T013`)
+## 8. 0.6.0 — triage (2026-11-03, SPEC `docs/delix/SPEC.md`, kartlar `docs/delix/tasks/T010–T014`; kapandı, main `375623f`)
 
 Gelen her bug ve öneri issue'su önce kontrol edilir: architect (job D) gerekçeli karar önerir, kararı insan verir, karar
 issue'ya kullanıcının terminalinde `triage.py apply` ile yazılır; start yalnız geçerli `accepted` issue'yu alır.
@@ -404,9 +404,21 @@ issue'ya kullanıcının terminalinde `triage.py apply` ile yazılır; start yal
 | 8.2 | Kapı 1 | ✔ 2026-11-03 |
 | 8.3 | Dispatch: T010 `triage.py`, T011 hook kuralları, T012 skill + architect job D + start §1a, T013 README/CHANGELOG/CI/0.6.0 | ✔ kartlar ve dispatch dosyaları |
 | 8.4 | 🔐 Kart başına Approved satırı (dördü de Tier 3) | ✔ 2026-11-03 tahircengiz; main `dbcaaa2` |
-| 8.5 | Dalga 1: T010, T011, T012 paralel; merge sırası T010 → T011 → T012 | ◐ oturum kartları önerildi, kullanıcı açar |
-| 8.6 | Dalga 2: T013, en son merge | ◻ |
+| 8.5 | Dalga 1: T010 (#24, 6 tur), T011 (#23, 2 tur), T012 (#22, 2 tur) | ✔ main `556189f`, `109c894`, `557f485`; record çağrısı merge edilmiş hook'tan geçiyor |
+| 8.6 | Dalga 2: T014 görünmez karakter sertleştirmesi (#28, K132), T013 doküman/CI/0.6.0 (#27, en son) | ✔ main `e549d17`, `375623f` |
 | 8.7 | W0: açık 7 issue'nun toplu triage'ı, gerçek oturum transkripti (REQ-3/4/8) | ◻ kullanıcıda |
+| 8.8 | Kapanış: metrikler, drift kontrolü, spec notları | ✔ 2026-11-03 |
+
+İnceleme kararları (kartlarda): K128 yerel `main` dokunulmadı · K129 feedback kuyruğu yazma kapısında aynı harf
+büyüklüğü açığı (takip) · K130 test logunda token adı, değer değil · K131 yorumda her `@`+harf ve HTML karakter kodu
+BLOCKED · K132 tur sınırı aşıldı; sonraki bulgular ayrı karta (T014) · K133 görünmez karakterde izin listesi (L/N/P/S/Zs
+ve `\n`; emoji seçicisi yalnız `So` sonrası).
+Açık iş (kapanış drift kontrolü, ayrıntı SPEC §10): izin listesinin fazla engellediği metinler spec notu olarak kayıtlı
+(birleşik işaretli yazılar, ZWJ/bayrak emojileri, Korece uyumluluk harfleri); REQ-6 kısmi (`apply` issue'yu bir kez
+okur; kayıt yazımı başarısızken exit 0); README/CHANGELOG'da 5 yanlış ifade (görünmez karakter, "yalnız triage.py
+yazar", exit 8, 300 issue sınırı, önizleme sonrası değişiklik), takip kartı; K129; `gh issue view --json comments`
+sayfalaması doğrulanmadı; W0 kullanıcıda; IDN ve ondalık IP adresli bağlantılar `feedback.py` temizliğinden kaçabilir
+(K115 kapsamı, doğrulanmadı).
 
 Kararlar: `docs/delix/SPEC.md` §9 (kullanıcı K106–K110, orkestratör K111–K127). Öne çıkanlar:
 - **K126** `gh` 2.86.0'da `gh issue view|list --json` issue düzeyinde `authorAssociation` vermiyor (`Unknown JSON field`).
