@@ -128,3 +128,18 @@ Open (third form of the same class):
 Noted, no fix: Markdown link reference definitions and link targets hide text (visible as raw Markdown in preview);
 `gh issue view --json comments` paging unverified; carried-over Lows and P2 from rounds 1–2.
 Decision (user, chat, 2026-11-03; K131): one last fix round with the class-wide rule above → fixing (round 4).
+
+### Round 4 (cb42b72) — qa ACCEPT_WITH_NOTES · security FIX with 1 Medium (new class) → escalated
+Deterministic gates: CI `test` pass; from `git archive cb42b72`: 5× `ALL PASSED`; validate passed; 5× `ALL PASSED`
+laid over current main. K131 fixed: `@[A-Za-z0-9]` and HTML character references are BLOCKED on the sanitized
+comment (6 tests; `bob@example.com` CLEAN). Mention/HTML class closed (qa and security agree).
+Open (new class, outside K131):
+- [Medium] `scripts/triage.py:304-305` (`bad_char` = Cc/Cf/Co only, `feedback.py:291-293`): invisible code points
+  outside those categories survive NFKC and `sanitize` and are published, unseen in preview and at the `APPLY` prompt.
+  Reproduced by the orchestrator: variation selectors U+FE00–FE0F and U+E0100–E01EF (Mn), U+3164 Hangul filler (Lo),
+  U+2028 (Zl), U+2800 blank Braille (So) all pass. Runs of variation selectors can encode arbitrary bytes ("emoji
+  smuggling"); this breaks the SPEC §6 premise that the user sees the comment exactly. Proposed fix: BLOCKED
+  `invisible character` for U+034F, U+115F, U+1160, U+180B–180D, U+180F, U+2028, U+2029, U+2800, U+3164, U+FFA0,
+  U+FE00–FE0F, U+E0100–E01EF in `raw + comment`; optionally allow a single U+FE0E/U+FE0F after a non-selector (emoji).
+Unsure (security, not verified): Markdown links to `github.com` survive host redaction (visible in preview); IDN,
+U+3002-dot and decimal-IP hosts may escape `feedback.py` host redaction (K115 scope).
