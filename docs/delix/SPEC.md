@@ -1,6 +1,6 @@
 # SPEC — Öz-besleme (self-feeding feedback)
 
-> Size: **M** · Tier: 3 · Date: 2026-11-03 · Status: **approved (gate 1, 2026-11-03)** (rev 2: architect FIX + security FIX işlendi)
+> Size: **M** · Tier: 3 · Date: 2026-11-03 · Status: **closed (0.5.0, 2026-11-03; cards T001–T005 merged)** · approved (gate 1, 2026-11-03) (rev 2: architect FIX + security FIX işlendi)
 > Source: grill kararları K61–K64 (kullanıcı), K65–K80 (orkestratör, geri alınır). STATUS.md K numaralarının devamıdır.
 
 ## 1. Goal
@@ -178,13 +178,13 @@ Bu repoda `docs/delix/delix.json` `test_command` `tests/*_tests.sh` döngüsüd�
 - Public repo kuralı: fixture ve metinlerde iç adres deseni yok; örnekler `10.x`, `172.16.x`, `example.*`, `example-corp.dev`.
 
 ## 7. Acceptance criteria (DoD)
-- [ ] Her REQ için geçen test; doğrulama: `for t in tests/*_tests.sh; do bash "$t" || exit 1; done` → her betik `ALL PASSED`
-- [ ] REQ-6 TTY yolu testte `script` ile sağlanan pty'de sınanır (testler Claude dışında koşar); REQ-8 sahte `gh` (PATH başında stub) ile
-- [ ] `claude plugin validate .` geçer; CI'da `feedback_tests.sh` adımı var
+- [ ] Her REQ için geçen test (REQ-1–8 ✔; REQ-9/10 yalnız metin + ayırt etmeyen eval, takip K89); doğrulama: `for t in tests/*_tests.sh; do bash "$t" || exit 1; done` → her betik `ALL PASSED`
+- [x] REQ-6 TTY yolu testte `script` ile sağlanan pty'de sınanır (testler Claude dışında koşar); REQ-8 sahte `gh` (PATH başında stub) ile
+- [x] `claude plugin validate .` geçer; CI'da `feedback_tests.sh` adımı var
 - [ ] W0: gerçek Claude oturumunda REQ-7 deny'ı (transkript); `gh issue list --search "delixcrew-fp: …"` görünür satırı buluyor mu (salt-okunur, var olan bir issue ile ya da uçtan uca testte); Desktop Run düğmesi TTY'li terminalde mi çalışıyor
 - [ ] Kullanıcı bir test issue'su gönderir ve kapatır (uçtan uca, insan eylemi)
-- [ ] `qa` ACCEPT; Tier 3 kartlarda `security` CLEAN + insan onayı
-- [ ] README.md ve README.tr.md "Feedback" bölümü aynı commit'te; CHANGELOG 0.5.0
+- [x] `qa` ACCEPT; Tier 3 kartlarda `security` CLEAN + insan onayı
+- [x] README.md ve README.tr.md "Feedback" bölümü aynı commit'te; CHANGELOG 0.5.0
 
 ## 8. Open questions
 - (P2) Arama dizini gecikmesinde çift issue: görülürse `send` öncesi yerel `sending` durumu eklenir.
@@ -222,3 +222,4 @@ Kapı 1 sonrası netleştirmeler (dispatch, architect job B; kapsam değişmedi)
   BLOCKED oluyordu (REQ-3 bu yolu korur). Bedel: `/` içeren base64 parçaları 32'nin altına bölünebilir; gitleaks ham metinde yine koşar.
 - **K82** Terim eşleşmesi büyük/küçük harf duyarsız alt dizgi (sızıntı yönünde güvenli); 3 karakterden kısa terim yok sayılır
   (ör. `ui` her kelimeyi bozardı). `origin_terms` izinli host'ları içermez (`github.com` remote'u REQ-3 senaryosunu bozuyordu).
+- **K83–K92** (uygulama ve inceleme sırasında; ayrıntı `STATUS.md` §7 ve kartların "Review findings" bölümleri): T002 4. tur `$VAR` muafiyeti kaldırıldı (ReDoS), T003 eval takibi (K89), T005 kapsamına issue #7 "Data & privacy" ve T007 CHANGELOG girdisi (K92).

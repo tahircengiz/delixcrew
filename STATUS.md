@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-03 · **Faz:** 6 — 0.3.0 dış kullanıcı: gereksinimler, python3 hata mesajı, CI, eval grader düzeltmesi, marketplace `delixcrew` (K55–K59; push/PR/release kullanıcıda)
+**Son güncelleme:** 2026-11-03 · **Faz:** 7 — 0.5.0 öz-besleme kapandı (T001–T005 main'de); 0.5.0 etiketi, W0 ve uçtan uca test kullanıcıda
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -348,11 +348,37 @@ Hazırlık [docs/rename/delix-hazirlik.md](docs/rename/delix-hazirlik.md) §4 s�
   kurulum satırları. Proje dosyaları (`docs/delix/`, `delix.json`, `.delix/`) ve ürün adı "delix" düzyazıda aynı kaldı:
   LLMPortal'da veri taşıma yok. `delix-board` adı kaldı, 0.1.2 yeni ajan önekini izler. Geçmiş kayıtlar (STATUS,
   CHANGELOG eski bölümleri, `docs/retro/`, `docs/rename/`) değişmedi.
+## 7. 0.5.0 — öz-besleme (2026-11-03, SPEC `docs/delix/SPEC.md`, kartlar `docs/delix/tasks/T001–T005`)
+
+| # | Adım | Durum |
+|---|---|---|
+| 7.1 | Grill (4 soru) + spec, kapı 1 | ✔ K61–K82 |
+| 7.2 | Dalga 1: T001 `feedback.py` (#6), T002 hook kuralları (#4), T003 skill'ler (#5) | ✔ 850fa34, c43516d, 0a15bc0 |
+| 7.3 | Dalga 2: T004 issue formları + CI + 0.5.0 (#18), T005 README/CHANGELOG + veri ve gizlilik (#19) | ✔ 8b8ae5e, e83ecad |
+| 7.4 | Kapanış: metrikler `docs/delix/metrics.md`, drift kontrolü (architect) | ✔ |
+| 7.5 | W0: gerçek oturumda REQ-7 deny transkripti, `gh issue list --search "delixcrew-fp: …"`, Run düğmesi TTY | ◐ deny gözlendi (orkestratör oturumu, 2 kez); arama ve TTY kontrol edilmedi |
+| 7.6 | Uçtan uca: kullanıcı bir test issue'su gönderir ve kapatır | ◻ kullanıcıda |
+| 7.7 | 🔐 0.5.0 etiketi ve release | ◻ kullanıcıda |
+
+Kararlar (orkestratör, geri alınır; kullanıcı onaylı olanlar belirtildi):
+- **K83–K86** Dalga sırası ve merge sırası T001 → T002 → T003 (T003'ün "hook yine reddeder" metni T002'ye dayanır); 0.5.0 T002'siz çıkmaz.
+- **K87** T002 4. tur (kullanıcı: "$VAR'ı kaldır, 4. tur"): hook muafiyeti yalnız düz yollu `feedback.py add <<'EOF'`; değişkenli yol muaf değil (ReDoS kapandı, en kötü 0,05 sn). `${CLAUDE_PLUGIN_ROOT}` skill metninde mutlak yola çevriliyor (`claude -p` ile doğrulandı).
+- **K88** T003 yeni main'e karşı yalnız deterministik kapılarla yeniden doğrulandı (metin değişmedi).
+- **K89** T003 eval'i ayırt etmiyor (Bash izni yok, boş kuyruk); merge bekletilmedi, takip işi.
+- **K90–K91** Eval takibi T005'e konmadı (docs kartı); T007 STATE kaydı close'da düzeltildi.
 - **K92** 0.5.0 kapsamı (2026-11-03, kullanıcı kararı): issue #7 (P0, veri ve gizlilik bölümü) T005'e katıldı, ayrı kart
   yok (aynı README dosyaları, aynı commit şartı). Gönderilmiş issue'nun silinme kanalı GitHub özel bildirimi
   (`security/advisories/new`); repoda private vulnerability reporting açıldı. #8 düzeltmesi (T007, `b22f45a`) ayrı 0.4.1
   olmadan 0.5.0 ile yayınlanır; CHANGELOG girdisi T005'te. Öz-besleme kartları ve kararları: `docs/delix/SPEC.md` §9
   (K61–K82), `docs/delix/tasks/`.
+
+Açık iş (drift kontrolü, 2026-11-03; hepsi P2 ya da test boşluğu, güvenli yönde):
+- REQ-9/10 için ayırt eden eval yok (K89): taslak kuyruğa eklenmiş, `Bash(python3:*)` izni, araç çağrısı grader'ı.
+- `feedback.py:338` sayı/liste `kind` → TypeError (exit 2 yerine 1); `send` `status`'a bakmıyor (dropped/sent tekrar gönderilebilir).
+- Redaksiyon: tek parçalı mutlak yol (`/srv`) redakte edilmiyor; README `example.*` diyor, kod yalnız `.com/.net/.org`.
+- Testsiz: REQ-4 kalıntı eşleşme ve gitleaks zaman aşımı; REQ-8 `gh` yok ve "list başarılı, create başarısız"; REQ-2 `last_seen`.
+- Hook (K77 kalıntısı): `exec(open('…/feedback.py').read())` + `pty.fork` kural (a)/(b)'ye takılmaz; TTY ve `SEND <hash>` yine durdurur. Kural (c) heredoc gövdesini de tarar (fazla engelleme).
+- SPEC §4'te olmayan davranış: BLOCKED `preview` HASH/gövde basmıyor, bilinmeyen id exit 2, `send` kontrol sırası repo→id→BLOCKED→hash→TTY.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
