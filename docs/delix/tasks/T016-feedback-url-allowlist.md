@@ -6,6 +6,8 @@
 
 > 🔐 Tier 3: `sanitize()` filters text published on a public repo (issue body, triage comment; SPEC §6). The lead adds the Approved line after the human says "yes".
 
+**🔐 Approved:** 2026-11-03 tahircengiz
+
 **Goal (1 sentence):** `sanitize()` keeps only allowlisted URLs, redacts absolute paths in every non-word left context, UNC paths and Unicode hosts, `SANITIZER_VERSION` becomes `"3"`, and `list`/`add` print disk values escaped. · **Spec:** `docs/delix/SPEC.md#REQ-1`, `#REQ-2`, `#REQ-3`, `#REQ-4`, `#REQ-5`, `#REQ-7`; §6; K134–K139, K142, K146–K148
 
 ## Files

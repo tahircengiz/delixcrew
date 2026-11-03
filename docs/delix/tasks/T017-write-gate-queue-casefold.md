@@ -6,6 +6,8 @@
 
 > 🔐 Tier 3: `scripts/write_gate.py` is a protected path (`docs/delix/delix.json:10`). The lead adds the Approved line after the human says "yes".
 
+**🔐 Approved:** 2026-11-03 tahircengiz
+
 **Goal (1 sentence):** Deny Write/Edit into the feedback queue and the triage dir whatever the letter case or Unicode normalization of either path. · **Spec:** `docs/delix/SPEC.md#REQ-6`; K129
 
 ## Files
