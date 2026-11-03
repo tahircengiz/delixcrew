@@ -403,8 +403,8 @@ issue'ya kullanıcının terminalinde `triage.py apply` ile yazılır; start yal
 | 8.1 | `/delixcrew:start` (M · Tier 3) + grill (6 soru) + spec, architect FIX ve security FIX işlendi | ✔ K106–K127 |
 | 8.2 | Kapı 1 | ✔ 2026-11-03 |
 | 8.3 | Dispatch: T010 `triage.py`, T011 hook kuralları, T012 skill + architect job D + start §1a, T013 README/CHANGELOG/CI/0.6.0 | ✔ kartlar ve dispatch dosyaları |
-| 8.4 | 🔐 Kart başına Approved satırı (dördü de Tier 3) | ◻ kullanıcıda |
-| 8.5 | Dalga 1: T010, T011, T012 paralel; merge sırası T010 → T011 → T012 | ◻ |
+| 8.4 | 🔐 Kart başına Approved satırı (dördü de Tier 3) | ✔ 2026-11-03 tahircengiz; main `dbcaaa2` |
+| 8.5 | Dalga 1: T010, T011, T012 paralel; merge sırası T010 → T011 → T012 | ◐ oturum kartları önerildi, kullanıcı açar |
 | 8.6 | Dalga 2: T013, en son merge | ◻ |
 | 8.7 | W0: açık 7 issue'nun toplu triage'ı, gerçek oturum transkripti (REQ-3/4/8) | ◻ kullanıcıda |
 
