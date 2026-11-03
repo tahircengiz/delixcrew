@@ -89,12 +89,12 @@
       "file": "docs/delix/tasks/T015-triage-doc-statements.md",
       "role": "docs",
       "tier": 1,
-      "status": "in_progress",
-      "pr": null,
+      "status": "accepted",
+      "pr": 29,
       "rounds": 0,
       "cost_usd": null,
-      "sha": null,
-      "merged": null
+      "sha": "4f7e62e",
+      "merged": "11bfb41"
     }
   },
   "status_values": [
