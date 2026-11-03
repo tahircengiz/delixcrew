@@ -111,3 +111,19 @@ Noted, no fix (carried over): makedirs re-chmod (Low); `apply` without record ex
 Unsure (security, not checked): `gh issue view --json comments` may cap at 100 comments, so on a long thread the
 re-run check and `--require accepted` could miss the newest marker; cross-repo references and GitHub URLs in `reason`
 create backlinks from the maintainer account (visible in preview).
+
+### Round 3 (8a2dd43) — qa ACCEPT_WITH_NOTES · security FIX with 1 Medium → escalated (round cap)
+Deterministic gates: CI `test` pass; from `git archive 8a2dd43`: 5× `ALL PASSED`; validate passed; also 5×
+`ALL PASSED` with `triage.py` + its tests laid over current main (T011 merged). Round 2 fixed: `MENTION_RE` also runs
+on the sanitized comment; tests for term, host and USER placeholders; `bob@example.com` stays CLEAN.
+Open (third form of the same class):
+- [Medium] `scripts/triage.py:49`, `:314`: the lookbehind `(?<![\w.])` lets an `@` after `.` or after a non-ASCII
+  letter through (Python `\w` is Unicode). Reproduced by the orchestrator: `Ask .@alice`, `x.@alice`, `Café@alice`,
+  `中@alice` pass raw, NFKC and comment checks unchanged, so preview says CLEAN. GitHub's mention boundary is believed
+  to be ASCII `\W` (html-pipeline), so these would likely ping; not verified live. `&#64;alice` (HTML character
+  reference) also passes; GitHub rendering not verified.
+- Class-wide fix proposal: on the sanitized comment, block any `@[A-Za-z0-9]` with no lookbehind (emails are already
+  `<redacted:email>`, no placeholder contains `@`) and any HTML character reference `&#…;` / `&name;`. Tests: the four
+  cases above and `&#64;alice` BLOCKED; `bob@example.com` CLEAN.
+Noted, no fix: Markdown link reference definitions and link targets hide text (visible as raw Markdown in preview);
+`gh issue view --json comments` paging unverified; carried-over Lows and P2 from rounds 1–2.
