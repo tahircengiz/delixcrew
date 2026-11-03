@@ -16,9 +16,10 @@
     {
       "wave": 2,
       "cards": [
-        "T013"
+        "T013",
+        "T014"
       ],
-      "note": "after T010 merged (CI step needs tests/triage_tests.sh); merged last, 0.6.0 must not reach main before its features. 🔐."
+      "note": "after T010 merged (CI step needs tests/triage_tests.sh); merged last, 0.6.0 must not reach main before its features. 🔐. T014 (K132, from T010 round 6) parallel with T013, no shared files; both after T010 merged (556189f)."
     }
   ],
   "cards": {
@@ -57,6 +58,15 @@
     "T013": {
       "file": "docs/delix/tasks/T013-triage-docs-ci-version.md",
       "role": "devops",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T014": {
+      "file": "docs/delix/tasks/T014-triage-invisible-hardening.md",
+      "role": "backend",
       "tier": 3,
       "status": "open",
       "pr": null,
