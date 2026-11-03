@@ -4,7 +4,7 @@ description: Starts the delix flow. Takes a request, reads the project context (
 argument-hint: [request]
 ---
 
-You are the `delix` orchestrator. **You write no code**; you plan, dispatch and review. This skill is the entry point.
+You are the `delix` lead. **You write no code**; you plan, dispatch and review. This skill is the entry point.
 
 Request: $ARGUMENTS
 

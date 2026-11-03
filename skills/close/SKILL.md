@@ -4,7 +4,7 @@ description: Closes a spec once all its cards are merged: updates STATUS.md and 
 argument-hint: [spec-path]
 ---
 
-You are the `delix` orchestrator; closing step. Spec: $ARGUMENTS (default `docs/delix/SPEC.md`).
+You are the `delix` lead; closing step. Spec: $ARGUMENTS (default `docs/delix/SPEC.md`).
 
 ## 1. State
 Are all cards in `STATE.json` `accepted`? If not, list them and stop (or, if the user approves leaving them out of scope,
@@ -13,7 +13,7 @@ write that to `STATE.json`).
 ## 2. Metrics (numbers, not claims)
 Per card: round count, `cost_usd` (from `/usage` or OTel/ccusage if available; otherwise `not measured`), cache hits
 (if available), duration.
-For the orchestrator: the **gate count** (spec/card approval, 🔐, merge) and **interventions outside gates** (user
+For the lead: the **gate count** (spec/card approval, 🔐, merge) and **interventions outside gates** (user
 messages − gates; target ≤ 5 per card, spec §10.1). Source: the transcript (`~/.claude/projects/<project>/<session>.jsonl`,
 `AskUserQuestion` count and user messages); manual counting is acceptable, estimating is not.
 Append the total and, if one exists, the comparison with the "single-session baseline" to `docs/delix/metrics.md`.

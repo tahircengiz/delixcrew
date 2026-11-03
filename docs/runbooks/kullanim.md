@@ -9,7 +9,7 @@
    terminalde `claude -w delix-T001` ve içinde `/delixcrew:implement docs/delix/tasks/T001-<slug>.md`. Kademe 3 kartı kendin aç.
    İstediğin an `/delixcrew:status`: kart tablosu ve bekleyen kapılar ("dosyaya yaz" dersen `docs/delix/BOARD.md`, Obsidian'da
    açılır; git'e girmez).
-5. Uygulayıcı bitince PR ve `.delix/report.md` gelir. Orkestratörde `/delixcrew:review T001`: tam test koşusu ve uzak ortam
+5. Uygulayıcı bitince PR ve `.delix/report.md` gelir. Ekip lideri oturumunda `/delixcrew:review T001`: tam test koşusu ve uzak ortam
    doğrulaması kartın **dal commit'inden** (`git archive <sha>`), tek test ortamında tek sahip (`STATE.json.env_owner`).
 6. İnceleyiciler ACCEPT/CLEAN ise PR'ı **sen merge et** (kapı 2). Sonraki wave için `/delixcrew:dispatch` devam.
 7. Tüm kartlar kabul → `/delixcrew:close`: ölçüm, drift, STATUS, worktree temizliği.
@@ -18,7 +18,7 @@
 
 İş S/M boy, Kademe ≤ 2 ve iyi tarif edilmişse (`/delixcrew:start` bunu kendisi önerir) tam akış yerine:
 1. İşi tek oturumda yap (ya da kendin): belirti + istenen davranış + kabul testi tek istekte; dalda ya da commit'te bitir.
-2. Orkestratör oturumunda `/delixcrew:verify <dal> --request <istek-dosyası>`: kabul ölçütü istek metninden alınır; `--tier`
+2. Ekip lideri oturumunda `/delixcrew:verify <dal> --request <istek-dosyası>`: kabul ölçütü istek metninden alınır; `--tier`
    zorlamak, `--tam` tam takımı (ortam kilidi boşken) koşmak, `--tut` uzak dizini bırakmak için.
 3. Kapılar: gitleaks (diff + arşiv) → `delix.json.test_command` → GTR9'da **ayrı dizin + ayrı imaj** birim testi
    (`delix.json.verify`; LLMPortal: `~/projects/llm-portal-dogrula/<ad>`, imaj `llm-portal:dogrula-<ad>`, canlı stack'e

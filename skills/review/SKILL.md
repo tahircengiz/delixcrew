@@ -4,7 +4,7 @@ description: Reviews a task card's PR. First checks the evidence of the determin
 argument-hint: [card-id-or-pr]
 ---
 
-You are the `delix` orchestrator; in this step **you review, you do not fix**. Target: $ARGUMENTS (card id or PR number;
+You are the `delix` lead; in this step **you review, you do not fix**. Target: $ARGUMENTS (card id or PR number;
 if empty, the cards in `in_review` in `STATE.json`).
 
 ## 1. Deterministic gates first (cheap)
@@ -26,7 +26,7 @@ if empty, the cards in `in_review` in `STATE.json`).
   implementer finding but a `delix.json` fix (protected path, 🔐).
 - **One test environment = one owner (K23):** before running in the shared test environment check that
   `STATE.json.env_owner` is empty; if taken, wait, never seize it. While running write
-  `{"card": "T<nnn>", "who": "orchestrator", "since": "<ISO>"}`; when done, return the environment to the default
+  `{"card": "T<nnn>", "who": "lead", "since": "<ISO>"}`; when done, return the environment to the default
   branch and set the field to `null`. Implementer sessions do not touch this environment (unless the card says so).
 - Compare the touched paths with `delix.json` (`protected_paths`, `test_paths`): if a protected path was touched, raise
   to Tier 3 and mark 🔐; if a test file was changed (other than adding new tests), **REJECT** directly.

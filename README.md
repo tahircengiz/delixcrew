@@ -3,7 +3,7 @@
 **Spec first. Agents build. You hold the gates.**
 
 `delix` turns the single-session loop of "open, pick a folder, read the history, continue" into the division of labour
-of a real software team: an **orchestrator** session writes a tech spec through a grill interview, splits the work into
+of a real software team: a **lead** session writes a tech spec through a grill interview, splits the work into
 task cards, hands each card to an **implementer** session running in its own worktree, and has **read-only reviewers**
 (qa, security) check the result. A human is involved at exactly two gates: **spec approval** and **PR merge**. The
 constraints live in the harness, not in the prompt: reviewer roles have no write tool in their `tools` list, plugin hooks
@@ -78,7 +78,7 @@ claude plugin install delix-board@delixcrew
 
 | Role | Unit | Permissions | Model |
 |---|---|---|---|
-| orchestrator | main session | writes no code | top |
+| lead | main session | writes no code | top |
 | `delixcrew:architect` | subagent | Read, Grep, Glob | opus |
 | implementer (backend / frontend / ui-ux / devops / docs role note) | separate session, worktree | everything; a protected path or an existing test file only when listed in the card's Files (a protected path additionally needs a 🔐 Approved line); the card and `docs/delix/**` blocked by hook | sonnet |
 | `delixcrew:qa` | subagent | Read, Grep, Glob | sonnet |
@@ -257,7 +257,7 @@ and `tee` into protected paths, reviewer Bash and, in every session, the known f
 paths; see [Feedback](#feedback) and [Triage](#triage)). A path escaping the worktree (cwd) is always rejected (A13, K42); path matching is relative to cwd. For
 that reason a change to the card file, `docs/delix/**` or an unapproved protected path in the card counts as a finding in
 the `delixcrew:qa` review of the diff. Tier 3 permission is opened by the `**🔐 Approved:** <YYYY-MM-DD> <who>` line after
-the card's header table; only the orchestrator writes it, after the user's explicit "yes" in chat, and commits it to main.
+the card's header table; only the lead writes it, after the user's explicit "yes" in chat, and commits it to main.
 
 ## License
 

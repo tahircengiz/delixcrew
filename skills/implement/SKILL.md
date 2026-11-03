@@ -37,11 +37,11 @@ role tag.
   Playwright evidence is mandatory (`.delix/evidence/`).
 - The Stop hook does not close the turn until the tests pass; if they do not pass in 3 attempts, report `BLOCKED`, no
   tricks.
-- Do **not** touch the shared remote test environment (rsync, image build, compose); that run belongs to the orchestrator
+- Do **not** touch the shared remote test environment (rsync, image build, compose); that run belongs to the lead
   (K23). If the card explicitly allows it, `STATE.json.env_owner` must be your card first; otherwise write "remote run
-  belongs to the orchestrator" in the report. Operational evidence a role note asks for (a container healthy, a probe)
+  belongs to the lead" in the report. Operational evidence a role note asks for (a container healthy, a probe)
   comes from an **isolated, throwaway** run you own (its own compose project name and directory, torn down afterwards;
-  the teardown is evidence too); if no isolated run is possible, write the commands for the orchestrator's remote run
+  the teardown is evidence too); if no isolated run is possible, write the commands for the lead's remote run
   under Concerns instead.
 
 ## 4. Deliver
@@ -52,7 +52,7 @@ role tag.
   branch, write `**PR:** none (<branch> @ <sha>)` in the report and keep `pr` `null` (the review reads the branch SHA).
 - Fill `.delix/report.md` from `${CLAUDE_PLUGIN_ROOT}/templates/report.md` (≤ 1–2K tokens); in `STATE.json` update only
   your own card's `status: in_review` and `pr` fields.
-- Your last message: the report summary + the PR number. If a fix round arrives (an orchestrator message or the card's
+- Your last message: the report summary + the PR number. If a fix round arrives (a lead message or the card's
   "Review findings" section), fix only the findings with the same protocol; not every finding, the P0/P1s.
 
 Reply in the user's language; keep status values and report tokens as written.

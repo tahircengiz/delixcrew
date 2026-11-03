@@ -1,10 +1,10 @@
 ---
 name: verify
-description: As the orchestrator, only verifies work done without a card (the user's or a single session's branch, commit or working directory) (K43). Deterministic gates (local tests, gitleaks, remote isolated unit test; full suite on request) and a single zero-context qa (+ security at Tier ≥ 2) review pass; no fix rounds. Output is a docs/delix/verifications/<date>-<name>.md report (ACCEPT / FIX) and a STATE.json record. Use when the user says "verify", "check this branch", or "/delixcrew:verify <branch>"; for a PR with a card use /delixcrew:review.
+description: As the lead, only verifies work done without a card (the user's or a single session's branch, commit or working directory) (K43). Deterministic gates (local tests, gitleaks, remote isolated unit test; full suite on request) and a single zero-context qa (+ security at Tier ≥ 2) review pass; no fix rounds. Output is a docs/delix/verifications/<date>-<name>.md report (ACCEPT / FIX) and a STATE.json record. Use when the user says "verify", "check this branch", or "/delixcrew:verify <branch>"; for a PR with a card use /delixcrew:review.
 argument-hint: <branch|commit|dir> [--request <file>] [--tier 1|2|3] [--full] [--keep]
 ---
 
-You are the `delix` orchestrator; in this mode **you only verify**: no code, no fixes, no fix rounds. Findings go to the
+You are the `delix` lead; in this mode **you only verify**: no code, no fixes, no fix rounds. Findings go to the
 report; applying them is the user's. Input: $ARGUMENTS
 
 When this mode applies (K43): a well-described S/M job finished without a card in a single session or by the user; what
@@ -50,7 +50,7 @@ decision. PRs with a card go to `/delixcrew:review` (with fix rounds); here it i
    separately in the report.
 4. **Full suite** (`delix.json.full_test_command_remote` or similar runs needing the shared test environment): only if the
    user said `--full` in this call **and** `STATE.json.env_owner` is empty (K23). While running write `env_owner =
-   {"card": "verify:<name>", "who": "orchestrator", "since": "<ISO>"}`; when done return the environment to the default
+   {"card": "verify:<name>", "who": "lead", "since": "<ISO>"}`; when done return the environment to the default
    branch and set `null`. If the lock is taken, do not wait and do not seize: `not run: environment lock <card>`. Without
    `--full`: `not run: no --full`. The global security approval gate applies here too (prod-like environment, a command
    that deletes data → ask first).

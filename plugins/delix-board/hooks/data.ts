@@ -59,7 +59,7 @@ async function readIfChanged<T>($: EngineInterface, cache: Cache, path: string, 
 
 /**
  * When a worktree's STATE.json last really changed: its mtime while it has uncommitted changes, else the time of
- * the commit that last touched it. A checkout or pull gives an old copy a fresh mtime, and the orchestrator does
+ * the commit that last touched it. A checkout or pull gives an old copy a fresh mtime, and the lead does
  * not always move `updated`, so neither is trusted alone.
  */
 async function changedAt($: EngineInterface, dir: string, mtimeMs: number): Promise<number> {
@@ -72,7 +72,7 @@ async function changedAt($: EngineInterface, dir: string, mtimeMs: number): Prom
 }
 
 /**
- * The checkout whose STATE.json is live. The orchestrator may write it in its own worktree (the desktop app opens
+ * The checkout whose STATE.json is live. The lead may write it in its own worktree (the desktop app opens
  * one per session) while the main checkout stays behind, and every implementer worktree holds the copy of its
  * dispatch. Among the worktrees holding one, implementer worktrees (`.delix/card`) left out: the copy changed last;
  * on a tie the session's own checkout, then the main checkout (listed first).
