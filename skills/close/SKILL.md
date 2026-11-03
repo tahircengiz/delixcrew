@@ -35,4 +35,13 @@ List the worktrees of merged cards; `git worktree remove` with the user's approv
 What went well · what was expensive (rounds, tokens) · which harness part was unnecessary ("remove one component, is it
 load-bearing").
 
+**Feedback capture.** Only if one of these happened in this work: (1) a delixcrew hook denied an action and you judged
+the denial a false positive; (2) a delixcrew skill step could not be followed as written (the instruction contradicted
+the tool's or the repo's behaviour); (3) a manual workaround was needed because of a plugin limit. Then, one draft per
+event, pipe `{"kind": "bug|feature", "component": "<skill|hook|script|agent name>", "title", "actual", "expected",
+"repro": [...], "context"?}` in generic terms (no project names, paths or secrets) to
+`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/feedback.py" add <<'EOF' … EOF`. Exit 0: one line, `Feedback draft F<nnn>: <title>
+(/delixcrew:feedback review)`. Exit 3: say nothing. Any other exit: show the script's message in one line. None of the
+three events: do not call `add` and say nothing about feedback.
+
 Reply in the user's language; keep status values and labels as written.

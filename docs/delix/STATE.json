@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T13:10:00Z",
+  "updated": "2026-11-03T13:20:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -45,19 +45,21 @@
       "file": "docs/delix/tasks/T002-hook-rules.md",
       "role": "backend",
       "tier": 3,
-      "status": "fixing",
+      "status": "accepted",
       "pr": 4,
-      "rounds": 3,
-      "cost_usd": null
+      "rounds": 4,
+      "cost_usd": null,
+      "merge": "c43516d"
     },
     "T003": {
       "file": "docs/delix/tasks/T003-feedback-skills.md",
       "role": "docs",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 5,
       "rounds": 0,
-      "cost_usd": null
+      "cost_usd": null,
+      "merge": "0a15bc0"
     },
     "T004": {
       "file": "docs/delix/tasks/T004-github-forms-ci-version.md",
@@ -81,8 +83,8 @@
       "file": "docs/delix/tasks/T006-design-system-step.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_progress",
-      "pr": null,
+      "status": "accepted",
+      "pr": 15,
       "rounds": 0,
       "cost_usd": null
     },
@@ -105,5 +107,46 @@
     "rejected",
     "escalated"
   ],
-  "verifications": []
+  "verifications": [
+    {
+      "name": "delix-t006",
+      "date": "2026-11-03",
+      "sha": "3273b88",
+      "base": "b627fa7",
+      "input": "delix-T006",
+      "tier": 2,
+      "verdict": "ACCEPT",
+      "report": "docs/delix/verifications/2026-11-03-delix-t006.md",
+      "gates": {
+        "gitleaks": "PASS (archive: pre-existing eval fixture)",
+        "local": "PASS",
+        "remote_unit": "not run: no delix.json.verify",
+        "full": "not run"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "CLEAN",
+      "cost_usd": null,
+      "resolution": "superseded by delix-t006-r2 (P2 #1 fixed in 36e4076)"
+    },
+    {
+      "name": "delix-t006-r2",
+      "date": "2026-11-03",
+      "sha": "36e4076",
+      "base": "b627fa7",
+      "input": "delix-T006",
+      "tier": 2,
+      "verdict": "ACCEPT",
+      "report": "docs/delix/verifications/2026-11-03-delix-t006-r2.md",
+      "gates": {
+        "gitleaks": "PASS (archive: pre-existing eval fixture)",
+        "local": "PASS",
+        "remote_unit": "not run: no delix.json.verify",
+        "full": "not run"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "CLEAN",
+      "cost_usd": null,
+      "resolution": "merged f84e675"
+    }
+  ]
 }

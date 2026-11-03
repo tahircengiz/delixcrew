@@ -82,4 +82,68 @@ while IFS= read -r cmd; do
   if [ $rc -eq 2 ] && [ "$(printf '%s\n' "$err" | wc -l)" -eq 1 ] && echo "$err" | grep -q '^delixcrew: python3 not found'; then echo "✔ no python3: blocks with message (${cmd##*/})"
   else echo "✘ no python3 (${cmd##*/}): rc=$rc, stderr: $err"; exit 1; fi
 done || FAIL=1
+# REQ-7: known feedback send paths and queue-dir writes are denied in every session (no card, any agent_type)
+N="$T/nocard"; mkdir -p "$N/repo" "$T/home" "$T/q"
+FBMSG="delixcrew: feedback is sent only by the user from their own terminal"
+fbdeny(){ # name, script, json[, env…] → deny with the exact feedback message
+  out=$(echo "$3" | env ${4:+"$4"} python3 "$S/$2"); if echo "$out" | grep -q '"permissionDecision": "deny"' && echo "$out" | grep -qF "$FBMSG"; then echo "✔ $1"; else echo "✘ $1 (expected feedback deny): $out"; FAIL=1; fi; }
+for a in "" "delixcrew:qa"; do
+  fbdeny "feedback.py send denied ${a:-no agent}"   bash_gate.py "{\"tool_name\":\"Bash\",\"agent_type\":\"$a\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"cd scripts && python3 feedback.py send F001 --confirm abc\"}}"
+  fbdeny "pty wrapper send denied ${a:-no agent}"   bash_gate.py "{\"tool_name\":\"Bash\",\"agent_type\":\"$a\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"printf 'SEND x' | script -q /dev/null python3 scripts/feedback.py send F001\"}}"
+  fbdeny "gh issue create delixcrew ${a:-no agent}" bash_gate.py "{\"tool_name\":\"Bash\",\"agent_type\":\"$a\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"gh issue create -R tahircengiz/delixcrew -t x -b y\"}}"
+done
+fbdeny "unbuffer + feedback.py denied"     bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"unbuffer python3 scripts/feedback.py list\"}}"
+fbdeny "gh api issues delixcrew denied"    bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"gh api repos/tahircengiz/delixcrew/issues -f title=x\"}}"
+git -C "$N/repo" init -q && git -C "$N/repo" remote add origin https://github.com/tahircengiz/delixcrew.git
+fbdeny "gh issue create, cwd remote delixcrew" bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N/repo\",\"tool_input\":{\"command\":\"gh issue create -t x\"}}"
+allow "gh pr view not affected"           bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"gh pr view 12\"}}"
+allow "gh issue create other repo"        bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"gh issue create -R example/other -t x\"}}"
+allow "feedback.py add is free"           bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"python3 scripts/feedback.py add < d.json\"}}"
+fbdeny "queue dir write (default ~)"      write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/home/.claude/delixcrew/feedback/config.json\"}}" "HOME=$T/home"
+fbdeny "queue dir edit (env dir)"         write_gate.py "{\"tool_name\":\"Edit\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/q/F001.json\"}}" "DELIXCREW_FEEDBACK_DIR=$T/q"
+fbdeny "queue dir write, reviewer too"    write_gate.py "{\"tool_name\":\"MultiEdit\",\"agent_type\":\"delixcrew:qa\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/q/F001.json\"}}" "DELIXCREW_FEEDBACK_DIR=$T/q"
+DELIXCREW_FEEDBACK_DIR="$T/q" allow "queue lookalike dir is free" write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"${T}/qx/F001.json\"}}"
+# REQ-7 fix round 1: heredoc draft bodies do not trigger (a)/(b); `send` must be the subcommand; `gh issue new` = create
+bashjson(){ python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2"; }
+HD=$(printf '%s\n' "python3 \"/x/scripts/feedback.py\" add <<'EOF'" '{"title": "preview hash differs on second send", "body": "the script wrapper path also fails"}' 'EOF')
+allow  "heredoc add with send/script in body"  bash_gate.py "$(bashjson "$N" "$HD")"
+fbdeny "quoted path feedback.py send denied"   bash_gate.py "$(bashjson "$N" "python3 \"/x/scripts/feedback.py\" send F001")"
+fbdeny "send inside a shell heredoc denied"    bash_gate.py "$(bashjson "$N" "$(printf '%s\n' "bash <<'EOF'" 'python3 scripts/feedback.py send F001' 'EOF')")"
+fbdeny "gh issue new delixcrew denied"         bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"gh issue new -R tahircengiz/delixcrew -t x\"}}"
+# REQ-7 fix round 2: only the body of a `feedback.py … add` heredoc is exempt; pty wrappers inside other heredocs stay denied
+fbdeny "pty.spawn in python3 - heredoc denied"  bash_gate.py "$(bashjson "$N" "$(printf '%s\n' "python3 - <<'EOF'" 'import pty; pty.spawn(["python3","scripts/feedback.py","send","F001"])' 'EOF')")"
+fbdeny "script wrapping a bash heredoc denied"  bash_gate.py "$(bashjson "$N" "$(printf '%s\n' "script -q /dev/null bash <<'EOF'" 'python3 scripts/feedback.py "send" F001' 'EOF')")"
+fbdeny "unterminated <<X does not hide the rest" bash_gate.py "$(bashjson "$N" "$(printf '%s\n' "echo '<<X'" 'script -q /dev/null python3 scripts/feedback.py "send" F001')")"
+allow  "add heredoc body quoting feedback.py send" bash_gate.py "$(bashjson "$N" "$(printf '%s\n' "python3 \"/x/scripts/feedback.py\" add <<'EOF'" '{"title": "feedback.py send prints wrong hash"}' 'EOF')")"
+# REQ-7 fix round 3: the exemption is a fullmatch of one quoted-delimiter `python3 …/feedback.py add <<'EOF'` call
+SND='script -q /dev/null python3 scripts/feedback.py send F001'
+hd(){ bashjson "$N" "$(printf '%s\n' "$@")"; }
+fbdeny "unquoted <<EOF with \$(… send)"        bash_gate.py "$(hd 'python3 scripts/feedback.py add <<EOF' '$(python3 scripts/feedback.py send F001 --confirm abc)' 'EOF')"
+fbdeny "unquoted <<EOF with backticks"        bash_gate.py "$(hd 'python3 scripts/feedback.py add <<EOF' '`python3 scripts/feedback.py send F001`' 'EOF')"
+fbdeny "add # <<EOF comment trick"            bash_gate.py "$(hd 'python3 scripts/feedback.py add # <<EOF' "$SND" 'EOF')"
+fbdeny "add \\<<EOF escape trick"             bash_gate.py "$(hd 'python3 scripts/feedback.py add \<<EOF' "$SND" 'EOF')"
+fbdeny "add \"<<EOF quote trick"              bash_gate.py "$(hd 'python3 scripts/feedback.py add "<<EOF' "\"; $SND" 'EOF')"
+fbdeny "command on the delimiter line"        bash_gate.py "$(hd "python3 scripts/feedback.py add <<'EOF'" '{"t":"x"}' "EOF; $SND")"
+fbdeny "line after the delimiter"             bash_gate.py "$(hd "python3 scripts/feedback.py add <<'EOF'" '{"t":"x"}' 'EOF' "$SND")"
+fbdeny "early delimiter inside the body"      bash_gate.py "$(hd "python3 scripts/feedback.py add <<'EOF'" '{"t":"x"}' 'EOF' "$SND" 'EOF')"
+T3B='{"title": "feedback.py send under script prints $( and `x`", "body": "send"}'
+T3O='python3 "/opt/plugins/delixcrew/scripts/feedback.py" add <<'"'EOF'"
+allow  "T003 add heredoc, risky words in body" bash_gate.py "$(hd "$T3O" "$T3B" 'EOF')"
+# REQ-7 fix round 4: no $VAR in the exempt path (ReDoS); the gate returns fast on long $-runs
+T3V='python3 "${CLAUDE_PLUGIN_ROOT}/scripts/feedback.py" add <<'"'EOF'"
+fbdeny "\${VAR} path gets no exemption"     bash_gate.py "$(hd "$T3V" '{"title": "feedback.py send prints wrong hash"}' 'EOF')"
+timed(){ # name, json → bash_gate.py must answer in < 1 s
+  python3 - "$S/bash_gate.py" "$2" <<'PYT' && echo "✔ $1" || { echo "✘ $1 (expected < 1 s)"; FAIL=1; }
+import subprocess, sys, time
+t = time.monotonic()
+try:
+    subprocess.run([sys.executable, sys.argv[1]], input=sys.argv[2], capture_output=True, text=True, timeout=5)
+except subprocess.TimeoutExpired:
+    sys.exit(1)
+sys.exit(0 if time.monotonic() - t < 1 else 1)
+PYT
+}
+DOL=$(printf '$aaaaaaaaaaaaaaa%.0s' $(seq 12))
+timed "12 x \$aaa run, fast"                 "$(bashjson "$N" "python3 $DOL x")"
+timed "12 x \$aaa in add heredoc path, fast" "$(hd "python3 \"$DOL/feedback.py\" add <<'EOF'" '{"t":"x"}' 'EOF')"
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

@@ -1,0 +1,90 @@
+diff --git a/agents/architect.md b/agents/architect.md
+index 742533b..e3d6b61 100644
+--- a/agents/architect.md
++++ b/agents/architect.md
+@@ -17,7 +17,8 @@ Read the spec with these questions: (1) is every requirement testable (SHALL + W
+ out-of-scope section explicit; (3) are the interface contracts (endpoint, signature, template context, data model)
+ written down; (4) if Tier 3 paths (auth, secrets, CI, lockfile, deploy) are touched, is there a security note; (5) is the
+ spec longer than its own scope ("a transcript, not a plan"); (6) is there a simpler design that meets the same
+-requirements, or a decision that improves UX, DX or AX at the cost of another without a K decision saying so.
++requirements, or a decision that improves UX, DX or AX at the cost of another without a K decision saying so; (7) does
++a UI spec (screen, component, visual change) link `DESIGN.md` or the repo's token file.
+ Output: at most 7 findings, each `[P0|P1|P2] <finding> · <spec line> · <suggestion>`; high-confidence only; no style
+ comments. End with a single verdict line: `READY` or `FIX`.
+ 
+@@ -27,7 +28,8 @@ fields of `templates/task-card.md`: id, size, tier, role tag (backend / frontend
+ (full paths; create / modify with line range / test), **Interfaces**, **Global Constraints**, **Steps** (failing test →
+ red → implement → green → commit), **Verification command + expected output**, **Review Focus**, **Don'ts**,
+ **Report contract**. Cards are written for "a junior with no project context who is reluctant to test": leave nothing
+-to guess.
++to guess. Every ui-ux card, and every frontend card with a visual change, puts `DESIGN.md` (or the repo's token file) in
++Global Constraints: its tokens only, no new colour, font or spacing value.
+ Assign the tier by file path + action type: `auth/`, Keycloak/OIDC, `.env*`, CI workflows, lockfiles, deploy, prod
+ data → Tier 3; new behaviour / many files / new dependency / template-route → Tier 2; everything else Tier 1.
+ Put dependencies in the **wave plan**, not in the cards: cards in the same wave run in parallel (at most 3), waves run
+diff --git a/agents/qa.md b/agents/qa.md
+index 3399846..3772d1c 100644
+--- a/agents/qa.md
++++ b/agents/qa.md
+@@ -26,6 +26,9 @@ SPEC.md path, the file holding the test/CI output (e.g. `.delix/test-result.txt`
+    `docs/delix/**` changed in the diff (the implementer cannot write them; if written via Bash, **P0**); a new
+    dependency without a reason.
+ 5. **Behavioural bugs:** boundary conditions, error paths, concurrency, resource leaks — only what you can show.
++6. **Design tokens** (ui-ux / frontend diffs only): a hard-coded colour, font or spacing value that is not a token in
++   `DESIGN.md` or the repo's token file is **P2**: `file:line` + the nearest token. Token definitions themselves
++   (`DESIGN.md`, token files, CSS custom-property / theme files) are not findings. Neither in the repo: skip this item.
+ 
+ ## How you write
+ - Ignore "this is correct / tested" claims in comments; look at the behaviour.
+diff --git a/skills/spec/SKILL.md b/skills/spec/SKILL.md
+index 07066ac..595a51a 100644
+--- a/skills/spec/SKILL.md
++++ b/skills/spec/SKILL.md
+@@ -18,6 +18,13 @@ if missing, propose them yourself with the `/delixcrew:start` logic).
+    repaired (read-back, idempotent retry, reconciliation at startup). The answer goes into the spec's security note as a
+    K decision. Pilot lesson: when not asked, the same finding surfaced in a review round (LLMPortal T002, K28); caught in
+    the spec, zero fix rounds (E.7).
++5. **Design system (UI work only):** if the work adds a screen or component or changes visuals AND the repo has no
++   `DESIGN.md` (nor a token file: `tokens.*`, a CSS-variables theme, a Tailwind theme config), produce `DESIGN.md` at the
++   repo root before gate 1: stack (framework, styling, icons) · type scale (display/body font, H1–small sizes) · colour
++   tokens (primary/secondary/accent; 60-30-10 only as a starting point; contrast ≥ 4.5:1) · spacing scale · core
++   components · breakpoints. If the Impeccable plugin is installed (its skill is listed), use its DESIGN.md capability;
++   otherwise ≤ 3 questions, one at a time, each with `My pick`. An existing `DESIGN.md` is linked, not regenerated.
++   Non-UI work: skip this item silently.
+ 
+ ## 2. Write the spec
+ - Template: size M → `${CLAUDE_PLUGIN_ROOT}/templates/spec-M.md`; size L → `templates/spec-L.md` (+ `docs/delix/design.md`,
+@@ -25,6 +32,7 @@ if missing, propose them yourself with the `/delixcrew:start` logic).
+ - Every requirement **testable**: `### Requirement: REQ-n` → "The system SHALL …" → `#### Scenario` WHEN/THEN.
+ - Interface contracts as a table (endpoint, signature, template context); data/migration; **security note** (protected
+   paths, 🔐); DoD; decisions.
++- UI work: link `DESIGN.md` (or the existing token file) on the template's "Design system" line.
+ - Keep it short: if the spec is longer than half the code it is "a transcript, not a plan" — cut. State out-of-scope
+   explicitly; this is the only place that prevents over-build.
+ - Simple purpose, simple architecture, simple implementation. Every decision should improve user, developer and agent
+diff --git a/templates/spec-L.md b/templates/spec-L.md
+index 61b03d2..bf139f4 100644
+--- a/templates/spec-L.md
++++ b/templates/spec-L.md
+@@ -8,7 +8,7 @@
+ ## 2. Scope / out of scope
+ ## 3. Users and flows (short, bullets)
+ ## 4. Requirements (REQ-n, SHALL + Scenario WHEN/THEN) — `spec-M.md` format
+-## 5. Architecture (link to design.md): components, data flow, decision rationale (short ADRs)
++## 5. Architecture (link to design.md): components, data flow, decision rationale (short ADRs); design system (UI work only): link to `DESIGN.md`
+ ## 6. Interface contracts → `contracts/` (OpenAPI / type definitions / template contexts)
+ ## 7. Data model and migration plan
+ ## 8. Security and privacy: threat model (assets, attacker, surface), protected paths, 🔐 points
+diff --git a/templates/spec-M.md b/templates/spec-M.md
+index 7162192..20508fb 100644
+--- a/templates/spec-M.md
++++ b/templates/spec-M.md
+@@ -26,6 +26,8 @@ The system SHALL …
+ | function | `module.fn(a: int) -> B` | … | … |
+ | template context | `templates/x.html` | `{ "items": [...] }` | … |
+ 
++Design system (UI work only; delete this line otherwise): link to `DESIGN.md`.
++
+ ## 5. Data and migration
+ Changed tables/fields; if a migration is needed, its step and rollback.
+ 
