@@ -85,26 +85,26 @@ P2 (tetikleyici olursa / iyi olur). Efor S/M/L.
 
 ## 5. Açık sorular
 
-1. **Marka ve telif (madde 13):** `delix` şirket markası; plugin kişisel proje mi, şirket ürünü mü? Tescil var mı?
-   Önerim: hukukçuya sormadan önce kısa bir ön tarama (TÜRKPATENT, EUIPO, USPTO "delix" sınıf 9/42) ve kararı
-   STATUS.md'ye K numarasıyla yazmak; şirket ürünüyse LICENSE telif satırı şirket adına çevrilir.
+1. **Marka ve telif (madde 13):** sahip kararı (2026-11-03): plugin **kişisel proje**, LICENSE kişi adına kalır.
+   Açık kalan: `delix` markasının tescil/çakışma ön taraması (TÜRKPATENT, EUIPO, USPTO sınıf 9/42) ve marka şirkete
+   aitse kişisel projede kullanım izni; [#11](https://github.com/tahircengiz/delixcrew/issues/11).
 2. **⚖️ Hukukçu gereken maddeler:** 03 (GDPR/KVKK'da repo sahibinin rolü), 05 (dayanak), 13 (marka, telif sahibi,
    yapay zekâ üretimi kod), 09 teyidi.
 3. **LLMPortal** pilot verileri (STATUS, retro, ekran görüntüsü) üçüncü bir tarafın gizli bilgisi mi? Varsayım: hayır.
 
 ## 6. İş listesi (issue taslakları)
 
-Her issue'nun sahip rolü ve kabul ölçütü vardır. Etiketler repoda mevcut olanlardan seçildi (`bug`, `documentation`,
-`enhancement`, `question`); onaylanırsa `legal` ve `security` etiketleri eklenir.
+Sahip onayıyla (2026-11-03) 7'si de açıldı; `legal` ve `security` etiketleri repoya eklendi. Gövde, kabul ölçütü ve
+karşılıklı bağlantılar issue'larda.
 
-| ID | Başlık | Öncelik | Efor | Rol | Etiket |
-|---|---|---|---|---|---|
-| I1 | 0.5.0 öz-besleme için veri ve gizlilik bölümü (yayın engeli) | P0 | S | docs | documentation, legal |
-| I2 | Stop hook: git'te izlenen `.delix/card` ile yabancı repoda komut çalıştırma | P1 | S–M | backend | bug, security |
-| I3 | Repo sertleştirme: ruleset, secret scanning, PVR, Dependabot | P1 | S | devops (sahip) | security |
-| I4 | SECURITY.md ve README "Bu plugin makinende ne yapar / veri nereye gider" | P1 | S | docs | documentation, security |
-| I5 | Marka, telif sahibi ve model çıktısı sahipliği kararı | P1 | S + hukukçu | sahip + hukukçu | question, legal |
-| I6 | Öz-besleme kuyruğu için yerel silme yolu (`purge` ya da belgeli komut) | P2 | S | backend | enhancement |
-| I7 | Public repo içerik gözden geçirmesi (pilot adları, ekran görüntüsü, araştırma alıntıları) | P2 | M | docs | documentation, legal |
+| ID | Issue | Başlık | Öncelik | Efor | Rol | Etiket |
+|---|---|---|---|---|---|---|
+| I1 | [#7](https://github.com/tahircengiz/delixcrew/issues/7) | 0.5.0 öz-besleme için veri ve gizlilik bölümü (yayın engeli) | P0 | S | docs | documentation, legal |
+| I2 | [#8](https://github.com/tahircengiz/delixcrew/issues/8) | Stop hook: git'te izlenen `.delix/card` ile yabancı repoda komut çalıştırma | P1 | S–M | backend | bug, security |
+| I3 | [#9](https://github.com/tahircengiz/delixcrew/issues/9) | Repo sertleştirme: ruleset, secret scanning, PVR, Dependabot | P1 | S | devops (sahip) | security |
+| I4 | [#10](https://github.com/tahircengiz/delixcrew/issues/10) | SECURITY.md ve README "Bu plugin makinende ne yapar / veri nereye gider" | P1 | S | docs | documentation, security |
+| I5 | [#11](https://github.com/tahircengiz/delixcrew/issues/11) | delix marka çakışması taraması ve model çıktısı sahipliği notu | P1 | S + hukukçu | sahip + hukukçu | question, legal |
+| I6 | [#12](https://github.com/tahircengiz/delixcrew/issues/12) | Öz-besleme kuyruğu için yerel silme yolu (`purge` ya da belgeli komut) | P2 | S | backend | enhancement |
+| I7 | [#13](https://github.com/tahircengiz/delixcrew/issues/13) | Public repo içerik gözden geçirmesi (pilot adları, ekran görüntüsü, araştırma alıntıları) | P2 | M | docs | documentation, legal |
 
-Gövdeler ve kabul ölçütleri issue'larda; bağlantılar issue'lar açılınca bu tabloya eklenir.
+Önerilen sıra: #7 (0.5.0'dan önce) · #9 ve #8 · #10 · #11 · #12 (T001 merge sonrası) · #13.
