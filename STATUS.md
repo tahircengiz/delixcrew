@@ -300,6 +300,11 @@ Hazırlık [docs/rename/delix-hazirlik.md](docs/rename/delix-hazirlik.md) §4 s�
   update` "already at the latest version", sürüm artınca yalnız `plugin update` yeni klasör açar. README/README.tr ve
   marketplace açıklaması düzeltildi; satır 171'deki eski "yerinde okunur" notu tarihsel bırakıldı. Ekler:
   `CHANGELOG.md` (yeni), F4/F6 için önce kırmızı testler.
+- **K53** Sürüm 0.2.3 (2026-11-03): sadelik ilkesi. `roles/ui-ux.md` slogan, yardım metni ve ikincil etiketi
+  keser; ekran onlarsız anlaşılmıyorsa düzeni düzeltir; erişilebilir ad, form etiketi ve hata mesajı kalır (körü
+  körüne kesmek erişilebilirliği bozardı). `spec` §2: her karar UX, DX ve AX'i birlikte iyileştirmeli; birini ötekinin
+  pahasına alan karar K kararı olur. `architect` A) soru (6) bunu denetler; kural yazılı ama denetimsiz kalmasın diye.
+  Kaynak: kullanıcının bulduğu kullanım örneği; marka adları (örnek siteler) metne alınmadı.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

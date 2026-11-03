@@ -27,6 +27,9 @@ if missing, propose them yourself with the `/delix:start` logic).
   paths, 🔐); DoD; decisions.
 - Keep it short: if the spec is longer than half the code it is "a transcript, not a plan" — cut. State out-of-scope
   explicitly; this is the only place that prevents over-build.
+- Simple purpose, simple architecture, simple implementation. Every decision should improve user, developer and agent
+  experience (UX / DX / AX: how easily an agent reads, changes and verifies the code) at once; a decision that buys one
+  at the cost of another is a K decision with the trade written out.
 
 ## 3. Independent review (zero context)
 - Call `delix:architect` with the `Agent` tool: SPEC path, project root, "job A: spec review". ≤ 7 findings, `READY/FIX`.

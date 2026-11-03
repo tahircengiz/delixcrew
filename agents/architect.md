@@ -16,7 +16,8 @@ production · C: card conflict check) and any constraints. You have no conversat
 Read the spec with these questions: (1) is every requirement testable (SHALL + WHEN/THEN present); (2) is the
 out-of-scope section explicit; (3) are the interface contracts (endpoint, signature, template context, data model)
 written down; (4) if Tier 3 paths (auth, secrets, CI, lockfile, deploy) are touched, is there a security note; (5) is the
-spec longer than its own scope ("a transcript, not a plan").
+spec longer than its own scope ("a transcript, not a plan"); (6) is there a simpler design that meets the same
+requirements, or a decision that improves UX, DX or AX at the cost of another without a K decision saying so.
 Output: at most 7 findings, each `[P0|P1|P2] <finding> · <spec line> · <suggestion>`; high-confidence only; no style
 comments. End with a single verdict line: `READY` or `FIX`.
 

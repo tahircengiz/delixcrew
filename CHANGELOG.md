@@ -2,6 +2,15 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## 0.2.3 — 2026-11-03
+
+- `roles/ui-ux.md`: no taglines, helper text or secondary labels; a screen that needs them gets a better layout.
+  Accessible names, form labels and error messages stay.
+- `spec`: simple purpose, architecture and implementation; a decision that improves one of UX, DX or AX (agent
+  experience) at the cost of another is recorded as a K decision with the trade.
+- `architect` spec review: new question (6), a simpler design that meets the same requirements, or an unrecorded
+  UX/DX/AX trade.
+
 ## 0.2.2 — 2026-11-02
 
 Fixes from the first acceptance run on a real project (one devops card, Tier 3, start → dispatch → implement →
