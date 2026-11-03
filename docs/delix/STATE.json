@@ -1,136 +1,10 @@
 {
-  "spec": "docs/delix/SPEC.md",
-  "size": "M",
-  "updated": "2026-11-03T18:00:00Z",
+  "spec": null,
+  "size": null,
+  "updated": "2026-11-03T14:30:00Z",
   "env_owner": null,
-  "waves": [
-    {
-      "wave": 1,
-      "cards": [
-        "T001",
-        "T002",
-        "T003"
-      ],
-      "note": "parallel; T003 written against T001's CLI interface (SPEC §4); T002 matches command text only. All 🔐: Approved line before dispatch."
-    },
-    {
-      "wave": 2,
-      "cards": [
-        "T004",
-        "T005"
-      ],
-      "note": "after T001 merged (CI step needs tests/feedback_tests.sh; docs need final CLI messages). T004 🔐."
-    },
-    {
-      "wave": 3,
-      "cards": [
-        "T006",
-        "T007"
-      ],
-      "note": "independent S card (design-system step, request approved in chat 2026-11-03); not part of SPEC.md; no file overlap with T001–T005. T007: S card from issue #8 (security), 🔐; overlaps T002 only on tests/hook_tests.sh line 5."
-    },
-    {
-      "wave": 4,
-      "cards": [
-        "T008",
-        "T009"
-      ],
-      "note": "SPEC rev 3 (gate 1 2026-11-03, K93-K103). Parallel; no code interface. T008 🔐: Approved line before dispatch. T009 paid eval runs, cap 6 USD. Merge order free (title marker survives sanitizer v1 and v2)."
-    }
-  ],
-  "cards": {
-    "T001": {
-      "file": "docs/delix/tasks/T001-feedback-script.md",
-      "role": "backend",
-      "tier": 3,
-      "status": "accepted",
-      "pr": 6,
-      "rounds": 1,
-      "cost_usd": null,
-      "merge": "850fa34"
-    },
-    "T002": {
-      "file": "docs/delix/tasks/T002-hook-rules.md",
-      "role": "backend",
-      "tier": 3,
-      "status": "accepted",
-      "pr": 4,
-      "rounds": 4,
-      "cost_usd": null,
-      "merge": "c43516d"
-    },
-    "T003": {
-      "file": "docs/delix/tasks/T003-feedback-skills.md",
-      "role": "docs",
-      "tier": 3,
-      "status": "accepted",
-      "pr": 5,
-      "rounds": 0,
-      "cost_usd": null,
-      "merge": "0a15bc0"
-    },
-    "T004": {
-      "file": "docs/delix/tasks/T004-github-forms-ci-version.md",
-      "role": "devops",
-      "tier": 3,
-      "status": "accepted",
-      "pr": 18,
-      "rounds": 0,
-      "cost_usd": null,
-      "merge": "8b8ae5e"
-    },
-    "T005": {
-      "file": "docs/delix/tasks/T005-docs-feedback.md",
-      "role": "docs",
-      "tier": 1,
-      "status": "accepted",
-      "pr": 19,
-      "rounds": 2,
-      "cost_usd": null,
-      "merge": "e83ecad"
-    },
-    "T006": {
-      "file": "docs/delix/tasks/T006-design-system-step.md",
-      "role": "docs",
-      "tier": 2,
-      "status": "accepted",
-      "pr": 15,
-      "rounds": 0,
-      "cost_usd": null
-    },
-    "T007": {
-      "file": "docs/delix/tasks/T007-stop-hook-trust.md",
-      "role": "backend",
-      "tier": 3,
-      "status": "accepted",
-      "pr": 16,
-      "rounds": 2,
-      "cost_usd": null,
-      "merge": "b22f45a"
-    },
-    "T008": {
-      "file": "docs/delix/tasks/T008-feedback-rev3.md",
-      "role": "backend",
-      "tier": 3,
-      "status": "accepted",
-      "pr": 20,
-      "rounds": 1,
-      "cost_usd": null,
-      "sha": "26758b7",
-      "merge": "1a0a0a7"
-    },
-    "T009": {
-      "file": "docs/delix/tasks/T009-feedback-eval.md",
-      "role": "devops",
-      "tier": 2,
-      "status": "accepted",
-      "pr": 21,
-      "rounds": 2,
-      "cost_usd": 2.03,
-      "sha": "9acc005",
-      "merge": "9d7b79d"
-    }
-  },
+  "waves": [],
+  "cards": {},
   "status_values": [
     "open",
     "in_progress",
@@ -140,46 +14,8 @@
     "rejected",
     "escalated"
   ],
-  "verifications": [
-    {
-      "name": "delix-t006",
-      "date": "2026-11-03",
-      "sha": "3273b88",
-      "base": "b627fa7",
-      "input": "delix-T006",
-      "tier": 2,
-      "verdict": "ACCEPT",
-      "report": "docs/delix/verifications/2026-11-03-delix-t006.md",
-      "gates": {
-        "gitleaks": "PASS (archive: pre-existing eval fixture)",
-        "local": "PASS",
-        "remote_unit": "not run: no delix.json.verify",
-        "full": "not run"
-      },
-      "qa": "ACCEPT_WITH_NOTES",
-      "security": "CLEAN",
-      "cost_usd": null,
-      "resolution": "superseded by delix-t006-r2 (P2 #1 fixed in 36e4076)"
-    },
-    {
-      "name": "delix-t006-r2",
-      "date": "2026-11-03",
-      "sha": "36e4076",
-      "base": "b627fa7",
-      "input": "delix-T006",
-      "tier": 2,
-      "verdict": "ACCEPT",
-      "report": "docs/delix/verifications/2026-11-03-delix-t006-r2.md",
-      "gates": {
-        "gitleaks": "PASS (archive: pre-existing eval fixture)",
-        "local": "PASS",
-        "remote_unit": "not run: no delix.json.verify",
-        "full": "not run"
-      },
-      "qa": "ACCEPT_WITH_NOTES",
-      "security": "CLEAN",
-      "cost_usd": null,
-      "resolution": "merged f84e675"
-    }
+  "verifications": [],
+  "archive": [
+    "docs/delix/archive/0.5.0-self-feeding/STATE.json"
   ]
 }

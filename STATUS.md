@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-03 · **Faz:** 7 — 0.5.0 öz-besleme kapandı (T001–T005 main'de); 0.5.0 etiketi, W0 ve uçtan uca test kullanıcıda
+**Son güncelleme:** 2026-11-03 · **Faz:** 7 — 0.5.0 öz-besleme rev 3 kapandı (T001–T009 main'de, arşiv `docs/delix/archive/0.5.0-self-feeding/`); K104 sızıntıları, 0.5.0 etiketi, W0 ve uçtan uca test açık
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -348,7 +348,7 @@ Hazırlık [docs/rename/delix-hazirlik.md](docs/rename/delix-hazirlik.md) §4 s�
   kurulum satırları. Proje dosyaları (`docs/delix/`, `delix.json`, `.delix/`) ve ürün adı "delix" düzyazıda aynı kaldı:
   LLMPortal'da veri taşıma yok. `delix-board` adı kaldı, 0.1.2 yeni ajan önekini izler. Geçmiş kayıtlar (STATUS,
   CHANGELOG eski bölümleri, `docs/retro/`, `docs/rename/`) değişmedi.
-## 7. 0.5.0 — öz-besleme (2026-11-03, SPEC `docs/delix/SPEC.md`, kartlar `docs/delix/tasks/T001–T005`)
+## 7. 0.5.0 — öz-besleme (2026-11-03, arşiv `docs/delix/archive/0.5.0-self-feeding/`: SPEC rev 1–3, kartlar T001–T009, STATE)
 
 | # | Adım | Durum |
 |---|---|---|
@@ -359,6 +359,8 @@ Hazırlık [docs/rename/delix-hazirlik.md](docs/rename/delix-hazirlik.md) §4 s�
 | 7.5 | W0: gerçek oturumda REQ-7 deny transkripti, `gh issue list --search "delixcrew-fp: …"`, Run düğmesi TTY | ◐ deny gözlendi (orkestratör oturumu, 2 kez); arama ve TTY kontrol edilmedi |
 | 7.6 | Uçtan uca: kullanıcı bir test issue'su gönderir ve kapatır | ◻ kullanıcıda |
 | 7.7 | 🔐 0.5.0 etiketi ve release | ◻ kullanıcıda |
+| 7.8 | Rev 3 (drift takibi): SPEC REQ-11–14, T008 `feedback.py` (#20, 🔐), T009 ayırt eden eval (#21; with 1.00 / without 0.50, 2,03 USD) | ✔ 1a0a0a7, 9d7b79d |
+| 7.9 | Kapanış: metrikler, drift (P2'ler aşağıda), 0.5.0 arşivi; `docs/delix/` triage için boş | ✔ |
 
 Kararlar (orkestratör, geri alınır; kullanıcı onaylı olanlar belirtildi):
 - **K83–K86** Dalga sırası ve merge sırası T001 → T002 → T003 (T003'ün "hook yine reddeder" metni T002'ye dayanır); 0.5.0 T002'siz çıkmaz.
@@ -369,15 +371,26 @@ Kararlar (orkestratör, geri alınır; kullanıcı onaylı olanlar belirtildi):
 - **K92** 0.5.0 kapsamı (2026-11-03, kullanıcı kararı): issue #7 (P0, veri ve gizlilik bölümü) T005'e katıldı, ayrı kart
   yok (aynı README dosyaları, aynı commit şartı). Gönderilmiş issue'nun silinme kanalı GitHub özel bildirimi
   (`security/advisories/new`); repoda private vulnerability reporting açıldı. #8 düzeltmesi (T007, `b22f45a`) ayrı 0.4.1
-  olmadan 0.5.0 ile yayınlanır; CHANGELOG girdisi T005'te. Öz-besleme kartları ve kararları: `docs/delix/SPEC.md` §9
-  (K61–K82), `docs/delix/tasks/`.
+  olmadan 0.5.0 ile yayınlanır; CHANGELOG girdisi T005'te. Öz-besleme kartları ve kararları: `docs/delix/archive/0.5.0-self-feeding/SPEC.md` §9
+  (K61–K82, rev 3: K93–K105), `docs/delix/archive/0.5.0-self-feeding/tasks/`.
+- **K93–K105** Rev 3 (2026-11-03): spec yerinde güncellendi; K94 (kullanıcı) tek parçalı yol allowlist'le redakte, K100 yalnız
+  `/delixcrew:<skill>` muaf; K104 bu değişiklikten önce de var olan sızıntılar takip işi; K105 eval izni joker içermez.
 
-Açık iş (drift kontrolü, 2026-11-03; hepsi P2 ya da test boşluğu, güvenli yönde):
-- REQ-9/10 için ayırt eden eval yok (K89): taslak kuyruğa eklenmiş, `Bash(python3:*)` izni, araç çağrısı grader'ı.
-- `feedback.py:338` sayı/liste `kind` → TypeError (exit 2 yerine 1); `send` `status`'a bakmıyor (dropped/sent tekrar gönderilebilir).
-- Redaksiyon: tek parçalı mutlak yol (`/srv`) redakte edilmiyor; README `example.*` diyor, kod yalnız `.com/.net/.org`.
-- Testsiz: REQ-4 kalıntı eşleşme ve gitleaks zaman aşımı; REQ-8 `gh` yok ve "list başarılı, create başarısız"; REQ-2 `last_seen`.
-- Hook (K77 kalıntısı): `exec(open('…/feedback.py').read())` + `pty.fork` kural (a)/(b)'ye takılmaz; TTY ve `SEND <hash>` yine durdurur. Kural (c) heredoc gövdesini de tarar (fazla engelleme).
+Açık iş (rev 3 kapanışı, 2026-11-03; ilk drift listesinin eval, `kind`, `send` durumu, `/srv`, `example.*` ve eksik test maddeleri
+rev 3'te kapandı):
+- **[Orta] K104 redaksiyon sızıntıları (rev 3'ten önce de vardı, security T008):** `_PATH_LB` `>`, `\`, `-`, `.` sonrası yolu kaçırır
+  (`cmd >/srv/acme/out.log`, `2>/var/lib/acme/x`, JSON `\/srv\/acme`); tek etiketli host'lu URL'ler kalır (`smb://nas/volume1/acme`,
+  `http://jenkins:8080/job/x`, `//fileserver/share`, `file:///etc/passwd`). 0.5.0 etiketinden önce küçük bir spec turu önerildi.
+- [Düşük] `cmd_add` tekrar satırı ve `cmd_list` diskten okunan değerleri ham basar (elle düzenlenmiş kayıtta ANSI/OSC).
+- Rev 3 drift P2'leri: `duplicate` durumu ve taslak olmayan kayıtta `preview` testsiz; REQ-12 büyük/küçük harf ve ASCII testsiz;
+  grader (d) deseni spec'ten geniş (T009 round 1 düzeltmesi); seed her koşuda `gh auth status` çalıştırır ve symlink reddi spec'te yok;
+  `*.localhost` izinli ama REQ-3/README yalnız `localhost` diyor; seed'deki sabit parmak izini test eden satır yok; README REQ-13'ü
+  (taslak olmayan kayda `send` çıkış 2) anlatmıyor; `feedback.py:2,13` docstring eski.
+- Eval: `env -u` öneki `DELIXCREW_FEEDBACK_DIR`'ı silmez (operatörde tanımlıysa eval o kuyruğu okur, salt-okunur); `$PWD`'de `*` olursa
+  birebir izin jokere döner.
+- Hook (K77 kalıntısı): `exec(open('…/feedback.py').read())` + `pty.fork` kural (a)/(b)'ye takılmaz; TTY ve `SEND <hash>` yine durdurur. Kural (c) heredoc gövdesini de tarar (fazla engelleme); rev 3'te 3 kez görüldü: SPEC düzenleyen Python heredoc'u, T009'un
+  `gh pr create` gövdesi ve review skill'inin kendi `feedback.py add <<'EOF'` taslak komutu (gövdede "send"/"gh" geçtiği için muafiyet
+  tutmadı; feedback taslağı yazılamadı).
 - SPEC §4'te olmayan davranış: BLOCKED `preview` HASH/gövde basmıyor, bilinmeyen id exit 2, `send` kontrol sırası repo→id→BLOCKED→hash→TTY.
 
 ## Açık riskler

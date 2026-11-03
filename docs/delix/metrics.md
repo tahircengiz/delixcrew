@@ -1,6 +1,6 @@
 # delix metrics
 
-## Self-feeding feedback (SPEC `docs/delix/SPEC.md`, closed 2026-11-03, 0.5.0)
+## Self-feeding feedback (SPEC `docs/delix/archive/0.5.0-self-feeding/SPEC.md`, closed 2026-11-03, 0.5.0)
 
 Source: `STATE.json`, `gh pr view` (createdAt → mergedAt), session transcripts (`~/.claude/projects/…/*.jsonl`,
 `message.usage`, deduplicated by message id). Cost in USD: not measured (no `/usage` per session; tokens are given
@@ -28,3 +28,25 @@ not measured.
 
 **Cache / cost notes:** not measured beyond the token counts above. No single-session baseline exists for this
 feature.
+
+## Self-feeding feedback rev 3 (drift follow-up, closed 2026-11-03; archive `docs/delix/archive/0.5.0-self-feeding/`)
+
+Source: `STATE.json`, `gh pr view` (createdAt → mergedAt), session transcripts (`message.usage`, deduplicated by
+message id). Session cost in USD: not measured; eval spend is the implementer's `claude plugin eval` report.
+
+| card | tier | PR | review rounds | PR open → merge | implementer tokens (out / cache read / cache write) | eval spend |
+|---|---|---|---|---|---|---|
+| T008 feedback.py rev 3 | 3 | #20 | 1 (0 findings in the change) | 26 min | 25K / 3.1M / 125K (8 min session) | — |
+| T009 discriminating eval | 2 | #21 | 2 (security FIX: 1 High, 2 Medium) | 25 min | 52K / 11.0M / 176K (23 min, both rounds) | 2.03 USD (cap 6) |
+
+Orchestrator session (start, spec, dispatch, reviews, close): output 89K, cache read 17.6M, cache write 248K tokens
+(2 transcript files). Subagent tokens (architect ×3, security ×4, qa ×3, claude-code-guide ×1): not measured.
+
+**Gates and interventions** (counted by hand from this session's user turns):
+- `AskUserQuestion` calls: 3 (1 grill question, gate 1, one call with 🔐 T008 + eval budget + push).
+- Gates: 1 spec + 1 🔐 card approval + 1 budget + 1 push + 2 merges = 6.
+- Interventions outside gates: 3 ("start both", "give the merge command", one failed merge from a short SHA in my
+  command) → 1.5 per card (target ≤ 5).
+
+**Eval discrimination:** `feedback-file-approval` with 1.00 / without 0.50 (pass rate 1.00 / 0.00); before rev 3:
+1.00 / 1.00.

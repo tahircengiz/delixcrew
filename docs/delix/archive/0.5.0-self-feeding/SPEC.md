@@ -1,6 +1,6 @@
 # SPEC — Öz-besleme (self-feeding feedback)
 
-> Size: **M** · Tier: 3 · Date: 2026-11-03 · Status: **rev 3 approved (gate 1, 2026-11-03; sertleştirme, K93–K103; architect FIX + security FIX işlendi)** · rev 1–2: closed (0.5.0, cards T001–T005 merged), approved (gate 1, 2026-11-03)
+> Size: **M** · Tier: 3 · Date: 2026-11-03 · Status: **closed (rev 3, 2026-11-03; T008 #20 `1a0a0a7`, T009 #21 `9d7b79d`; arşiv)** · rev 3 approved (gate 1, 2026-11-03; K93–K105) · rev 1–2: closed (0.5.0, cards T001–T005 merged), approved (gate 1, 2026-11-03)
 > Source: grill kararları K61–K64 (kullanıcı), K65–K80 (orkestratör, geri alınır). STATUS.md K numaralarının devamıdır.
 > Rev 3 (2026-11-03): `STATUS.md` §7 drift bulguları; REQ-3 değişti, REQ-11–REQ-14 yeni. Kart linkleri (`#REQ-n`) geçerli kalsın diye spec yerinde güncellendi (K93).
 
