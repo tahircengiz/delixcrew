@@ -96,7 +96,8 @@ claude plugin install delix-board@delixcrew
 
 delixcrew'un kendisi sorun çıkardığında (bir hook doğru işi reddeder, bir skill adımı yazıldığı gibi uygulanamaz, bir
 plugin sınırını elle aşarsınız) sorunun yerel bir taslağını tutabilir; bunu bu repoya GitHub issue olarak
-gönderebilirsiniz. Siz kendi terminalinizden göndermedikçe makinenizden hiçbir şey çıkmaz.
+gönderebilirsiniz. delixcrew kendi başına göndermez: taslak siz kendi terminalinizde `send` çalıştırınca gider;
+hook'lar Claude'un göndermesinin bilinen yollarını kapatır (bkz. Kalan risk).
 
 **Varsayılan kapalı.** Kendi terminalinizde açıp kapatırsınız; betik plugin'in kurulum dizinindedir, marketplace
 kurulumunda `~/.claude/plugins/cache/delixcrew/delixcrew/<version>/scripts/feedback.py`:
@@ -122,7 +123,7 @@ sayısını gösterir; `disable` kapatır. Kapalıyken hiçbir şey yazılmaz: `
 4. Bunu **kendi terminalinizde** çalıştırın. Kuyruk dizinini ve tam metni yeniden basar, `SEND <hash>` yazmanızı
    bekler. Önizlemeden sonra metin değiştiyse durur ve yeniden önizleme ister.
 
-Claude göndermez: hook'lar her oturumda `feedback.py send`'i, `feedback.py`'yi `script`, `expect`, `unbuffer` ya da
+Claude için bilinen gönderme yolları kapalıdır: hook'lar her oturumda `feedback.py send`'i, `feedback.py`'yi `script`, `expect`, `unbuffer` ya da
 `pty.spawn` altında çalıştırmayı, delixcrew'u hedefleyen `gh issue create|comment|edit` ve `gh api … issues`
 komutlarını ve kuyruk dizinine Write/Edit'i `delixcrew: feedback is sent only by the user from their own terminal`
 mesajıyla reddeder.
@@ -142,7 +143,8 @@ projelerin adları (klasör adı, git remote sahibi ve repo) ve `--terms` kelime
 **Taslağı ne engeller** (`VERDICT: BLOCKED: <neden>`, `send` 4 ile çıkar; sır değeri basılmaz): ham ya da redakte
 metinde `gitleaks` bulgusu, ya da `gitleaks`'in olmaması, hata vermesi, zaman aşımı; görünmez Unicode kontrol karakteri
 (zero-width, bidi); 32+ karakterlik opak dizi (`[A-Za-z0-9+=_-]`; tam git SHA'sı da takılır, kısasını kullanın);
-15'ten fazla kod satırı; 8 KB'tan büyük gövde; redaksiyondan sonra hâlâ redaksiyon kuralına uyan bir şey.
+15'ten fazla kod satırı; 8 KB'tan büyük gövde; redaksiyondan sonra hâlâ redaksiyon kuralına uyan bir şey; kuyruğa
+alındıktan sonra diskte değişmiş kayıt (`fingerprint mismatch`); okunamayan kuyruk kaydı.
 
 **Kalan risk.** Hook'lar göndermenin *bilinen* yollarını kapatır; her şeyi engellemez. Claude sizin `gh` oturumunuzla
 çalışır ve gizlenmiş bir komut (base64'ten kurulan komut, dosyaya yazılmış bir sarmalayıcı, `gh` dışı bir HTTP isteği)
@@ -164,9 +166,11 @@ isterseniz kendi `settings.json`'unuza bir deny kuralı ekleyin; delixcrew bunu 
   sır içeren taslak redakte edilip gönderilmez, engellenir.
 - **Nereye gider**: `tahircengiz/delixcrew` üzerinde **public** bir issue; `gh` ile **sizin kendi** GitHub hesabınızla
   açılır. Dayanak sizin açık eyleminizdir: siz açana kadar geri bildirim kapalıdır, kendi terminalinizde `SEND <hash>`
-  yazana kadar hiçbir şey gönderilmez.
+  yazana kadar delixcrew hiçbir şey göndermez; hook'lar Claude için yalnız bilinen yolları kapatır (bkz. Kalan risk).
 - **Yerel kuyruk**: `~/.claude/delixcrew/feedback/` (ya da `DELIXCREW_FEEDBACK_DIR`). `feedback.py drop <id>` taslağı
   bırakılmış olarak işaretler ve bir daha önerilmez (dosya kalır); bütün taslakları ve ayarı silmek için dizini silin.
+  Kuyruk dosyaları taslağın **ham, redakte edilmemiş** metnini ve proje terimlerini (`origin_terms`) tutar; redaksiyon
+  yalnız `preview` ve `send` sırasında uygulanır. Redaksiyon desen tabanlıdır; göndermeden önce önizlemeyi okuyun.
 - **Gönderilmiş issue'yu sildirmek**: yazarı olarak düzenleyebilirsiniz ama GitHub silmenize izin vermez. Kaldırılmasını
   GitHub private reporting üzerinden isteyin:
   [security/advisories/new](https://github.com/tahircengiz/delixcrew/security/advisories/new).

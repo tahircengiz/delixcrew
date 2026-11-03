@@ -4,11 +4,11 @@ Earlier versions: git history and the [v0.2.0 release](https://github.com/tahirc
 
 ## 0.5.0 — 2026-11-03
 
-Self-feeding feedback: problems with delixcrew itself become sanitized GitHub issues, sent only by you.
+Self-feeding feedback: problems with delixcrew itself become sanitized GitHub issues, sent from your own terminal after you review them.
 
 - **Feedback queue** (`scripts/feedback.py`, stdlib only): off by default (`feedback.py enable [--terms a,b]`,
   `disable`, `status`); drafts in `~/.claude/delixcrew/feedback/` (`DELIXCREW_FEEDBACK_DIR`), never in the project repo;
-  repeats are folded by fingerprint. `preview` redacts hosts outside an allowlist, private IPs, MAC and e-mail addresses,
+  repeats are folded by fingerprint. `preview` redacts hosts outside an allowlist, IP addresses (except loopback and documentation ranges), MAC and e-mail addresses,
   paths, user and machine names, project names and your extra terms, and blocks (fail-closed) on a `gitleaks` finding or
   missing `gitleaks`, invisible Unicode controls, 32+ character opaque strings, more than 15 code lines or a body over
   8 KB. `send` runs only on a TTY, prints the full text and waits for `SEND <hash>`; the target repo is fixed and an

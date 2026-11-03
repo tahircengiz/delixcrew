@@ -96,7 +96,8 @@ on request, in `.gitignore`). In the implementer worktree: `.delix/card` (activa
 
 When delixcrew itself misbehaves (a hook rejects correct work, a skill step cannot be followed as written, you work
 around a plugin limit by hand), it can keep a local draft of the problem so you can send it to this repo as a GitHub
-issue. Nothing leaves your machine unless you send it yourself, from your own terminal.
+issue. delixcrew never sends on its own: a draft is sent when you run `send` in your own terminal, and the hooks block
+the known ways for Claude to send (see Remaining risk).
 
 **Off by default.** Turn it on (and off) in your own terminal; the script lives in the plugin's install directory, for
 a marketplace install `~/.claude/plugins/cache/delixcrew/delixcrew/<version>/scripts/feedback.py`:
@@ -123,7 +124,7 @@ directory and the number of drafts; `disable` turns it off. While it is off noth
 4. Run it in **your own terminal**. It prints the queue directory and the full text again and waits for you to type
    `SEND <hash>`. If the text changed since the preview, it stops and asks you to preview again.
 
-Claude never sends: in every session the hooks deny `feedback.py send`, running `feedback.py` under `script`, `expect`,
+The known send paths for Claude are closed: in every session the hooks deny `feedback.py send`, running `feedback.py` under `script`, `expect`,
 `unbuffer` or `pty.spawn`, `gh issue create|comment|edit` and `gh api … issues` aimed at delixcrew, and Write/Edit into
 the queue directory, with `delixcrew: feedback is sent only by the user from their own terminal`.
 
@@ -143,7 +144,8 @@ from (folder name, git remote owner and repo) and your `--terms`.
 **What blocks a draft** (`VERDICT: BLOCKED: <reason>`, `send` exits 4; no secret value is printed): a `gitleaks` finding in
 the raw or the redacted text, or `gitleaks` missing, failing or timing out; an invisible Unicode control character
 (zero-width, bidi); an opaque string of 32+ characters (`[A-Za-z0-9+=_-]`, so a full git SHA is blocked too; use the
-short one); more than 15 code lines; a body over 8 KB; anything still matching the redaction rules after redaction.
+short one); more than 15 code lines; a body over 8 KB; anything still matching the redaction rules after redaction; a
+record changed on disk since it was queued (`fingerprint mismatch`); an unreadable queue record.
 
 **Remaining risk.** The hooks close the *known* ways to send; they do not block everything. Claude runs with your `gh`
 login, and a disguised command (one built from base64, a wrapper written to a file, an HTTP request without `gh`) can get
@@ -164,10 +166,12 @@ guard, add a deny rule to your own `settings.json`; delixcrew only suggests this
   part of home paths, other absolute paths, e-mail addresses and hosts outside the allowlist are redacted; a draft with a
   secret is blocked, not redacted and sent.
 - **Where it goes**: a **public** issue on `tahircengiz/delixcrew`, opened with **your own** GitHub account through
-  `gh`. The basis is your explicit action: feedback is off until you enable it, and nothing is sent until you type
-  `SEND <hash>` in your own terminal.
+  `gh`. The basis is your explicit action: feedback is off until you enable it, and delixcrew sends nothing until you
+  type `SEND <hash>` in your own terminal; the hooks close only the known paths for Claude (see Remaining risk).
 - **Local queue**: `~/.claude/delixcrew/feedback/` (or `DELIXCREW_FEEDBACK_DIR`). `feedback.py drop <id>` marks a draft
   as dropped so it is not offered again (the file stays); delete the directory to remove every draft and the setting.
+  The queue files keep the **raw, unredacted** draft text and the project terms (`origin_terms`); redaction is applied
+  only at `preview` and `send`. Redaction is pattern-based, so read the preview before you send.
 - **Deleting a sent issue**: as its author you can edit it, but GitHub does not let you delete it. To have it removed,
   ask through GitHub private reporting:
   [security/advisories/new](https://github.com/tahircengiz/delixcrew/security/advisories/new).
