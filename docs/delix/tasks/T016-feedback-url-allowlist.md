@@ -112,3 +112,13 @@
 - **[Low, fix] H2 IPv4 glued to `_` or `.`** (`:69` `IPV4_RE`, `_url_allowed` tail): `https://code.claude.com/docs/_10.20.30.40`, `https://code.claude.com/docs/x.10.20.30.40` stay (K146 "no IP in the tail"); `_10.20.30.40` stays in plain text. Fix: in `_url_allowed`, before the github.com rule, `if re.search(r"(?<!\d)\d{1,3}(?:\.\d{1,3}){3}(?!\d)", tail): return False`; `IPV4_RE` lookbehind `(?<![\w.])` → `(?<![^\W_])(?<!\.)`. Tests: both URLs → `https://<redacted:url>`; `_10.20.30.40` → `_<redacted:ip>`; `v1.2.3.4` unchanged; REQ-5 timing `"_1.2.3.4" * 6000`.
 - [Note, no fix] `self.term_re`, `module.some_function` → `<redacted:host>` (G1 side effect, fail closed, same as `os.path` on main). `jenkins.acme-corp.internal.1` and `jenkins:8080` without `/` stay (pre-existing, design call): lead adds to SPEC §6 at close with the combining marks. qa P2 notes: `_url_pass` concat O(n²) (follow-up), adjacent placeholders may change on a second pass (fail closed, follow-up).
 - Round 3 is the last (`max_review_rounds` 3): a further Medium escalates to the user.
+
+### Round 3 (2026-11-03, PR #33, 1d82c9d, base f46f006)
+- Deterministic gates (lead, from `git archive 1d82c9d`): `bash tests/sanitize_tests.sh` 132 ✔ ALL PASSED, 17 REQ-5 timings ≤ 0.019 s; full loop exit 0; CI `test` + `check` SUCCESS. H1 and H2 fixed.
+- qa: ACCEPT_WITH_NOTES (P0 0, P1 0, P2 1). security: 🔐 HUMAN_APPROVAL (no Critical/High/Medium; 3 Low). Lead reproduced every item below; all are pre-existing on main except the timing gap, all are plain-text heuristic limits (class b), none breaks a REQ.
+- [P2/Low, follow-up] IP followed by `_`: `_10.20.30.40_`, `10.20.30.40_`, `_fd00:1:2::3_` unchanged (`IPV4_RE`/`IPV6_RE` lookahead treats `_` as `\w`).
+- [Low, §6] host with a known extension as last label: `jenkins.acme-corp.internal.conf` unchanged (REQ-3 says so; denied inside a URL tail).
+- [Low, follow-up] path after a host that starts after `:`: `key:jenkins.acme-corp.internal/api/acme-bank` → `key:<redacted:host>/api/acme-bank`.
+- [Low, follow-up, test only] no ≈50 000-character timing case through the new tail IPv4 check; lead measured `"https://code.claude.com/docs/" + "1111." * 10000` at 0.007 s.
+- [Note] `jenkins.acme-corp.internal.a_` unchanged (1-letter label, contrived); `http://[2001:db8::10.1.2.3]/` kept (documentation IPv6).
+- Round cap reached; the lead does not open a round 4. Residuals go to one follow-up card and SPEC §6 at close.

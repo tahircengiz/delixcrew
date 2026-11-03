@@ -26,11 +26,11 @@
       "file": "docs/delix/tasks/T016-feedback-url-allowlist.md",
       "role": "backend",
       "tier": 3,
-      "status": "fixing",
+      "status": "in_review",
       "pr": 33,
       "rounds": 3,
       "cost_usd": null,
-      "sha": "842707d"
+      "sha": "1d82c9d"
     },
     "T017": {
       "file": "docs/delix/tasks/T017-write-gate-queue-casefold.md",
