@@ -305,7 +305,9 @@ def build(n, rec, live_sha):
         reasons.append("opaque string of 32+ characters")
     if sanitize(comment, term_re) != comment:
         reasons.append("residual match after sanitizing")
-    user = [reason] + questions  # K122: checked on the raw text; sanitize adds <redacted:…> placeholders
+    # K122: checked on the raw text (sanitize adds <redacted:…> placeholders) and on its NFKC form, which sanitize
+    # publishes: fullwidth / small-form characters become @ and <.
+    user = [y for x in [reason] + questions for y in (x, unicodedata.normalize("NFKC", x))]
     if any(HTML_RE.search(x) or "<!--" in x for x in user):
         reasons.append("HTML in reason or questions")
     if any(MENTION_RE.search(x) for x in user):

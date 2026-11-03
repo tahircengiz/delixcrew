@@ -40,7 +40,7 @@ T = os.environ["TRT"]
 a = sys.argv[1:]
 with open(os.path.join(T, "gh.log"), "a") as f:
     f.write("ARGS: " + " ".join(a) + "\n")
-    f.writelines("%s=%s\n" % kv for kv in os.environ.items() if kv[0].startswith(("GH_", "GITHUB_")))
+    f.writelines("ENV: %s\n" % k for k in os.environ if k.startswith(("GH_", "GITHUB_")))  # names only, never values
 def die(msg):
     sys.stderr.write(msg + "\n"); sys.exit(1)
 fail = os.environ.get("GH_FAIL", "")
@@ -177,7 +177,10 @@ out=$(GH_FAIL=all tr_ index 2>&1); [ $? -eq 7 ] && ok "REQ-2 gh fails: exit 7" |
 
 # --- K126 and gh environment ---------------------------------------------------
 grep -E '^ARGS: .*--json [^ ]*authorAssociation' "$T/gh.log" && bad "K126 top-level authorAssociation requested" || ok "K126 no top-level authorAssociation in any --json"
-grep -qE '^(GH_HOST|GH_REPO|GH_ENTERPRISE_TOKEN|GITHUB_ENTERPRISE_TOKEN)=' "$T/gh.log" && bad "gh env not scrubbed" || ok "GH_HOST/GH_REPO/enterprise tokens removed from gh env"
+grep -qE '^ENV: (GH_HOST|GH_REPO|GH_ENTERPRISE_TOKEN|GITHUB_ENTERPRISE_TOKEN)$' "$T/gh.log" && bad "gh env not scrubbed" || ok "GH_HOST/GH_REPO/enterprise tokens removed from gh env"
+cp "$T/gh.log" "$T/gh.keep"; : > "$T/gh.log"; GH_ASSOC=SECRETVALUE gh label list -R x --json name >/dev/null
+grep -qx "ENV: GH_ASSOC" "$T/gh.log" && ! grep -q SECRETVALUE "$T/gh.log" && ok "stub logs GH_/GITHUB_ variable names, never values" || bad "stub env log ($(cat "$T/gh.log"))"
+cp "$T/gh.keep" "$T/gh.log"
 
 # --- REQ-8 --require accepted (before triage) -----------------------------------
 out=$(tr_ show 12 --require accepted 2>"$T/err"); rc=$?
@@ -293,6 +296,11 @@ blocked "gitleaks finding"     'd["reason"]="key FAKE_SECRET_MARKER here"'      
 blocked "32+ opaque string"    "d['reason']='token $RAND here'"                                    opaque
 blocked "zero-width char"      'd["reason"]="a​b"'                                            unicode
 blocked "residual match"       'd["reason"]="see x.ioacme.md"'                                     residual
+# Review round 1: NFKC (inside sanitize) turns fullwidth / small-form characters into @ and <.
+blocked "fullwidth @ (U+FF20)" 'd["reason"]="Ask ＠alice"'                                     mention
+blocked "small-form @ (U+FE6B)" 'd["reason"]="Ask ﹫alice"'                                    mention
+blocked "fullwidth <b>"        'd["reason"]="＜b＞x"'                                      HTML
+blocked "fullwidth <!--"       'd["reason"]="＜!-- x"'                                         HTML
 
 # --- REQ-6 apply -------------------------------------------------------------
 mkdir -p "$T/fake/scripts" "$T/fake/.claude-plugin"; cp "$S/triage.py" "$S/feedback.py" "$T/fake/scripts/"
@@ -318,7 +326,7 @@ out=$(GH_FAIL=all tr_ apply 12 --confirm "$H12" </dev/null 2>&1); [ $? -eq 7 ] &
   && ok "REQ-6 accept: label created (fixed color/description), comment = preview text, label added, not closed, record applied" || bad "REQ-6 accept (rc=$rc, $out)"
 grep -qF -- "ARGS: label create -R github.com/tahircengiz/delixcrew accepted --color 0e8a16 --description Triaged: accepted" "$T/gh.log" \
   && grep -qF -- "--body-file" "$T/gh.log" && ok "REQ-6 gh label create / issue comment --body-file with fixed -R" || bad "REQ-6 gh args ($(grep ARGS "$T/gh.log"))"
-grep -qE '^(GH_HOST|GH_REPO|GH_ENTERPRISE_TOKEN|GITHUB_ENTERPRISE_TOKEN)=' "$T/gh.log" && bad "REQ-6 gh env not scrubbed" || ok "REQ-6 gh env scrubbed"
+grep -qE '^ENV: (GH_HOST|GH_REPO|GH_ENTERPRISE_TOKEN|GITHUB_ENTERPRISE_TOKEN)$' "$T/gh.log" && bad "REQ-6 gh env not scrubbed" || ok "REQ-6 gh env scrubbed"
 
 # --- REQ-8 --require accepted (after triage) ------------------------------------
 out=$(tr_ show 12 --require accepted 2>"$T/err"); rc=$?
