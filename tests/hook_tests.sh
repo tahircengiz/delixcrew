@@ -115,4 +115,18 @@ fbdeny "pty.spawn in python3 - heredoc denied"  bash_gate.py "$(bashjson "$N" "$
 fbdeny "script wrapping a bash heredoc denied"  bash_gate.py "$(bashjson "$N" "$(printf '%s\n' "script -q /dev/null bash <<'EOF'" 'python3 scripts/feedback.py "send" F001' 'EOF')")"
 fbdeny "unterminated <<X does not hide the rest" bash_gate.py "$(bashjson "$N" "$(printf '%s\n' "echo '<<X'" 'script -q /dev/null python3 scripts/feedback.py "send" F001')")"
 allow  "add heredoc body quoting feedback.py send" bash_gate.py "$(bashjson "$N" "$(printf '%s\n' "python3 \"/x/scripts/feedback.py\" add <<'EOF'" '{"title": "feedback.py send prints wrong hash"}' 'EOF')")"
+# REQ-7 fix round 3: the exemption is a fullmatch of one quoted-delimiter `python3 …/feedback.py add <<'EOF'` call
+SND='script -q /dev/null python3 scripts/feedback.py send F001'
+hd(){ bashjson "$N" "$(printf '%s\n' "$@")"; }
+fbdeny "unquoted <<EOF with \$(… send)"        bash_gate.py "$(hd 'python3 scripts/feedback.py add <<EOF' '$(python3 scripts/feedback.py send F001 --confirm abc)' 'EOF')"
+fbdeny "unquoted <<EOF with backticks"        bash_gate.py "$(hd 'python3 scripts/feedback.py add <<EOF' '`python3 scripts/feedback.py send F001`' 'EOF')"
+fbdeny "add # <<EOF comment trick"            bash_gate.py "$(hd 'python3 scripts/feedback.py add # <<EOF' "$SND" 'EOF')"
+fbdeny "add \\<<EOF escape trick"             bash_gate.py "$(hd 'python3 scripts/feedback.py add \<<EOF' "$SND" 'EOF')"
+fbdeny "add \"<<EOF quote trick"              bash_gate.py "$(hd 'python3 scripts/feedback.py add "<<EOF' "\"; $SND" 'EOF')"
+fbdeny "command on the delimiter line"        bash_gate.py "$(hd "python3 scripts/feedback.py add <<'EOF'" '{"t":"x"}' "EOF; $SND")"
+fbdeny "line after the delimiter"             bash_gate.py "$(hd "python3 scripts/feedback.py add <<'EOF'" '{"t":"x"}' 'EOF' "$SND")"
+fbdeny "early delimiter inside the body"      bash_gate.py "$(hd "python3 scripts/feedback.py add <<'EOF'" '{"t":"x"}' 'EOF' "$SND" 'EOF')"
+T3B='{"title": "feedback.py send under script prints $( and `x`", "body": "send"}'
+T3O='python3 "${CLAUDE_PLUGIN_ROOT}/scripts/feedback.py" add <<'"'EOF'"
+allow  "T003 add heredoc, risky words in body" bash_gate.py "$(hd "$T3O" "$T3B" 'EOF')"
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

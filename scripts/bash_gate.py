@@ -16,13 +16,16 @@ cwd = g.get("cwd") or os.getcwd()
 
 # REQ-7: known feedback send paths, in every session (before the card and agent_type checks); known paths only (K77)
 FEEDBACK_DENY = "delixcrew: feedback is sent only by the user from their own terminal"
-# (a) and (b) run on the command with one kind of heredoc body removed: the draft fed to `feedback.py … add <<'EOF'`.
-# The opening line must be that command alone (no shell metacharacters) and the body must end at its delimiter line;
-# every other heredoc body (bash, python3 -, a pty wrapper) stays in the checked text.
-ADD_HEREDOC = re.compile(r"^([ \t]*(?:python3?[ \t]+)?(?:\"(?:[^\"\n]*/)?feedback\.py\"|'(?:[^'\n]*/)?feedback\.py'|"
-                         r"(?:[^\s'\"]*/)?feedback\.py)[ \t]+add\b[^\n;&|`$()<>]*<<-?[ \t]*(['\"]?)([A-Za-z_][\w.-]*)\2"
-                         r"[ \t]*)\n.*?^[ \t]*\3[ \t]*$", re.M | re.S)
-checked = ADD_HEREDOC.sub(lambda m: m.group(1), cmd)
+# (a) and (b) skip a heredoc body only when the whole command is exactly one capture call (allowlist):
+# `python3 <path>/feedback.py add <<'DELIM'` (quoted delimiter: no expansion), body, `DELIM` as the last line.
+# The path may use $VAR/${VAR}, nothing else that the shell expands. Any other shape is checked as full text.
+_VAR = r"\$\{?[A-Za-z_]\w*\}?"
+_QPATH = r"\"(?:(?:[^\"\n$`\\]|" + _VAR + r")*/)?feedback\.py\""
+_PATH = r"(?:(?:[^\s'\"$`\\;&|<>(){}#*?\[\]~]|" + _VAR + r")*/)?feedback\.py"
+ADD_HEREDOC = re.compile(r"(python3[ \t]+(?:" + _QPATH + "|" + _PATH + r")[ \t]+add[ \t]+<<(['\"])([A-Za-z_][\w.-]*)\2)"
+                         r"\n(.*)\n\3", re.S)
+m = ADD_HEREDOC.fullmatch(cmd.strip())
+checked = m.group(1) if m and m.group(3) not in m.group(4).split("\n") else cmd
 if re.search(r"\bfeedback\.py['\"]?(?:\s*,\s*|\s+)(?:-\S+\s+)*['\"]?send\b", checked) or (
         re.search(r"\bfeedback\.py\b", checked) and re.search(r"\b(script|expect|unbuffer)\b|\bpty\.spawn\b", checked)):
     deny(FEEDBACK_DENY)
