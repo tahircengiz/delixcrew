@@ -3,7 +3,7 @@
 **Spec first. Agents build. You hold the gates.**
 
 `delix`, tek oturumda "aç, klasör seç, geçmişi oku, devam et" döngüsünü gerçek bir yazılım ekibinin iş bölümüne
-çevirir: **orkestratör** oturum grill ile tech spec yazar, işi görev kartlarına böler, her kartı kendi worktree'sinde
+çevirir: **ekip lideri** oturumu grill ile tech spec yazar, işi görev kartlarına böler, her kartı kendi worktree'sinde
 çalışan bir **uygulayıcı** oturumuna verir, **salt-okunur inceleyicilerle** (qa, security) denetler. İnsan yalnız iki
 kapıda devrededir: **spec onayı** ve **PR merge**. Kısıtlar prompt'ta değil harness'tadır: inceleyici rollerin `tools`
 listesinde yazma aracı yoktur, plugin hook'ları korunan yollara yazmayı ve test dosyası değiştirmeyi engeller, Stop
@@ -78,7 +78,7 @@ claude plugin install delix-board@delixcrew
 
 | Rol | Birim | Yetki | Model |
 |---|---|---|---|
-| orkestratör | ana oturum | kod yazmaz | üst |
+| ekip lideri | ana oturum | kod yazmaz | üst |
 | `delixcrew:architect` | subagent | Read, Grep, Glob | opus |
 | uygulayıcı (backend / frontend / ui-ux / devops / docs rol notu) | ayrı oturum, worktree | tümü; korunan yol ve var olan test dosyası yalnız kartın Files listesinde (korunan yol ek olarak 🔐 Approved satırıyla) açık, kart ve `docs/delix/**` hook'la engelli | sonnet |
 | `delixcrew:qa` | subagent | Read, Grep, Glob | sonnet |
@@ -254,7 +254,7 @@ yönlendirme, `cp`, `mv` ve `tee`'yi, inceleyici Bash'ini ve her oturumda biline
 yollarını keser; bkz. [Geri bildirim](#geri-bildirim) ve [Triage](#triage)). Worktree (cwd) dışına çıkan yol her zaman reddedilir (A13, K42); yol eşleşmeleri cwd'ye
 göredir. Bu yüzden kart dosyası, `docs/delix/**` ya da kartta onaysız korunan yol değişikliği `delixcrew:qa` incelemesinde
 diff'ten bulgu sayılır. Tier 3 izni kartın başlık tablosundan sonraki `**🔐 Approved:** <YYYY-MM-DD> <kim>` satırıyla
-açılır; bu satırı yalnız orkestratör, kullanıcının sohbetteki açık "evet"inden sonra yazar ve main'e commit eder.
+açılır; bu satırı yalnız ekip lideri, kullanıcının sohbetteki açık "evet"inden sonra yazar ve main'e commit eder.
 
 ## Lisans
 

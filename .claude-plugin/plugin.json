@@ -1,8 +1,8 @@
 {
   "name": "delixcrew",
   "displayName": "DelixCrew",
-  "version": "0.6.0",
-  "description": "Team workflow for Claude Code: an orchestrator writes the spec through a grill interview, splits it into task cards, dispatches them to worktree-isolated implementer sessions, and reviews them with read-only reviewers. Two human gates: spec approval and PR merge.",
+  "version": "0.6.1",
+  "description": "Team workflow for Claude Code: a lead writes the spec through a grill interview, splits it into task cards, dispatches them to worktree-isolated implementer sessions, and reviews them with read-only reviewers. Two human gates: spec approval and PR merge.",
   "author": {
     "name": "Tahir Cengiz"
   },

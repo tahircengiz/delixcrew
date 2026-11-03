@@ -37,7 +37,7 @@ const T002 = `# T002 — Container hardening for the database
 ## Steps
 1. Red, then green.
 
-## Review findings (filled by the orchestrator)
+## Review findings (filled by the lead)
 - Round 1 (838c7f1; qa **ACCEPT**, security **HUMAN_APPROVAL**):
   - **[security, Medium] \`compose.yaml:51\` capability is wider than needed.**
   - P2 (no fix asked): the test result file misses one command.
@@ -92,7 +92,7 @@ export const FILES: Record<string, string> = {
 
 export const WORKTREES = `worktree ${ROOT}\nHEAD 1\nbranch refs/heads/main\n\nworktree /w/t002\nHEAD 2\nbranch refs/heads/delix-T002\n\n`
 
-// The desktop app's layout: the orchestrator writes STATE in its own session worktree, the main checkout is
+// The desktop app's layout: the lead writes STATE in its own session worktree, the main checkout is
 // behind on a closed spec, an implementer worktree holds the dispatch-time copy (and may touch `updated`).
 export const MAIN = '/m'
 export const ORCH = '/m/.claude/worktrees/orch'
@@ -126,8 +126,8 @@ const at = (hhmm: string) => Date.parse(`2026-11-03T${hhmm}:00Z`)
 export const LAYOUT_COMMITS = { [MAIN]: at('12:45') / 1000, [ORCH]: at('17:45') / 1000, [IMPL]: at('18:00') / 1000 }
 
 /**
- * As seen live: both copies say `updated` 18:30, the orchestrator did not move it. The main checkout was pulled at
- * 18:19 (fresh mtime) to a commit of 18:06; the orchestrator committed at 18:00 and wrote again at 18:15, uncommitted.
+ * As seen live: both copies say `updated` 18:30, the lead did not move it. The main checkout was pulled at
+ * 18:19 (fresh mtime) to a commit of 18:06; the lead committed at 18:00 and wrote again at 18:15, uncommitted.
  */
 export const TIE = {
   files: {

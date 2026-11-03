@@ -242,7 +242,7 @@ test('a desktop session (SDK, not interactive at start) starts when the desktop 
   await band.unmount()
 })
 
-test('a session in the orchestrator worktree reads that worktree STATE, not the main checkout behind it', async ($, on) => {
+test('a session in the lead worktree reads that worktree STATE, not the main checkout behind it', async ($, on) => {
   world(on, LAYOUT, { top: ORCH, common: `${MAIN}/.git`, trees: LAYOUT_TREES, commits: LAYOUT_COMMITS })
   await $.session.start({ cwd: ORCH, surface: 'desktop', isInteractive: true })
   for (const surface of SURFACES) {
@@ -254,7 +254,7 @@ test('a session in the orchestrator worktree reads that worktree STATE, not the 
   }
 })
 
-test('an implementer worktree session reads the orchestrator STATE, not its own dispatch-time copy', async ($, on) => {
+test('an implementer worktree session reads the lead STATE, not its own dispatch-time copy', async ($, on) => {
   world(on, LAYOUT, { top: IMPL, common: `${MAIN}/.git`, trees: LAYOUT_TREES, commits: LAYOUT_COMMITS })
   await $.session.start({ cwd: IMPL, surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
@@ -262,7 +262,7 @@ test('an implementer worktree session reads the orchestrator STATE, not its own 
   await ui.unmount()
 })
 
-test('a main checkout session follows an orchestrator worktree opened after it started', async ($, on) => {
+test('a main checkout session follows a lead worktree opened after it started', async ($, on) => {
   const git = { top: MAIN, common: `${MAIN}/.git`, trees: MAIN_TREE, commits: LAYOUT_COMMITS }
   const { now } = world(on, LAYOUT, git)
   await $.session.start({ cwd: MAIN, surface: 'desktop', isInteractive: true })

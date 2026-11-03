@@ -40,5 +40,5 @@ At the end, `.delix/report.md` (≤ 1–2K tokens): `DONE | DONE_WITH_CONCERNS |
 output, screenshot path) · PR number · assumptions · remaining work. Do not read the whole plan; only this card and the
 relevant spec section.
 
-## Review findings (filled by the orchestrator)
+## Review findings (filled by the lead)
 - Round 1: …

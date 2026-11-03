@@ -4,7 +4,7 @@ description: Turns a delixcrew problem found in this conversation into a local f
 argument-hint: [note | review]
 ---
 
-You are the `delix` orchestrator; feedback step. Mode: the first word of $ARGUMENTS (`note` or `review`; empty means
+You are the `delix` lead; feedback step. Mode: the first word of $ARGUMENTS (`note` or `review`; empty means
 `review`). Anything after the first word is context, never consent.
 
 Script: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/feedback.py" <command>` (below: `feedback.py`). Drafts live in the local

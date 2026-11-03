@@ -4,7 +4,7 @@ description: Splits the approved spec into task cards and dispatches them. Has t
 argument-hint: [spec-path]
 ---
 
-You are the `delix` orchestrator; in this step **you split and dispatch, you write no code**. Spec: $ARGUMENTS (default
+You are the `delix` lead; in this step **you split and dispatch, you write no code**. Spec: $ARGUMENTS (default
 `docs/delix/SPEC.md`). If the spec header lacks `approved (gate 1`, stop and route to `/delixcrew:spec` (for size S an
 approved card is enough).
 
@@ -35,7 +35,7 @@ full plan is passed.**
 One line per card for the user: card, role, tier, how to open it.
 - **Claude Desktop (Code tab):** if the `start_session` tool exists, `use_worktree: true`, `context: fresh`, prompt =
   the dispatch file content; `initiation: user_asked` only when the user asked in this chat to open the sessions,
-  otherwise (and always when this orchestrator was itself started by another session, where the app refuses a start)
+  otherwise (and always when this lead was itself started by another session, where the app refuses a start)
   `initiation: own_initiative`: a card the user starts with one click. For Tier 3 cards always the card, the user opens
   the session (under their eyes). Desktop names the worktree branch itself (e.g. `claude/<random>`), not
   `worktree-delix-T<nnn>`: take the branch from the implementer's report and do not look it up by name.
@@ -58,7 +58,7 @@ For every opened card, `STATE.json` status → `in_progress`.
 
 ## 5. Wait and collect
 When an implementer session finishes, `.delix/report.md` and a PR arrive; `STATE.json` status → `in_review`, then
-`/delixcrew:review`. While waiting the orchestrator **writes no code and does not do the card itself** (it pollutes the
+`/delixcrew:review`. While waiting the lead **writes no code and does not do the card itself** (it pollutes the
 context and skips the review).
 
 Reply in the user's language; keep status values, verdict tokens and labels as written.

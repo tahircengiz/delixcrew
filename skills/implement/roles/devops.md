@@ -11,5 +11,5 @@
 - Evidence is operational: the service up (`docker compose ps` healthy, an HTTPS request through the proxy returning the
   expected status), logs clean after start, and the rollback command written in the report. A measurement the card
   asks for is command + number, never an estimate. You gather it in an isolated, throwaway run (own compose project
-  name and directory, torn down afterwards); the shared test environment is the orchestrator's (implement §3), so
-  what needs it goes into the report as commands for the orchestrator's run.
+  name and directory, torn down afterwards); the shared test environment is the lead's (implement §3), so
+  what needs it goes into the report as commands for the lead's run.

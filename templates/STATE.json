@@ -1,16 +1,16 @@
 {
-  "$comment": "docs/delix/STATE.json. The orchestrator writes it; the implementer changes only its own card's status and pr fields.",
+  "$comment": "docs/delix/STATE.json. The lead writes it; the implementer changes only its own card's status and pr fields.",
   "spec": "docs/delix/SPEC.md",
   "size": "M",
   "updated": "2026-01-01T00:00:00Z",
   "env_owner": null,
-  "$comment_env_owner": "Lock of the shared test environment (K23): null or {\"card\": \"T001\", \"who\": \"orchestrator\", \"since\": \"<ISO>\"}; only the orchestrator writes it.",
+  "$comment_env_owner": "Lock of the shared test environment (K23): null or {\"card\": \"T001\", \"who\": \"lead\", \"since\": \"<ISO>\"}; only the lead writes it.",
   "waves": [["T001", "T002"], ["T003"]],
   "cards": {
     "T001": { "file": "docs/delix/tasks/T001-example.md", "role": "backend", "tier": 2, "status": "open", "pr": null, "rounds": 0, "cost_usd": null }
   },
   "status_values": ["open", "in_progress", "in_review", "fixing", "accepted", "rejected", "escalated"],
-  "$comment_verifications": "/delixcrew:verify records (card-less work, K43); only the orchestrator writes them, /delixcrew:status shows them in the 'Verifications' table. Optional \"resolution\" closes a FIX record (\"merged <sha>\", \"abandoned: <why>\"); it then leaves Pending fixes.",
+  "$comment_verifications": "/delixcrew:verify records (card-less work, K43); only the lead writes them, /delixcrew:status shows them in the 'Verifications' table. Optional \"resolution\" closes a FIX record (\"merged <sha>\", \"abandoned: <why>\"); it then leaves Pending fixes.",
   "verifications": [
     { "name": "example-branch", "date": "2026-01-01", "sha": "0000000", "base": "0000000", "input": "example-branch", "tier": 2, "verdict": "ACCEPT",
       "report": "docs/delix/verifications/2026-01-01-example-branch.md",

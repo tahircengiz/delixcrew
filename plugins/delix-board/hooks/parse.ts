@@ -158,7 +158,7 @@ export type ParsedCard = {
   reviewRounds: ReviewRound[]
 }
 
-/** A task card: title, its top table row, the Files list and the review rounds the orchestrator wrote. */
+/** A task card: title, its top table row, the Files list and the review rounds the lead wrote. */
 export function parseCard(text: string): ParsedCard {
   const lines = text.split('\n')
   const titleLine = lines.find(l => /^#\s/.test(l)) ?? ''

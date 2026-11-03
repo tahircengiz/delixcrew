@@ -1,6 +1,6 @@
 {
   "$comment": "Lives at docs/delix/delix.json in the project root. Hooks and skills read it.",
-  "$comment_test_command": "The Stop gate runs only this command; include the unit tests that can run locally (if it is only build/lint, the Stop gate lets logic errors through, pilot T004). The full suite and the remote-environment run belong to the card's 'Verification command', run by the orchestrator in the deterministic gate.",
+  "$comment_test_command": "The Stop gate runs only this command; include the unit tests that can run locally (if it is only build/lint, the Stop gate lets logic errors through, pilot T004). The full suite and the remote-environment run belong to the card's 'Verification command', run by the lead in the deterministic gate.",
   "test_command": "pytest -q",
   "extra_checks": ["ruff check .", "mypy ."],
   "protected_paths": [

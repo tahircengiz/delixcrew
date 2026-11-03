@@ -2,6 +2,13 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## 0.6.1 — 2026-11-03
+
+- **The main session's role is now called the lead** (Turkish: *ekip lideri*); it was the *orchestrator*. Only the
+  name changes: skills, agent descriptions, templates, hook deny messages (`write_gate.py`), README, the site and the
+  delix-board comments use the new name. Nothing in behaviour, commands or file formats changes. New `env_owner` locks
+  say `"who": "lead"`; an existing `"orchestrator"` value still shows as is.
+
 ## 0.6.0 — 2026-11-03
 
 Issue triage: incoming delixcrew issues are checked before they become work, and the decision comment is published

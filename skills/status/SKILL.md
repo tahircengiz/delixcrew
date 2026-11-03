@@ -4,7 +4,7 @@ description: Shows the current state of delix work. From docs/delix/STATE.json, 
 allowed-tools: Bash(python3 *board.py*)
 ---
 
-You are the `delix` orchestrator; this step is **read-only**: no code, no card or STATE changes, no sessions.
+You are the `delix` lead; this step is **read-only**: no code, no card or STATE changes, no sessions.
 The table below was produced by `${CLAUDE_PLUGIN_ROOT}/scripts/board.py` in this project's root; no file was written.
 If the user says "write it to a file" / "BOARD.md" / "Obsidian", run again with `--write` (`docs/delix/BOARD.md`; it must
 be in the project `.gitignore`, never committed).

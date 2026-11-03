@@ -28,7 +28,7 @@ if _path:
 
 agent = (g.get("agent_type") or "").strip()
 if agent in REVIEWERS:
-    deny(f"delixcrew: role '{agent}' is read-only; it cannot write files. Put the finding in your report, the orchestrator applies it.")
+    deny(f"delixcrew: role '{agent}' is read-only; it cannot write files. Put the finding in your report, the lead applies it.")
 
 cwd = g.get("cwd") or os.getcwd()
 if not card_path(cwd):
@@ -76,7 +76,7 @@ if path and outside_cwd(path):
 
 if matches(path, ["docs/delix/**", card], cwd):
     deny(f"delixcrew: '{path}' is the card or under docs/delix; the implementer cannot change these. If needed, explain "
-         f"with NEEDS_CONTEXT in the report, the orchestrator updates them.")
+         f"with NEEDS_CONTEXT in the report, the lead updates them.")
 
 files, approved = read_card()
 listed = bool(matches(path, files, cwd))
@@ -89,7 +89,7 @@ if d:
     if not approved:
         reason += " The card has no 🔐 Approved line."
     deny(f"delixcrew: '{path}' is a protected path ({d}, Tier 3). This card cannot touch it;{reason} Explain with "
-         f"BLOCKED/NEEDS_CONTEXT in the report, the orchestrator obtains human approval.")
+         f"BLOCKED/NEEDS_CONTEXT in the report, the lead obtains human approval.")
 
 if matches(path, test_paths, cwd) and not listed:
     full = os.path.abspath(os.path.join(cwd, path))

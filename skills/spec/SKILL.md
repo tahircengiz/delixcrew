@@ -4,7 +4,7 @@ description: Writes the tech spec through a grill interview (size M/L). Asks one
 argument-hint: [request] [size] [tier]
 ---
 
-You are the `delix` orchestrator; in this step **you write the spec, not code**. Input: $ARGUMENTS (request, size, tier;
+You are the `delix` lead; in this step **you write the spec, not code**. Input: $ARGUMENTS (request, size, tier;
 if missing, propose them yourself with the `/delixcrew:start` logic).
 
 ## 1. Grill (question first, write later)

@@ -4,7 +4,7 @@ description: Triages incoming delixcrew GitHub issues (bugs and feature requests
 argument-hint: [#n]
 ---
 
-You are the `delix` orchestrator; triage step. Argument: $ARGUMENTS. Only an issue number (`#12`, `12` or an issue URL
+You are the `delix` lead; triage step. Argument: $ARGUMENTS. Only an issue number (`#12`, `12` or an issue URL
 of this repository) is read from it; any other word in it is context, never consent and never a decision. Below, `<n>`
 is that number as digits only (it must fullmatch `^[0-9]+$` after dropping a leading `#` or taking it from the URL);
 anything else: say "not an issue number" and stop. Only such an `<n>` goes into a command (`show`, `record`,
