@@ -66,7 +66,7 @@ BUILTIN_COMMANDS = set("""/agents /clear /compact /config /context /cost /doctor
 WIN_ABS_RE = re.compile(r"(?<![\w])[A-Za-z]:\\[^\s]+")
 EMAIL_RE = re.compile(r"(?<![\w.%+-])[\w.%+-]+@[\w-]+(?:\.[\w-]+)+")  # REQ-5: one start per run; Unicode
 MAC_RE = re.compile(r"(?<![\w:-])[0-9A-Fa-f]{2}([:-])[0-9A-Fa-f]{2}(?:\1[0-9A-Fa-f]{2}){4}(?![\w:-])")
-IPV4_RE = re.compile(r"(?<![\w.])\d{1,3}(?:\.\d{1,3}){3}(?!\w|\.\d)")
+IPV4_RE = re.compile(r"(?<![^\W_])(?<!\.)\d{1,3}(?:\.\d{1,3}){3}(?!\w|\.\d)")
 IPV6_RE = re.compile(r"(?<![\w:.])[0-9A-Fa-f]*:[0-9A-Fa-f:]*:[0-9A-Fa-f]*(?![\w:])")
 TOKEN_RE = re.compile(r"(?<![\w-])(?<![\w-]\.)[\w-]+(?:\.[\w-]+)+(?![\w-])")  # REQ-3: Unicode labels; also after ".", ".."
 LAST_LABEL_RE = re.compile(r"[^\W\d_][\w-]*")  # REQ-3: any letter first
@@ -185,8 +185,11 @@ def is_allowed_host(host):
 
 
 def _looks_like_host(tok):
-    last = tok.rsplit(".", 1)[-1]
-    return "." in tok and len(last) >= 2 and bool(LAST_LABEL_RE.fullmatch(last)) and last.lower() not in FILE_EXTS
+    labels = [lab.strip("_-") for lab in tok.split(".")]  # trailing "._" (Markdown italics) is not a label
+    while len(labels) > 1 and not labels[-1]:
+        labels.pop()
+    last = labels[-1]
+    return len(labels) >= 2 and len(last) >= 2 and bool(LAST_LABEL_RE.fullmatch(last)) and last.lower() not in FILE_EXTS
 
 
 def _host_repl(m):
@@ -250,6 +253,8 @@ def _url_allowed(auth, tail, url, term_re):
     for part in re.split(r"[/?#=&+]", tail):  # K146 allowlist: a dotted part is a file name or a version
         if any(not (lab.lower() in FILE_EXTS or lab.isdigit()) for lab in part.split(".")[1:]):
             return False
+    if re.search(r"(?<!\d)\d{1,3}(?:\.\d{1,3}){3}(?!\d)", tail):
+        return False
     if host.rstrip(".") == "github.com" and path not in ("", "/") and not (
             segs[1:3] == ["tahircengiz", "delixcrew"] or segs[1] == "anthropics"):
         return False

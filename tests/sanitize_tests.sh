@@ -139,6 +139,22 @@ jenkins.acme-corp.internal_https://github.com/anthropics/x
 @jenkins.acme-corp.internal
 @.jenkins.acme-corp.internal
 EOF
+# Review round 3 (H1 trailing non-letter label, H2 IPv4 after "_" or ".").
+cat > "$T/r3_exact.txt" <<'EOF'
+jenkins.acme-corp._internal	<redacted:host>
+notlar.md._	notlar.md._
+v0.6.1	v0.6.1
+__init__.py	__init__.py
+x._	x._
+https://code.claude.com/docs/_10.20.30.40	https://<redacted:url>
+https://code.claude.com/docs/x.10.20.30.40	https://<redacted:url>
+_10.20.30.40	_<redacted:ip>
+v1.2.3.4	v1.2.3.4
+EOF
+cat > "$T/r3_absent.txt" <<'EOF'
+_The build runs on jenkins.acme-corp.internal._
+on jenkins.acme-corp.internal.__
+EOF
 
 cat > "$T/cases.py" <<'PY'
 import os, sys, time
@@ -214,6 +230,12 @@ for x, want in pairs("r2_exact.txt"):
 for x in lines("r2_absent.txt"):
     got = s(x)
     res("jenkins" not in got and "acme" not in got, "round 2 %s → %s" % (x, got))
+for x, want in pairs("r3_exact.txt"):
+    got = s(x)
+    res(got == want, "round 3 %s → %s%s" % (x, want, "" if got == want else " (got %s)" % got))
+for x in lines("r3_absent.txt"):
+    got = s(x)
+    res("jenkins" not in got and "acme" not in got, "round 3 %s → %s" % (x, got))
 res(f.SANITIZER_VERSION == "3", "REQ-4 SANITIZER_VERSION is 3")
 
 once = [(x, r, f.sanitize(x, r)) for x, r in seen]
@@ -225,7 +247,8 @@ redos = [("slash", "/" * 50000), ("a-slash", "a/" * 25000), ("json-slash", "\\/"
          ("scheme-a", "x://" + "a" * 50000), ("github-a-slash", "https://github.com/" + "a/" * 25000),
          ("query-amp", "http://x/?" + "a&" * 25000), ("u-dot", "ü." * 25000), ("a-dot-slash", "a." * 25000 + "/"),
          ("email-a-at", "a" * 50000 + "@"), ("email-dot", "." * 50000),
-         ("ab-at", "ab@" * 16000), ("underscore-dot", "_." * 25000)]
+         ("ab-at", "ab@" * 16000), ("underscore-dot", "_." * 25000),
+         ("a-dot-underscore", "a" + "._" * 25000), ("underscore-ipv4", "_1.2.3.4" * 6000)]
 for name, x in redos:
     t0 = time.perf_counter()
     f.sanitize(x, None)
