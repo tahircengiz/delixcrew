@@ -19,9 +19,11 @@ if _path:
     target = os.path.realpath(os.path.join(g.get("cwd") or os.getcwd(), os.path.expanduser(_path)))
     if os.path.commonpath([queue, target]) == queue:
         deny("delixcrew: feedback is sent only by the user from their own terminal")
-    # REQ-7 (0.6.0): same for the triage record dir (triage.py record via Bash is the only writer)
+    # REQ-7 (0.6.0): same for the triage record dir (triage.py record via Bash is the only writer); casefold, since
+    # realpath keeps the given letter case and a case-insensitive filesystem (APFS default) maps TRIAGE to triage
     triage = os.path.realpath(os.path.expanduser(os.environ.get("DELIXCREW_TRIAGE_DIR") or "~/.claude/delixcrew/triage"))
-    if os.path.commonpath([triage, target]) == triage:
+    triage = triage.casefold()
+    if os.path.commonpath([triage, target.casefold()]) == triage:
         deny("delixcrew: triage decisions are applied only by the user from their own terminal")
 
 agent = (g.get("agent_type") or "").strip()

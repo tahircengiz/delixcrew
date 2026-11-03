@@ -245,4 +245,8 @@ rtime "ReDoS: 12 x \$aaa in record path" "$T/probe-dol.json"
 rtime "ReDoS: 20k -a after triage.py"    "$T/probe-flags.json"
 rtime "ReDoS: 200 KB record body"        "$T/probe-body.json"
 rtime "ReDoS: 5k delimiter lines"        "$T/probe-delim.json"
+# T011 fix round 1: the triage dir check ignores letter case (APFS is case-insensitive by default)
+trdeny "triage dir, upper-cased ~ path"   write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/home/.CLAUDE/delixcrew/TRIAGE/12.json\"}}" "HOME=$T/home"
+trdeny "triage dir, upper-cased env dir"  write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/TQ/12.json\"}}" "DELIXCREW_TRIAGE_DIR=$T/tq"
+DELIXCREW_TRIAGE_DIR="$T/tq" allow "triage lookalike dir still free (case fix)" write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"${T}/TQX/12.json\"}}"
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
