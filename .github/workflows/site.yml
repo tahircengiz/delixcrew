@@ -3,8 +3,8 @@ on:
   push:
     branches: [main]
     paths: ["site/**", ".claude-plugin/plugin.json", "tests/site_tests.sh", ".github/workflows/site.yml"]
+  # every PR: the check stays a reliable status, and a version bump anywhere is caught
   pull_request:
-    paths: ["site/**", ".claude-plugin/plugin.json", "tests/site_tests.sh", ".github/workflows/site.yml"]
   workflow_dispatch:
 permissions:
   contents: read
