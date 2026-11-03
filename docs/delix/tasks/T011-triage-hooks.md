@@ -72,3 +72,15 @@ Noted, no fix:
 - [Low] (c)/(d) look at the hook's cwd: a leading `cd <delixcrew checkout> &&` from another project, or GraphQL with an
   opaque node id from a non-delixcrew cwd, passes. Same class as the 0.5.0 rule (K125); residual.
 - P2 (qa): the issues-path `-X POST` test asserts deny with the feedback message (rule order); covered separately.
+
+### Round 2 (b409295) — qa ACCEPT · security 🔐 HUMAN_APPROVAL (no Medium+) → gate 2
+Deterministic gates: CI `test` pass; from `git archive b409295`: 4× `ALL PASSED`; validate passed; test file diff
+103 insertions, 0 deletions; `bash_gate.py` lines 17–41 byte-identical. Round 1 Medium fixed: both realpaths are
+casefolded before `commonpath` (triage check only); tests for upper-case `~` path, upper-case env dir, `TQX` allow.
+Noted, no fix:
+- [Low] Shell-escape evasion of (a), (c), (d) and the `delixcrew` text check (`\-f`, `''-f`, `g\h`, `delix''crew`):
+  K77 / SPEC §6 "known paths only" residual. Possible hardening later: match on the command with `\`, `'`, `"` removed.
+- [Low] In a delixcrew cwd a `record` body that quotes `gh label` or an issue-close command is denied by (c) (full-text
+  rule by design). Fails closed; the skill should say "on a hook deny at record, stop" (T012 Low).
+- Unsure: Bash redirects into the triage dir are not gated (REQ-7 covers Write/Edit/MultiEdit only); `preview`/`apply`
+  re-validate. Unicode NFC/NFD variants of a non-ASCII triage dir path (default path is ASCII).

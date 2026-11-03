@@ -79,3 +79,17 @@ Noted, no fix (P2):
 - When the user's decision differs from the proposal, step 6 does not say a new `reason` must be drafted.
 - No "read an issue only through `triage.py show`" rule; the skill says `gh issue comment|edit` is denied with the triage
   message (it is the 0.5.0 feedback message).
+
+### Round 2 (1816d01) — qa ACCEPT_WITH_NOTES · security 🔐 HUMAN_APPROVAL (no Medium+) → gate 2
+Deterministic gates: CI `test` pass; from `git archive 1816d01`: 4× `ALL PASSED`; card greps 0 / 1 / 1 / 1; validate
+passed. Both round 1 Mediums fixed: `VERDICT:`/`HASH:` only from the last two lines, hash fullmatch `^[0-9a-f]{12}$`;
+`<n>` fullmatch `^[0-9]+$` before any command, version only from the fixed-field line and only as `^\d+\.\d+\.\d+$`.
+Interfaces match T010 `triage.py` (subcommands, exit codes, fixed fields) and the T011 record-heredoc exemption.
+Noted, no fix (P2 / Low):
+- start §1a: `<n>` has no digits-only rule (argparse rejects it, but after the shell); only exits 8 and 7 are named.
+- Decision differs from the proposal: no rule to draft a new `reason`, nor where `duplicate_of` comes from (exit 2).
+- No "on a hook deny at `record`, stop; never pass the JSON another way" line; JSON not required to be one line.
+- start §1a: comments marked `(after triage, not reviewed)` are not handled in the rewrite step.
+- Job D: no "read only inside the repo root and the given tree" line (Rule of Two; preview + consent mitigate).
+- Resolved: `${CLAUDE_PLUGIN_ROOT}` is replaced with the absolute path in skill text before the model sees it, so the
+  `record` call gets the T011 exemption.

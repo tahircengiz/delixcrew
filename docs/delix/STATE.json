@@ -26,30 +26,31 @@
       "file": "docs/delix/tasks/T010-triage-script.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_progress",
-      "pr": null,
-      "rounds": 0,
-      "cost_usd": null
+      "status": "fixing",
+      "pr": 24,
+      "rounds": 1,
+      "cost_usd": null,
+      "sha": "c0fd189"
     },
     "T011": {
       "file": "docs/delix/tasks/T011-triage-hooks.md",
       "role": "backend",
       "tier": 3,
-      "status": "fixing",
+      "status": "in_review",
       "pr": 23,
-      "rounds": 1,
+      "rounds": 2,
       "cost_usd": null,
-      "sha": "4016a4c"
+      "sha": "b409295"
     },
     "T012": {
       "file": "docs/delix/tasks/T012-triage-skill.md",
       "role": "docs",
       "tier": 3,
-      "status": "fixing",
+      "status": "in_review",
       "pr": 22,
-      "rounds": 1,
+      "rounds": 2,
       "cost_usd": null,
-      "sha": "787816d"
+      "sha": "1816d01"
     },
     "T013": {
       "file": "docs/delix/tasks/T013-triage-docs-ci-version.md",

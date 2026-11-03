@@ -68,3 +68,27 @@
 
 ## Report contract
 `.delix/report.md` (≤ 2K tokens): status · command + output · PR number · assumptions · remaining work. Read only this card and SPEC REQ-1, 2, 5, 6, 8, §4, §6.
+
+## Review findings
+### Round 1 (c0fd189) — qa REJECT (1 P1) · security FIX with 1 Medium → fixing
+Deterministic gates: CI `test` pass; from `git archive c0fd189`: 5× `ALL PASSED` (triage included); validate passed;
+diff touches only `scripts/triage.py` and `tests/triage_tests.sh` (new files, 0 deletions); `feedback.py` unchanged.
+To fix (round 1):
+- [P1 / Medium] `scripts/triage.py:308-312`: the HTML, `<!--` and `@mention` BLOCKED checks run on the raw
+  `reason`/`questions`, but the published comment is `sanitize(raw)`, which starts with NFKC (`feedback.py:250`).
+  Fullwidth and small-form characters pass the raw check and become ASCII in the comment: `＠` U+FF20 and `﹫` U+FE6B
+  become `@`, `＜` U+FF1C becomes `<`. A reason `Ask ＠alice` gives preview `VERDICT: CLEAN` and publishes `@alice`
+  (a ping from the maintainer account); `＜!-- x` publishes a hidden HTML comment. `bad_char`, the residual check
+  (NFKC is idempotent), `OPAQUE_RE` and gitleaks do not catch it. Fix: run the three checks on both `x` and
+  `unicodedata.normalize("NFKC", x)` for every `x` in `user` (no placeholders are added, so K122 holds). Tests
+  (append to `blocked`): `Ask ＠alice` (mention), `＜b＞x` (HTML), `＜!-- x` (HTML), each BLOCKED.
+- [Low, fix too: secret hygiene, K130] `tests/triage_tests.sh:43`: the `gh` stub logs every `GH_*`/`GITHUB_*`
+  variable as `name=value` to `gh.log`, and failing tests print `gh.log` (lines 149, 175). An exported real token
+  variable would land in terminal or CI output. Fix: log names only; the assertions at 180 and 321 need names only.
+Noted, no fix:
+- [P2] `scripts/triage.py:221-226`: `validate` rejects `duplicate_of` outside `duplicate` and `questions` outside
+  `needs-info`; stricter than the REQ-5 schema list. Fails closed; spec note at close.
+- [Low] `scripts/triage.py:263`: `makedirs(mode=0o700, exist_ok=True)` does not re-chmod an existing dir; files are 0600.
+- `apply` without a record exits 2 (shared `prepare()`), outside the card's apply set 0·4·5·6·7; tested, accepted.
+- Unsure (security): U+2028/U+2029 in `index` titles not escaped; a fake `--- comment by … | OWNER` line inside a body
+  in `show` output (shown in an UNTRUSTED block; `--require accepted` reads raw gh data).
