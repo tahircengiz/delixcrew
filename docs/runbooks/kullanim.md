@@ -1,6 +1,6 @@
 # Runbook — ekip ile bir özellik
 
-1. Projede oturum aç (Desktop ya da terminal). Plugin Mac'te kalıcı kurulu (`claude plugin list` → `delix@delix-local`);
+1. Projede oturum aç (Desktop ya da terminal). Plugin Mac'te kalıcı kurulu (`claude plugin list` → `delix@delixcrew`);
    değilse README "Kurulum" (marketplace add + install), tek seferlik için `claude --plugin-dir ~/Documents/projects/prj_Ekip`.
 2. `/delix:start <istek>` → boy/kademe önerisini oku; `docs/delix/delix.json` ilk kez oluşturulduysa `test_command` ve
    `protected_paths`ı projeye göre düzelt (ör. LLMPortal: `tests/run_all.sh`, `keycloak/**`, `compose*.yaml`).
