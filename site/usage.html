@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How to use delixCrew</title>
+<meta name="description" content="Installing delixCrew, the first job, commands, project files, feedback and known limits.">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="alternate" hreflang="tr" href="tr/usage.html">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html">delix<span>Crew</span></a>
+    <nav class="pages" aria-label="Pages">
+      <a href="index.html">What it is</a>
+      <a href="usage.html" aria-current="page">How to use</a>
+      <a href="https://github.com/tahircengiz/delixcrew"><svg class="ico" aria-hidden="true"><use href="assets/icons.svg#i-code"/></svg>GitHub</a>
+    </nav>
+    <a class="lang" href="tr/usage.html" hreflang="tr" lang="tr" title="Türkçe">TR</a>
+  </div>
+</header>
+<main id="main" class="wrap">
+<header class="hero sm">
+  <div class="kicker"><span class="ver" data-version="0.6.0">delixcrew 0.6.0</span><span>Install and everyday use</span></div>
+  <h1>How to use</h1>
+  <p class="lede">delixCrew is a Claude Code plugin. Once it is installed, you start work with a single request. The lead proposes each next step and waits for your decision at two gates. This page covers installation, the first job, the commands, the files it creates in your project and the known limits. How the system works is on the <a href="index.html">What it is</a> page.</p>
+</header>
+
+<nav class="nav" aria-label="Sections">
+  <a href="#requirements">Requirements</a><a href="#install">Install</a><a href="#first-job">First job</a><a href="#commands">Commands</a><a href="#files">Project files</a><a href="#feedback">Feedback</a><a href="#board">delix-board</a><a href="#limits">Limits</a>
+</nav>
+
+<section id="requirements">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-grid"/></svg>Requirements</div>
+    <h2>Three required tools, two optional</h2>
+  </div>
+  <div class="tbl">
+    <table>
+      <thead><tr><th>Tool</th><th>Needed</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><th>Claude Code</th><td><span class="pill ag">required</span></td><td>A version with plugin marketplaces. Tested with 2.1.309; older versions are not tested.</td></tr>
+        <tr><th><code>python3</code></th><td><span class="pill ag">required</span></td><td>The hooks are Python scripts (tested with 3.9) and block on failure. Without <code>python3</code> on PATH, Write, Edit and Bash are blocked in every session.</td></tr>
+        <tr><th><code>git</code></th><td><span class="pill ag">required</span></td><td>Implementer sessions work on card branches in separate worktrees.</td></tr>
+        <tr><th><code>gh</code></th><td><span class="pill">optional</span></td><td>The GitHub CLI, signed in, to open and read PRs. Without it the commits stay on the card branch and the report says <code>**PR:** none</code>.</td></tr>
+        <tr><th><code>gitleaks</code></th><td><span class="pill">optional</span></td><td>A secret scan before every implementer commit. Without it a note goes to <code>.delix/warnings.log</code>. Required for sending feedback.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="src"><b>Source:</b> README.md (Requirements) · hooks/hooks.json</p>
+</section>
+
+<section id="install">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-down"/></svg>Install</div>
+    <h2>Two commands to install, two to update</h2>
+    <p>Installation works in the desktop app and in the terminal; no <code>--plugin-dir</code> is needed. No GitHub SSH key is needed either: <code>marketplace add</code> tries SSH and falls back to HTTPS.</p>
+  </div>
+  <div class="grid2">
+    <ol class="steps">
+      <li><h3>Add the marketplace</h3><pre><code>claude plugin marketplace add tahircengiz/delixcrew</code></pre></li>
+      <li><h3>Install the plugin</h3><pre><code>claude plugin install delixcrew@delixcrew</code></pre><p>From a local clone: first <code>claude plugin marketplace add /path/to/delix</code>, then the same <code>install</code> command.</p></li>
+    </ol>
+    <div class="stack">
+      <div class="note">
+        <h3><svg class="ico"><use href="assets/icons.svg#i-loop"/></svg>Update</h3>
+        <pre><code>claude plugin marketplace update delixcrew
+claude plugin update delixcrew@delixcrew</code></pre>
+        <p>Then restart Claude. An install copies the plugin into Claude's cache, one folder per version, so an update arrives only when the version in <code>plugin.json</code> changes; <code>git pull</code> alone is not enough.</p>
+      </div>
+      <div class="note limit">
+        <h3><svg class="ico"><use href="assets/icons.svg#i-code"/></svg>Trying a local change</h3>
+        <p>To read a folder in place without a version bump: <code>claude --plugin-dir /path/to/delix</code>. If you installed it before 0.4.0 under the name <code>delix</code>, the migration steps are in <a href="https://github.com/tahircengiz/delixcrew/blob/main/CHANGELOG.md#040--2026-11-03">CHANGELOG 0.4.0</a>.</p>
+      </div>
+    </div>
+  </div>
+  <p class="src"><b>Source:</b> README.md (Installation)</p>
+</section>
+
+<section id="first-job">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-flow"/></svg>First job</div>
+    <h2>From a request to a merge, step by step</h2>
+    <p>You type the commands in the lead session, in the project's main checkout. The lead proposes the next step at the end of each one; the order is below. Amber steps are your decisions.</p>
+  </div>
+  <ol class="steps">
+    <li><h3><code>/delixcrew:start &lt;request&gt;</code></h3><p>The lead reads <code>CLAUDE.md</code>, <code>STATUS.md</code> and <code>docs/delix/</code>. It proposes a <strong>size</strong> (S/M/L, process weight) and a <strong>tier</strong> (1/2/3, risk) and sets up <code>docs/delix/</code>. For S a single card is written. For well-described work of size S or M and at most Tier 2, it proposes a single session plus <code>/delixcrew:verify</code> instead of the full flow.</p></li>
+    <li><h3><code>/delixcrew:spec</code> · size M and L</h3><p>The grill asks one question at a time and adds its recommendation to each. The result is <code>docs/delix/SPEC.md</code>, with requirements in <code>SHALL</code> and <code>WHEN/THEN</code> form. The architect reviews the spec, and security too at Tier 3. For UI work the spec links <code>DESIGN.md</code> or the repo's token file, and produces <code>DESIGN.md</code> when neither exists.</p></li>
+    <li class="gate"><h3>Gate 1 · spec approval</h3><p>You approve the spec (the card, for S). For Tier 3 cards you also say an explicit "yes" in chat; the lead writes the <code>**🔐 Approved:** &lt;date&gt; &lt;who&gt;</code> line into the card header and commits it to main.</p></li>
+    <li><h3><code>/delixcrew:dispatch</code></h3><p>The architect writes the cards and the wave plan and checks that Files lists do not overlap. Each card gets a dispatch prompt (<code>docs/delix/tasks/T&lt;nnn&gt;.dispatch.md</code>) and you are told how to open its session. At most 3 cards run at once. Tier 1–2 cards open headless with <code>claude -p</code> in a terminal, Tier 3 cards in an interactive session.</p></li>
+    <li><h3><code>/delixcrew:implement &lt;card&gt;</code> · implementer session</h3><p>The dispatch prompt calls this skill; you do not type it. The implementer writes a failing test first, touches only the card's Files list, runs the verification command, opens a PR and fills in <code>.delix/report.md</code>. The Stop hook does not end the turn until the tests pass.</p></li>
+    <li><h3><code>/delixcrew:review &lt;card&gt;</code></h3><p>First the deterministic gates: test result, CI, gitleaks. Then qa with zero context, plus security at Tier 2 and above. Only serious findings (P0/P1) open a fix round; at most 3 rounds, then the decision is yours.</p></li>
+    <li class="gate"><h3>Gate 2 · merge</h3><p>You merge the PR; the lead never runs <code>gh pr merge</code>. The card becomes <code>accepted</code> and the next wave opens.</p></li>
+    <li><h3><code>/delixcrew:close</code></h3><p>Once every card is merged: STATUS and CHANGELOG, per-card cost and round metrics, a spec-to-code drift check and worktree cleanup. Lessons learned go to CLAUDE.md or memory only with your approval.</p></li>
+  </ol>
+  <div class="callout ag" style="margin-top:18px">
+    <p><strong>Shortcut: <code>/delixcrew:verify &lt;branch|commit|dir&gt;</code>.</strong> It only verifies work done without a card. In order it runs gitleaks, the local tests, a remote isolated unit test (when <code>delix.json</code> has a <code>verify</code> block) and, on request, the full suite with <code>--full</code>. Then qa (plus security at Tier 2 and above) reviews in a single pass; there are no fix rounds. The result is written as ACCEPT or FIX to a <code>docs/delix/verifications/&lt;date&gt;-&lt;name&gt;.md</code> report.</p>
+  </div>
+  <p class="src"><b>Source:</b> README.md (Flow) · skills/start, spec, dispatch, implement, review, close, verify (SKILL.md)</p>
+</section>
+
+<section id="commands">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-term"/></svg>Commands</div>
+    <h2>Every command in one table</h2>
+    <p>The skills reply in the user's language. Labels, status values and verdict tokens (<code>ACCEPT</code>, <code>FIX</code>, <code>accepted</code>…) stay in English.</p>
+  </div>
+  <div class="tbl">
+    <table class="mx">
+      <thead><tr><th>Command</th><th>When</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><th><code>/delixcrew:start</code></th><td>Every new request</td><td>Reads the context, proposes size and tier, sets up <code>docs/delix/</code>; a single card for S.</td></tr>
+        <tr><th><code>/delixcrew:spec</code></th><td>Size M and L</td><td><code>SPEC.md</code> through the grill; architect (+ security at Tier 3) review; Gate 1.</td></tr>
+        <tr><th><code>/delixcrew:dispatch</code></th><td>After Gate 1</td><td>Cards, wave plan, conflict check, dispatch prompts.</td></tr>
+        <tr><th><code>/delixcrew:implement</code></th><td>In the implementer session</td><td>Test first, Files only, PR and report. Called by the dispatch prompt.</td></tr>
+        <tr><th><code>/delixcrew:review</code></th><td>When the PR is open</td><td>Deterministic gates, qa (+ security), at most 3 fix rounds; Gate 2.</td></tr>
+        <tr><th><code>/delixcrew:close</code></th><td>When every card is merged</td><td>STATUS, CHANGELOG, metrics, drift check, worktree cleanup.</td></tr>
+        <tr><th><code>/delixcrew:verify</code></th><td>Card-less work</td><td>Only verifies: gitleaks, tests, a single-pass review; an ACCEPT or FIX report.</td></tr>
+        <tr><th><code>/delixcrew:status</code></th><td>Any time</td><td>Read-only board: wave, card, role, tier, status, rounds, PR, cost, last report, pending gate. With <code>--write</code> to <code>docs/delix/BOARD.md</code> (not committed). Also works under <code>-p</code>.</td></tr>
+        <tr><th><code>/delixcrew:feedback</code></th><td>When the plugin misbehaves</td><td><code>note</code>: writes the problem to a local draft. <code>review</code>: shows the drafts exactly as they would be sent. It never sends anything itself.</td></tr>
+        <tr><th><code>/delixcrew:triage</code></th><td>Only in the delixcrew repo, when issues arrive</td><td>Reads issues cleaned; the architect proposes a decision. You decide in chat with the number (<code>accept #12</code>) and publish the comment and labels from your own terminal. Only an issue accepted in triage becomes work through <code>/delixcrew:start #&lt;n&gt;</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="src"><b>Source:</b> README.md (Flow) · skills/*/SKILL.md (description) · README.md (Triage)</p>
+</section>
+
+<section id="files">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-doc"/></svg>Project files</div>
+    <h2>What delixCrew creates in your project</h2>
+    <p>The shared memory is in files: <code>docs/delix/</code> on the main branch, <code>.delix/</code> in each implementer worktree.</p>
+  </div>
+  <div class="grid2">
+    <div class="note">
+      <h3>On the main branch · <code>docs/delix/</code></h3>
+      <ul>
+        <li><code>delix.json</code>: test command, protected paths, test paths, parallel card limit, the <code>verify</code> block</li>
+        <li><code>SPEC.md</code>: the approved tech spec</li>
+        <li><code>tasks/T&lt;nnn&gt;-&lt;slug&gt;.md</code>: cards and dispatch prompts</li>
+        <li><code>STATE.json</code>: card states, waves, <code>verifications</code> records</li>
+        <li><code>verifications/&lt;date&gt;-&lt;name&gt;.md</code>: verify reports</li>
+        <li><code>BOARD.md</code>: generated only on request, in <code>.gitignore</code></li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>In the implementer worktree · <code>.delix/</code></h3>
+      <ul>
+        <li><code>card</code>: activates the hooks; must be local, not tracked by git</li>
+        <li><code>report.md</code>: <code>DONE</code>, <code>DONE_WITH_CONCERNS</code>, <code>NEEDS_CONTEXT</code> or <code>BLOCKED</code></li>
+        <li><code>test-result.txt</code>: the Stop hook's test output</li>
+        <li><code>evidence/</code>: verification evidence</li>
+      </ul>
+    </div>
+  </div>
+  <figure class="dgm" style="margin-top:18px">
+    <pre><code>{
+  "test_command": "pytest -q",
+  "extra_checks": ["ruff check .", "mypy ."],
+  "protected_paths": ["auth/**", ".env*", ".github/workflows/**", "*.lock", "docs/delix/delix.json"],
+  "test_paths": ["tests/**"],
+  "max_parallel": 3,
+  "max_review_rounds": 3,
+  "default_branch": "main"
+}</code></pre>
+    <figcaption><strong><code>docs/delix/delix.json</code>, shortened example.</strong> The Stop hook runs only <code>test_command</code> and <code>extra_checks</code>, so the unit tests that can run locally belong here. Every card that touches <code>protected_paths</code> becomes Tier 3. Full template: <a href="https://github.com/tahircengiz/delixcrew/blob/main/templates/delix.json">templates/delix.json</a>.</figcaption>
+  </figure>
+  <p class="src"><b>Source:</b> README.md (Files on the project side) · templates/delix.json · templates/report.md</p>
+</section>
+
+<section id="feedback">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-loop"/></svg>Feedback</div>
+    <h2>Reporting a plugin fault: off by default, you send</h2>
+    <p>When a hook rejects correct work, a skill step cannot be followed as written, or you work around a limit by hand, delixCrew can keep a draft of it. It never sends anything on its own. Drafts live in <code>~/.claude/delixcrew/feedback/</code>, not in your project repo.</p>
+  </div>
+  <ol class="steps">
+    <li><h3>Turn it on in your own terminal</h3><pre><code>python3 &lt;plugin dir&gt;/scripts/feedback.py enable --terms acme,example-corp</code></pre><p>For a marketplace install the script is at <code>~/.claude/plugins/cache/delixcrew/delixcrew/&lt;version&gt;/scripts/feedback.py</code>. <code>--terms</code> adds your own words to redact (customer names, codenames). <code>status</code> shows the state, <code>disable</code> turns it off.</p></li>
+    <li><h3>A draft is created</h3><p>You say <code>/delixcrew:feedback note</code> in chat, or close and review add a draft when one of the three events above happened. A repeated finding raises the draft's count instead of adding a new one.</p></li>
+    <li><h3>See the full text</h3><p><code>/delixcrew:feedback review</code> shows each draft exactly as it would be published: repo, label, title, body, a <code>VERDICT:</code> and a <code>HASH:</code> line.</p></li>
+    <li class="gate"><h3>Approve by id in chat</h3><p>Reply with the id of the draft you want to send: <code>yes F003</code> (or <code>evet F003</code>). A bare "yes", "send all" or an "approved" in a file is not consent. Claude then gives you one command.</p></li>
+    <li class="gate"><h3>Send from your own terminal</h3><pre><code>python3 &lt;plugin dir&gt;/scripts/feedback.py send F003 --confirm &lt;hash&gt;</code></pre><p>It prints the text once more and waits for you to type <code>SEND &lt;hash&gt;</code>. If the text changed since the preview, it stops.</p></li>
+  </ol>
+  <div class="grid2" style="margin-top:18px">
+    <div class="callout hk">
+      <p><strong>The issue is public and opened with your GitHub account.</strong> Sending needs <code>gitleaks</code> and a signed-in <code>gh</code>. A draft with a secret is blocked, never redacted and sent. GitHub does not let an author delete an issue; to have one removed, use <a href="https://github.com/tahircengiz/delixcrew/security/advisories/new">private reporting</a>. What gets redacted is on the <a href="index.html#self-feeding">What it is page</a>.</p>
+    </div>
+    <div class="note limit">
+      <h3><svg class="ico"><use href="assets/icons.svg#i-shield"/></svg>Remaining risk</h3>
+      <p>The hooks close the known send paths, not all of them. For a stronger guard you can add this to your own <code>settings.json</code>; delixCrew does not change your settings:</p>
+      <pre><code>{ "permissions": { "deny": ["Bash(gh issue create:*)", "Bash(gh api:*)"] } }</code></pre>
+    </div>
+  </div>
+  <p class="src"><b>Source:</b> README.md (Feedback, Data &amp; privacy) · skills/feedback/SKILL.md</p>
+</section>
+
+<section id="board">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-card"/></svg>delix-board</div>
+    <h2>An optional live board</h2>
+    <p><code>delix-board</code> is a separate, read-only mod in the same marketplace. It shows the board, long runs, card details and metrics live, puts a band above the prompt and shows a toast when a run ends. delixCrew does not need it to work, and it draws nothing in headless sessions.</p>
+  </div>
+  <pre><code>claude plugin install delix-board@delixcrew</code></pre>
+  <p class="src"><b>Source:</b> README.md (Companion: delix-board) · <a href="https://github.com/tahircengiz/delixcrew/blob/main/plugins/delix-board/README.md">plugins/delix-board/README.md</a></p>
+</section>
+
+<section id="limits">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-alert"/></svg>Limits and troubleshooting</div>
+    <h2>What you should know</h2>
+  </div>
+  <div class="grid2">
+    <div class="note limit">
+      <h3><svg class="ico"><use href="assets/icons.svg#i-shield"/></svg>Known limits</h3>
+      <ul>
+        <li>The hooks load in every session where the plugin is installed. The implementer rules run only when <code>cwd/.delix/card</code> exists, the reviewer rules only when <code>agent_type</code> is <code>delixcrew:*</code>.</li>
+        <li>write_gate sees only the Write, Edit, MultiEdit and NotebookEdit tools, not files written through Bash. That is why a change to the card, <code>docs/delix/**</code> or an unapproved protected path in the diff counts as a finding in the qa review.</li>
+        <li>Plugin agents ignore the <code>permissionMode</code>, <code>hooks</code> and <code>mcpServers</code> fields; the constraint lives in the <code>tools</code> list and <code>hooks/hooks.json</code>.</li>
+        <li>Experimental Agent Teams are not used. The plugin has no monitor.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3><svg class="ico"><use href="assets/icons.svg#i-alert"/></svg>Troubleshooting</h3>
+      <ul>
+        <li>If you see <code>delixcrew: python3 not found on PATH</code>, install Python 3 or disable the plugin: <code>claude plugin disable delixcrew@delixcrew</code>.</li>
+        <li>No update arriving: the installed copy refreshes only when the version changes. Run <code>marketplace update</code>, <code>plugin update</code> and restart.</li>
+        <li>No PR opened: check that <code>gh</code> is installed and signed in. Without a remote the commits stay on the card branch.</li>
+        <li>Found a fault in the plugin itself? Use the <a href="#feedback">feedback</a> flow or open an <a href="https://github.com/tahircengiz/delixcrew/issues">issue</a> on GitHub by hand.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="src"><b>Source:</b> README.md (Known limits, Requirements) · hooks/hooks.json</p>
+</section>
+
+<footer>
+  <p><span data-version="0.6.0">delixcrew 0.6.0</span> · as of 2026-11-03. Compiled from the README and the skill files. MIT licence.</p>
+  <p>Source code and issues: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="tr/usage.html" hreflang="tr">Türkçe</a></p>
+</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>delixCrew nedir</title>
+<meta name="description" content="delixCrew, Claude Code için bir ekip iş akışı plugin'i: önce spec, kodu ajanlar yazar, kapılar insanda.">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="../assets/style.css">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="alternate" hreflang="en" href="../index.html">
+</head>
+<body>
+<a class="skip" href="#main">İçeriğe geç</a>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html">delix<span>Crew</span></a>
+    <nav class="pages" aria-label="Sayfalar">
+      <a href="index.html" aria-current="page">Nedir</a>
+      <a href="usage.html">Nasıl kullanılır</a>
+      <a href="https://github.com/tahircengiz/delixcrew"><svg class="ico" aria-hidden="true"><use href="../assets/icons.svg#i-code"/></svg>GitHub</a>
+    </nav>
+    <a class="lang" href="../index.html" hreflang="en" lang="en" title="English">EN</a>
+  </div>
+</header>
+<main id="main" class="wrap">
+<header class="hero">
+  <div class="kicker"><span class="ver" data-version="0.6.0">delixcrew 0.6.0</span><span>Claude Code plugin · MIT</span></div>
+  <h1>delix<span>Crew</span></h1>
+  <p class="thesis">Önce spec yazılır. Kodu ajanlar yazar. <em>Son kararı insan verir.</em></p>
+  <p class="lede">İşi yöneten ana oturuma <strong>ekip lideri</strong> (lead) denir. Ekip lideri sana tek tek soru sorar (bu soru turuna grill denir) ve cevaplardan bir tech spec yazar. Sonra işi <strong>kartlara</strong>, yani küçük ve birbirinden ayrı iş birimlerine böler. Her kart, kendi worktree'sinde çalışan ayrı bir uygulayıcı oturumuna gider. Sonucu, dosya değiştiremeyen inceleme ajanları kontrol eder.</p>
+  <p class="lede">İş iki noktada durur ve insan onayı bekler. Bu noktalara <strong>kapı</strong> denir: Kapı 1'de spec onaylanır, Kapı 2'de PR merge edilir. Kurallar ajanın iyi niyetine bırakılmaz, onları Claude Code'un kendisi uygular: hook'lar yasak işlemi engeller, araç listeleri ajanın ne yapabileceğini sınırlar. Sayfada bu kontrol katmanına <strong>harness</strong> deniyor.</p>
+  <ol class="rail" aria-label="Ana akış">
+    <li>start</li><li class="sep" aria-hidden="true">›</li>
+    <li>spec</li><li class="sep" aria-hidden="true">›</li>
+    <li class="gate"><svg class="ico"><use href="../assets/icons.svg#i-lock"/></svg>Kapı 1 · spec onayı</li><li class="sep" aria-hidden="true">›</li>
+    <li>dispatch</li><li class="sep" aria-hidden="true">›</li>
+    <li>implement</li><li class="sep" aria-hidden="true">›</li>
+    <li>review</li><li class="sep" aria-hidden="true">›</li>
+    <li class="gate"><svg class="ico"><use href="../assets/icons.svg#i-lock"/></svg>Kapı 2 · merge</li><li class="sep" aria-hidden="true">›</li>
+    <li>close</li>
+  </ol>
+  <div class="cta">
+    <a class="btn primary" href="usage.html"><svg class="ico" aria-hidden="true"><use href="../assets/icons.svg#i-term"/></svg>Kurulum ve kullanım</a>
+    <a class="btn" href="https://github.com/tahircengiz/delixcrew"><svg class="ico" aria-hidden="true"><use href="../assets/icons.svg#i-code"/></svg>Kaynak kod</a>
+  </div>
+</header>
+
+<nav class="nav" aria-label="Bölümler">
+  <a href="#fikir">Ana fikir</a><a href="#topology">Topology</a><a href="#akis">Ana akış</a><a href="#kademe">Kademe ve kapılar</a><a href="#hooks">Hook'lar</a><a href="#oz-besleme">Öz-besleme</a><a href="#kart">Kartın yaşamı</a><a href="#sozluk">Sözlük</a>
+</nav>
+
+<section id="fikir">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-doc"/></svg>Ana fikir</div>
+    <h2>Tek oturumluk döngü yerine bir yazılım ekibinin iş bölümü</h2>
+    <p>"Aç, klasör seç, geçmişi oku, devam et" döngüsünün yerini roller alır. Her rolün yapabilecekleri, araç listesi ve hook'larla sınırlanır.</p>
+  </div>
+  <div class="principles">
+    <article class="pr agent"><h3><svg class="ico"><use href="../assets/icons.svg#i-doc"/></svg>Spec önce</h3><p>Grill her seferinde tek soru sorar, her soruya bir öneri ekler. Gereksinimler, <code>SHALL</code> ve <code>WHEN/THEN</code> biçiminde, test edilebilecek şekilde yazılır. Kapsam dışı açıkça belirtilir.</p></article>
+    <article class="pr agent"><h3><svg class="ico"><use href="../assets/icons.svg#i-bot"/></svg>Kodu ajanlar yazar</h3><p>Uygulayıcı kendi worktree'sinde çalışır. Yalnız kartta izin verilen dosyaları (Files listesi) değiştirir. Önce başarısız olan bir test yazar; var olan testleri değiştiremez.</p></article>
+    <article class="pr human"><h3><svg class="ico"><use href="../assets/icons.svg#i-lock"/></svg>Kararı insan verir</h3><p>Kapı 1'de spec ya da kart onaylanır, Kapı 2'de PR merge edilir. En riskli kartlar (Tier 3) ayrıca açık bir güvenlik onayı ister. Ekip lideri <code>gh pr merge</code> çalıştırmaz.</p></article>
+    <article class="pr hk-p"><h3><svg class="ico"><use href="../assets/icons.svg#i-shield"/></svg>Kuralları Claude Code zorlar</h3><p>İnceleme ajanlarının (reviewer) <code>tools</code> listesinde yazma aracı yok. Hook'lar korumalı yollara (auth, sırlar, CI, deploy) ve var olan test dosyalarına yazmayı engeller. Stop hook sayesinde uygulayıcı, testler geçmeden işi bitiremez.</p></article>
+  </div>
+  <p class="src"><b>Kaynak:</b> README.md (giriş, Roles) · skills/review/SKILL.md §4 · hooks/hooks.json</p>
+</section>
+
+<section id="topology">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-topo"/></svg>Topology</div>
+    <h2>Kim nerede çalışır, neyi okur, neye yazar</h2>
+    <p>Ekip lideri (plugin dosyalarında <code>orchestrator</code>) ana checkout'ta durur ve kod yazmaz. Uygulayıcılar ayrı oturumlarda çalışır. Reviewer'lar ise ekip liderinin çağırdığı alt ajanlardır. Ajanların ortak hafızasını sohbet değil, <code>docs/delix/</code> altındaki dosyalar oluşturur.</p>
+  </div>
+  <figure class="dgm">
+    <div class="scroll">
+      <svg class="dg w680" viewBox="0 0 860 610" role="img" aria-label="Topology: insan, ekip lideri oturumu, dört salt-okunur alt ajan, en çok üç paralel uygulayıcı oturumu, docs/delix dosyaları, kullanıcı düzeyindeki feedback kuyruğu ve GitHub; hook katmanı uygulayıcıyı ve reviewer'ları sınırlar.">
+        <defs>
+          <marker id="tp-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="tp-h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahh" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <!-- İnsan -->
+        <rect class="hu" x="300" y="16" width="220" height="64" rx="8"/>
+        <text class="t tu" x="410" y="42" text-anchor="middle">İnsan · kullanıcı</text>
+        <text class="k" x="410" y="62" text-anchor="middle">iki kapı · güvenlik onayı · send</text>
+        <!-- GitHub -->
+        <rect class="box" x="640" y="16" width="200" height="84" rx="8"/>
+        <text class="t" x="740" y="42" text-anchor="middle">GitHub</text>
+        <text class="k" x="740" y="62" text-anchor="middle">PR · CI · Issues</text>
+        <text class="m" x="740" y="82" text-anchor="middle">gh CLI ile</text>
+        <line class="ln h" x1="520" y1="36" x2="637" y2="36" marker-end="url(#tp-h)"/>
+        <text class="lh" x="579" y="30" text-anchor="middle">PR merge · Kapı 2</text>
+        <line class="ln h" x1="520" y1="66" x2="637" y2="66" marker-end="url(#tp-h)"/>
+        <text class="lh" x="579" y="60" text-anchor="middle">feedback send</text>
+        <!-- Feedback kuyruğu -->
+        <rect class="box" x="20" y="150" width="180" height="112" rx="8"/>
+        <text class="t" x="110" y="174" text-anchor="middle">Feedback kuyruğu</text>
+        <text class="m" x="110" y="196" text-anchor="middle">~/.claude/delixcrew/</text>
+        <text class="m" x="110" y="212" text-anchor="middle">feedback/</text>
+        <text class="s" x="110" y="234" text-anchor="middle">proje reposunun dışında</text>
+        <text class="s" x="110" y="250" text-anchor="middle">varsayılan kapalı</text>
+        <!-- Ekip lideri -->
+        <rect class="ag" x="240" y="150" width="320" height="118" rx="10"/>
+        <text class="t" x="400" y="176" text-anchor="middle">Ekip lideri oturumu</text>
+        <text class="k" x="400" y="196" text-anchor="middle">ana checkout · kod yazmaz · üst model</text>
+        <text class="m" x="400" y="222" text-anchor="middle">start · spec · dispatch · review · triage</text>
+        <text class="m" x="400" y="242" text-anchor="middle">verify · close · status · feedback</text>
+        <line class="ln h" x1="410" y1="80" x2="410" y2="147" marker-end="url(#tp-h)"/>
+        <text class="lh" x="418" y="106">istek · Kapı 1</text>
+        <text class="lh" x="418" y="121">güvenlik onayı (Tier 3)</text>
+        <path class="ln d" d="M545,150 V126 H690 V103" marker-end="url(#tp-a)"/>
+        <text class="lbl" x="617" y="120" text-anchor="middle">PR, CI, diff okur</text>
+        <line class="ln" x1="240" y1="206" x2="203" y2="206" marker-end="url(#tp-a)"/>
+        <text class="lbl" x="221" y="200" text-anchor="middle">add</text>
+        <!-- Uygulayıcı -->
+        <rect class="ghost" x="650" y="140" width="200" height="250" rx="10"/>
+        <rect class="ghost" x="645" y="145" width="200" height="250" rx="10"/>
+        <rect class="ag" x="640" y="150" width="200" height="250" rx="10"/>
+        <text class="t" x="740" y="176" text-anchor="middle">Uygulayıcı oturumu</text>
+        <text class="k" x="740" y="196" text-anchor="middle">worktree · kart dalı · sonnet</text>
+        <text class="s" x="740" y="212" text-anchor="middle">aynı anda en çok 3 kart</text>
+        <text class="m" x="656" y="240">.delix/card</text>
+        <text class="m" x="656" y="258">.delix/report.md</text>
+        <text class="m" x="656" y="276">.delix/test-result.txt</text>
+        <text class="m" x="656" y="294">.delix/evidence/</text>
+        <text class="s" x="656" y="318">kod + yeni test (yalnız Files)</text>
+        <rect class="hk" x="640" y="336" width="200" height="64" rx="0"/>
+        <text class="t th" x="740" y="358" text-anchor="middle">Hook katmanı</text>
+        <text class="k" x="740" y="376" text-anchor="middle">write_gate · bash_gate</text>
+        <text class="k" x="740" y="392" text-anchor="middle">Stop gate · gitleaks</text>
+        <line class="ln" x1="560" y1="190" x2="637" y2="190" marker-end="url(#tp-a)"/>
+        <text class="lbl" x="599" y="184" text-anchor="middle">dispatch</text>
+        <line class="ln" x1="640" y1="236" x2="563" y2="236" marker-end="url(#tp-a)"/>
+        <text class="lbl" x="600" y="230" text-anchor="middle">rapor · PR</text>
+        <line class="ln" x1="790" y1="138" x2="790" y2="103" marker-end="url(#tp-a)"/>
+        <text class="lbl" x="782" y="128" text-anchor="end">gh pr create</text>
+        <!-- Alt ajanlar -->
+        <rect class="hkout" x="240" y="304" width="320" height="146" rx="10"/>
+        <rect class="ag" x="252" y="316" width="144" height="46" rx="6"/>
+        <text class="t" x="324" y="336" text-anchor="middle">architect</text>
+        <text class="s" x="324" y="352" text-anchor="middle">opus · salt-okunur</text>
+        <rect class="ag" x="404" y="316" width="144" height="46" rx="6"/>
+        <text class="t" x="476" y="336" text-anchor="middle">qa</text>
+        <text class="s" x="476" y="352" text-anchor="middle">sonnet · salt-okunur</text>
+        <rect class="ag" x="252" y="370" width="144" height="46" rx="6"/>
+        <text class="t" x="324" y="390" text-anchor="middle">security</text>
+        <text class="s" x="324" y="406" text-anchor="middle">opus · + tarayıcı Bash</text>
+        <rect class="ag" x="404" y="370" width="144" height="46" rx="6"/>
+        <text class="t" x="476" y="390" text-anchor="middle">scout</text>
+        <text class="s" x="476" y="406" text-anchor="middle">haiku · salt-okunur</text>
+        <text class="s th" x="400" y="440" text-anchor="middle">Write yok · Bash yok (security: tarayıcı, git okuma)</text>
+        <line class="ln" x1="330" y1="268" x2="330" y2="301" marker-end="url(#tp-a)"/>
+        <text class="lbl" x="338" y="290">Agent · yalnız yollar</text>
+        <line class="ln" x1="490" y1="304" x2="490" y2="271" marker-end="url(#tp-a)"/>
+        <text class="lbl" x="498" y="290">karar</text>
+        <!-- docs/delix -->
+        <rect class="box2" x="240" y="486" width="320" height="106" rx="10"/>
+        <text class="t" x="400" y="510" text-anchor="middle">docs/delix/ · ana dal</text>
+        <text class="m" x="400" y="534" text-anchor="middle">SPEC.md · STATE.json · delix.json</text>
+        <text class="m" x="400" y="554" text-anchor="middle">tasks/T&lt;nnn&gt;-*.md · *.dispatch.md</text>
+        <text class="m" x="400" y="574" text-anchor="middle">verifications/ · metrics.md · archive/</text>
+        <line class="ln d" x1="400" y1="450" x2="400" y2="483" marker-end="url(#tp-a)"/>
+        <text class="lbl" x="408" y="472">okur</text>
+        <path class="ln" d="M240,250 H222 V540 H237" marker-end="url(#tp-a)"/>
+        <text class="lbl" x="214" y="400" text-anchor="middle" transform="rotate(-90 214 400)">yazar: SPEC · kart · STATE</text>
+        <path class="ln d" d="M560,540 H740 V403" marker-end="url(#tp-a)"/>
+        <text class="lbl" x="650" y="533" text-anchor="middle">kart (dal kopyası)</text>
+        <!-- Gösterim -->
+        <text class="s" x="20" y="318">Gösterim</text>
+        <rect class="sw-hu" x="20" y="330" width="18" height="12" rx="2" stroke-width="1.4"/><text class="k" x="46" y="340">insan, kapı</text>
+        <rect class="sw-ag" x="20" y="354" width="18" height="12" rx="2" stroke-width="1.4"/><text class="k" x="46" y="364">ajan oturumu, alt ajan</text>
+        <rect class="sw-hk" x="20" y="378" width="18" height="12" rx="2" stroke-width="1.4"/><text class="k" x="46" y="388">hook (harness)</text>
+        <line class="ln" x1="20" y1="408" x2="38" y2="408"/><text class="k" x="46" y="412">yazar, çağırır</text>
+        <line class="ln d" x1="20" y1="432" x2="38" y2="432"/><text class="k" x="46" y="436">okur</text>
+      </svg>
+    </div>
+    <p class="swipe">Diyagramı yatay kaydırın.</p>
+    <figcaption><strong>Okuma ve yazma ayrıdır.</strong> Ekip lideri spec'i, kartları ve <code>STATE.json</code>'u yazar. Alt ajanlara yalnız dosya yollarını iletir; kendi görüşünü aktarmaz. Uygulayıcı kartın dal kopyasını okur, kodu ve <code>.delix/</code> dosyalarını kendi worktree'sine yazar. Kart dosyası ve <code>docs/delix/**</code> uygulayıcıya hook'la kapalıdır. Feedback kuyruğu proje reposunda değil, kullanıcının ev dizinindedir.</figcaption>
+  </figure>
+
+  <div class="tbl" style="margin-top:18px">
+    <table class="mx">
+      <thead><tr><th>Bileşen</th><th>Okur</th><th>Yazar</th><th>Sınırı koyan</th></tr></thead>
+      <tbody>
+        <tr><th>Ekip lideri</th><td><code>CLAUDE.md</code>, <code>STATUS.md</code>, <code>docs/delix/*</code>, rapor, diff, <code>gh pr checks</code></td><td><code>SPEC.md</code>, kartlar, <code>*.dispatch.md</code>, <code>STATE.json</code>, verifications, metrics, feedback taslağı</td><td>Skill metni: kod yazmaz, kartı kendisi yapmaz, merge etmez</td></tr>
+        <tr><th>Uygulayıcı</th><td>Kart, SPEC'te kartın REQ bölümü, <code>delix.json</code>, rol notu</td><td>Files listesindeki kod, yeni testler, <code>.delix/*</code>, commit, PR</td><td>write_gate, bash_gate, Stop gate (yalnız yerel <code>.delix/card</code> varsa)</td></tr>
+        <tr><th>architect</th><td>SPEC, repo, kartlar</td><td>Hiçbir dosya; kartları ve wave planını metin olarak döndürür</td><td><code>tools: Read, Grep, Glob</code> + hook</td></tr>
+        <tr><th>qa</th><td>Diff, kart, SPEC, test çıktısı</td><td>Hiçbir dosya; <code>ACCEPT</code> · <code>ACCEPT_WITH_NOTES</code> · <code>REJECT</code> · <code>ESCALATE</code></td><td><code>tools: Read, Grep, Glob</code> + hook</td></tr>
+        <tr><th>security</th><td>Diff, kart, SPEC, tier, korumalı yollar; dış web içeriği yok</td><td>Hiçbir dosya; <code>CLEAN</code> · <code>FIX</code> · <code>🔐 HUMAN_APPROVAL</code></td><td>bash_gate: yalnız gitleaks, semgrep, pip-audit, trivy, git okuma</td></tr>
+        <tr><th>scout</th><td>Hedefli arama, sayım, alıntı</td><td>Hiçbir dosya</td><td><code>tools: Read, Grep, Glob</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="src"><b>Kaynak:</b> README.md (Roles, Files on the project side) · agents/*.md · skills/implement/SKILL.md §0 · scripts/write_gate.py · scripts/bash_gate.py</p>
+</section>
+
+<section id="akis">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-flow"/></svg>Ana akış</div>
+    <h2>İstekten kapanışa: altı komut, iki kapı</h2>
+    <p><code>/delixcrew:start</code> iki şey önerir. <strong>Boy</strong>, işin ne kadar süreç gerektirdiğini gösterir: S, M ya da L. <strong>Kademe</strong> (tier) riski gösterir: 1, 2 ya da 3. Kademe yükseldikçe daha çok inceleme ve onay gerekir. İyi tarif edilmiş küçük bir iş için tam akış yerine tek oturum ve <code>/delixcrew:verify</code> önerilir.</p>
+  </div>
+  <div class="split">
+    <figure class="dgm">
+      <div class="scroll">
+        <svg class="dg v" viewBox="0 0 440 730" role="img" aria-label="Ana akış: start boy ve kademe önerir; S için tek kart, M ve L için spec grill'i; Kapı 1; dispatch; worktree'de implement ve Stop gate; review ve en çok üç düzeltme turu; Kapı 2 merge; sonraki wave ya da close.">
+          <defs>
+            <marker id="fl-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+          </defs>
+          <rect class="ag" x="20" y="10" width="300" height="58" rx="8"/>
+          <text class="tm" x="170" y="34" text-anchor="middle">/delixcrew:start &lt;istek&gt;</text>
+          <text class="s" x="170" y="54" text-anchor="middle">bağlam · Boy S/M/L · Kademe 1/2/3</text>
+          <line class="ln d" x1="320" y1="39" x2="351" y2="39" marker-end="url(#fl-a)"/>
+          <text class="k" x="358" y="34">tek oturum</text>
+          <text class="k" x="358" y="49">+ verify</text>
+          <text class="s" x="358" y="64">(ayrı akış)</text>
+
+          <line class="ln" x1="90" y1="68" x2="90" y2="97" marker-end="url(#fl-a)"/>
+          <text class="lbl" x="82" y="88" text-anchor="end">S</text>
+          <line class="ln" x1="250" y1="68" x2="250" y2="97" marker-end="url(#fl-a)"/>
+          <text class="lbl" x="258" y="88">M / L</text>
+          <rect class="box" x="20" y="100" width="140" height="60" rx="8"/>
+          <text class="t" x="90" y="124" text-anchor="middle">Tek kart</text>
+          <text class="s" x="90" y="141" text-anchor="middle">architect yazar</text>
+          <text class="s" x="90" y="155" text-anchor="middle">spec yok</text>
+          <rect class="box" x="180" y="100" width="140" height="60" rx="8"/>
+          <text class="tm" x="250" y="124" text-anchor="middle">/delixcrew:spec</text>
+          <text class="s" x="250" y="141" text-anchor="middle">grill: tek tek soru</text>
+          <text class="s" x="250" y="155" text-anchor="middle">architect incelemesi</text>
+
+          <line class="ln" x1="90" y1="160" x2="90" y2="189" marker-end="url(#fl-a)"/>
+          <line class="ln" x1="250" y1="160" x2="250" y2="189" marker-end="url(#fl-a)"/>
+          <rect class="hu" x="20" y="192" width="300" height="44" rx="8"/>
+          <text class="t tu" x="170" y="212" text-anchor="middle">KAPI 1 · spec onayı (insan)</text>
+          <text class="s" x="170" y="228" text-anchor="middle">S: kart · M/L: SPEC.md "approved (gate 1)"</text>
+
+          <line class="ln" x1="170" y1="236" x2="170" y2="263" marker-end="url(#fl-a)"/>
+          <rect class="ag" x="20" y="266" width="300" height="62" rx="8"/>
+          <text class="tm" x="170" y="288" text-anchor="middle">/delixcrew:dispatch</text>
+          <text class="s" x="170" y="305" text-anchor="middle">architect: kartlar + wave planı · çakışma</text>
+          <text class="s" x="170" y="320" text-anchor="middle">Tier 3: kartta onay satırı, main'e commit</text>
+
+          <line class="ln" x1="170" y1="328" x2="170" y2="355" marker-end="url(#fl-a)"/>
+          <rect class="ag" x="20" y="358" width="300" height="96" rx="8"/>
+          <text class="tm" x="170" y="380" text-anchor="middle">/delixcrew:implement</text>
+          <text class="s" x="170" y="398" text-anchor="middle">worktree · önce kırmızı test · yalnız Files</text>
+          <text class="s" x="170" y="414" text-anchor="middle">doğrulama → PR + .delix/report.md</text>
+          <rect class="hk" x="36" y="424" width="268" height="22" rx="11"/>
+          <text class="s th" x="170" y="439" text-anchor="middle">Stop gate: test geçmeden iş bitmez</text>
+
+          <line class="ln" x1="170" y1="454" x2="170" y2="481" marker-end="url(#fl-a)"/>
+          <rect class="ag" x="20" y="484" width="300" height="72" rx="8"/>
+          <text class="tm" x="170" y="506" text-anchor="middle">/delixcrew:review</text>
+          <text class="s" x="170" y="524" text-anchor="middle">deterministik kapılar → qa (+ security T≥2)</text>
+          <text class="s" x="170" y="542" text-anchor="middle">ciddi bulgu: düzelt · 3 turdan sonra insana</text>
+
+          <line class="ln" x1="170" y1="556" x2="170" y2="583" marker-end="url(#fl-a)"/>
+          <rect class="hu" x="20" y="586" width="300" height="44" rx="8"/>
+          <text class="t tu" x="170" y="606" text-anchor="middle">KAPI 2 · merge (insan)</text>
+          <text class="s" x="170" y="622" text-anchor="middle">kart: accepted · ajan merge etmez</text>
+
+          <line class="ln" x1="170" y1="630" x2="170" y2="657" marker-end="url(#fl-a)"/>
+          <rect class="ag" x="20" y="660" width="300" height="62" rx="8"/>
+          <text class="tm" x="170" y="682" text-anchor="middle">/delixcrew:close</text>
+          <text class="s" x="170" y="699" text-anchor="middle">metrikler · spec-kod farkı · retro</text>
+          <text class="s" x="170" y="714" text-anchor="middle">STATUS · CHANGELOG · worktree temizliği</text>
+
+          <path class="ln" d="M320,520 H352 V406 H323" marker-end="url(#fl-a)"/>
+          <text class="lbl" x="364" y="463" text-anchor="middle" transform="rotate(-90 364 463)">düzeltme turu ≤ 3</text>
+          <path class="ln" d="M320,608 H400 V297 H323" marker-end="url(#fl-a)"/>
+          <text class="lbl" x="412" y="452" text-anchor="middle" transform="rotate(-90 412 452)">sonraki kart grubu (wave)</text>
+        </svg>
+      </div>
+      <p class="swipe">Diyagramı yatay kaydırın.</p>
+      <figcaption><strong>Tam akış.</strong> Review önce otomatik kontrollere bakar: testler, CI ve gitleaks. Biri başarısızsa LLM incelemesi başlamaz, bulgu uygulayıcıya geri gider. İnceleme ajanları yalnız ciddi bulgular (P0/P1) için düzeltme ister, küçükler (P2) not edilir. Üç düzeltme turundan sonra kart <code>escalated</code> olur, yani karar insana geçer: daha güçlü bir model, daha dar kapsam ya da olduğu gibi kabul.</figcaption>
+    </figure>
+
+    <figure class="dgm">
+      <div class="scroll">
+        <svg class="dg v" viewBox="0 0 440 604" role="img" aria-label="Kartsız verify yolu: girdi SHA'ya sabitlenir, beş deterministik kapı ucuzdan pahalıya koşar, qa ve security tek geçişte inceler, sonuç ACCEPT ya da FIX olarak verifications raporuna yazılır; düzeltme turu yoktur.">
+          <defs>
+            <marker id="vf-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+          </defs>
+          <rect class="ag" x="20" y="10" width="400" height="58" rx="8"/>
+          <text class="tm" x="220" y="34" text-anchor="middle">/delixcrew:verify &lt;dal|commit|dizin&gt;</text>
+          <text class="s" x="220" y="54" text-anchor="middle">kartsız iş · tek oturumda ya da elle yapılmış</text>
+          <line class="ln" x1="220" y1="68" x2="220" y2="93" marker-end="url(#vf-a)"/>
+          <rect class="box" x="20" y="96" width="400" height="58" rx="8"/>
+          <text class="t" x="220" y="120" text-anchor="middle">SHA'ya sabitle</text>
+          <text class="s" x="220" y="140" text-anchor="middle">git archive → çalışma dizini · korumalı yol → Tier 3</text>
+          <line class="ln" x1="220" y1="154" x2="220" y2="179" marker-end="url(#vf-a)"/>
+          <rect class="box2" x="20" y="182" width="400" height="170" rx="8"/>
+          <text class="t" x="40" y="206">Deterministik kapılar, ucuzdan pahalıya</text>
+          <text class="m" x="40" y="232">1  gitleaks: commit aralığı + arşiv</text>
+          <text class="m" x="40" y="256">2  yerel testler: delix.json.test_command</text>
+          <text class="m" x="40" y="280">3  uzak izole unit test: ayrı dizin + imaj</text>
+          <text class="m" x="40" y="304">4  tam suite: yalnız --full, kilit boşsa</text>
+          <text class="m" x="40" y="328">5  yol kontrolü: korumalı yol, test satırı</text>
+          <line class="ln" x1="220" y1="352" x2="220" y2="377" marker-end="url(#vf-a)"/>
+          <rect class="ag" x="20" y="380" width="400" height="58" rx="8"/>
+          <text class="t" x="220" y="404" text-anchor="middle">qa (+ security, Tier ≥ 2) · tek geçiş</text>
+          <text class="s" x="220" y="424" text-anchor="middle">sıfır bağlam · düzeltme turu yok · oturum açılmaz</text>
+          <path class="ln" d="M220,438 V452 H130 V463" marker-end="url(#vf-a)"/>
+          <path class="ln" d="M220,452 H310 V463" marker-end="url(#vf-a)"/>
+          <rect class="ok" x="60" y="466" width="140" height="36" rx="18"/>
+          <text class="tm tok" x="130" y="489" text-anchor="middle">ACCEPT</text>
+          <rect class="hk" x="240" y="466" width="140" height="36" rx="18"/>
+          <text class="tm th" x="310" y="489" text-anchor="middle">FIX</text>
+          <line class="ln" x1="130" y1="502" x2="130" y2="521" marker-end="url(#vf-a)"/>
+          <line class="ln" x1="310" y1="502" x2="310" y2="521" marker-end="url(#vf-a)"/>
+          <rect class="box" x="20" y="524" width="400" height="72" rx="8"/>
+          <text class="tm" x="220" y="546" text-anchor="middle">verifications/&lt;tarih&gt;-&lt;ad&gt;.md</text>
+          <text class="s" x="220" y="566" text-anchor="middle">+ STATE.json.verifications · düzeltme kullanıcının</text>
+          <text class="s tu" x="220" y="584" text-anchor="middle">korumalı yol: ACCEPT + güvenlik onayı, merge öncesi</text>
+        </svg>
+      </div>
+      <p class="swipe">Diyagramı yatay kaydırın.</p>
+      <figcaption><strong>Kartsız yol.</strong> Boy S ya da M, kademe en çok 2 ve iş iyi tarif edilmişse önerilir. Tier 3, iki ya da daha çok paralel kart ya da belirsiz spec tam akışı gerektirir. Projenin kendi ölçümlerinde bu yol, tam akışla aynı sonucu onun maliyetinin %4–12'siyle verdi.</figcaption>
+    </figure>
+  </div>
+  <p class="src"><b>Kaynak:</b> skills/start, spec, dispatch, implement, review, close, verify (SKILL.md) · README.md (Flow) · STATUS.md (A10, K43)</p>
+</section>
+
+<section id="kademe">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-grid"/></svg>Kademe ve kapı matrisi</div>
+    <h2>Riski satır sayısı değil, yol ve eylem belirler</h2>
+    <p>Kademe dosya yoluna, eyleme ve dış içeriğe bakar. Keycloak'ta 3 satırlık bir değişiklik boy S, kademe 3'tür. Review sırasında korumalı bir yola dokunulduğu görülürse kartın kademesi 3'e çıkar ve güvenlik onayı gerekir.</p>
+  </div>
+  <div class="tbl">
+    <table class="mx">
+      <thead><tr><th></th><th>Kademe 1</th><th>Kademe 2</th><th>Kademe 3 · <svg class="ico il" aria-hidden="true"><use href="../assets/icons.svg#i-lock"/></svg></th></tr></thead>
+      <tbody>
+        <tr><th>Ne zaman</th><td>Geri kalan her şey</td><td>Yeni davranış, birden çok dosya, yeni bağımlılık, şablon ya da route</td><td><code>protected_paths</code>: auth, sırlar, CI, lockfile, deploy, prod veri; ya da dışarı yayın</td></tr>
+        <tr><th>Spec incelemesi</th><td><span class="pill ag">architect</span></td><td><span class="pill ag">architect</span></td><td><span class="pill ag">architect</span> <span class="pill ag">security</span></td></tr>
+        <tr><th>PR incelemesi</th><td><span class="pill ag">qa</span></td><td><span class="pill ag">qa</span> <span class="pill ag">security</span></td><td><span class="pill ag">qa</span> <span class="pill ag">security</span> tüm maddeler; varsa <code>/security-review</code>, boy L'de Claude Security</td></tr>
+        <tr><th><svg class="ico il" aria-hidden="true"><use href="../assets/icons.svg#i-lock"/></svg> onayı</th><td class="muted">yok</td><td class="muted">yok</td><td><span class="pill hu"><svg class="ico"><use href="../assets/icons.svg#i-lock"/></svg>kart başına</span> Kullanıcı sohbette açıkça "evet" der. Ardından ekip lideri kartın başlığına <code>**🔐 Approved:** &lt;tarih&gt; &lt;kim&gt;</code> satırını yazar ve main'e commit eder. Bu satır yoksa write gate korumalı yolu reddeder.</td></tr>
+        <tr><th>Uygulayıcı oturumu</th><td>Terminalde headless <code>claude -p</code></td><td>Terminalde headless <code>claude -p</code></td><td>Etkileşimli; oturumu kullanıcı açar, iş gözünün önünde yürür</td></tr>
+        <tr><th>verify'da</th><td>security yalnız açıkça <code>--tier 1</code> denirse atlanır</td><td>Varsayılan kademe</td><td>Korumalı yol görülünce otomatik; sonuç <code>ACCEPT 🔐</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="tbl" style="margin-top:14px">
+    <table class="mx">
+      <thead><tr><th>Boy</th><th>Tanım</th><th>Yol</th></tr></thead>
+      <tbody>
+        <tr><th>S</th><td>Tek kart; yeni davranış yok ya da tek yer</td><td>Spec yok; kartı architect yazar, Kapı 1 kartın onayıdır</td></tr>
+        <tr><th>M</th><td>Yeni ekran ya da endpoint, 2–5 kart</td><td><code>templates/spec-M.md</code> ile grill ve SPEC</td></tr>
+        <tr><th>L</th><td>2+ disiplin; veri modeli, auth ya da mimari değişikliği; 5+ kart</td><td><code>spec-L.md</code> + <code>design.md</code> + <code>contracts/</code>; ayrı EGM plugin'i (doküman inceleme ajanları) kuruluysa spec onunla da incelenir; close'ta EGM, spec ile kod arasındaki farkı raporlar</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="src"><b>Kaynak:</b> skills/start/SKILL.md §2 · skills/spec/SKILL.md §3 · skills/review/SKILL.md §1–2 · skills/dispatch/SKILL.md §2, §4 · skills/verify/SKILL.md §0 · skills/close/SKILL.md §3</p>
+</section>
+
+<section id="hooks">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-shield"/></svg>Hook'lar</div>
+    <h2>Üç hook, hangi aracı nerede durdurur</h2>
+    <p><code>hooks/hooks.json</code> üç kayıt tanımlar ve hepsi Python betiğidir. <code>python3</code> PATH'te yoksa Write, Edit ve Bash engellenir; hook hata verirse işlem de engellenir (fail-closed). Uygulayıcı kuralları yalnız worktree kökünde yerel bir <code>.delix/card</code> dosyası varken devreye girer; bu dosya git'te izlenmez. İnceleme ajanı kuralları, ajan türü (<code>agent_type</code>) <code>delixcrew:*</code> olduğunda devreye girer.</p>
+  </div>
+  <div class="split wide-left">
+    <figure class="dgm">
+      <div class="scroll">
+        <svg class="dg v" viewBox="0 0 460 494" role="img" aria-label="write_gate karar sırası: önce feedback ve triage dizinleri, sonra reviewer rolü, uygulayıcı değilse izin, worktree dışı, kart ve docs/delix, korumalı yol, test dosyası, kalan her şeye izin.">
+          <defs>
+            <marker id="wg-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+          </defs>
+          <!-- satır 0 -->
+          <rect class="box" x="20" y="14" width="270" height="40" rx="6"/>
+          <text class="k" x="34" y="38">Feedback ya da triage dizini mi?</text>
+          <line class="ln" x1="290" y1="34" x2="319" y2="34" marker-end="url(#wg-a)"/>
+          <text class="lbl" x="305" y="28" text-anchor="middle">evet</text>
+          <rect class="hk" x="322" y="19" width="124" height="30" rx="15"/>
+          <text class="s th" x="384" y="38" text-anchor="middle">DENY · her oturum</text>
+          <line class="ln" x1="155" y1="54" x2="155" y2="73" marker-end="url(#wg-a)"/>
+          <text class="lbl" x="163" y="68">hayır</text>
+          <!-- satır 1 -->
+          <rect class="box" x="20" y="76" width="270" height="40" rx="6"/>
+          <text class="k" x="34" y="100">Rol delixcrew:* reviewer mı?</text>
+          <line class="ln" x1="290" y1="96" x2="319" y2="96" marker-end="url(#wg-a)"/>
+          <text class="lbl" x="305" y="90" text-anchor="middle">evet</text>
+          <rect class="hk" x="322" y="81" width="124" height="30" rx="15"/>
+          <text class="s th" x="384" y="100" text-anchor="middle">DENY · salt-okunur</text>
+          <line class="ln" x1="155" y1="116" x2="155" y2="135" marker-end="url(#wg-a)"/>
+          <text class="lbl" x="163" y="130">hayır</text>
+          <!-- satır 2 -->
+          <rect class="box" x="20" y="138" width="270" height="40" rx="6"/>
+          <text class="k" x="34" y="162">Yerel .delix/card yok mu?</text>
+          <line class="ln" x1="290" y1="158" x2="319" y2="158" marker-end="url(#wg-a)"/>
+          <text class="lbl" x="305" y="152" text-anchor="middle">evet</text>
+          <rect class="ok" x="322" y="143" width="124" height="30" rx="15"/>
+          <text class="s tok" x="384" y="162" text-anchor="middle">İZİN · kural yok</text>
+          <line class="ln" x1="155" y1="178" x2="155" y2="197" marker-end="url(#wg-a)"/>
+          <text class="lbl" x="163" y="192">hayır: uygulayıcı</text>
+          <!-- satır 3 -->
+          <rect class="box" x="20" y="200" width="270" height="40" rx="6"/>
+          <text class="k" x="34" y="224">Yol worktree'nin dışında mı?</text>
+          <line class="ln" x1="290" y1="220" x2="319" y2="220" marker-end="url(#wg-a)"/>
+          <text class="lbl" x="305" y="214" text-anchor="middle">evet</text>
+          <rect class="hk" x="322" y="205" width="124" height="30" rx="15"/>
+          <text class="s th" x="384" y="224" text-anchor="middle">DENY</text>
+          <line class="ln" x1="155" y1="240" x2="155" y2="259" marker-end="url(#wg-a)"/>
+          <text class="lbl" x="163" y="254">hayır</text>
+          <!-- satır 4 -->
+          <rect class="box" x="20" y="262" width="270" height="40" rx="6"/>
+          <text class="k" x="34" y="286">Kart dosyası ya da docs/delix/** mı?</text>
+          <line class="ln" x1="290" y1="282" x2="319" y2="282" marker-end="url(#wg-a)"/>
+          <text class="lbl" x="305" y="276" text-anchor="middle">evet</text>
+          <rect class="hk" x="322" y="267" width="124" height="30" rx="15"/>
+          <text class="s th" x="384" y="286" text-anchor="middle">DENY</text>
+          <line class="ln" x1="155" y1="302" x2="155" y2="321" marker-end="url(#wg-a)"/>
+          <text class="lbl" x="163" y="316">hayır</text>
+          <!-- satır 5 -->
+          <rect class="box" x="20" y="324" width="270" height="40" rx="6"/>
+          <text class="k" x="34" y="348">Korumalı yol mu (protected_paths)?</text>
+          <line class="ln" x1="290" y1="344" x2="319" y2="344" marker-end="url(#wg-a)"/>
+          <text class="lbl" x="305" y="338" text-anchor="middle">evet</text>
+          <rect class="hu" x="322" y="324" width="124" height="40" rx="8"/>
+          <text class="s tu" x="384" y="340" text-anchor="middle">Files + onay → İZİN</text>
+          <text class="s" x="384" y="355" text-anchor="middle">yoksa DENY</text>
+          <line class="ln" x1="155" y1="364" x2="155" y2="383" marker-end="url(#wg-a)"/>
+          <text class="lbl" x="163" y="378">hayır</text>
+          <!-- satır 6 -->
+          <rect class="box" x="20" y="386" width="270" height="40" rx="6"/>
+          <text class="k" x="34" y="410">Test yolu ve kartın Files'ında yok mu?</text>
+          <line class="ln" x1="290" y1="406" x2="319" y2="406" marker-end="url(#wg-a)"/>
+          <text class="lbl" x="305" y="400" text-anchor="middle">evet</text>
+          <rect class="box2" x="322" y="386" width="124" height="40" rx="8"/>
+          <text class="s tok" x="384" y="402" text-anchor="middle">yeni dosya → İZİN</text>
+          <text class="s th" x="384" y="417" text-anchor="middle">var olan → DENY</text>
+          <line class="ln" x1="155" y1="426" x2="155" y2="445" marker-end="url(#wg-a)"/>
+          <text class="lbl" x="163" y="440">hayır</text>
+          <rect class="ok" x="95" y="448" width="120" height="32" rx="16"/>
+          <text class="s tok" x="155" y="468" text-anchor="middle">İZİN</text>
+        </svg>
+      </div>
+      <p class="swipe">Diyagramı yatay kaydırın.</p>
+      <figcaption><strong>write_gate karar sırası.</strong> <code>scripts/write_gate.py</code> soruları bu sırayla sorar ve ilk "evet"te durur. Write, Edit, MultiEdit ve NotebookEdit araçlarının çağrılarını denetler. Yeni test dosyası serbesttir, var olan test dosyasına yalnız kartın Files listesindeyse yazılabilir.</figcaption>
+    </figure>
+
+    <div class="notes">
+      <div class="note limit">
+        <h3><svg class="ico"><use href="../assets/icons.svg#i-shield"/></svg>Bilinen sınırlar</h3>
+        <ul>
+          <li>write_gate Bash ile yazılanı görmez (<code>echo &gt;</code>, <code>sed -i</code>, <code>tee</code>). bash_gate yalnız korumalı yola giden yönlendirmeyi, <code>cp</code>, <code>mv</code> ve <code>tee</code>'yi yakalar. Bu açığa karşı qa ajanı, diff'te kart ya da <code>docs/delix/**</code> değişikliği görürse bunu bulgu sayar.</li>
+          <li>Hook'lar gönderimin bilinen yollarını kapatır, her yolu kapatmaz. base64 ile kurulmuş bir komut, dosyaya yazılmış bir wrapper ya da gh kullanmayan bir HTTP isteği desen eşleşmesinden geçebilir. README, kullanıcının kendi <code>settings.json</code>'una <code>permissions.deny</code> eklemesini önerir.</li>
+          <li>Claude Code, plugin ajan tanımlarındaki <code>permissionMode</code>, <code>hooks</code> ve <code>mcpServers</code> alanlarını yok sayar. Bu yüzden kısıtlar <code>tools</code> listesinde ve <code>hooks.json</code> dosyasında durur.</li>
+          <li>Kendi <code>.git</code>'ini içeren bir arşivden gelen kartlarla ilgili durum açıktır ve issue #17'de izleniyor. T007, git'in izlediği ve symlink'li kartları kapattı.</li>
+        </ul>
+      </div>
+      <div class="note">
+        <h3><span class="pill ag">0.6.0</span>Triage hook kuralları</h3>
+        <p>bash_gate her oturumda <code>triage.py apply</code>'ı ve <code>triage.py</code>'yi <code>script</code>, <code>expect</code>, <code>unbuffer</code> ya da <code>pty.spawn</code> altında çalıştırmayı reddeder. delixcrew'u hedefleyen <code>gh issue close|reopen|lock|…</code>, <code>gh label</code> ve yazma yapan <code>gh api</code> çağrılarını (<code>-f</code>, <code>--input</code>, <code>graphql</code>, GET dışı metot) da reddeder. write_gate triage kayıt dizinine doğrudan yazmayı reddeder. Feedback'te olduğu gibi yalnız bilinen yollar kapalıdır.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="hooks">
+    <article class="hook">
+      <h3>write_gate.py</h3>
+      <p class="when">PreToolUse · Write | Edit | MultiEdit | NotebookEdit · timeout 10 sn</p>
+      <dl>
+        <div><dt>Her oturum</dt><dd>Feedback kuyruğuna ve triage kayıt dizinine doğrudan yazım reddedilir.</dd></div>
+        <div><dt>Reviewer</dt><dd>Hiçbir dosyaya yazamaz.</dd></div>
+        <div><dt>Uygulayıcı</dt><dd>Worktree dışı, kart ve <code>docs/delix/**</code> kapalı. Korumalı yola yazmak için yolun Files listesinde olması ve kartta güvenlik onayı satırı gerekir. Var olan test dosyası yalnız Files'taysa açılır.</dd></div>
+      </dl>
+    </article>
+    <article class="hook">
+      <h3>bash_gate.py</h3>
+      <p class="when">PreToolUse · Bash · timeout 60 sn</p>
+      <dl>
+        <div><dt>Her oturum</dt><dd><code>feedback.py send</code> reddedilir; <code>script</code>, <code>expect</code>, <code>unbuffer</code> ve <code>pty.spawn</code> sarmalayıcıları da reddedilir. delixcrew'u hedefleyen <code>gh issue create|comment|edit</code> ve <code>gh api … issues</code> çağrıları da reddedilir. Triage yazma yolları da kapalıdır (yukarıdaki not).</dd></div>
+        <div><dt>Reviewer</dt><dd>security yalnız tarayıcı (gitleaks, semgrep, pip-audit, trivy, …) ve git okuma komutu çalıştırır; diğer reviewer'lar Bash kullanamaz.</dd></div>
+        <div><dt>Uygulayıcı</dt><dd>Korumalı yola shell ile yazma reddedilir. <code>git commit</code> öncesinde staged değişikliklerde <code>gitleaks protect</code> koşar; bulgu varsa commit durur. gitleaks yoksa <code>.delix/warnings.log</code>'a not düşülür.</dd></div>
+      </dl>
+    </article>
+    <article class="hook">
+      <h3>stop_gate.py</h3>
+      <p class="when">Stop · komut başına 540 sn</p>
+      <dl>
+        <div><dt>Yalnız uygulayıcı</dt><dd><code>test_command</code> ve <code>extra_checks</code> koşar, çıktı <code>.delix/test-result.txt</code>'ye yazılır. Biri başarısızsa çıkış kodu 2 olur ve uygulayıcı işi bitiremez.</dd></div>
+        <div><dt>Çıkış yolu</dt><dd>Rapor <code>NEEDS_CONTEXT</code> ya da <code>BLOCKED</code> diyorsa uygulayıcı durabilir. <code>stop_hook_active</code> sonsuz döngüyü önler.</dd></div>
+        <div><dt>Sınır</dt><dd>Yalnız bu yerel komutlar koşar. Kartın doğrulama komutunu ve tam suite'i review'da ekip lideri çalıştırır.</dd></div>
+      </dl>
+    </article>
+  </div>
+  <p class="src"><b>Kaynak:</b> hooks/hooks.json · scripts/write_gate.py · scripts/bash_gate.py · scripts/stop_gate.py · scripts/common.py (card_path) · README.md (Known limits, Remaining risk) · CHANGELOG 0.5.0 (T007) · README.md (Triage) · CHANGELOG 0.6.0</p>
+</section>
+
+<section id="oz-besleme">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-loop"/></svg>Öz-besleme · 0.5.0 ve 0.6.0</div>
+    <h2>Plugin kendi hatasını bildirir, gönderen yine insandır</h2>
+    <p>delixcrew bir projede kendi kusurunu görünce bunu yerel bir taslağa yazar. Taslak temizlenir, kullanıcı tam metni görür ve gönderimi kendi terminalinde yapar. Bulgu GitHub Issue'a dönüşür, triage'dan geçer ve kabul edilirse <code>/delixcrew:start #&lt;n&gt;</code> ile yeniden iş akışına girer.</p>
+  </div>
+  <div class="split">
+    <figure class="dgm">
+      <div class="scroll">
+        <svg class="dg v" viewBox="0 0 460 762" role="img" aria-label="Öz-besleme döngüsü: bulgu feedback.py add ile yerel kuyruğa yazılır, preview deterministik temizlik yapar, kullanıcı tam metni görüp id ile onaylar, Claude gönderemez, kullanıcı kendi terminalinde send çalıştırır, public issue açılır, triage kararından sonra start yalnız accepted issue'yu UNTRUSTED alıntı olarak alır ve döngü yeni bulgulara döner.">
+          <defs>
+            <marker id="fb-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+            <marker id="fb-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahp" d="M0,0 L10,5 L0,10 z"/></marker>
+          </defs>
+          <rect class="ag" x="40" y="10" width="320" height="58" rx="8"/>
+          <text class="t" x="200" y="31" text-anchor="middle">Bulgu</text>
+          <text class="s" x="200" y="48" text-anchor="middle">hook'un yanlış reddi · uygulanamayan adım</text>
+          <text class="s" x="200" y="62" text-anchor="middle">elle aşılan sınır · ya da feedback note</text>
+          <line class="ln" x1="200" y1="68" x2="200" y2="91" marker-end="url(#fb-a)"/>
+          <rect class="box" x="40" y="94" width="320" height="58" rx="8"/>
+          <text class="tm" x="200" y="116" text-anchor="middle">feedback.py add</text>
+          <text class="s" x="200" y="133" text-anchor="middle">~/.claude/delixcrew/feedback/ · ham metin</text>
+          <text class="s" x="200" y="147" text-anchor="middle">varsayılan kapalı · tekrar → count + 1</text>
+          <line class="ln" x1="200" y1="152" x2="200" y2="175" marker-end="url(#fb-a)"/>
+          <rect class="hk" x="40" y="178" width="320" height="76" rx="8"/>
+          <text class="t" x="200" y="199" text-anchor="middle">preview · deterministik temizlik</text>
+          <text class="s" x="200" y="217" text-anchor="middle">host · IP · MAC · e-posta · yol · ad · --terms</text>
+          <text class="s th" x="200" y="232" text-anchor="middle">BLOCKED: sır · gizli karakter · uzun gövde</text>
+          <text class="m" x="200" y="247" text-anchor="middle">sonuç: CLEAN / BLOCKED + hash</text>
+          <line class="ln" x1="200" y1="254" x2="200" y2="277" marker-end="url(#fb-a)"/>
+          <rect class="hu" x="40" y="280" width="320" height="50" rx="8"/>
+          <text class="t tu" x="200" y="301" text-anchor="middle">Kullanıcı tam metni görür</text>
+          <text class="s" x="200" y="318" text-anchor="middle">sohbette "yes F003" · id'siz evet sayılmaz</text>
+          <line class="ln" x1="200" y1="330" x2="200" y2="353" marker-end="url(#fb-a)"/>
+          <rect class="hk" x="40" y="356" width="320" height="44" rx="8"/>
+          <text class="t th" x="200" y="375" text-anchor="middle">Claude gönderemez</text>
+          <text class="s" x="200" y="391" text-anchor="middle">yalnız tek satırlık komutu verir · hook send'i reddeder</text>
+          <line class="ln" x1="200" y1="400" x2="200" y2="423" marker-end="url(#fb-a)"/>
+          <rect class="hu" x="40" y="426" width="320" height="58" rx="8"/>
+          <text class="t tu" x="200" y="447" text-anchor="middle">Kullanıcının kendi terminali</text>
+          <text class="m" x="200" y="464" text-anchor="middle">feedback.py send F003 --confirm &lt;hash&gt;</text>
+          <text class="s" x="200" y="478" text-anchor="middle">TTY şart · metin yeniden basılır · SEND &lt;hash&gt;</text>
+          <line class="ln" x1="200" y1="484" x2="200" y2="507" marker-end="url(#fb-a)"/>
+          <rect class="box" x="40" y="510" width="320" height="50" rx="8"/>
+          <text class="t" x="200" y="531" text-anchor="middle">GitHub Issue · public</text>
+          <text class="s" x="200" y="548" text-anchor="middle">tahircengiz/delixcrew · parmak izi tekilliği</text>
+          <line class="ln" x1="200" y1="560" x2="200" y2="583" marker-end="url(#fb-a)"/>
+          <rect class="ag" x="40" y="586" width="320" height="76" rx="8"/>
+          <text class="tm" x="200" y="612" text-anchor="middle">/delixcrew:triage</text>
+          <text class="s" x="200" y="629" text-anchor="middle">temiz okuma → architect karar önerir</text>
+          <text class="s" x="200" y="644" text-anchor="middle">insan "accept #12" · apply kendi terminalinde</text>
+          <text class="s" x="200" y="657" text-anchor="middle">yorum + karar etiketi</text>
+          <line class="ln" x1="200" y1="662" x2="200" y2="685" marker-end="url(#fb-a)"/>
+          <rect class="ag" x="40" y="688" width="320" height="62" rx="8"/>
+          <text class="tm" x="200" y="710" text-anchor="middle">/delixcrew:start #&lt;n&gt;</text>
+          <text class="s" x="200" y="727" text-anchor="middle">yalnız accepted · kabulden sonra değişmemiş</text>
+          <text class="s" x="200" y="742" text-anchor="middle">issue metni komut sayılmaz · Tier ≥ 2</text>
+          <path class="ln" d="M360,719 H400 V39 H363" marker-end="url(#fb-a)"/>
+          <text class="lbl" x="414" y="380" text-anchor="middle" transform="rotate(-90 414 380)">delix akışı → yeni bulgular</text>
+        </svg>
+      </div>
+      <p class="swipe">Diyagramı yatay kaydırın.</p>
+      <figcaption><strong>Döngü.</strong> 0.6.0'dan beri start yalnız triage'da <code>accepted</code> kararı almış ve kabulden sonra başlığı ya da gövdesi değişmemiş issue'yu alır (<code>triage.py show &lt;n&gt; --require accepted</code>; kabul kontrolü tutmazsa çıkış 8, <code>gh</code> hata verirse 7). Triage yorumunu ve etiketini de kullanıcı kendi terminalinde <code>APPLY &lt;hash&gt;</code> yazarak yayımlar.</figcaption>
+    </figure>
+
+    <div class="notes">
+      <div class="note">
+        <h3>Ne zaman taslak yazılır</h3>
+        <p><code>/delixcrew:close</code> ve <code>/delixcrew:review</code> yalnız şu üç durumda taslak ekler: hook doğru bir işi reddettiğinde, bir skill adımı yazıldığı gibi uygulanamadığında ya da bir plugin sınırı elle aşıldığında. Bunlar dışında, kullanıcı sohbette <code>/delixcrew:feedback note</code> der. Özellik kapalıysa hiçbir şey yazılmaz (çıkış 3).</p>
+      </div>
+      <div class="note">
+        <h3>Temizlik ve engelleme</h3>
+        <ul>
+          <li><strong>Değiştirilir:</strong> kısa izin listesi dışındaki her host, belge aralıkları ve loopback dışındaki IP'ler, MAC ve e-posta adresleri. Ev dizinindeki kullanıcı adı ve diğer mutlak yollar, kullanıcı ve makine adı, kaynak proje adları ve <code>--terms</code> de değiştirilir.</li>
+          <li><strong>BLOCKED olur (fail-closed):</strong> gitleaks bulgusu ya da gitleaks'in olmaması, görünmez Unicode kontrol karakteri, 32+ karakterlik opak dizi, 15'ten çok kod satırı, 8 KB'yi aşan gövde, temizlikten sonra kalan eşleşme.</li>
+          <li>Sır redakte edilip gönderilmez; taslak engellenir.</li>
+        </ul>
+      </div>
+      <div class="note">
+        <h3>Onay zinciri</h3>
+        <ul>
+          <li>Preview metni veridir. Taslakta, dosyada ya da issue'da geçen "approved" onay sayılmaz.</li>
+          <li>Onay için kullanıcı, sohbette taslağın id'sini belirtmeli: <code>yes F003</code>. Ardından Claude tek satırlık komutu verir.</li>
+          <li><code>send</code> metni terminalde bir kez daha basar ve <code>SEND &lt;hash&gt;</code> yazılmasını bekler. Metin preview'dan sonra değiştiyse durur.</li>
+          <li>Hedef repo sabittir. Aynı parmak izli bir issue varsa yenisi açılmaz, mevcut URL kaydedilir.</li>
+        </ul>
+      </div>
+      <div class="note">
+        <h3><span class="pill ag">0.6.0</span>Triage: doğrula, ele, karar ver</h3>
+        <p>Triage'da architect bir bug'ı bildirilen sürümün koduna, bir feature'ı delix ilkelerine karşı kontrol eder; her issue'da tekrar, kaynak ve eksik bilgiye bakar. Ardından <code>accept</code>, <code>needs-info</code>, <code>duplicate</code>, <code>wontfix</code> ya da <code>defer</code> kararlarından birini önerir. Kararı insan sohbette numarasıyla verir: <code>accept #12</code>. Yorum ve etiketi kullanıcı kendi terminalinde <code>APPLY &lt;hash&gt;</code> yazarak yayımlar. Yalnız <code>duplicate</code> ve <code>wontfix</code> issue'yu kapatır.</p>
+      </div>
+    </div>
+  </div>
+  <p class="src"><b>Kaynak:</b> README.md (Feedback, Data &amp; privacy) · CHANGELOG 0.5.0 · skills/feedback/SKILL.md · skills/start/SKILL.md §1a · scripts/feedback.py · README.md (Triage) · CHANGELOG 0.6.0</p>
+</section>
+
+<section id="kart">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-card"/></svg>Kartın yaşam döngüsü</div>
+    <h2>Bir kart yedi durumdan birindedir</h2>
+    <p>Durum değerleri <code>STATE.json.status_values</code>'tan alındı: <code>open</code>, <code>in_progress</code>, <code>in_review</code>, <code>fixing</code>, <code>accepted</code>, <code>rejected</code>, <code>escalated</code>. Geçişleri dispatch, implement ve review skill'leri yazar.</p>
+  </div>
+  <figure class="dgm">
+    <div class="scroll">
+      <svg class="dg w600" viewBox="0 0 690 300" role="img" aria-label="Kart durum makinesi: open, dispatch ile in_progress, PR ve rapor ile in_review, P0 veya P1 bulguyla fixing ve geri in_review, tur sınırı aşılınca escalated, Kapı 2 merge ile accepted; rejected durum listesinde var ama geçişi tanımlı değil.">
+        <defs>
+          <marker id="sm-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+          <marker id="sm-h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahh" d="M0,0 L10,5 L0,10 z"/></marker>
+        </defs>
+        <rect class="box" x="20" y="40" width="110" height="40" rx="20"/>
+        <text class="tm" x="75" y="64" text-anchor="middle">open</text>
+        <rect class="ag" x="200" y="40" width="110" height="40" rx="20"/>
+        <text class="tm" x="255" y="64" text-anchor="middle">in_progress</text>
+        <rect class="ag" x="380" y="40" width="110" height="40" rx="20"/>
+        <text class="tm" x="435" y="64" text-anchor="middle">in_review</text>
+        <rect class="ok" x="560" y="40" width="110" height="40" rx="20"/>
+        <text class="tm tok" x="615" y="64" text-anchor="middle">accepted</text>
+        <rect class="ag" x="380" y="200" width="110" height="40" rx="20"/>
+        <text class="tm" x="435" y="224" text-anchor="middle">fixing</text>
+        <rect class="hu" x="560" y="200" width="110" height="40" rx="20"/>
+        <text class="tm tu" x="615" y="224" text-anchor="middle">escalated</text>
+        <rect class="pl" x="20" y="200" width="110" height="40" rx="20"/>
+        <text class="tm tp" x="75" y="224" text-anchor="middle">rejected</text>
+        <text class="s" x="75" y="260" text-anchor="middle">listede var; geçişi</text>
+        <text class="s" x="75" y="274" text-anchor="middle">skill'lerde tanımlı değil</text>
+
+        <line class="ln" x1="130" y1="60" x2="197" y2="60" marker-end="url(#sm-a)"/>
+        <text class="lbl" x="165" y="52" text-anchor="middle">dispatch</text>
+        <line class="ln" x1="310" y1="60" x2="377" y2="60" marker-end="url(#sm-a)"/>
+        <text class="lbl" x="345" y="52" text-anchor="middle">PR + rapor</text>
+        <line class="ln h" x1="490" y1="60" x2="557" y2="60" marker-end="url(#sm-h)"/>
+        <text class="lh" x="525" y="52" text-anchor="middle">Kapı 2</text>
+        <text class="lh" x="525" y="78" text-anchor="middle">merge</text>
+        <line class="ln" x1="415" y1="80" x2="415" y2="197" marker-end="url(#sm-a)"/>
+        <text class="lbl" x="407" y="135" text-anchor="end">P0/P1 bulgu</text>
+        <text class="lbl" x="407" y="150" text-anchor="end">rounds + 1</text>
+        <line class="ln" x1="455" y1="200" x2="455" y2="83" marker-end="url(#sm-a)"/>
+        <text class="lbl" x="463" y="135">düzeltme commit'i</text>
+        <text class="lbl" x="463" y="150">kapsamlı yeniden inceleme</text>
+        <line class="ln" x1="490" y1="220" x2="557" y2="220" marker-end="url(#sm-a)"/>
+        <text class="lbl" x="524" y="212" text-anchor="middle">tur &gt; 3</text>
+        <path class="ln d" d="M615,240 V270 H435 V243" marker-end="url(#sm-a)"/>
+        <text class="lbl" x="525" y="288" text-anchor="middle">kullanıcı ek tur onaylar (ör. T002)</text>
+      </svg>
+    </div>
+    <p class="swipe">Diyagramı yatay kaydırın.</p>
+    <figcaption><strong>Durum makinesi.</strong> Uygulayıcı raporu ayrı bir sözleşme taşır: <code>DONE</code>, <code>DONE_WITH_CONCERNS</code>, <code>NEEDS_CONTEXT</code> ya da <code>BLOCKED</code>. Son ikisinde review açılmaz; ekip lideri cevap verir ya da kullanıcıya götürür. qa'nın <code>REJECT</code> kararı bir review sonucudur; kartı <code>rejected</code> durumuna taşıyan bir adım skill metinlerinde yok.</figcaption>
+  </figure>
+
+  <div class="split" style="margin-top:18px">
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Kart</th><th>Rol</th><th>Tier</th><th>PR</th><th>Tur</th></tr></thead>
+        <tbody>
+          <tr><th>T001</th><td>backend</td><td class="num">3</td><td class="num">#6</td><td class="num"><span class="bar" style="width:14px"></span> 1</td></tr>
+          <tr><th>T002</th><td>backend</td><td class="num">3</td><td class="num">#4</td><td class="num"><span class="bar over" style="width:56px"></span> 4</td></tr>
+          <tr><th>T003</th><td>docs</td><td class="num">3</td><td class="num">#5</td><td class="num">0</td></tr>
+          <tr><th>T004</th><td>devops</td><td class="num">3</td><td class="num">#18</td><td class="num">0</td></tr>
+          <tr><th>T005</th><td>docs</td><td class="num">1</td><td class="num">#19</td><td class="num"><span class="bar" style="width:28px"></span> 2</td></tr>
+          <tr><th>T006</th><td>docs</td><td class="num">2</td><td class="num">#15</td><td class="num">0</td></tr>
+          <tr><th>T007</th><td>backend</td><td class="num">3</td><td class="num">#16</td><td class="num"><span class="bar" style="width:28px"></span> 2</td></tr>
+          <tr><th>T008</th><td>backend</td><td class="num">3</td><td class="num">#20</td><td class="num"><span class="bar" style="width:14px"></span> 1</td></tr>
+          <tr><th>T009</th><td>devops</td><td class="num">2</td><td class="num">#21</td><td class="num"><span class="bar" style="width:28px"></span> 2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="notes">
+      <div class="note">
+        <h3>Gerçek bir kart: T002 hook kuralları</h3>
+        <p>Kademe 3, backend, wave 1. Dispatch'ten önce karta güvenlik onayı satırı (Approved) yazıldı ve PR #4 açıldı. Review dört tur sürdü: sınır 3'tü, dördüncü turu kullanıcı onayladı. Sonra Kapı 2'de merge edildi (<code>c43516d</code>) ve kart <code>accepted</code> oldu. PR açılışından merge'e 48 dakika geçti.</p>
+      </div>
+      <div class="note">
+        <h3>0.5.0 öz-besleme özeti</h3>
+        <p>4 wave'de 9 kart, hepsi <code>accepted</code>. 6'sı Tier 3, toplam 12 inceleme turu, 3 kart sıfır turla geçti. Kullanıcı kapılar dışında kart başına 1,6 (ilk tur) ve 1,5 (rev 3) kez araya girdi; hedef en çok 5. Oturum maliyeti USD olarak ölçülmedi, yalnız token sayıldı.</p>
+      </div>
+      <div class="note">
+        <h3><span class="pill ag">0.6.0</span>Triage kartları</h3>
+        <p>Wave 1: T010 (betik, 6 tur, PR #24), T011 (hook, 2 tur, PR #23) ve T012 (skill, 2 tur, PR #22). Wave 2: T013 (doküman, CI, sürüm, PR #27) ve T014 (T010'un 6. turundan çıkan karakter engelleri, PR #28). Beşi de Tier 3, güvenlik onaylı ve main'e merge edildi; 0.6.0 T013 ile çıktı.</p>
+      </div>
+    </div>
+  </div>
+  <p class="src"><b>Kaynak:</b> docs/delix/archive/0.5.0-self-feeding/STATE.json · docs/delix/metrics.md · STATUS.md K87 · docs/delix/STATE.json (origin/main) · templates/report.md · skills/review/SKILL.md §1, §3</p>
+</section>
+
+<section id="sozluk">
+  <div class="sec-head">
+    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-book"/></svg>Sözlük</div>
+    <h2>Kısa sözlük</h2>
+  </div>
+  <dl class="gloss">
+    <div><dt>card <span>kart</span></dt><dd>Tek iş birimidir ve <code>docs/delix/tasks/T&lt;nnn&gt;-&lt;slug&gt;.md</code> dosyasında bulunur. Hedef, Files listesi, Interfaces, doğrulama komutu ve rapor sözleşmesi içerir. Files listeleri kartlar arasında çakışmaz.</dd></div>
+    <div><dt>wave <span>dalga</span></dt><dd>Birlikte açılan kart grubudur ve en çok <code>max_parallel</code> (3) kart içerir. Aynı dosyaya dokunan ya da başka bir karta bağımlı kart sonraki wave'e gider. <code>STATE.json.waves</code>'te durur.</dd></div>
+    <div><dt>tier <span>kademe</span></dt><dd>Kapıları belirleyen risk ekseni (1–3). Dosya yoluna, eyleme ve dış içeriğe bakar. Boydan (S/M/L, süreç ağırlığı) ayrı bir eksendir.</dd></div>
+    <div><dt>gate <span>kapı</span></dt><dd>İnsanın karar verdiği nokta. Kapı 1'de spec ya da kart onaylanır, Kapı 2'de PR merge edilir. Tier 3 kartta ayrıca güvenlik onayı gerekir. Test, CI ve gitleaks gibi otomatik kontroller de birer kapıdır (deterministik kapı): kararı makine verir ve bunlar LLM incelemesinden önce koşar.</dd></div>
+    <div><dt>drift <span>sapma</span></dt><dd>Spec ile merge edilen kod arasındaki fark: uygulanmamış REQ'ler ya da spec'te olmayan davranış. Close'ta architect arar, bulgular STATUS'un açık işlerine yazılır.</dd></div>
+    <div><dt>escalation <span>yükseltme</span></dt><dd>İnceleme turu <code>max_review_rounds</code> (3) sınırını aşınca kart <code>escalated</code> olur. Kullanıcı seçer: daha güçlü model, kapsamı daraltmak ya da kabul.</dd></div>
+    <div><dt>worktree</dt><dd>Uygulayıcının kart dalındaki kendi git çalışma ağacıdır. Diff ve uzak testler, dizinden değil dalın commit SHA'sından alınır.</dd></div>
+    <div><dt>K kararı</dt><dd>Numaralı karar kaydı (K1, K2, …). STATUS ve SPEC'te tutulur, "geri alınır" ya da "tek yön" olarak işaretlenir.</dd></div>
+  </dl>
+  <p class="src"><b>Kaynak:</b> templates/task-card.md · skills/dispatch/SKILL.md §2 · skills/start/SKILL.md §2 · skills/close/SKILL.md §3 · skills/review/SKILL.md §1, §3 · skills/spec/SKILL.md (Rules)</p>
+</section>
+
+<footer>
+  <p><span data-version="0.6.0">delixcrew 0.6.0</span> · durum 2026-11-03. İçerik repo dosyalarından derlendi; her bölümün altında kaynağı yazar.</p>
+  <p>Kaynak kod ve issue'lar: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="../index.html" hreflang="en">English</a></p>
+</footer>
+</main>
+</body>
+</html>
