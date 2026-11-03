@@ -2,7 +2,7 @@
 # Deterministic tests for the delix hook scripts. Run: bash tests/hook_tests.sh
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; S="$ROOT/scripts"; FAIL=0
-T="$(mktemp -d)"; mkdir -p "$T/.delix" "$T/docs/delix" "$T/tests" "$T/auth"
+T="$(mktemp -d)"; git -C "$T" init -q; mkdir -p "$T/.delix" "$T/docs/delix" "$T/tests" "$T/auth"
 echo "docs/delix/tasks/T001-x.md" > "$T/.delix/card"
 python3 - "$T/docs/delix/delix.json" <<'PY'
 import json,sys; json.dump({"test_command":"true","extra_checks":[],"protected_paths":["auth/**",".env*"],"test_paths":["tests/**"]},open(sys.argv[1],"w"))

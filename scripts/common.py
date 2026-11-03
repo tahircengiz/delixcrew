@@ -2,6 +2,7 @@
 import fnmatch
 import json
 import os
+import subprocess
 import sys
 
 REVIEWERS = {"delixcrew:architect", "delixcrew:qa", "delixcrew:security", "delixcrew:scout",
@@ -24,9 +25,22 @@ def deny(reason):
 
 
 def card_path(cwd):
-    """Returns the card path if the implementer worktree has .delix/card; otherwise None (hook inactive)."""
+    """Returns the card path if the implementer worktree has .delix/card; otherwise None (hook inactive).
+    Only a local card counts (issue #8): cwd is a git work tree and .delix/card is a plain file git does not track.
+    A card that arrives with the repo (clone, archive, symlink) would make the Stop gate run the repo's commands."""
     p = os.path.join(cwd, ".delix", "card")
     if not os.path.isfile(p):
+        return None
+    rc = None
+    if os.path.realpath(p) == os.path.join(os.path.realpath(cwd), ".delix", "card"):
+        try:
+            rc = subprocess.run(["git", "-c", "core.fsmonitor=false", "-C", cwd, "ls-files", "--error-unmatch", "--",
+                                 ".delix/card"], stdin=subprocess.DEVNULL, capture_output=True, timeout=5).returncode
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    if rc != 1:  # 0: tracked, came with the repo; 128/None: not a git work tree or no git; symlink: never checked
+        sys.stderr.write("delixcrew: .delix/card is tracked, a symlink or outside a git work tree; hooks stay inactive "
+                         "here. The implementer writes it locally (.git/info/exclude).\n")
         return None
     with open(p, encoding="utf-8") as f:
         return f.read().strip() or None

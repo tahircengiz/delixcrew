@@ -4,6 +4,8 @@
 |---|---|---|---|---|---|
 | T007 | S | 3 | backend | 3 | open |
 
+**🔐 Approved:** 2026-11-03 tahircengiz
+
 > 🔐 Tier 3 (protected hook script `scripts/common.py`). The orchestrator adds the Approved line after the human's "yes".
 
 **Goal (1 sentence):** A repo that ships its own `.delix/card` cannot switch the hooks on, so the Stop gate never runs
