@@ -56,3 +56,7 @@
 `.delix/report.md` (≤ 1K tokens): `DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED` · the commands and their output · PR number · the list of `+ bash` lines from the CI log · assumptions. Read only this card.
 
 ## Review findings (filled by the lead)
+
+### Round 0 (2026-11-03, PR #37, 8da9dc2)
+- Deterministic gates (lead): diff touches only `.github/workflows/tests.yml`; CI `test` + `check` SUCCESS; the `test` log has 7 `+ bash tests/…` lines (board, feedback, hook, site, triage, trust, write_gate_case), i.e. every `tests/*_tests.sh` on main.
+- qa: ACCEPT. security: 🔐 HUMAN_APPROVAL (no finding; CI surface, no new permission, secret or action).

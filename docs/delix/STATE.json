@@ -28,9 +28,9 @@
       "tier": 3,
       "status": "fixing",
       "pr": 33,
-      "rounds": 1,
+      "rounds": 2,
       "cost_usd": null,
-      "sha": "b8ca34f"
+      "sha": "f60dd67"
     },
     "T017": {
       "file": "docs/delix/tasks/T017-write-gate-queue-casefold.md",
@@ -56,10 +56,11 @@
       "file": "docs/delix/tasks/T019-ci-run-all-tests.md",
       "role": "devops",
       "tier": 3,
-      "status": "in_progress",
-      "pr": null,
+      "status": "in_review",
+      "pr": 37,
       "rounds": 0,
-      "cost_usd": null
+      "cost_usd": null,
+      "sha": "8da9dc2"
     }
   },
   "status_values": [
