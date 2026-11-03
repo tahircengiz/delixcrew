@@ -252,8 +252,8 @@ pv=$(fb preview "$id"); rc=$?
 [ $rc -eq 0 ] && echo "$pv" | grep -qxF -- "$ACT" && ok "REQ-12 /delixcrew:spec, /compact, /plugin., URL, a/b, w/o, bug / feature unchanged" || bad "REQ-12 commands changed ($(echo "$pv" | grep -A1 '^### What happened' | tail -1))"
 pv=$(python3 "$T/fake/scripts/feedback.py" preview "$id" 2>&1)
 echo "$pv" | grep -qF "/delixcrew:spec" && bad "REQ-12 skills dir missing: /delixcrew:spec kept (not fail-closed)" || ok "REQ-12 skills dir missing: /delixcrew:<skill> redacted (fail-closed)"
-python3 -c 'import sys; sys.path.insert(0, sys.argv[1]); import feedback; sys.exit(0 if feedback.SANITIZER_VERSION == "2" else 1)' "$S" \
-  && ok "REQ-12 SANITIZER_VERSION is 2" || bad "REQ-12 SANITIZER_VERSION not 2"
+python3 -c 'import sys; sys.path.insert(0, sys.argv[1]); import feedback; sys.exit(0 if feedback.SANITIZER_VERSION == "3" else 1)' "$S" \
+  && ok "REQ-12 SANITIZER_VERSION is 3" || bad "REQ-12 SANITIZER_VERSION not 3"
 # REQ-13: send runs only for status == draft; checked before BLOCKED, hash and TTY.
 out=$(add3 'd["title"]="Dropped draft send"'); id=${out%% *}
 H=$(hash_of "$(fb preview "$id")"); fb drop "$id" >/dev/null; : > "$T/gh.log"
