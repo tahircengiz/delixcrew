@@ -110,4 +110,9 @@ allow  "heredoc add with send/script in body"  bash_gate.py "$(bashjson "$N" "$H
 fbdeny "quoted path feedback.py send denied"   bash_gate.py "$(bashjson "$N" "python3 \"/x/scripts/feedback.py\" send F001")"
 fbdeny "send inside a shell heredoc denied"    bash_gate.py "$(bashjson "$N" "$(printf '%s\n' "bash <<'EOF'" 'python3 scripts/feedback.py send F001' 'EOF')")"
 fbdeny "gh issue new delixcrew denied"         bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"gh issue new -R tahircengiz/delixcrew -t x\"}}"
+# REQ-7 fix round 2: only the body of a `feedback.py … add` heredoc is exempt; pty wrappers inside other heredocs stay denied
+fbdeny "pty.spawn in python3 - heredoc denied"  bash_gate.py "$(bashjson "$N" "$(printf '%s\n' "python3 - <<'EOF'" 'import pty; pty.spawn(["python3","scripts/feedback.py","send","F001"])' 'EOF')")"
+fbdeny "script wrapping a bash heredoc denied"  bash_gate.py "$(bashjson "$N" "$(printf '%s\n' "script -q /dev/null bash <<'EOF'" 'python3 scripts/feedback.py "send" F001' 'EOF')")"
+fbdeny "unterminated <<X does not hide the rest" bash_gate.py "$(bashjson "$N" "$(printf '%s\n' "echo '<<X'" 'script -q /dev/null python3 scripts/feedback.py "send" F001')")"
+allow  "add heredoc body quoting feedback.py send" bash_gate.py "$(bashjson "$N" "$(printf '%s\n' "python3 \"/x/scripts/feedback.py\" add <<'EOF'" '{"title": "feedback.py send prints wrong hash"}' 'EOF')")"
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

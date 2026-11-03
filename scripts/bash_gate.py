@@ -16,12 +16,15 @@ cwd = g.get("cwd") or os.getcwd()
 
 # REQ-7: known feedback send paths, in every session (before the card and agent_type checks); known paths only (K77)
 FEEDBACK_DENY = "delixcrew: feedback is sent only by the user from their own terminal"
-# (a) `send` as the subcommand, on the full command (also inside a heredoc fed to a shell); (b) on the command without
-# heredoc bodies, so a `feedback.py add <<'EOF'` draft that mentions `script` is not denied
-no_heredoc = re.sub(r"(?<!<)<<(?!<)-?\s*(['\"]?)([A-Za-z_][\w.-]*)\1([^\n]*)\n.*?(?:^\s*\2[ \t]*$|\Z)",
-                    lambda m: "<<" + m.group(3), cmd, flags=re.S | re.M)
-if re.search(r"\bfeedback\.py['\"]?(\s+-\S+)*\s+send\b", cmd) or (
-        re.search(r"\bfeedback\.py\b", no_heredoc) and re.search(r"\b(script|expect|unbuffer)\b|\bpty\.spawn\b", no_heredoc)):
+# (a) and (b) run on the command with one kind of heredoc body removed: the draft fed to `feedback.py … add <<'EOF'`.
+# The opening line must be that command alone (no shell metacharacters) and the body must end at its delimiter line;
+# every other heredoc body (bash, python3 -, a pty wrapper) stays in the checked text.
+ADD_HEREDOC = re.compile(r"^([ \t]*(?:python3?[ \t]+)?(?:\"(?:[^\"\n]*/)?feedback\.py\"|'(?:[^'\n]*/)?feedback\.py'|"
+                         r"(?:[^\s'\"]*/)?feedback\.py)[ \t]+add\b[^\n;&|`$()<>]*<<-?[ \t]*(['\"]?)([A-Za-z_][\w.-]*)\2"
+                         r"[ \t]*)\n.*?^[ \t]*\3[ \t]*$", re.M | re.S)
+checked = ADD_HEREDOC.sub(lambda m: m.group(1), cmd)
+if re.search(r"\bfeedback\.py['\"]?(?:\s*,\s*|\s+)(?:-\S+\s+)*['\"]?send\b", checked) or (
+        re.search(r"\bfeedback\.py\b", checked) and re.search(r"\b(script|expect|unbuffer)\b|\bpty\.spawn\b", checked)):
     deny(FEEDBACK_DENY)
 if re.search(r"\bgh\s+issue\s+(create|new|comment|edit)\b", cmd) or (re.search(r"\bgh\s+api\b", cmd)
                                                                  and re.search(r"\bissues\b", cmd)):
