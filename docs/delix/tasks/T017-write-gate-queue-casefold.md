@@ -64,3 +64,9 @@
 `.delix/report.md` (≤ 1K tokens): status · commands + output · PR number · assumptions. Read only this card and SPEC REQ-6.
 
 ## Review findings (filled by the lead)
+
+### Round 0 (2026-11-03, PR #32, dd0f1e5, base f46f006)
+- Deterministic gates (lead, from `git archive dd0f1e5`): `bash tests/write_gate_case_tests.sh` 8 ✔ ALL PASSED; full `tests/*_tests.sh` loop exit 0; diff touches only the two Files paths; CI `test` + `check` SUCCESS.
+- qa: ACCEPT_WITH_NOTES (P0 0, P1 0). security: 🔐 HUMAN_APPROVAL (no finding; check is a strict superset of the old one, `hooks.json` onFailure block covers crashes; gitleaks clean).
+- [P2, no fix] `.github/workflows/tests.yml:20-27` runs only hook/board/feedback/triage tests, so `tests/write_gate_case_tests.sh` (and T016's `tests/sanitize_tests.sh`, `site_tests.sh`, `trust_tests.sh`) never run in CI. Not in this card's Files; follow-up CI card (lead).
+- [Note] `casefold(NFD(x))` differs from Unicode canonical caseless match only for rare combining marks in the dir path itself; default path is ASCII.
