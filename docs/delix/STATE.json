@@ -1,6 +1,6 @@
 {
-  "spec": null,
-  "size": null,
+  "spec": "docs/delix/SPEC.md",
+  "size": "M",
   "updated": "2026-11-03T21:30:00Z",
   "env_owner": null,
   "waves": [],
