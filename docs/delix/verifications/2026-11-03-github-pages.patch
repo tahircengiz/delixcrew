@@ -1,0 +1,2327 @@
+diff --git a/.github/workflows/site.yml b/.github/workflows/site.yml
+new file mode 100644
+index 0000000..161b50f
+--- /dev/null
++++ b/.github/workflows/site.yml
+@@ -0,0 +1,46 @@
++name: site
++on:
++  push:
++    branches: [main]
++    paths: ["site/**", ".claude-plugin/plugin.json", "tests/site_tests.sh", ".github/workflows/site.yml"]
++  pull_request:
++    paths: ["site/**", ".claude-plugin/plugin.json", "tests/site_tests.sh", ".github/workflows/site.yml"]
++  workflow_dispatch:
++permissions:
++  contents: read
++jobs:
++  check:
++    runs-on: ubuntu-24.04
++    timeout-minutes: 5
++    steps:
++      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
++        with:
++          persist-credentials: false
++      - name: Site tests
++        run: bash tests/site_tests.sh
++  deploy:
++    # Only main publishes; pull requests stop at the check job
++    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
++    needs: check
++    runs-on: ubuntu-24.04
++    timeout-minutes: 10
++    permissions:
++      contents: read
++      pages: write
++      id-token: write
++    concurrency:
++      group: pages
++      cancel-in-progress: false
++    environment:
++      name: github-pages
++      url: ${{ steps.deployment.outputs.page_url }}
++    steps:
++      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
++        with:
++          persist-credentials: false
++      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
++      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
++        with:
++          path: site
++      - id: deployment
++        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+diff --git a/CLAUDE.md b/CLAUDE.md
+new file mode 100644
+index 0000000..d783ab8
+--- /dev/null
++++ b/CLAUDE.md
+@@ -0,0 +1,16 @@
++# delixcrew repo notes
++
++## Site (GitHub Pages)
++
++`site/` is the public site: plain HTML and CSS, no build step, published by `.github/workflows/site.yml` on every push
++to main. Four pages, one per language and topic: `index.html` and `usage.html` (English), `tr/index.html` and
++`tr/usage.html` (Turkish). The English and Turkish pages carry the same content.
++
++Update the site in the same change when:
++- the version in `.claude-plugin/plugin.json` changes: every `data-version` mark and its `delixcrew <version>` text,
++  and the "coming in" / "ile gelecek" labels that the release turns into shipped features;
++- a command, hook rule, role, gate or project file is added, removed or renamed (README Flow, Roles, Files, Known limits).
++
++`bash tests/site_tests.sh` fails when a page's version differs from `plugin.json`, a TR/EN twin is missing, a page loads
++a script or a third-party asset, or a local link, anchor or icon does not resolve. Every claim on the site comes from a
++repo file; each section names its sources in its `Source:` / `Kaynak:` line.
+diff --git a/site/assets/favicon.svg b/site/assets/favicon.svg
+new file mode 100644
+index 0000000..b38af01
+--- /dev/null
++++ b/site/assets/favicon.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#1B6A85"/><rect x="9" y="15" width="14" height="10" rx="2" fill="none" stroke="#FBEED7" stroke-width="2.4"/><path d="M12 15v-3a4 4 0 0 1 8 0v3" fill="none" stroke="#EEA43E" stroke-width="2.4" stroke-linecap="round"/></svg>
+diff --git a/site/assets/icons.svg b/site/assets/icons.svg
+new file mode 100644
+index 0000000..037e810
+--- /dev/null
++++ b/site/assets/icons.svg
+@@ -0,0 +1,19 @@
++<svg xmlns="http://www.w3.org/2000/svg">
++  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></symbol>
++  <symbol id="i-bot" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4M9 13h.01M15 13h.01M9 16h6"/></symbol>
++  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3M12 15v2"/></symbol>
++  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
++  <symbol id="i-topo" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="M7 6h10M6 8l5 8M18 8l-5 8"/></symbol>
++  <symbol id="i-flow" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="6" rx="1.5"/><rect x="13" y="15" width="8" height="6" rx="1.5"/><path d="M7 9v5a2 2 0 0 0 2 2h4"/></symbol>
++  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></symbol>
++  <symbol id="i-loop" viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 14-5.3L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-14 5.3L4 15"/><path d="M4 20v-5h5"/></symbol>
++  <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h6M7 14h10"/></symbol>
++  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M9 7h7"/></symbol>
++  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
++
++  <symbol id="i-term" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></symbol>
++  <symbol id="i-code" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></symbol>
++  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
++  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
++  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></symbol>
++</svg>
+diff --git a/site/assets/style.css b/site/assets/style.css
+new file mode 100644
+index 0000000..1b22712
+--- /dev/null
++++ b/site/assets/style.css
+@@ -0,0 +1,245 @@
++/* delixCrew site. Plain CSS, no build step, no web fonts (system stacks keep visitors off third-party hosts).
++   Colour meaning is fixed across pages: amber = human gate, teal = agent, red = hook/harness, dashed grey = planned. */
++:root {
++  --bg: #EDF0F3; --surface: #FFFFFF; --surface-2: #F5F7F9;
++  --ink: #14202B; --ink-2: #3A4956; --muted: #5B6976; --line: #D3DAE1; --line-2: #A9B5C1;
++  --agent: #1B6A85; --agent-bg: #E2EFF4;
++  --human: #B06800; --human-ink: #7A4700; --human-bg: #FBEED7;
++  --hook: #B12E24; --hook-bg: #FAE6E3;
++  --ok: #2C7A47; --ok-bg: #E1F1E6;
++  --plan: #66727F;
++  --f-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
++  --f-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
++  --f-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
++}
++@media (prefers-color-scheme: dark) {
++  :root:not([data-theme="light"]) {
++    --bg: #0D1318; --surface: #141C24; --surface-2: #19232C;
++    --ink: #E2E8EE; --ink-2: #B5C1CC; --muted: #8B99A6; --line: #25313C; --line-2: #3B4956;
++    --agent: #5BB2D1; --agent-bg: #12303F;
++    --human: #EEA43E; --human-ink: #F4BB68; --human-bg: #392910;
++    --hook: #EF7569; --hook-bg: #3B1B19;
++    --ok: #6AC38A; --ok-bg: #133221;
++    --plan: #8B99A6;
++    color-scheme: dark;
++  }
++}
++:root[data-theme="dark"] {
++  --bg: #0D1318; --surface: #141C24; --surface-2: #19232C;
++  --ink: #E2E8EE; --ink-2: #B5C1CC; --muted: #8B99A6; --line: #25313C; --line-2: #3B4956;
++  --agent: #5BB2D1; --agent-bg: #12303F;
++  --human: #EEA43E; --human-ink: #F4BB68; --human-bg: #392910;
++  --hook: #EF7569; --hook-bg: #3B1B19;
++  --ok: #6AC38A; --ok-bg: #133221;
++  --plan: #8B99A6;
++  color-scheme: dark;
++}
++
++* { box-sizing: border-box; }
++html { -webkit-text-size-adjust: 100%; }
++body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.6; }
++.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
++h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.15; }
++p { margin: 0; }
++code, .mono { font-family: var(--f-mono); font-size: .9em; }
++code { background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 0 .3em; overflow-wrap: anywhere; }
++a { color: var(--agent); }
++a:focus-visible, .nav a:focus-visible { outline: 2px solid var(--human); outline-offset: 2px; border-radius: 4px; }
++.ico { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
++
++/* Hero */
++.hero { padding-block: 56px 36px; display: grid; gap: 22px; }
++.kicker { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-family: var(--f-mono); font-size: 13px; color: var(--muted); }
++.kicker .ver { color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
++.hero h1 { font-size: clamp(44px, 9vw, 88px); font-weight: 800; letter-spacing: -0.035em; }
++.hero h1 span { color: var(--human); }
++.thesis { font-family: var(--f-display); font-weight: 700; font-size: clamp(22px, 3.4vw, 32px); letter-spacing: -0.01em; max-width: 30ch; }
++.thesis em { font-style: normal; color: var(--human-ink); }
++.lede { max-width: 68ch; color: var(--ink-2); font-size: 17px; }
++
++.rail { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
++.rail li { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: 13.5px; padding: 6px 12px; border-radius: 8px; background: var(--agent-bg); color: var(--ink); border: 1px solid color-mix(in srgb, var(--agent) 35%, transparent); }
++.rail li.gate { background: var(--human-bg); border: 1.5px solid var(--human); color: var(--human-ink); font-family: var(--f-display); font-weight: 700; letter-spacing: .02em; }
++.rail li.sep { background: none; border: 0; padding: 0; color: var(--line-2); }
++
++.nav { display: flex; flex-wrap: wrap; gap: 6px; padding-block: 18px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
++.nav a { font-size: 14px; color: var(--ink-2); text-decoration: none; padding: 4px 10px; border-radius: 6px; }
++.nav a:hover { background: var(--surface); color: var(--ink); }
++
++/* Sections */
++section { padding-block: 56px 8px; scroll-margin-top: 72px; }
++.eyebrow { display: flex; align-items: center; gap: 8px; font-family: var(--f-mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
++.sec-head { display: grid; gap: 10px; margin-bottom: 26px; }
++.sec-head h2 { font-size: clamp(26px, 4vw, 36px); font-weight: 700; letter-spacing: -0.02em; }
++.sec-head p { max-width: 70ch; color: var(--ink-2); }
++.src { font-family: var(--f-mono); font-size: 12px; color: var(--muted); margin-top: 14px; overflow-wrap: anywhere; }
++.src b { font-weight: 500; color: var(--ink-2); }
++
++.principles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
++.pr { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 8px; align-content: start; }
++.pr h3 { font-size: 18px; font-weight: 700; display: flex; gap: 8px; align-items: center; }
++.pr p { font-size: 14.5px; color: var(--ink-2); }
++.pr.human h3 { color: var(--human-ink); }
++.pr.hk-p h3 { color: var(--hook); }
++.pr.agent h3 { color: var(--agent); }
++
++.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
++.split.wide-left { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
++
++figure.dgm { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
++figure.dgm figcaption { font-size: 14px; color: var(--ink-2); }
++figure.dgm figcaption strong { color: var(--ink); }
++.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
++.scroll svg { display: block; width: 100%; height: auto; }
++.scroll svg.w680 { min-width: 680px; }
++.scroll svg.w600 { min-width: 600px; }
++.swipe { display: none; font-size: 12px; color: var(--muted); font-family: var(--f-mono); }
++
++/* SVG */
++.dg { font-family: var(--f-body); font-size: 13px; }
++.dg text { fill: var(--ink); }
++.dg .t { font-weight: 600; font-size: 13.5px; }
++.dg .s { fill: var(--muted); font-size: 11.5px; }
++.dg .k { fill: var(--ink-2); font-size: 11.5px; }
++.dg .m { font-family: var(--f-mono); font-size: 11.5px; fill: var(--ink-2); }
++.dg .tm { font-family: var(--f-mono); font-weight: 500; font-size: 12.5px; }
++.dg .lbl { fill: var(--muted); font-size: 11px; }
++.dg .lh { fill: var(--human-ink); font-size: 11px; font-weight: 500; }
++.dg .th { fill: var(--hook); }
++.dg .tu { fill: var(--human-ink); }
++.dg .tok { fill: var(--ok); }
++.dg .tp { fill: var(--plan); }
++.dg .box { fill: var(--surface); stroke: var(--line-2); stroke-width: 1.2; }
++.dg .box2 { fill: var(--surface-2); stroke: var(--line-2); stroke-width: 1.2; }
++.dg .ghost { fill: var(--surface-2); stroke: var(--line-2); stroke-width: 1; }
++.dg .ag { fill: var(--agent-bg); stroke: var(--agent); stroke-width: 1.4; }
++.dg .hu { fill: var(--human-bg); stroke: var(--human); stroke-width: 1.6; }
++.dg .hk { fill: var(--hook-bg); stroke: var(--hook); stroke-width: 1.4; }
++.dg .hkout { fill: none; stroke: var(--hook); stroke-width: 1.3; stroke-dasharray: 6 4; }
++.dg .ok { fill: var(--ok-bg); stroke: var(--ok); stroke-width: 1.4; }
++.dg .pl { fill: var(--surface); stroke: var(--plan); stroke-width: 1.4; stroke-dasharray: 6 4; }
++.dg .plchip { fill: var(--surface-2); stroke: var(--plan); stroke-width: 1; stroke-dasharray: 3 2; }
++.dg .ln { stroke: var(--ink-2); stroke-width: 1.4; fill: none; }
++.dg .ln.d { stroke-dasharray: 5 4; }
++.dg .ln.h { stroke: var(--human); stroke-width: 1.7; }
++.dg .ln.r { stroke: var(--hook); }
++.dg .ln.p { stroke: var(--plan); stroke-dasharray: 5 4; }
++.dg .ah { fill: var(--ink-2); }
++.dg .ahh { fill: var(--human); }
++.dg .ahr { fill: var(--hook); }
++.dg .ahp { fill: var(--plan); }
++.dg .sw-ag { fill: var(--agent-bg); stroke: var(--agent); }
++.dg .sw-hu { fill: var(--human-bg); stroke: var(--human); }
++.dg .sw-hk { fill: var(--hook-bg); stroke: var(--hook); }
++
++/* Tables */
++.tbl { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
++table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
++.tbl table.mx { min-width: 720px; }
++th, td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); }
++tr:last-child td { border-bottom: 0; }
++thead th { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--surface-2); }
++tbody th { font-family: var(--f-display); font-size: 15px; white-space: nowrap; }
++td .muted, .muted { color: var(--muted); }
++.pill { display: inline-flex; align-items: center; gap: 5px; font-family: var(--f-mono); font-size: 12px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line-2); white-space: nowrap; }
++.pill.hu { background: var(--human-bg); border-color: var(--human); color: var(--human-ink); }
++.pill.ag { background: var(--agent-bg); border-color: var(--agent); color: var(--ink); }
++.pill.hk { background: var(--hook-bg); border-color: var(--hook); color: var(--hook); }
++.pill.ok { background: var(--ok-bg); border-color: var(--ok); color: var(--ok); }
++.pill.pl { border-style: dashed; color: var(--plan); }
++.pill .ico { width: 13px; height: 13px; }
++.ico.il { width: 15px; height: 15px; vertical-align: -2px; color: var(--human); }
++
++.notes { display: grid; gap: 14px; }
++.note { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 8px; }
++.note h3 { font-size: 17px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
++.note ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14.5px; color: var(--ink-2); }
++.note p { font-size: 14.5px; color: var(--ink-2); }
++.note.limit { background: var(--surface-2); border-style: dashed; }
++.note.plan { border-style: dashed; border-color: var(--plan); }
++
++.hooks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 18px; }
++.hook { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--hook); border-radius: 10px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; min-width: 0; }
++.hook h3 { font-family: var(--f-mono); font-size: 15px; font-weight: 500; color: var(--hook); }
++.hook .when { font-size: 13px; color: var(--muted); font-family: var(--f-mono); overflow-wrap: anywhere; }
++.hook dl { margin: 0; display: grid; gap: 8px; font-size: 14px; }
++.hook dt { font-weight: 600; color: var(--ink); }
++.hook dd { margin: 0; color: var(--ink-2); }
++
++.bar { display: inline-block; height: 8px; border-radius: 4px; background: var(--agent); vertical-align: middle; }
++.bar.over { background: var(--human); }
++td.num { font-variant-numeric: tabular-nums; font-family: var(--f-mono); font-size: 13.5px; white-space: nowrap; }
++
++.gloss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; margin: 0; }
++.gloss div { padding-block: 14px; border-bottom: 1px solid var(--line); display: grid; gap: 4px; }
++.gloss dt { font-family: var(--f-mono); font-weight: 500; font-size: 15px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
++.gloss dt span { font-family: var(--f-body); font-size: 13px; color: var(--muted); font-weight: 400; }
++.gloss dd { margin: 0; color: var(--ink-2); font-size: 14.5px; }
++
++footer { padding-block: 48px 64px; color: var(--muted); font-size: 13px; display: grid; gap: 6px; }
++
++@media (max-width: 960px) {
++  .principles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
++  .hooks { grid-template-columns: minmax(0, 1fr); }
++}
++@media (max-width: 860px) {
++  .split, .split.wide-left { grid-template-columns: minmax(0, 1fr); }
++}
++@media (max-width: 700px) {
++  .swipe { display: block; }
++  .gloss { grid-template-columns: minmax(0, 1fr); }
++}
++@media (max-width: 520px) {
++  .principles { grid-template-columns: minmax(0, 1fr); }
++  .hero { padding-block: 36px 24px; }
++  section { padding-block: 44px 4px; }
++  figure.dgm { padding: 12px; }
++  .scroll svg.v { min-width: 430px; }
++}
++@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
++
++/* Site chrome */
++.skip { position: absolute; left: -999px; top: 8px; background: var(--surface); color: var(--ink); padding: 6px 12px; border-radius: 6px; z-index: 20; }
++.skip:focus { left: 16px; }
++.topbar { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 90%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
++.topbar .wrap { display: flex; align-items: center; gap: 8px 16px; min-height: 56px; flex-wrap: wrap; padding-block: 8px; }
++.brand { font-family: var(--f-display); font-weight: 800; font-size: 19px; letter-spacing: -0.02em; color: var(--ink); text-decoration: none; }
++.brand span { color: var(--human); }
++.pages { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
++.pages a, .lang { font-size: 14px; color: var(--ink-2); text-decoration: none; padding: 5px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; }
++.pages a:hover, .lang:hover { background: var(--surface); color: var(--ink); }
++.pages a[aria-current="page"] { background: var(--surface); color: var(--ink); border-color: var(--line); }
++.pages .ico { width: 16px; height: 16px; }
++.lang { font-family: var(--f-mono); font-size: 13px; border-color: var(--line-2); border-radius: 999px; padding: 3px 11px; }
++.pages a:focus-visible, .lang:focus-visible, .brand:focus-visible { outline: 2px solid var(--human); outline-offset: 2px; }
++.hero.sm h1 { font-size: clamp(36px, 6.5vw, 60px); }
++.cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
++.btn { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; text-decoration: none; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line-2); color: var(--ink); background: var(--surface); }
++.btn.primary { background: var(--agent); border-color: var(--agent); color: var(--surface); }
++.btn:hover { border-color: var(--agent); }
++.btn:focus-visible { outline: 2px solid var(--human); outline-offset: 2px; }
++footer a { color: var(--ink-2); }
++
++/* Usage page */
++pre { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; overflow-x: auto; font-family: var(--f-mono); font-size: 13.5px; line-height: 1.55; color: var(--ink); }
++pre code { background: none; border: 0; padding: 0; overflow-wrap: normal; font-size: 1em; }
++.steps { list-style: none; counter-reset: step; padding: 0; margin: 0; display: grid; gap: 14px; }
++.steps > li { counter-increment: step; position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px 16px 58px; display: grid; gap: 10px; min-width: 0; }
++.steps > li::before { content: counter(step); position: absolute; left: 16px; top: 15px; width: 28px; height: 28px; border-radius: 50%; background: var(--agent-bg); border: 1px solid var(--agent); color: var(--agent); font: 600 13px/26px var(--f-mono); text-align: center; }
++.steps > li.gate::before { background: var(--human-bg); border-color: var(--human); color: var(--human-ink); }
++.steps h3 { font-size: 18px; }
++.steps p, .steps ul { color: var(--ink-2); font-size: 15px; }
++.steps ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
++.callout { background: var(--human-bg); border-left: 3px solid var(--human); border-radius: 0 10px 10px 0; padding: 12px 16px; font-size: 15px; color: var(--ink); display: grid; gap: 6px; }
++.callout.hk { background: var(--hook-bg); border-left-color: var(--hook); }
++.callout.ag { background: var(--agent-bg); border-left-color: var(--agent); }
++.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
++.stack { display: grid; gap: 14px; }
++td code, th code { white-space: nowrap; }
++@media (max-width: 760px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
++@media (max-width: 560px) {
++  .pages { order: 3; width: 100%; margin-left: 0; }
++  .lang { margin-left: auto; }
++  .steps > li { padding-left: 50px; }
++  .steps > li::before { left: 12px; }
++}
+diff --git a/site/index.html b/site/index.html
+new file mode 100644
+index 0000000..f4993c6
+--- /dev/null
++++ b/site/index.html
+@@ -0,0 +1,698 @@
++<!doctype html>
++<html lang="en">
++<head>
++<meta charset="utf-8">
++<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
++<title>What is delixCrew</title>
++<meta name="description" content="delixCrew is a team workflow plugin for Claude Code: spec first, agents write the code, a human holds the gates.">
++<meta name="color-scheme" content="light dark">
++<link rel="stylesheet" href="assets/style.css">
++<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
++<link rel="alternate" hreflang="tr" href="tr/index.html">
++</head>
++<body>
++<a class="skip" href="#main">Skip to content</a>
++<header class="topbar">
++  <div class="wrap">
++    <a class="brand" href="index.html">delix<span>Crew</span></a>
++    <nav class="pages" aria-label="Pages">
++      <a href="index.html" aria-current="page">What it is</a>
++      <a href="usage.html">How to use</a>
++      <a href="https://github.com/tahircengiz/delixcrew"><svg class="ico" aria-hidden="true"><use href="assets/icons.svg#i-code"/></svg>GitHub</a>
++    </nav>
++    <a class="lang" href="tr/index.html" hreflang="tr" lang="tr" title="Türkçe">TR</a>
++  </div>
++</header>
++<main id="main" class="wrap">
++<header class="hero">
++  <div class="kicker"><span class="ver" data-version="0.6.0">delixcrew 0.6.0</span><span>Claude Code plugin · MIT</span></div>
++  <h1>delix<span>Crew</span></h1>
++  <p class="thesis">Spec first. Agents write the code. <em>A human makes the final call.</em></p>
++  <p class="lede">The main session that runs the work is the <strong>lead</strong>. The lead asks you one question at a time (this interview is called the grill) and writes a tech spec from your answers. It then splits the work into <strong>cards</strong>: small, independent units of work. Each card goes to a separate implementer session working in its own worktree. Review agents that cannot change files check the result.</p>
++  <p class="lede">The work stops at two points and waits for a human. These points are <strong>gates</strong>: at Gate 1 the spec is approved, at Gate 2 the PR is merged. The rules are not left to the agent's good intentions; Claude Code itself enforces them: hooks block forbidden actions and tool lists limit what each agent can do. This page calls that control layer the <strong>harness</strong>.</p>
++  <ol class="rail" aria-label="Main flow">
++    <li>start</li><li class="sep" aria-hidden="true">›</li>
++    <li>spec</li><li class="sep" aria-hidden="true">›</li>
++    <li class="gate"><svg class="ico"><use href="assets/icons.svg#i-lock"/></svg>Gate 1 · spec approval</li><li class="sep" aria-hidden="true">›</li>
++    <li>dispatch</li><li class="sep" aria-hidden="true">›</li>
++    <li>implement</li><li class="sep" aria-hidden="true">›</li>
++    <li>review</li><li class="sep" aria-hidden="true">›</li>
++    <li class="gate"><svg class="ico"><use href="assets/icons.svg#i-lock"/></svg>Gate 2 · merge</li><li class="sep" aria-hidden="true">›</li>
++    <li>close</li>
++  </ol>
++  <div class="cta">
++    <a class="btn primary" href="usage.html"><svg class="ico" aria-hidden="true"><use href="assets/icons.svg#i-term"/></svg>Install and use</a>
++    <a class="btn" href="https://github.com/tahircengiz/delixcrew"><svg class="ico" aria-hidden="true"><use href="assets/icons.svg#i-code"/></svg>Source code</a>
++  </div>
++</header>
++
++<nav class="nav" aria-label="Sections">
++  <a href="#idea">Core idea</a><a href="#topology">Topology</a><a href="#flow">Main flow</a><a href="#tiers">Tiers and gates</a><a href="#hooks">Hooks</a><a href="#self-feeding">Self-feeding</a><a href="#card">Card lifecycle</a><a href="#glossary">Glossary</a>
++</nav>
++
++<section id="idea">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-doc"/></svg>Core idea</div>
++    <h2>A software team's division of labour instead of a single-session loop</h2>
++    <p>Roles replace the loop of "open, pick a folder, read the history, continue". What each role can do is limited by its tool list and by hooks.</p>
++  </div>
++  <div class="principles">
++    <article class="pr agent"><h3><svg class="ico"><use href="assets/icons.svg#i-doc"/></svg>Spec first</h3><p>The grill asks one question at a time and adds a recommendation to each. Requirements are written to be testable, in <code>SHALL</code> and <code>WHEN/THEN</code> form. What is out of scope is stated explicitly.</p></article>
++    <article class="pr agent"><h3><svg class="ico"><use href="assets/icons.svg#i-bot"/></svg>Agents write the code</h3><p>The implementer works in its own worktree. It changes only the files the card allows (the Files list). It writes a failing test first and cannot change existing tests.</p></article>
++    <article class="pr human"><h3><svg class="ico"><use href="assets/icons.svg#i-lock"/></svg>A human decides</h3><p>At Gate 1 the spec or card is approved, at Gate 2 the PR is merged. The riskiest cards (Tier 3) also need an explicit security approval. The lead never runs <code>gh pr merge</code>.</p></article>
++    <article class="pr hk-p"><h3><svg class="ico"><use href="assets/icons.svg#i-shield"/></svg>Claude Code enforces the rules</h3><p>Review agents (reviewers) have no write tool in their <code>tools</code> list. Hooks block writes to protected paths (auth, secrets, CI, deploy) and to existing test files. Because of the Stop hook, the implementer cannot finish until the tests pass.</p></article>
++  </div>
++  <p class="src"><b>Source:</b> README.md (intro, Roles) · skills/review/SKILL.md §4 · hooks/hooks.json</p>
++</section>
++
++<section id="topology">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-topo"/></svg>Topology</div>
++    <h2>Who runs where, what it reads, what it writes</h2>
++    <p>The lead (<code>orchestrator</code> in the plugin files) stays in the main checkout and writes no code. Implementers run in separate sessions. Reviewers are subagents the lead calls. The agents' shared memory is not the chat but the files under <code>docs/delix/</code>.</p>
++  </div>
++  <figure class="dgm">
++    <div class="scroll">
++      <svg class="dg w680" viewBox="0 0 860 610" role="img" aria-label="Topology: the human, the lead session, four read-only subagents, at most three parallel implementer sessions, the docs/delix files, the user-level feedback queue and GitHub; the hook layer limits the implementer and the reviewers.">
++        <defs>
++          <marker id="tp-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
++          <marker id="tp-h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahh" d="M0,0 L10,5 L0,10 z"/></marker>
++        </defs>
++        <!-- Human -->
++        <rect class="hu" x="300" y="16" width="220" height="64" rx="8"/>
++        <text class="t tu" x="410" y="42" text-anchor="middle">Human · user</text>
++        <text class="k" x="410" y="62" text-anchor="middle">2 gates · security approval · send</text>
++        <!-- GitHub -->
++        <rect class="box" x="640" y="16" width="200" height="84" rx="8"/>
++        <text class="t" x="740" y="42" text-anchor="middle">GitHub</text>
++        <text class="k" x="740" y="62" text-anchor="middle">PR · CI · Issues</text>
++        <text class="m" x="740" y="82" text-anchor="middle">via gh CLI</text>
++        <line class="ln h" x1="520" y1="36" x2="637" y2="36" marker-end="url(#tp-h)"/>
++        <text class="lh" x="579" y="30" text-anchor="middle">PR merge · Gate 2</text>
++        <line class="ln h" x1="520" y1="66" x2="637" y2="66" marker-end="url(#tp-h)"/>
++        <text class="lh" x="579" y="60" text-anchor="middle">feedback send</text>
++        <!-- Feedback queue -->
++        <rect class="box" x="20" y="150" width="180" height="112" rx="8"/>
++        <text class="t" x="110" y="174" text-anchor="middle">Feedback queue</text>
++        <text class="m" x="110" y="196" text-anchor="middle">~/.claude/delixcrew/</text>
++        <text class="m" x="110" y="212" text-anchor="middle">feedback/</text>
++        <text class="s" x="110" y="234" text-anchor="middle">outside the project repo</text>
++        <text class="s" x="110" y="250" text-anchor="middle">off by default</text>
++        <!-- Lead -->
++        <rect class="ag" x="240" y="150" width="320" height="118" rx="10"/>
++        <text class="t" x="400" y="176" text-anchor="middle">Lead session</text>
++        <text class="k" x="400" y="196" text-anchor="middle">main checkout · writes no code · top model</text>
++        <text class="m" x="400" y="222" text-anchor="middle">start · spec · dispatch · review · triage</text>
++        <text class="m" x="400" y="242" text-anchor="middle">verify · close · status · feedback</text>
++        <line class="ln h" x1="410" y1="80" x2="410" y2="147" marker-end="url(#tp-h)"/>
++        <text class="lh" x="418" y="106">request · Gate 1</text>
++        <text class="lh" x="418" y="121">security approval (Tier 3)</text>
++        <path class="ln d" d="M545,150 V126 H690 V103" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="617" y="120" text-anchor="middle">reads PR, CI, diff</text>
++        <line class="ln" x1="240" y1="206" x2="203" y2="206" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="221" y="200" text-anchor="middle">add</text>
++        <!-- Implementer -->
++        <rect class="ghost" x="650" y="140" width="200" height="250" rx="10"/>
++        <rect class="ghost" x="645" y="145" width="200" height="250" rx="10"/>
++        <rect class="ag" x="640" y="150" width="200" height="250" rx="10"/>
++        <text class="t" x="740" y="176" text-anchor="middle">Implementer session</text>
++        <text class="k" x="740" y="196" text-anchor="middle">worktree · card branch · sonnet</text>
++        <text class="s" x="740" y="212" text-anchor="middle">at most 3 cards at once</text>
++        <text class="m" x="656" y="240">.delix/card</text>
++        <text class="m" x="656" y="258">.delix/report.md</text>
++        <text class="m" x="656" y="276">.delix/test-result.txt</text>
++        <text class="m" x="656" y="294">.delix/evidence/</text>
++        <text class="s" x="656" y="318">code + new tests (Files only)</text>
++        <rect class="hk" x="640" y="336" width="200" height="64" rx="0"/>
++        <text class="t th" x="740" y="358" text-anchor="middle">Hook layer</text>
++        <text class="k" x="740" y="376" text-anchor="middle">write_gate · bash_gate</text>
++        <text class="k" x="740" y="392" text-anchor="middle">Stop gate · gitleaks</text>
++        <line class="ln" x1="560" y1="190" x2="637" y2="190" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="599" y="184" text-anchor="middle">dispatch</text>
++        <line class="ln" x1="640" y1="236" x2="563" y2="236" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="600" y="230" text-anchor="middle">report · PR</text>
++        <line class="ln" x1="790" y1="138" x2="790" y2="103" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="782" y="128" text-anchor="end">gh pr create</text>
++        <!-- Subagents -->
++        <rect class="hkout" x="240" y="304" width="320" height="146" rx="10"/>
++        <rect class="ag" x="252" y="316" width="144" height="46" rx="6"/>
++        <text class="t" x="324" y="336" text-anchor="middle">architect</text>
++        <text class="s" x="324" y="352" text-anchor="middle">opus · read-only</text>
++        <rect class="ag" x="404" y="316" width="144" height="46" rx="6"/>
++        <text class="t" x="476" y="336" text-anchor="middle">qa</text>
++        <text class="s" x="476" y="352" text-anchor="middle">sonnet · read-only</text>
++        <rect class="ag" x="252" y="370" width="144" height="46" rx="6"/>
++        <text class="t" x="324" y="390" text-anchor="middle">security</text>
++        <text class="s" x="324" y="406" text-anchor="middle">opus · + scanner Bash</text>
++        <rect class="ag" x="404" y="370" width="144" height="46" rx="6"/>
++        <text class="t" x="476" y="390" text-anchor="middle">scout</text>
++        <text class="s" x="476" y="406" text-anchor="middle">haiku · read-only</text>
++        <text class="s th" x="400" y="440" text-anchor="middle">no Write · no Bash (security: scanners, git reads)</text>
++        <line class="ln" x1="330" y1="268" x2="330" y2="301" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="338" y="290">Agent · paths only</text>
++        <line class="ln" x1="490" y1="304" x2="490" y2="271" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="498" y="290">verdict</text>
++        <!-- docs/delix -->
++        <rect class="box2" x="240" y="486" width="320" height="106" rx="10"/>
++        <text class="t" x="400" y="510" text-anchor="middle">docs/delix/ · main branch</text>
++        <text class="m" x="400" y="534" text-anchor="middle">SPEC.md · STATE.json · delix.json</text>
++        <text class="m" x="400" y="554" text-anchor="middle">tasks/T&lt;nnn&gt;-*.md · *.dispatch.md</text>
++        <text class="m" x="400" y="574" text-anchor="middle">verifications/ · metrics.md · archive/</text>
++        <line class="ln d" x1="400" y1="450" x2="400" y2="483" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="408" y="472">reads</text>
++        <path class="ln" d="M240,250 H222 V540 H237" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="214" y="400" text-anchor="middle" transform="rotate(-90 214 400)">writes: SPEC · card · STATE</text>
++        <path class="ln d" d="M560,540 H740 V403" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="650" y="533" text-anchor="middle">card (branch copy)</text>
++        <!-- Legend -->
++        <text class="s" x="20" y="318">Legend</text>
++        <rect class="sw-hu" x="20" y="330" width="18" height="12" rx="2" stroke-width="1.4"/><text class="k" x="46" y="340">human, gate</text>
++        <rect class="sw-ag" x="20" y="354" width="18" height="12" rx="2" stroke-width="1.4"/><text class="k" x="46" y="364">agent session, subagent</text>
++        <rect class="sw-hk" x="20" y="378" width="18" height="12" rx="2" stroke-width="1.4"/><text class="k" x="46" y="388">hook (harness)</text>
++        <line class="ln" x1="20" y1="408" x2="38" y2="408"/><text class="k" x="46" y="412">writes, calls</text>
++        <line class="ln d" x1="20" y1="432" x2="38" y2="432"/><text class="k" x="46" y="436">reads</text>
++      </svg>
++    </div>
++    <p class="swipe">Scroll the diagram sideways.</p>
++    <figcaption><strong>Reading and writing are separate.</strong> The lead writes the spec, the cards and <code>STATE.json</code>. It passes subagents only file paths, not its own opinion. The implementer reads the branch copy of its card and writes code and the <code>.delix/</code> files in its own worktree. A hook closes the card file and <code>docs/delix/**</code> to the implementer. The feedback queue lives in the user's home directory, not in the project repo.</figcaption>
++  </figure>
++
++  <div class="tbl" style="margin-top:18px">
++    <table class="mx">
++      <thead><tr><th>Component</th><th>Reads</th><th>Writes</th><th>Limited by</th></tr></thead>
++      <tbody>
++        <tr><th>Lead</th><td><code>CLAUDE.md</code>, <code>STATUS.md</code>, <code>docs/delix/*</code>, report, diff, <code>gh pr checks</code></td><td><code>SPEC.md</code>, cards, <code>*.dispatch.md</code>, <code>STATE.json</code>, verifications, metrics, feedback draft</td><td>Skill text: writes no code, does no card itself, does not merge</td></tr>
++        <tr><th>Implementer</th><td>The card, its REQ section in SPEC, <code>delix.json</code>, role note</td><td>Code in the Files list, new tests, <code>.delix/*</code>, commit, PR</td><td>write_gate, bash_gate, Stop gate (only when a local <code>.delix/card</code> exists)</td></tr>
++        <tr><th>architect</th><td>SPEC, repo, cards</td><td>No files; returns the cards and the wave plan as text</td><td><code>tools: Read, Grep, Glob</code> + hook</td></tr>
++        <tr><th>qa</th><td>Diff, card, SPEC, test output</td><td>No files; <code>ACCEPT</code> · <code>ACCEPT_WITH_NOTES</code> · <code>REJECT</code> · <code>ESCALATE</code></td><td><code>tools: Read, Grep, Glob</code> + hook</td></tr>
++        <tr><th>security</th><td>Diff, card, SPEC, tier, protected paths; no external web content</td><td>No files; <code>CLEAN</code> · <code>FIX</code> · <code>🔐 HUMAN_APPROVAL</code></td><td>bash_gate: only gitleaks, semgrep, pip-audit, trivy, git reads</td></tr>
++        <tr><th>scout</th><td>Targeted search, counts, quotes</td><td>No files</td><td><code>tools: Read, Grep, Glob</code></td></tr>
++      </tbody>
++    </table>
++  </div>
++  <p class="src"><b>Source:</b> README.md (Roles, Files on the project side) · agents/*.md · skills/implement/SKILL.md §0 · scripts/write_gate.py · scripts/bash_gate.py</p>
++</section>
++
++<section id="flow">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-flow"/></svg>Main flow</div>
++    <h2>From request to close: six commands, two gates</h2>
++    <p><code>/delixcrew:start</code> proposes two things. <strong>Size</strong> shows how much process the work needs: S, M or L. <strong>Tier</strong> shows the risk: 1, 2 or 3. The higher the tier, the more review and approval it takes. For a small, well-described job, a single session plus <code>/delixcrew:verify</code> is proposed instead of the full flow.</p>
++  </div>
++  <div class="split">
++    <figure class="dgm">
++      <div class="scroll">
++        <svg class="dg v" viewBox="0 0 440 730" role="img" aria-label="Main flow: start proposes size and tier; a single card for S, the spec grill for M and L; Gate 1; dispatch; implement in a worktree with the Stop gate; review with at most three fix rounds; Gate 2 merge; next wave or close.">
++          <defs>
++            <marker id="fl-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
++          </defs>
++          <rect class="ag" x="20" y="10" width="300" height="58" rx="8"/>
++          <text class="tm" x="170" y="34" text-anchor="middle">/delixcrew:start &lt;request&gt;</text>
++          <text class="s" x="170" y="54" text-anchor="middle">context · Size S/M/L · Tier 1/2/3</text>
++          <line class="ln d" x1="320" y1="39" x2="351" y2="39" marker-end="url(#fl-a)"/>
++          <text class="k" x="358" y="34">1 session</text>
++          <text class="k" x="358" y="49">+ verify</text>
++          <text class="s" x="358" y="64">(own path)</text>
++
++          <line class="ln" x1="90" y1="68" x2="90" y2="97" marker-end="url(#fl-a)"/>
++          <text class="lbl" x="82" y="88" text-anchor="end">S</text>
++          <line class="ln" x1="250" y1="68" x2="250" y2="97" marker-end="url(#fl-a)"/>
++          <text class="lbl" x="258" y="88">M / L</text>
++          <rect class="box" x="20" y="100" width="140" height="60" rx="8"/>
++          <text class="t" x="90" y="124" text-anchor="middle">Single card</text>
++          <text class="s" x="90" y="141" text-anchor="middle">architect writes</text>
++          <text class="s" x="90" y="155" text-anchor="middle">no spec</text>
++          <rect class="box" x="180" y="100" width="140" height="60" rx="8"/>
++          <text class="tm" x="250" y="124" text-anchor="middle">/delixcrew:spec</text>
++          <text class="s" x="250" y="141" text-anchor="middle">grill: one question</text>
++          <text class="s" x="250" y="155" text-anchor="middle">architect review</text>
++
++          <line class="ln" x1="90" y1="160" x2="90" y2="189" marker-end="url(#fl-a)"/>
++          <line class="ln" x1="250" y1="160" x2="250" y2="189" marker-end="url(#fl-a)"/>
++          <rect class="hu" x="20" y="192" width="300" height="44" rx="8"/>
++          <text class="t tu" x="170" y="212" text-anchor="middle">GATE 1 · spec approval (human)</text>
++          <text class="s" x="170" y="228" text-anchor="middle">S: card · M/L: SPEC.md "approved (gate 1)"</text>
++
++          <line class="ln" x1="170" y1="236" x2="170" y2="263" marker-end="url(#fl-a)"/>
++          <rect class="ag" x="20" y="266" width="300" height="62" rx="8"/>
++          <text class="tm" x="170" y="288" text-anchor="middle">/delixcrew:dispatch</text>
++          <text class="s" x="170" y="305" text-anchor="middle">architect: cards + wave plan · conflicts</text>
++          <text class="s" x="170" y="320" text-anchor="middle">Tier 3: Approved line, committed to main</text>
++
++          <line class="ln" x1="170" y1="328" x2="170" y2="355" marker-end="url(#fl-a)"/>
++          <rect class="ag" x="20" y="358" width="300" height="96" rx="8"/>
++          <text class="tm" x="170" y="380" text-anchor="middle">/delixcrew:implement</text>
++          <text class="s" x="170" y="398" text-anchor="middle">worktree · failing test first · Files only</text>
++          <text class="s" x="170" y="414" text-anchor="middle">verification → PR + .delix/report.md</text>
++          <rect class="hk" x="36" y="424" width="268" height="22" rx="11"/>
++          <text class="s th" x="170" y="439" text-anchor="middle">Stop gate: no finish until tests pass</text>
++
++          <line class="ln" x1="170" y1="454" x2="170" y2="481" marker-end="url(#fl-a)"/>
++          <rect class="ag" x="20" y="484" width="300" height="72" rx="8"/>
++          <text class="tm" x="170" y="506" text-anchor="middle">/delixcrew:review</text>
++          <text class="s" x="170" y="524" text-anchor="middle">deterministic gates → qa (+ security T≥2)</text>
++          <text class="s" x="170" y="542" text-anchor="middle">serious finding: fix · after 3 rounds: human</text>
++
++          <line class="ln" x1="170" y1="556" x2="170" y2="583" marker-end="url(#fl-a)"/>
++          <rect class="hu" x="20" y="586" width="300" height="44" rx="8"/>
++          <text class="t tu" x="170" y="606" text-anchor="middle">GATE 2 · merge (human)</text>
++          <text class="s" x="170" y="622" text-anchor="middle">card: accepted · no agent merges</text>
++
++          <line class="ln" x1="170" y1="630" x2="170" y2="657" marker-end="url(#fl-a)"/>
++          <rect class="ag" x="20" y="660" width="300" height="62" rx="8"/>
++          <text class="tm" x="170" y="682" text-anchor="middle">/delixcrew:close</text>
++          <text class="s" x="170" y="699" text-anchor="middle">metrics · spec-code drift · retro</text>
++          <text class="s" x="170" y="714" text-anchor="middle">STATUS · CHANGELOG · worktree cleanup</text>
++
++          <path class="ln" d="M320,520 H352 V406 H323" marker-end="url(#fl-a)"/>
++          <text class="lbl" x="364" y="463" text-anchor="middle" transform="rotate(-90 364 463)">fix rounds ≤ 3</text>
++          <path class="ln" d="M320,608 H400 V297 H323" marker-end="url(#fl-a)"/>
++          <text class="lbl" x="412" y="452" text-anchor="middle" transform="rotate(-90 412 452)">next card group (wave)</text>
++        </svg>
++      </div>
++      <p class="swipe">Scroll the diagram sideways.</p>
++      <figcaption><strong>Full flow.</strong> Review first checks the automatic gates: tests, CI and gitleaks. If one fails, the LLM review does not start and the finding goes back to the implementer. Review agents ask for fixes only for serious findings (P0/P1); minor ones (P2) are noted. After three fix rounds the card becomes <code>escalated</code> and the decision passes to the human: a stronger model, a narrower scope, or accept as is.</figcaption>
++    </figure>
++
++    <figure class="dgm">
++      <div class="scroll">
++        <svg class="dg v" viewBox="0 0 440 604" role="img" aria-label="Card-less verify path: the input is pinned to a SHA, five deterministic gates run from cheapest to most expensive, qa and security review in a single pass, and the result goes to a verifications report as ACCEPT or FIX; there are no fix rounds.">
++          <defs>
++            <marker id="vf-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
++          </defs>
++          <rect class="ag" x="20" y="10" width="400" height="58" rx="8"/>
++          <text class="tm" x="220" y="34" text-anchor="middle">/delixcrew:verify &lt;branch|commit|dir&gt;</text>
++          <text class="s" x="220" y="54" text-anchor="middle">card-less work · one session or by hand</text>
++          <line class="ln" x1="220" y1="68" x2="220" y2="93" marker-end="url(#vf-a)"/>
++          <rect class="box" x="20" y="96" width="400" height="58" rx="8"/>
++          <text class="t" x="220" y="120" text-anchor="middle">Pin to a SHA</text>
++          <text class="s" x="220" y="140" text-anchor="middle">git archive → work dir · protected path → Tier 3</text>
++          <line class="ln" x1="220" y1="154" x2="220" y2="179" marker-end="url(#vf-a)"/>
++          <rect class="box2" x="20" y="182" width="400" height="170" rx="8"/>
++          <text class="t" x="40" y="206">Deterministic gates, cheapest first</text>
++          <text class="m" x="40" y="232">1  gitleaks: commit range + archive</text>
++          <text class="m" x="40" y="256">2  local tests: delix.json.test_command</text>
++          <text class="m" x="40" y="280">3  remote isolated unit test: own dir + image</text>
++          <text class="m" x="40" y="304">4  full suite: only --full, if the lock is free</text>
++          <text class="m" x="40" y="328">5  path check: protected path, test lines</text>
++          <line class="ln" x1="220" y1="352" x2="220" y2="377" marker-end="url(#vf-a)"/>
++          <rect class="ag" x="20" y="380" width="400" height="58" rx="8"/>
++          <text class="t" x="220" y="404" text-anchor="middle">qa (+ security, Tier ≥ 2) · single pass</text>
++          <text class="s" x="220" y="424" text-anchor="middle">zero context · no fix rounds · no new session</text>
++          <path class="ln" d="M220,438 V452 H130 V463" marker-end="url(#vf-a)"/>
++          <path class="ln" d="M220,452 H310 V463" marker-end="url(#vf-a)"/>
++          <rect class="ok" x="60" y="466" width="140" height="36" rx="18"/>
++          <text class="tm tok" x="130" y="489" text-anchor="middle">ACCEPT</text>
++          <rect class="hk" x="240" y="466" width="140" height="36" rx="18"/>
++          <text class="tm th" x="310" y="489" text-anchor="middle">FIX</text>
++          <line class="ln" x1="130" y1="502" x2="130" y2="521" marker-end="url(#vf-a)"/>
++          <line class="ln" x1="310" y1="502" x2="310" y2="521" marker-end="url(#vf-a)"/>
++          <rect class="box" x="20" y="524" width="400" height="72" rx="8"/>
++          <text class="tm" x="220" y="546" text-anchor="middle">verifications/&lt;date&gt;-&lt;name&gt;.md</text>
++          <text class="s" x="220" y="566" text-anchor="middle">+ STATE.json.verifications · fixes are the user's</text>
++          <text class="s tu" x="220" y="584" text-anchor="middle">protected path: ACCEPT + security approval before merge</text>
++        </svg>
++      </div>
++      <p class="swipe">Scroll the diagram sideways.</p>
++      <figcaption><strong>Card-less path.</strong> Proposed when the size is S or M, the tier is at most 2 and the work is well described. Tier 3, two or more parallel cards or an unclear spec need the full flow. In the project's own measurements this path reached the same result as the full flow at 4–12% of its cost.</figcaption>
++    </figure>
++  </div>
++  <p class="src"><b>Source:</b> skills/start, spec, dispatch, implement, review, close, verify (SKILL.md) · README.md (Flow) · STATUS.md (A10, K43)</p>
++</section>
++
++<section id="tiers">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-grid"/></svg>Tier and gate matrix</div>
++    <h2>Risk is set by path and action, not by line count</h2>
++    <p>The tier looks at the file path, the action and external content. A 3-line change in Keycloak is size S, tier 3. If review finds that a protected path was touched, the card moves to tier 3 and needs a security approval.</p>
++  </div>
++  <div class="tbl">
++    <table class="mx">
++      <thead><tr><th></th><th>Tier 1</th><th>Tier 2</th><th>Tier 3 · <svg class="ico il" aria-hidden="true"><use href="assets/icons.svg#i-lock"/></svg></th></tr></thead>
++      <tbody>
++        <tr><th>When</th><td>Everything else</td><td>New behaviour, several files, a new dependency, a template or route</td><td><code>protected_paths</code>: auth, secrets, CI, lockfile, deploy, prod data; or publishing outward</td></tr>
++        <tr><th>Spec review</th><td><span class="pill ag">architect</span></td><td><span class="pill ag">architect</span></td><td><span class="pill ag">architect</span> <span class="pill ag">security</span></td></tr>
++        <tr><th>PR review</th><td><span class="pill ag">qa</span></td><td><span class="pill ag">qa</span> <span class="pill ag">security</span></td><td><span class="pill ag">qa</span> <span class="pill ag">security</span> full checklist; <code>/security-review</code> if available, Claude Security at size L</td></tr>
++        <tr><th><svg class="ico il" aria-hidden="true"><use href="assets/icons.svg#i-lock"/></svg> approval</th><td class="muted">none</td><td class="muted">none</td><td><span class="pill hu"><svg class="ico"><use href="assets/icons.svg#i-lock"/></svg>per card</span> The user says an explicit "yes" in chat. The lead then writes the <code>**🔐 Approved:** &lt;date&gt; &lt;who&gt;</code> line into the card header and commits it to main. Without this line the write gate rejects the protected path.</td></tr>
++        <tr><th>Implementer session</th><td>Headless <code>claude -p</code> in a terminal</td><td>Headless <code>claude -p</code> in a terminal</td><td>Interactive; the user opens the session and watches the work</td></tr>
++        <tr><th>In verify</th><td>security is skipped only with an explicit <code>--tier 1</code></td><td>Default tier</td><td>Automatic when a protected path is seen; result <code>ACCEPT 🔐</code></td></tr>
++      </tbody>
++    </table>
++  </div>
++  <div class="tbl" style="margin-top:14px">
++    <table class="mx">
++      <thead><tr><th>Size</th><th>Definition</th><th>Path</th></tr></thead>
++      <tbody>
++        <tr><th>S</th><td>One card; no new behaviour, or one place</td><td>No spec; the architect writes the card, Gate 1 is the card's approval</td></tr>
++        <tr><th>M</th><td>A new screen or endpoint, 2–5 cards</td><td>Grill and SPEC with <code>templates/spec-M.md</code></td></tr>
++        <tr><th>L</th><td>2+ disciplines; a data model, auth or architecture change; 5+ cards</td><td><code>spec-L.md</code> + <code>design.md</code> + <code>contracts/</code>; if the separate EGM plugin (document review agents) is installed, it also reviews the spec; at close EGM reports the drift between spec and code</td></tr>
++      </tbody>
++    </table>
++  </div>
++  <p class="src"><b>Source:</b> skills/start/SKILL.md §2 · skills/spec/SKILL.md §3 · skills/review/SKILL.md §1–2 · skills/dispatch/SKILL.md §2, §4 · skills/verify/SKILL.md §0 · skills/close/SKILL.md §3</p>
++</section>
++
++<section id="hooks">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-shield"/></svg>Hooks</div>
++    <h2>Three hooks: which tool they stop, and where</h2>
++    <p><code>hooks/hooks.json</code> defines three entries, all Python scripts. Without <code>python3</code> on PATH, Write, Edit and Bash are blocked; if a hook fails, the action is blocked too (fail-closed). The implementer rules apply only while a local <code>.delix/card</code> file exists at the worktree root; git does not track this file. The reviewer rules apply when the agent type (<code>agent_type</code>) is <code>delixcrew:*</code>.</p>
++  </div>
++  <div class="split wide-left">
++    <figure class="dgm">
++      <div class="scroll">
++        <svg class="dg v" viewBox="0 0 460 494" role="img" aria-label="write_gate decision order: first the feedback and triage directories, then the reviewer role, allow if not an implementer, outside the worktree, card and docs/delix, protected path, test file, allow everything else.">
++          <defs>
++            <marker id="wg-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
++          </defs>
++          <!-- row 0 -->
++          <rect class="box" x="20" y="14" width="270" height="40" rx="6"/>
++          <text class="k" x="34" y="38">Feedback or triage directory?</text>
++          <line class="ln" x1="290" y1="34" x2="319" y2="34" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="305" y="28" text-anchor="middle">yes</text>
++          <rect class="hk" x="322" y="19" width="124" height="30" rx="15"/>
++          <text class="s th" x="384" y="38" text-anchor="middle">DENY · any session</text>
++          <line class="ln" x1="155" y1="54" x2="155" y2="73" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="163" y="68">no</text>
++          <!-- row 1 -->
++          <rect class="box" x="20" y="76" width="270" height="40" rx="6"/>
++          <text class="k" x="34" y="100">Is the role a delixcrew:* reviewer?</text>
++          <line class="ln" x1="290" y1="96" x2="319" y2="96" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="305" y="90" text-anchor="middle">yes</text>
++          <rect class="hk" x="322" y="81" width="124" height="30" rx="15"/>
++          <text class="s th" x="384" y="100" text-anchor="middle">DENY · read-only</text>
++          <line class="ln" x1="155" y1="116" x2="155" y2="135" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="163" y="130">no</text>
++          <!-- row 2 -->
++          <rect class="box" x="20" y="138" width="270" height="40" rx="6"/>
++          <text class="k" x="34" y="162">No local .delix/card?</text>
++          <line class="ln" x1="290" y1="158" x2="319" y2="158" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="305" y="152" text-anchor="middle">yes</text>
++          <rect class="ok" x="322" y="143" width="124" height="30" rx="15"/>
++          <text class="s tok" x="384" y="162" text-anchor="middle">ALLOW · no rules</text>
++          <line class="ln" x1="155" y1="178" x2="155" y2="197" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="163" y="192">no: implementer</text>
++          <!-- row 3 -->
++          <rect class="box" x="20" y="200" width="270" height="40" rx="6"/>
++          <text class="k" x="34" y="224">Is the path outside the worktree?</text>
++          <line class="ln" x1="290" y1="220" x2="319" y2="220" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="305" y="214" text-anchor="middle">yes</text>
++          <rect class="hk" x="322" y="205" width="124" height="30" rx="15"/>
++          <text class="s th" x="384" y="224" text-anchor="middle">DENY</text>
++          <line class="ln" x1="155" y1="240" x2="155" y2="259" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="163" y="254">no</text>
++          <!-- row 4 -->
++          <rect class="box" x="20" y="262" width="270" height="40" rx="6"/>
++          <text class="k" x="34" y="286">Card file or docs/delix/**?</text>
++          <line class="ln" x1="290" y1="282" x2="319" y2="282" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="305" y="276" text-anchor="middle">yes</text>
++          <rect class="hk" x="322" y="267" width="124" height="30" rx="15"/>
++          <text class="s th" x="384" y="286" text-anchor="middle">DENY</text>
++          <line class="ln" x1="155" y1="302" x2="155" y2="321" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="163" y="316">no</text>
++          <!-- row 5 -->
++          <rect class="box" x="20" y="324" width="270" height="40" rx="6"/>
++          <text class="k" x="34" y="348">Protected path (protected_paths)?</text>
++          <line class="ln" x1="290" y1="344" x2="319" y2="344" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="305" y="338" text-anchor="middle">yes</text>
++          <rect class="hu" x="322" y="324" width="124" height="40" rx="8"/>
++          <text class="s tu" x="384" y="340" text-anchor="middle">listed + approved:</text>
++          <text class="s" x="384" y="355" text-anchor="middle">ALLOW, else DENY</text>
++          <line class="ln" x1="155" y1="364" x2="155" y2="383" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="163" y="378">no</text>
++          <!-- row 6 -->
++          <rect class="box" x="20" y="386" width="270" height="40" rx="6"/>
++          <text class="k" x="34" y="410">Test path not in the card's Files?</text>
++          <line class="ln" x1="290" y1="406" x2="319" y2="406" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="305" y="400" text-anchor="middle">yes</text>
++          <rect class="box2" x="322" y="386" width="124" height="40" rx="8"/>
++          <text class="s tok" x="384" y="402" text-anchor="middle">new file → ALLOW</text>
++          <text class="s th" x="384" y="417" text-anchor="middle">existing → DENY</text>
++          <line class="ln" x1="155" y1="426" x2="155" y2="445" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="163" y="440">no</text>
++          <rect class="ok" x="95" y="448" width="120" height="32" rx="16"/>
++          <text class="s tok" x="155" y="468" text-anchor="middle">ALLOW</text>
++        </svg>
++      </div>
++      <p class="swipe">Scroll the diagram sideways.</p>
++      <figcaption><strong>write_gate decision order.</strong> <code>scripts/write_gate.py</code> asks these questions in this order and stops at the first "yes". It checks calls to the Write, Edit, MultiEdit and NotebookEdit tools. A new test file is free; an existing test file can be written only if it is in the card's Files list.</figcaption>
++    </figure>
++
++    <div class="notes">
++      <div class="note limit">
++        <h3><svg class="ico"><use href="assets/icons.svg#i-shield"/></svg>Known limits</h3>
++        <ul>
++          <li>write_gate does not see what is written through Bash (<code>echo &gt;</code>, <code>sed -i</code>, <code>tee</code>). bash_gate catches only redirects, <code>cp</code>, <code>mv</code> and <code>tee</code> into a protected path. To cover this gap, the qa agent counts a change to the card or to <code>docs/delix/**</code> in the diff as a finding.</li>
++          <li>The hooks close the known send paths, not every path. A command built from base64, a wrapper written to a file or an HTTP request without gh can get past pattern matching. The README suggests adding <code>permissions.deny</code> to your own <code>settings.json</code>.</li>
++          <li>Claude Code ignores the <code>permissionMode</code>, <code>hooks</code> and <code>mcpServers</code> fields in plugin agent definitions. That is why the constraints live in the <code>tools</code> list and in <code>hooks.json</code>.</li>
++          <li>Cards that arrive in an archive carrying its own <code>.git</code> are an open case, tracked in issue #17. T007 closed tracked and symlinked cards.</li>
++        </ul>
++      </div>
++      <div class="note">
++        <h3><span class="pill ag">0.6.0</span>Triage hook rules</h3>
++        <p>In every session bash_gate denies <code>triage.py apply</code> and running <code>triage.py</code> under <code>script</code>, <code>expect</code>, <code>unbuffer</code> or <code>pty.spawn</code>. It also denies <code>gh issue close|reopen|lock|…</code>, <code>gh label</code> and writing <code>gh api</code> calls (<code>-f</code>, <code>--input</code>, <code>graphql</code>, a method other than GET) aimed at delixcrew. write_gate denies direct writes into the triage record directory. As with feedback, only the known paths are closed.</p>
++      </div>
++    </div>
++  </div>
++
++  <div class="hooks">
++    <article class="hook">
++      <h3>write_gate.py</h3>
++      <p class="when">PreToolUse · Write | Edit | MultiEdit | NotebookEdit · timeout 10 s</p>
++      <dl>
++        <div><dt>Every session</dt><dd>Direct writes into the feedback queue and the triage record directory are denied.</dd></div>
++        <div><dt>Reviewer</dt><dd>Cannot write any file.</dd></div>
++        <div><dt>Implementer</dt><dd>Outside the worktree, the card and <code>docs/delix/**</code> are closed. Writing a protected path needs the path in the Files list and a security approval line in the card. An existing test file opens only if it is in Files.</dd></div>
++      </dl>
++    </article>
++    <article class="hook">
++      <h3>bash_gate.py</h3>
++      <p class="when">PreToolUse · Bash · timeout 60 s</p>
++      <dl>
++        <div><dt>Every session</dt><dd><code>feedback.py send</code> is denied, and so are the <code>script</code>, <code>expect</code>, <code>unbuffer</code> and <code>pty.spawn</code> wrappers. <code>gh issue create|comment|edit</code> and <code>gh api … issues</code> calls aimed at delixcrew are denied too. The triage write paths are closed as well (see the note above).</dd></div>
++        <div><dt>Reviewer</dt><dd>security runs only scanners (gitleaks, semgrep, pip-audit, trivy, …) and git read commands; the other reviewers cannot use Bash.</dd></div>
++        <div><dt>Implementer</dt><dd>Shell writes into a protected path are denied. Before <code>git commit</code>, <code>gitleaks protect</code> runs on the staged changes; a finding stops the commit. Without gitleaks a note goes to <code>.delix/warnings.log</code>.</dd></div>
++      </dl>
++    </article>
++    <article class="hook">
++      <h3>stop_gate.py</h3>
++      <p class="when">Stop · 540 s per command</p>
++      <dl>
++        <div><dt>Implementer only</dt><dd>Runs <code>test_command</code> and <code>extra_checks</code> and writes the output to <code>.delix/test-result.txt</code>. If one fails, the exit code is 2 and the implementer cannot finish.</dd></div>
++        <div><dt>Way out</dt><dd>If the report says <code>NEEDS_CONTEXT</code> or <code>BLOCKED</code>, the implementer can stop. <code>stop_hook_active</code> prevents an endless loop.</dd></div>
++        <div><dt>Limit</dt><dd>Only these local commands run. The lead runs the card's verification command and the full suite during review.</dd></div>
++      </dl>
++    </article>
++  </div>
++  <p class="src"><b>Source:</b> hooks/hooks.json · scripts/write_gate.py · scripts/bash_gate.py · scripts/stop_gate.py · scripts/common.py (card_path) · README.md (Known limits, Remaining risk) · CHANGELOG 0.5.0 (T007) · README.md (Triage) · CHANGELOG 0.6.0</p>
++</section>
++
++<section id="self-feeding">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-loop"/></svg>Self-feeding · 0.5.0 and 0.6.0</div>
++    <h2>The plugin reports its own faults; a human still sends them</h2>
++    <p>When delixcrew sees a fault of its own in a project, it writes it to a local draft. The draft is redacted, the user sees the full text and sends it from their own terminal. The finding becomes a GitHub issue, goes through triage and, if accepted, re-enters the workflow through <code>/delixcrew:start #&lt;n&gt;</code>.</p>
++  </div>
++  <div class="split">
++    <figure class="dgm">
++      <div class="scroll">
++        <svg class="dg v" viewBox="0 0 460 762" role="img" aria-label="Self-feeding loop: a finding is written to the local queue with feedback.py add, preview redacts it deterministically, the user sees the full text and approves by id, Claude cannot send, the user runs send in their own terminal, a public issue opens, and after the triage decision start takes only an accepted issue as an UNTRUSTED quote, and the loop returns to new findings.">
++          <defs>
++            <marker id="fb-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
++            <marker id="fb-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahp" d="M0,0 L10,5 L0,10 z"/></marker>
++          </defs>
++          <rect class="ag" x="40" y="10" width="320" height="58" rx="8"/>
++          <text class="t" x="200" y="31" text-anchor="middle">Finding</text>
++          <text class="s" x="200" y="48" text-anchor="middle">wrong hook denial · unworkable step</text>
++          <text class="s" x="200" y="62" text-anchor="middle">limit worked around · or feedback note</text>
++          <line class="ln" x1="200" y1="68" x2="200" y2="91" marker-end="url(#fb-a)"/>
++          <rect class="box" x="40" y="94" width="320" height="58" rx="8"/>
++          <text class="tm" x="200" y="116" text-anchor="middle">feedback.py add</text>
++          <text class="s" x="200" y="133" text-anchor="middle">~/.claude/delixcrew/feedback/ · raw text</text>
++          <text class="s" x="200" y="147" text-anchor="middle">off by default · repeat → count + 1</text>
++          <line class="ln" x1="200" y1="152" x2="200" y2="175" marker-end="url(#fb-a)"/>
++          <rect class="hk" x="40" y="178" width="320" height="76" rx="8"/>
++          <text class="t" x="200" y="199" text-anchor="middle">preview · deterministic redaction</text>
++          <text class="s" x="200" y="217" text-anchor="middle">host · IP · MAC · e-mail · path · name · --terms</text>
++          <text class="s th" x="200" y="232" text-anchor="middle">BLOCKED: secret · hidden character · long body</text>
++          <text class="m" x="200" y="247" text-anchor="middle">result: CLEAN / BLOCKED + hash</text>
++          <line class="ln" x1="200" y1="254" x2="200" y2="277" marker-end="url(#fb-a)"/>
++          <rect class="hu" x="40" y="280" width="320" height="50" rx="8"/>
++          <text class="t tu" x="200" y="301" text-anchor="middle">The user sees the full text</text>
++          <text class="s" x="200" y="318" text-anchor="middle">"yes F003" in chat · a bare yes does not count</text>
++          <line class="ln" x1="200" y1="330" x2="200" y2="353" marker-end="url(#fb-a)"/>
++          <rect class="hk" x="40" y="356" width="320" height="44" rx="8"/>
++          <text class="t th" x="200" y="375" text-anchor="middle">Claude cannot send</text>
++          <text class="s" x="200" y="391" text-anchor="middle">gives only the one-line command · hook denies send</text>
++          <line class="ln" x1="200" y1="400" x2="200" y2="423" marker-end="url(#fb-a)"/>
++          <rect class="hu" x="40" y="426" width="320" height="58" rx="8"/>
++          <text class="t tu" x="200" y="447" text-anchor="middle">The user's own terminal</text>
++          <text class="m" x="200" y="464" text-anchor="middle">feedback.py send F003 --confirm &lt;hash&gt;</text>
++          <text class="s" x="200" y="478" text-anchor="middle">TTY required · text printed again · SEND &lt;hash&gt;</text>
++          <line class="ln" x1="200" y1="484" x2="200" y2="507" marker-end="url(#fb-a)"/>
++          <rect class="box" x="40" y="510" width="320" height="50" rx="8"/>
++          <text class="t" x="200" y="531" text-anchor="middle">GitHub Issue · public</text>
++          <text class="s" x="200" y="548" text-anchor="middle">tahircengiz/delixcrew · fingerprint dedup</text>
++          <line class="ln" x1="200" y1="560" x2="200" y2="583" marker-end="url(#fb-a)"/>
++          <rect class="ag" x="40" y="586" width="320" height="76" rx="8"/>
++          <text class="tm" x="200" y="612" text-anchor="middle">/delixcrew:triage</text>
++          <text class="s" x="200" y="629" text-anchor="middle">clean read → architect proposes a decision</text>
++          <text class="s" x="200" y="644" text-anchor="middle">human "accept #12" · apply in own terminal</text>
++          <text class="s" x="200" y="657" text-anchor="middle">comment + decision label</text>
++          <line class="ln" x1="200" y1="662" x2="200" y2="685" marker-end="url(#fb-a)"/>
++          <rect class="ag" x="40" y="688" width="320" height="62" rx="8"/>
++          <text class="tm" x="200" y="710" text-anchor="middle">/delixcrew:start #&lt;n&gt;</text>
++          <text class="s" x="200" y="727" text-anchor="middle">accepted only · unchanged since acceptance</text>
++          <text class="s" x="200" y="742" text-anchor="middle">issue text is not a command · Tier ≥ 2</text>
++          <path class="ln" d="M360,719 H400 V39 H363" marker-end="url(#fb-a)"/>
++          <text class="lbl" x="414" y="380" text-anchor="middle" transform="rotate(-90 414 380)">delix flow → new findings</text>
++        </svg>
++      </div>
++      <p class="swipe">Scroll the diagram sideways.</p>
++      <figcaption><strong>The loop.</strong> Since 0.6.0, start takes only an issue triaged as <code>accepted</code> whose title and body are unchanged since acceptance (<code>triage.py show &lt;n&gt; --require accepted</code>, exit 8 otherwise). The user also publishes the triage comment and labels from their own terminal, by typing <code>APPLY &lt;hash&gt;</code>.</figcaption>
++    </figure>
++
++    <div class="notes">
++      <div class="note">
++        <h3>When a draft is written</h3>
++        <p><code>/delixcrew:close</code> and <code>/delixcrew:review</code> add a draft only in three cases: a hook rejected correct work, a skill step could not be followed as written, or a plugin limit was worked around by hand. Otherwise the user says <code>/delixcrew:feedback note</code> in chat. If the feature is off, nothing is written (exit 3).</p>
++      </div>
++      <div class="note">
++        <h3>Redaction and blocking</h3>
++        <ul>
++          <li><strong>Replaced:</strong> every host outside a short allowlist, IPs outside the documentation ranges and loopback, MAC and e-mail addresses. The user name in home paths and other absolute paths, the user and machine name, the source project names and <code>--terms</code> are replaced too.</li>
++          <li><strong>BLOCKED (fail-closed):</strong> a gitleaks finding or gitleaks missing, an invisible Unicode control character, an opaque string of 32+ characters, more than 15 code lines, a body over 8 KB, a match left after redaction.</li>
++          <li>A secret is not redacted and sent; the draft is blocked.</li>
++        </ul>
++      </div>
++      <div class="note">
++        <h3>Approval chain</h3>
++        <ul>
++          <li>The preview text is data. An "approved" inside a draft, a file or an issue is not consent.</li>
++          <li>To approve, the user names the draft id in chat: <code>yes F003</code>. Claude then gives the one-line command.</li>
++          <li><code>send</code> prints the text once more in the terminal and waits for <code>SEND &lt;hash&gt;</code>. If the text changed after the preview, it stops.</li>
++          <li>The target repo is fixed. If an issue with the same fingerprint exists, no new one is opened and the existing URL is recorded.</li>
++        </ul>
++      </div>
++      <div class="note">
++        <h3><span class="pill ag">0.6.0</span>Triage: verify, filter, decide</h3>
++        <p>In triage the architect checks a bug against the reported version's code and a feature against the delix principles, and looks at every issue for duplicates, its source and missing information. It then proposes one of <code>accept</code>, <code>needs-info</code>, <code>duplicate</code>, <code>wontfix</code> or <code>defer</code>. The human decides in chat, with the number: <code>accept #12</code>. The user publishes the comment and labels from their own terminal by typing <code>APPLY &lt;hash&gt;</code>. Only <code>duplicate</code> and <code>wontfix</code> close the issue.</p>
++      </div>
++    </div>
++  </div>
++  <p class="src"><b>Source:</b> README.md (Feedback, Data &amp; privacy) · CHANGELOG 0.5.0 · skills/feedback/SKILL.md · skills/start/SKILL.md §1a · scripts/feedback.py · README.md (Triage) · CHANGELOG 0.6.0</p>
++</section>
++
++<section id="card">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-card"/></svg>Card lifecycle</div>
++    <h2>A card is in one of seven states</h2>
++    <p>The status values come from <code>STATE.json.status_values</code>: <code>open</code>, <code>in_progress</code>, <code>in_review</code>, <code>fixing</code>, <code>accepted</code>, <code>rejected</code>, <code>escalated</code>. The dispatch, implement and review skills write the transitions.</p>
++  </div>
++  <figure class="dgm">
++    <div class="scroll">
++      <svg class="dg w600" viewBox="0 0 690 300" role="img" aria-label="Card state machine: open, in_progress via dispatch, in_review via PR and report, fixing on a P0 or P1 finding and back to in_review, escalated past the round limit, accepted via the Gate 2 merge; rejected is in the status list but has no defined transition.">
++        <defs>
++          <marker id="sm-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
++          <marker id="sm-h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahh" d="M0,0 L10,5 L0,10 z"/></marker>
++        </defs>
++        <rect class="box" x="20" y="40" width="110" height="40" rx="20"/>
++        <text class="tm" x="75" y="64" text-anchor="middle">open</text>
++        <rect class="ag" x="200" y="40" width="110" height="40" rx="20"/>
++        <text class="tm" x="255" y="64" text-anchor="middle">in_progress</text>
++        <rect class="ag" x="380" y="40" width="110" height="40" rx="20"/>
++        <text class="tm" x="435" y="64" text-anchor="middle">in_review</text>
++        <rect class="ok" x="560" y="40" width="110" height="40" rx="20"/>
++        <text class="tm tok" x="615" y="64" text-anchor="middle">accepted</text>
++        <rect class="ag" x="380" y="200" width="110" height="40" rx="20"/>
++        <text class="tm" x="435" y="224" text-anchor="middle">fixing</text>
++        <rect class="hu" x="560" y="200" width="110" height="40" rx="20"/>
++        <text class="tm tu" x="615" y="224" text-anchor="middle">escalated</text>
++        <rect class="pl" x="20" y="200" width="110" height="40" rx="20"/>
++        <text class="tm tp" x="75" y="224" text-anchor="middle">rejected</text>
++        <text class="s" x="75" y="260" text-anchor="middle">in the list; no</text>
++        <text class="s" x="75" y="274" text-anchor="middle">transition in skills</text>
++
++        <line class="ln" x1="130" y1="60" x2="197" y2="60" marker-end="url(#sm-a)"/>
++        <text class="lbl" x="165" y="52" text-anchor="middle">dispatch</text>
++        <line class="ln" x1="310" y1="60" x2="377" y2="60" marker-end="url(#sm-a)"/>
++        <text class="lbl" x="345" y="52" text-anchor="middle">PR + report</text>
++        <line class="ln h" x1="490" y1="60" x2="557" y2="60" marker-end="url(#sm-h)"/>
++        <text class="lh" x="525" y="52" text-anchor="middle">Gate 2</text>
++        <text class="lh" x="525" y="78" text-anchor="middle">merge</text>
++        <line class="ln" x1="415" y1="80" x2="415" y2="197" marker-end="url(#sm-a)"/>
++        <text class="lbl" x="407" y="135" text-anchor="end">P0/P1 finding</text>
++        <text class="lbl" x="407" y="150" text-anchor="end">rounds + 1</text>
++        <line class="ln" x1="455" y1="200" x2="455" y2="83" marker-end="url(#sm-a)"/>
++        <text class="lbl" x="463" y="135">fix commit</text>
++        <text class="lbl" x="463" y="150">full re-review</text>
++        <line class="ln" x1="490" y1="220" x2="557" y2="220" marker-end="url(#sm-a)"/>
++        <text class="lbl" x="524" y="212" text-anchor="middle">rounds &gt; 3</text>
++        <path class="ln d" d="M615,240 V270 H435 V243" marker-end="url(#sm-a)"/>
++        <text class="lbl" x="525" y="288" text-anchor="middle">user approves an extra round (e.g. T002)</text>
++      </svg>
++    </div>
++    <p class="swipe">Scroll the diagram sideways.</p>
++    <figcaption><strong>State machine.</strong> The implementer report carries its own contract: <code>DONE</code>, <code>DONE_WITH_CONCERNS</code>, <code>NEEDS_CONTEXT</code> or <code>BLOCKED</code>. For the last two no review opens; the lead answers or takes it to the user. qa's <code>REJECT</code> verdict is a review result; no step in the skill texts moves a card to <code>rejected</code>.</figcaption>
++  </figure>
++
++  <div class="split" style="margin-top:18px">
++    <div class="tbl">
++      <table>
++        <thead><tr><th>Card</th><th>Role</th><th>Tier</th><th>PR</th><th>Rounds</th></tr></thead>
++        <tbody>
++          <tr><th>T001</th><td>backend</td><td class="num">3</td><td class="num">#6</td><td class="num"><span class="bar" style="width:14px"></span> 1</td></tr>
++          <tr><th>T002</th><td>backend</td><td class="num">3</td><td class="num">#4</td><td class="num"><span class="bar over" style="width:56px"></span> 4</td></tr>
++          <tr><th>T003</th><td>docs</td><td class="num">3</td><td class="num">#5</td><td class="num">0</td></tr>
++          <tr><th>T004</th><td>devops</td><td class="num">3</td><td class="num">#18</td><td class="num">0</td></tr>
++          <tr><th>T005</th><td>docs</td><td class="num">1</td><td class="num">#19</td><td class="num"><span class="bar" style="width:28px"></span> 2</td></tr>
++          <tr><th>T006</th><td>docs</td><td class="num">2</td><td class="num">#15</td><td class="num">0</td></tr>
++          <tr><th>T007</th><td>backend</td><td class="num">3</td><td class="num">#16</td><td class="num"><span class="bar" style="width:28px"></span> 2</td></tr>
++          <tr><th>T008</th><td>backend</td><td class="num">3</td><td class="num">#20</td><td class="num"><span class="bar" style="width:14px"></span> 1</td></tr>
++          <tr><th>T009</th><td>devops</td><td class="num">2</td><td class="num">#21</td><td class="num"><span class="bar" style="width:28px"></span> 2</td></tr>
++        </tbody>
++      </table>
++    </div>
++    <div class="notes">
++      <div class="note">
++        <h3>A real card: T002 hook rules</h3>
++        <p>Tier 3, backend, wave 1. Before dispatch the security approval line (Approved) was written into the card, then PR #4 was opened. Review took four rounds: the limit was 3 and the user approved the fourth. It was then merged at Gate 2 (<code>c43516d</code>) and the card became <code>accepted</code>. 48 minutes passed from PR open to merge.</p>
++      </div>
++      <div class="note">
++        <h3>0.5.0 self-feeding in numbers</h3>
++        <p>9 cards in 4 waves, all <code>accepted</code>. 6 were Tier 3, 12 review rounds in total, 3 cards passed with zero rounds. Outside the gates the user stepped in 1.6 (first round) and 1.5 (rev 3) times per card; the target was at most 5. Session cost was not measured in USD; only tokens were counted.</p>
++      </div>
++      <div class="note">
++        <h3><span class="pill ag">0.6.0</span>Triage cards</h3>
++        <p>Wave 1: T010 (script, 6 rounds, PR #24), T011 (hook, 2 rounds, PR #23) and T012 (skill, 2 rounds, PR #22). Wave 2: T013 (docs, CI, version, PR #27) and T014 (character blocks from T010's round 6, PR #28). All five are Tier 3, security-approved and merged to main; 0.6.0 shipped with T013.</p>
++      </div>
++    </div>
++  </div>
++  <p class="src"><b>Source:</b> docs/delix/archive/0.5.0-self-feeding/STATE.json · docs/delix/metrics.md · STATUS.md K87 · docs/delix/STATE.json (origin/main) · templates/report.md · skills/review/SKILL.md §1, §3</p>
++</section>
++
++<section id="glossary">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-book"/></svg>Glossary</div>
++    <h2>Short glossary</h2>
++  </div>
++  <dl class="gloss">
++    <div><dt>card</dt><dd>One unit of work, in <code>docs/delix/tasks/T&lt;nnn&gt;-&lt;slug&gt;.md</code>. It holds the goal, the Files list, Interfaces, the verification command and the report contract. Files lists do not overlap between cards.</dd></div>
++    <div><dt>wave</dt><dd>A group of cards opened together, at most <code>max_parallel</code> (3). A card that touches the same file as another, or depends on another card, goes to the next wave. Kept in <code>STATE.json.waves</code>.</dd></div>
++    <div><dt>tier</dt><dd>The risk axis that sets the gates (1–3). It looks at the file path, the action and external content. A separate axis from size (S/M/L, process weight).</dd></div>
++    <div><dt>gate</dt><dd>A point where a human decides. At Gate 1 the spec or card is approved, at Gate 2 the PR is merged. A Tier 3 card also needs a security approval. Automatic checks such as tests, CI and gitleaks are gates too (deterministic gates): a machine decides, and they run before the LLM review.</dd></div>
++    <div><dt>drift</dt><dd>The gap between the spec and the merged code: REQs not implemented, or behaviour not in the spec. The architect looks for it at close; findings go to the open items in STATUS.</dd></div>
++    <div><dt>escalation</dt><dd>When review rounds pass <code>max_review_rounds</code> (3), the card becomes <code>escalated</code>. The user picks: a stronger model, a narrower scope, or accept.</dd></div>
++    <div><dt>worktree</dt><dd>The implementer's own git working tree on the card branch. Diffs and remote tests are taken from the branch's commit SHA, not from the directory.</dd></div>
++    <div><dt>K decision</dt><dd>A numbered decision record (K1, K2, …), kept in STATUS and SPEC and marked "reversible" or "one-way".</dd></div>
++  </dl>
++  <p class="src"><b>Source:</b> templates/task-card.md · skills/dispatch/SKILL.md §2 · skills/start/SKILL.md §2 · skills/close/SKILL.md §3 · skills/review/SKILL.md §1, §3 · skills/spec/SKILL.md (Rules)</p>
++</section>
++
++<footer>
++  <p>delixcrew 0.6.0 · as of 2026-11-03. Compiled from the repository files; each section lists its sources.</p>
++  <p>Source code and issues: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="tr/index.html" hreflang="tr">Türkçe</a></p>
++</footer>
++</main>
++</body>
++</html>
+diff --git a/site/tr/index.html b/site/tr/index.html
+new file mode 100644
+index 0000000..fb49bf4
+--- /dev/null
++++ b/site/tr/index.html
+@@ -0,0 +1,698 @@
++<!doctype html>
++<html lang="tr">
++<head>
++<meta charset="utf-8">
++<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
++<title>delixCrew nedir</title>
++<meta name="description" content="delixCrew, Claude Code için bir ekip iş akışı plugin'i: önce spec, kodu ajanlar yazar, kapılar insanda.">
++<meta name="color-scheme" content="light dark">
++<link rel="stylesheet" href="../assets/style.css">
++<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
++<link rel="alternate" hreflang="en" href="../index.html">
++</head>
++<body>
++<a class="skip" href="#main">İçeriğe geç</a>
++<header class="topbar">
++  <div class="wrap">
++    <a class="brand" href="index.html">delix<span>Crew</span></a>
++    <nav class="pages" aria-label="Sayfalar">
++      <a href="index.html" aria-current="page">Nedir</a>
++      <a href="usage.html">Nasıl kullanılır</a>
++      <a href="https://github.com/tahircengiz/delixcrew"><svg class="ico" aria-hidden="true"><use href="../assets/icons.svg#i-code"/></svg>GitHub</a>
++    </nav>
++    <a class="lang" href="../index.html" hreflang="en" lang="en" title="English">EN</a>
++  </div>
++</header>
++<main id="main" class="wrap">
++<header class="hero">
++  <div class="kicker"><span class="ver" data-version="0.6.0">delixcrew 0.6.0</span><span>Claude Code plugin · MIT</span></div>
++  <h1>delix<span>Crew</span></h1>
++  <p class="thesis">Önce spec yazılır. Kodu ajanlar yazar. <em>Son kararı insan verir.</em></p>
++  <p class="lede">İşi yöneten ana oturuma <strong>ekip lideri</strong> (lead) denir. Ekip lideri sana tek tek soru sorar (bu soru turuna grill denir) ve cevaplardan bir tech spec yazar. Sonra işi <strong>kartlara</strong>, yani küçük ve birbirinden ayrı iş birimlerine böler. Her kart, kendi worktree'sinde çalışan ayrı bir uygulayıcı oturumuna gider. Sonucu, dosya değiştiremeyen inceleme ajanları kontrol eder.</p>
++  <p class="lede">İş iki noktada durur ve insan onayı bekler. Bu noktalara <strong>kapı</strong> denir: Kapı 1'de spec onaylanır, Kapı 2'de PR merge edilir. Kurallar ajanın iyi niyetine bırakılmaz, onları Claude Code'un kendisi uygular: hook'lar yasak işlemi engeller, araç listeleri ajanın ne yapabileceğini sınırlar. Sayfada bu kontrol katmanına <strong>harness</strong> deniyor.</p>
++  <ol class="rail" aria-label="Ana akış">
++    <li>start</li><li class="sep" aria-hidden="true">›</li>
++    <li>spec</li><li class="sep" aria-hidden="true">›</li>
++    <li class="gate"><svg class="ico"><use href="../assets/icons.svg#i-lock"/></svg>Kapı 1 · spec onayı</li><li class="sep" aria-hidden="true">›</li>
++    <li>dispatch</li><li class="sep" aria-hidden="true">›</li>
++    <li>implement</li><li class="sep" aria-hidden="true">›</li>
++    <li>review</li><li class="sep" aria-hidden="true">›</li>
++    <li class="gate"><svg class="ico"><use href="../assets/icons.svg#i-lock"/></svg>Kapı 2 · merge</li><li class="sep" aria-hidden="true">›</li>
++    <li>close</li>
++  </ol>
++  <div class="cta">
++    <a class="btn primary" href="usage.html"><svg class="ico" aria-hidden="true"><use href="../assets/icons.svg#i-term"/></svg>Kurulum ve kullanım</a>
++    <a class="btn" href="https://github.com/tahircengiz/delixcrew"><svg class="ico" aria-hidden="true"><use href="../assets/icons.svg#i-code"/></svg>Kaynak kod</a>
++  </div>
++</header>
++
++<nav class="nav" aria-label="Bölümler">
++  <a href="#fikir">Ana fikir</a><a href="#topology">Topology</a><a href="#akis">Ana akış</a><a href="#kademe">Kademe ve kapılar</a><a href="#hooks">Hook'lar</a><a href="#oz-besleme">Öz-besleme</a><a href="#kart">Kartın yaşamı</a><a href="#sozluk">Sözlük</a>
++</nav>
++
++<section id="fikir">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-doc"/></svg>Ana fikir</div>
++    <h2>Tek oturumluk döngü yerine bir yazılım ekibinin iş bölümü</h2>
++    <p>"Aç, klasör seç, geçmişi oku, devam et" döngüsünün yerini roller alır. Her rolün yapabilecekleri, araç listesi ve hook'larla sınırlanır.</p>
++  </div>
++  <div class="principles">
++    <article class="pr agent"><h3><svg class="ico"><use href="../assets/icons.svg#i-doc"/></svg>Spec önce</h3><p>Grill her seferinde tek soru sorar, her soruya bir öneri ekler. Gereksinimler, <code>SHALL</code> ve <code>WHEN/THEN</code> biçiminde, test edilebilecek şekilde yazılır. Kapsam dışı açıkça belirtilir.</p></article>
++    <article class="pr agent"><h3><svg class="ico"><use href="../assets/icons.svg#i-bot"/></svg>Kodu ajanlar yazar</h3><p>Uygulayıcı kendi worktree'sinde çalışır. Yalnız kartta izin verilen dosyaları (Files listesi) değiştirir. Önce başarısız olan bir test yazar; var olan testleri değiştiremez.</p></article>
++    <article class="pr human"><h3><svg class="ico"><use href="../assets/icons.svg#i-lock"/></svg>Kararı insan verir</h3><p>Kapı 1'de spec ya da kart onaylanır, Kapı 2'de PR merge edilir. En riskli kartlar (Tier 3) ayrıca açık bir güvenlik onayı ister. Ekip lideri <code>gh pr merge</code> çalıştırmaz.</p></article>
++    <article class="pr hk-p"><h3><svg class="ico"><use href="../assets/icons.svg#i-shield"/></svg>Kuralları Claude Code zorlar</h3><p>İnceleme ajanlarının (reviewer) <code>tools</code> listesinde yazma aracı yok. Hook'lar korumalı yollara (auth, sırlar, CI, deploy) ve var olan test dosyalarına yazmayı engeller. Stop hook sayesinde uygulayıcı, testler geçmeden işi bitiremez.</p></article>
++  </div>
++  <p class="src"><b>Kaynak:</b> README.md (giriş, Roles) · skills/review/SKILL.md §4 · hooks/hooks.json</p>
++</section>
++
++<section id="topology">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-topo"/></svg>Topology</div>
++    <h2>Kim nerede çalışır, neyi okur, neye yazar</h2>
++    <p>Ekip lideri (plugin dosyalarında <code>orchestrator</code>) ana checkout'ta durur ve kod yazmaz. Uygulayıcılar ayrı oturumlarda çalışır. Reviewer'lar ise ekip liderinin çağırdığı alt ajanlardır. Ajanların ortak hafızasını sohbet değil, <code>docs/delix/</code> altındaki dosyalar oluşturur.</p>
++  </div>
++  <figure class="dgm">
++    <div class="scroll">
++      <svg class="dg w680" viewBox="0 0 860 610" role="img" aria-label="Topology: insan, ekip lideri oturumu, dört salt-okunur alt ajan, en çok üç paralel uygulayıcı oturumu, docs/delix dosyaları, kullanıcı düzeyindeki feedback kuyruğu ve GitHub; hook katmanı uygulayıcıyı ve reviewer'ları sınırlar.">
++        <defs>
++          <marker id="tp-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
++          <marker id="tp-h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahh" d="M0,0 L10,5 L0,10 z"/></marker>
++        </defs>
++        <!-- İnsan -->
++        <rect class="hu" x="300" y="16" width="220" height="64" rx="8"/>
++        <text class="t tu" x="410" y="42" text-anchor="middle">İnsan · kullanıcı</text>
++        <text class="k" x="410" y="62" text-anchor="middle">iki kapı · güvenlik onayı · send</text>
++        <!-- GitHub -->
++        <rect class="box" x="640" y="16" width="200" height="84" rx="8"/>
++        <text class="t" x="740" y="42" text-anchor="middle">GitHub</text>
++        <text class="k" x="740" y="62" text-anchor="middle">PR · CI · Issues</text>
++        <text class="m" x="740" y="82" text-anchor="middle">gh CLI ile</text>
++        <line class="ln h" x1="520" y1="36" x2="637" y2="36" marker-end="url(#tp-h)"/>
++        <text class="lh" x="579" y="30" text-anchor="middle">PR merge · Kapı 2</text>
++        <line class="ln h" x1="520" y1="66" x2="637" y2="66" marker-end="url(#tp-h)"/>
++        <text class="lh" x="579" y="60" text-anchor="middle">feedback send</text>
++        <!-- Feedback kuyruğu -->
++        <rect class="box" x="20" y="150" width="180" height="112" rx="8"/>
++        <text class="t" x="110" y="174" text-anchor="middle">Feedback kuyruğu</text>
++        <text class="m" x="110" y="196" text-anchor="middle">~/.claude/delixcrew/</text>
++        <text class="m" x="110" y="212" text-anchor="middle">feedback/</text>
++        <text class="s" x="110" y="234" text-anchor="middle">proje reposunun dışında</text>
++        <text class="s" x="110" y="250" text-anchor="middle">varsayılan kapalı</text>
++        <!-- Ekip lideri -->
++        <rect class="ag" x="240" y="150" width="320" height="118" rx="10"/>
++        <text class="t" x="400" y="176" text-anchor="middle">Ekip lideri oturumu</text>
++        <text class="k" x="400" y="196" text-anchor="middle">ana checkout · kod yazmaz · üst model</text>
++        <text class="m" x="400" y="222" text-anchor="middle">start · spec · dispatch · review · triage</text>
++        <text class="m" x="400" y="242" text-anchor="middle">verify · close · status · feedback</text>
++        <line class="ln h" x1="410" y1="80" x2="410" y2="147" marker-end="url(#tp-h)"/>
++        <text class="lh" x="418" y="106">istek · Kapı 1</text>
++        <text class="lh" x="418" y="121">güvenlik onayı (Tier 3)</text>
++        <path class="ln d" d="M545,150 V126 H690 V103" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="617" y="120" text-anchor="middle">PR, CI, diff okur</text>
++        <line class="ln" x1="240" y1="206" x2="203" y2="206" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="221" y="200" text-anchor="middle">add</text>
++        <!-- Uygulayıcı -->
++        <rect class="ghost" x="650" y="140" width="200" height="250" rx="10"/>
++        <rect class="ghost" x="645" y="145" width="200" height="250" rx="10"/>
++        <rect class="ag" x="640" y="150" width="200" height="250" rx="10"/>
++        <text class="t" x="740" y="176" text-anchor="middle">Uygulayıcı oturumu</text>
++        <text class="k" x="740" y="196" text-anchor="middle">worktree · kart dalı · sonnet</text>
++        <text class="s" x="740" y="212" text-anchor="middle">aynı anda en çok 3 kart</text>
++        <text class="m" x="656" y="240">.delix/card</text>
++        <text class="m" x="656" y="258">.delix/report.md</text>
++        <text class="m" x="656" y="276">.delix/test-result.txt</text>
++        <text class="m" x="656" y="294">.delix/evidence/</text>
++        <text class="s" x="656" y="318">kod + yeni test (yalnız Files)</text>
++        <rect class="hk" x="640" y="336" width="200" height="64" rx="0"/>
++        <text class="t th" x="740" y="358" text-anchor="middle">Hook katmanı</text>
++        <text class="k" x="740" y="376" text-anchor="middle">write_gate · bash_gate</text>
++        <text class="k" x="740" y="392" text-anchor="middle">Stop gate · gitleaks</text>
++        <line class="ln" x1="560" y1="190" x2="637" y2="190" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="599" y="184" text-anchor="middle">dispatch</text>
++        <line class="ln" x1="640" y1="236" x2="563" y2="236" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="600" y="230" text-anchor="middle">rapor · PR</text>
++        <line class="ln" x1="790" y1="138" x2="790" y2="103" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="782" y="128" text-anchor="end">gh pr create</text>
++        <!-- Alt ajanlar -->
++        <rect class="hkout" x="240" y="304" width="320" height="146" rx="10"/>
++        <rect class="ag" x="252" y="316" width="144" height="46" rx="6"/>
++        <text class="t" x="324" y="336" text-anchor="middle">architect</text>
++        <text class="s" x="324" y="352" text-anchor="middle">opus · salt-okunur</text>
++        <rect class="ag" x="404" y="316" width="144" height="46" rx="6"/>
++        <text class="t" x="476" y="336" text-anchor="middle">qa</text>
++        <text class="s" x="476" y="352" text-anchor="middle">sonnet · salt-okunur</text>
++        <rect class="ag" x="252" y="370" width="144" height="46" rx="6"/>
++        <text class="t" x="324" y="390" text-anchor="middle">security</text>
++        <text class="s" x="324" y="406" text-anchor="middle">opus · + tarayıcı Bash</text>
++        <rect class="ag" x="404" y="370" width="144" height="46" rx="6"/>
++        <text class="t" x="476" y="390" text-anchor="middle">scout</text>
++        <text class="s" x="476" y="406" text-anchor="middle">haiku · salt-okunur</text>
++        <text class="s th" x="400" y="440" text-anchor="middle">Write yok · Bash yok (security: tarayıcı, git okuma)</text>
++        <line class="ln" x1="330" y1="268" x2="330" y2="301" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="338" y="290">Agent · yalnız yollar</text>
++        <line class="ln" x1="490" y1="304" x2="490" y2="271" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="498" y="290">karar</text>
++        <!-- docs/delix -->
++        <rect class="box2" x="240" y="486" width="320" height="106" rx="10"/>
++        <text class="t" x="400" y="510" text-anchor="middle">docs/delix/ · ana dal</text>
++        <text class="m" x="400" y="534" text-anchor="middle">SPEC.md · STATE.json · delix.json</text>
++        <text class="m" x="400" y="554" text-anchor="middle">tasks/T&lt;nnn&gt;-*.md · *.dispatch.md</text>
++        <text class="m" x="400" y="574" text-anchor="middle">verifications/ · metrics.md · archive/</text>
++        <line class="ln d" x1="400" y1="450" x2="400" y2="483" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="408" y="472">okur</text>
++        <path class="ln" d="M240,250 H222 V540 H237" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="214" y="400" text-anchor="middle" transform="rotate(-90 214 400)">yazar: SPEC · kart · STATE</text>
++        <path class="ln d" d="M560,540 H740 V403" marker-end="url(#tp-a)"/>
++        <text class="lbl" x="650" y="533" text-anchor="middle">kart (dal kopyası)</text>
++        <!-- Gösterim -->
++        <text class="s" x="20" y="318">Gösterim</text>
++        <rect class="sw-hu" x="20" y="330" width="18" height="12" rx="2" stroke-width="1.4"/><text class="k" x="46" y="340">insan, kapı</text>
++        <rect class="sw-ag" x="20" y="354" width="18" height="12" rx="2" stroke-width="1.4"/><text class="k" x="46" y="364">ajan oturumu, alt ajan</text>
++        <rect class="sw-hk" x="20" y="378" width="18" height="12" rx="2" stroke-width="1.4"/><text class="k" x="46" y="388">hook (harness)</text>
++        <line class="ln" x1="20" y1="408" x2="38" y2="408"/><text class="k" x="46" y="412">yazar, çağırır</text>
++        <line class="ln d" x1="20" y1="432" x2="38" y2="432"/><text class="k" x="46" y="436">okur</text>
++      </svg>
++    </div>
++    <p class="swipe">Diyagramı yatay kaydırın.</p>
++    <figcaption><strong>Okuma ve yazma ayrıdır.</strong> Ekip lideri spec'i, kartları ve <code>STATE.json</code>'u yazar. Alt ajanlara yalnız dosya yollarını iletir; kendi görüşünü aktarmaz. Uygulayıcı kartın dal kopyasını okur, kodu ve <code>.delix/</code> dosyalarını kendi worktree'sine yazar. Kart dosyası ve <code>docs/delix/**</code> uygulayıcıya hook'la kapalıdır. Feedback kuyruğu proje reposunda değil, kullanıcının ev dizinindedir.</figcaption>
++  </figure>
++
++  <div class="tbl" style="margin-top:18px">
++    <table class="mx">
++      <thead><tr><th>Bileşen</th><th>Okur</th><th>Yazar</th><th>Sınırı koyan</th></tr></thead>
++      <tbody>
++        <tr><th>Ekip lideri</th><td><code>CLAUDE.md</code>, <code>STATUS.md</code>, <code>docs/delix/*</code>, rapor, diff, <code>gh pr checks</code></td><td><code>SPEC.md</code>, kartlar, <code>*.dispatch.md</code>, <code>STATE.json</code>, verifications, metrics, feedback taslağı</td><td>Skill metni: kod yazmaz, kartı kendisi yapmaz, merge etmez</td></tr>
++        <tr><th>Uygulayıcı</th><td>Kart, SPEC'te kartın REQ bölümü, <code>delix.json</code>, rol notu</td><td>Files listesindeki kod, yeni testler, <code>.delix/*</code>, commit, PR</td><td>write_gate, bash_gate, Stop gate (yalnız yerel <code>.delix/card</code> varsa)</td></tr>
++        <tr><th>architect</th><td>SPEC, repo, kartlar</td><td>Hiçbir dosya; kartları ve wave planını metin olarak döndürür</td><td><code>tools: Read, Grep, Glob</code> + hook</td></tr>
++        <tr><th>qa</th><td>Diff, kart, SPEC, test çıktısı</td><td>Hiçbir dosya; <code>ACCEPT</code> · <code>ACCEPT_WITH_NOTES</code> · <code>REJECT</code> · <code>ESCALATE</code></td><td><code>tools: Read, Grep, Glob</code> + hook</td></tr>
++        <tr><th>security</th><td>Diff, kart, SPEC, tier, korumalı yollar; dış web içeriği yok</td><td>Hiçbir dosya; <code>CLEAN</code> · <code>FIX</code> · <code>🔐 HUMAN_APPROVAL</code></td><td>bash_gate: yalnız gitleaks, semgrep, pip-audit, trivy, git okuma</td></tr>
++        <tr><th>scout</th><td>Hedefli arama, sayım, alıntı</td><td>Hiçbir dosya</td><td><code>tools: Read, Grep, Glob</code></td></tr>
++      </tbody>
++    </table>
++  </div>
++  <p class="src"><b>Kaynak:</b> README.md (Roles, Files on the project side) · agents/*.md · skills/implement/SKILL.md §0 · scripts/write_gate.py · scripts/bash_gate.py</p>
++</section>
++
++<section id="akis">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-flow"/></svg>Ana akış</div>
++    <h2>İstekten kapanışa: altı komut, iki kapı</h2>
++    <p><code>/delixcrew:start</code> iki şey önerir. <strong>Boy</strong>, işin ne kadar süreç gerektirdiğini gösterir: S, M ya da L. <strong>Kademe</strong> (tier) riski gösterir: 1, 2 ya da 3. Kademe yükseldikçe daha çok inceleme ve onay gerekir. İyi tarif edilmiş küçük bir iş için tam akış yerine tek oturum ve <code>/delixcrew:verify</code> önerilir.</p>
++  </div>
++  <div class="split">
++    <figure class="dgm">
++      <div class="scroll">
++        <svg class="dg v" viewBox="0 0 440 730" role="img" aria-label="Ana akış: start boy ve kademe önerir; S için tek kart, M ve L için spec grill'i; Kapı 1; dispatch; worktree'de implement ve Stop gate; review ve en çok üç düzeltme turu; Kapı 2 merge; sonraki wave ya da close.">
++          <defs>
++            <marker id="fl-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
++          </defs>
++          <rect class="ag" x="20" y="10" width="300" height="58" rx="8"/>
++          <text class="tm" x="170" y="34" text-anchor="middle">/delixcrew:start &lt;istek&gt;</text>
++          <text class="s" x="170" y="54" text-anchor="middle">bağlam · Boy S/M/L · Kademe 1/2/3</text>
++          <line class="ln d" x1="320" y1="39" x2="351" y2="39" marker-end="url(#fl-a)"/>
++          <text class="k" x="358" y="34">tek oturum</text>
++          <text class="k" x="358" y="49">+ verify</text>
++          <text class="s" x="358" y="64">(ayrı akış)</text>
++
++          <line class="ln" x1="90" y1="68" x2="90" y2="97" marker-end="url(#fl-a)"/>
++          <text class="lbl" x="82" y="88" text-anchor="end">S</text>
++          <line class="ln" x1="250" y1="68" x2="250" y2="97" marker-end="url(#fl-a)"/>
++          <text class="lbl" x="258" y="88">M / L</text>
++          <rect class="box" x="20" y="100" width="140" height="60" rx="8"/>
++          <text class="t" x="90" y="124" text-anchor="middle">Tek kart</text>
++          <text class="s" x="90" y="141" text-anchor="middle">architect yazar</text>
++          <text class="s" x="90" y="155" text-anchor="middle">spec yok</text>
++          <rect class="box" x="180" y="100" width="140" height="60" rx="8"/>
++          <text class="tm" x="250" y="124" text-anchor="middle">/delixcrew:spec</text>
++          <text class="s" x="250" y="141" text-anchor="middle">grill: tek tek soru</text>
++          <text class="s" x="250" y="155" text-anchor="middle">architect incelemesi</text>
++
++          <line class="ln" x1="90" y1="160" x2="90" y2="189" marker-end="url(#fl-a)"/>
++          <line class="ln" x1="250" y1="160" x2="250" y2="189" marker-end="url(#fl-a)"/>
++          <rect class="hu" x="20" y="192" width="300" height="44" rx="8"/>
++          <text class="t tu" x="170" y="212" text-anchor="middle">KAPI 1 · spec onayı (insan)</text>
++          <text class="s" x="170" y="228" text-anchor="middle">S: kart · M/L: SPEC.md "approved (gate 1)"</text>
++
++          <line class="ln" x1="170" y1="236" x2="170" y2="263" marker-end="url(#fl-a)"/>
++          <rect class="ag" x="20" y="266" width="300" height="62" rx="8"/>
++          <text class="tm" x="170" y="288" text-anchor="middle">/delixcrew:dispatch</text>
++          <text class="s" x="170" y="305" text-anchor="middle">architect: kartlar + wave planı · çakışma</text>
++          <text class="s" x="170" y="320" text-anchor="middle">Tier 3: kartta onay satırı, main'e commit</text>
++
++          <line class="ln" x1="170" y1="328" x2="170" y2="355" marker-end="url(#fl-a)"/>
++          <rect class="ag" x="20" y="358" width="300" height="96" rx="8"/>
++          <text class="tm" x="170" y="380" text-anchor="middle">/delixcrew:implement</text>
++          <text class="s" x="170" y="398" text-anchor="middle">worktree · önce kırmızı test · yalnız Files</text>
++          <text class="s" x="170" y="414" text-anchor="middle">doğrulama → PR + .delix/report.md</text>
++          <rect class="hk" x="36" y="424" width="268" height="22" rx="11"/>
++          <text class="s th" x="170" y="439" text-anchor="middle">Stop gate: test geçmeden iş bitmez</text>
++
++          <line class="ln" x1="170" y1="454" x2="170" y2="481" marker-end="url(#fl-a)"/>
++          <rect class="ag" x="20" y="484" width="300" height="72" rx="8"/>
++          <text class="tm" x="170" y="506" text-anchor="middle">/delixcrew:review</text>
++          <text class="s" x="170" y="524" text-anchor="middle">deterministik kapılar → qa (+ security T≥2)</text>
++          <text class="s" x="170" y="542" text-anchor="middle">ciddi bulgu: düzelt · 3 turdan sonra insana</text>
++
++          <line class="ln" x1="170" y1="556" x2="170" y2="583" marker-end="url(#fl-a)"/>
++          <rect class="hu" x="20" y="586" width="300" height="44" rx="8"/>
++          <text class="t tu" x="170" y="606" text-anchor="middle">KAPI 2 · merge (insan)</text>
++          <text class="s" x="170" y="622" text-anchor="middle">kart: accepted · ajan merge etmez</text>
++
++          <line class="ln" x1="170" y1="630" x2="170" y2="657" marker-end="url(#fl-a)"/>
++          <rect class="ag" x="20" y="660" width="300" height="62" rx="8"/>
++          <text class="tm" x="170" y="682" text-anchor="middle">/delixcrew:close</text>
++          <text class="s" x="170" y="699" text-anchor="middle">metrikler · spec-kod farkı · retro</text>
++          <text class="s" x="170" y="714" text-anchor="middle">STATUS · CHANGELOG · worktree temizliği</text>
++
++          <path class="ln" d="M320,520 H352 V406 H323" marker-end="url(#fl-a)"/>
++          <text class="lbl" x="364" y="463" text-anchor="middle" transform="rotate(-90 364 463)">düzeltme turu ≤ 3</text>
++          <path class="ln" d="M320,608 H400 V297 H323" marker-end="url(#fl-a)"/>
++          <text class="lbl" x="412" y="452" text-anchor="middle" transform="rotate(-90 412 452)">sonraki kart grubu (wave)</text>
++        </svg>
++      </div>
++      <p class="swipe">Diyagramı yatay kaydırın.</p>
++      <figcaption><strong>Tam akış.</strong> Review önce otomatik kontrollere bakar: testler, CI ve gitleaks. Biri başarısızsa LLM incelemesi başlamaz, bulgu uygulayıcıya geri gider. İnceleme ajanları yalnız ciddi bulgular (P0/P1) için düzeltme ister, küçükler (P2) not edilir. Üç düzeltme turundan sonra kart <code>escalated</code> olur, yani karar insana geçer: daha güçlü bir model, daha dar kapsam ya da olduğu gibi kabul.</figcaption>
++    </figure>
++
++    <figure class="dgm">
++      <div class="scroll">
++        <svg class="dg v" viewBox="0 0 440 604" role="img" aria-label="Kartsız verify yolu: girdi SHA'ya sabitlenir, beş deterministik kapı ucuzdan pahalıya koşar, qa ve security tek geçişte inceler, sonuç ACCEPT ya da FIX olarak verifications raporuna yazılır; düzeltme turu yoktur.">
++          <defs>
++            <marker id="vf-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
++          </defs>
++          <rect class="ag" x="20" y="10" width="400" height="58" rx="8"/>
++          <text class="tm" x="220" y="34" text-anchor="middle">/delixcrew:verify &lt;dal|commit|dizin&gt;</text>
++          <text class="s" x="220" y="54" text-anchor="middle">kartsız iş · tek oturumda ya da elle yapılmış</text>
++          <line class="ln" x1="220" y1="68" x2="220" y2="93" marker-end="url(#vf-a)"/>
++          <rect class="box" x="20" y="96" width="400" height="58" rx="8"/>
++          <text class="t" x="220" y="120" text-anchor="middle">SHA'ya sabitle</text>
++          <text class="s" x="220" y="140" text-anchor="middle">git archive → çalışma dizini · korumalı yol → Tier 3</text>
++          <line class="ln" x1="220" y1="154" x2="220" y2="179" marker-end="url(#vf-a)"/>
++          <rect class="box2" x="20" y="182" width="400" height="170" rx="8"/>
++          <text class="t" x="40" y="206">Deterministik kapılar, ucuzdan pahalıya</text>
++          <text class="m" x="40" y="232">1  gitleaks: commit aralığı + arşiv</text>
++          <text class="m" x="40" y="256">2  yerel testler: delix.json.test_command</text>
++          <text class="m" x="40" y="280">3  uzak izole unit test: ayrı dizin + imaj</text>
++          <text class="m" x="40" y="304">4  tam suite: yalnız --full, kilit boşsa</text>
++          <text class="m" x="40" y="328">5  yol kontrolü: korumalı yol, test satırı</text>
++          <line class="ln" x1="220" y1="352" x2="220" y2="377" marker-end="url(#vf-a)"/>
++          <rect class="ag" x="20" y="380" width="400" height="58" rx="8"/>
++          <text class="t" x="220" y="404" text-anchor="middle">qa (+ security, Tier ≥ 2) · tek geçiş</text>
++          <text class="s" x="220" y="424" text-anchor="middle">sıfır bağlam · düzeltme turu yok · oturum açılmaz</text>
++          <path class="ln" d="M220,438 V452 H130 V463" marker-end="url(#vf-a)"/>
++          <path class="ln" d="M220,452 H310 V463" marker-end="url(#vf-a)"/>
++          <rect class="ok" x="60" y="466" width="140" height="36" rx="18"/>
++          <text class="tm tok" x="130" y="489" text-anchor="middle">ACCEPT</text>
++          <rect class="hk" x="240" y="466" width="140" height="36" rx="18"/>
++          <text class="tm th" x="310" y="489" text-anchor="middle">FIX</text>
++          <line class="ln" x1="130" y1="502" x2="130" y2="521" marker-end="url(#vf-a)"/>
++          <line class="ln" x1="310" y1="502" x2="310" y2="521" marker-end="url(#vf-a)"/>
++          <rect class="box" x="20" y="524" width="400" height="72" rx="8"/>
++          <text class="tm" x="220" y="546" text-anchor="middle">verifications/&lt;tarih&gt;-&lt;ad&gt;.md</text>
++          <text class="s" x="220" y="566" text-anchor="middle">+ STATE.json.verifications · düzeltme kullanıcının</text>
++          <text class="s tu" x="220" y="584" text-anchor="middle">korumalı yol: ACCEPT + güvenlik onayı, merge öncesi</text>
++        </svg>
++      </div>
++      <p class="swipe">Diyagramı yatay kaydırın.</p>
++      <figcaption><strong>Kartsız yol.</strong> Boy S ya da M, kademe en çok 2 ve iş iyi tarif edilmişse önerilir. Tier 3, iki ya da daha çok paralel kart ya da belirsiz spec tam akışı gerektirir. Projenin kendi ölçümlerinde bu yol, tam akışla aynı sonucu onun maliyetinin %4–12'siyle verdi.</figcaption>
++    </figure>
++  </div>
++  <p class="src"><b>Kaynak:</b> skills/start, spec, dispatch, implement, review, close, verify (SKILL.md) · README.md (Flow) · STATUS.md (A10, K43)</p>
++</section>
++
++<section id="kademe">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-grid"/></svg>Kademe ve kapı matrisi</div>
++    <h2>Riski satır sayısı değil, yol ve eylem belirler</h2>
++    <p>Kademe dosya yoluna, eyleme ve dış içeriğe bakar. Keycloak'ta 3 satırlık bir değişiklik boy S, kademe 3'tür. Review sırasında korumalı bir yola dokunulduğu görülürse kartın kademesi 3'e çıkar ve güvenlik onayı gerekir.</p>
++  </div>
++  <div class="tbl">
++    <table class="mx">
++      <thead><tr><th></th><th>Kademe 1</th><th>Kademe 2</th><th>Kademe 3 · <svg class="ico il" aria-hidden="true"><use href="../assets/icons.svg#i-lock"/></svg></th></tr></thead>
++      <tbody>
++        <tr><th>Ne zaman</th><td>Geri kalan her şey</td><td>Yeni davranış, birden çok dosya, yeni bağımlılık, şablon ya da route</td><td><code>protected_paths</code>: auth, sırlar, CI, lockfile, deploy, prod veri; ya da dışarı yayın</td></tr>
++        <tr><th>Spec incelemesi</th><td><span class="pill ag">architect</span></td><td><span class="pill ag">architect</span></td><td><span class="pill ag">architect</span> <span class="pill ag">security</span></td></tr>
++        <tr><th>PR incelemesi</th><td><span class="pill ag">qa</span></td><td><span class="pill ag">qa</span> <span class="pill ag">security</span></td><td><span class="pill ag">qa</span> <span class="pill ag">security</span> tüm maddeler; varsa <code>/security-review</code>, boy L'de Claude Security</td></tr>
++        <tr><th><svg class="ico il" aria-hidden="true"><use href="../assets/icons.svg#i-lock"/></svg> onayı</th><td class="muted">yok</td><td class="muted">yok</td><td><span class="pill hu"><svg class="ico"><use href="../assets/icons.svg#i-lock"/></svg>kart başına</span> Kullanıcı sohbette açıkça "evet" der. Ardından ekip lideri kartın başlığına <code>**🔐 Approved:** &lt;tarih&gt; &lt;kim&gt;</code> satırını yazar ve main'e commit eder. Bu satır yoksa write gate korumalı yolu reddeder.</td></tr>
++        <tr><th>Uygulayıcı oturumu</th><td>Terminalde headless <code>claude -p</code></td><td>Terminalde headless <code>claude -p</code></td><td>Etkileşimli; oturumu kullanıcı açar, iş gözünün önünde yürür</td></tr>
++        <tr><th>verify'da</th><td>security yalnız açıkça <code>--tier 1</code> denirse atlanır</td><td>Varsayılan kademe</td><td>Korumalı yol görülünce otomatik; sonuç <code>ACCEPT 🔐</code></td></tr>
++      </tbody>
++    </table>
++  </div>
++  <div class="tbl" style="margin-top:14px">
++    <table class="mx">
++      <thead><tr><th>Boy</th><th>Tanım</th><th>Yol</th></tr></thead>
++      <tbody>
++        <tr><th>S</th><td>Tek kart; yeni davranış yok ya da tek yer</td><td>Spec yok; kartı architect yazar, Kapı 1 kartın onayıdır</td></tr>
++        <tr><th>M</th><td>Yeni ekran ya da endpoint, 2–5 kart</td><td><code>templates/spec-M.md</code> ile grill ve SPEC</td></tr>
++        <tr><th>L</th><td>2+ disiplin; veri modeli, auth ya da mimari değişikliği; 5+ kart</td><td><code>spec-L.md</code> + <code>design.md</code> + <code>contracts/</code>; ayrı EGM plugin'i (doküman inceleme ajanları) kuruluysa spec onunla da incelenir; close'ta EGM, spec ile kod arasındaki farkı raporlar</td></tr>
++      </tbody>
++    </table>
++  </div>
++  <p class="src"><b>Kaynak:</b> skills/start/SKILL.md §2 · skills/spec/SKILL.md §3 · skills/review/SKILL.md §1–2 · skills/dispatch/SKILL.md §2, §4 · skills/verify/SKILL.md §0 · skills/close/SKILL.md §3</p>
++</section>
++
++<section id="hooks">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-shield"/></svg>Hook'lar</div>
++    <h2>Üç hook, hangi aracı nerede durdurur</h2>
++    <p><code>hooks/hooks.json</code> üç kayıt tanımlar ve hepsi Python betiğidir. <code>python3</code> PATH'te yoksa Write, Edit ve Bash engellenir; hook hata verirse işlem de engellenir (fail-closed). Uygulayıcı kuralları yalnız worktree kökünde yerel bir <code>.delix/card</code> dosyası varken devreye girer; bu dosya git'te izlenmez. İnceleme ajanı kuralları, ajan türü (<code>agent_type</code>) <code>delixcrew:*</code> olduğunda devreye girer.</p>
++  </div>
++  <div class="split wide-left">
++    <figure class="dgm">
++      <div class="scroll">
++        <svg class="dg v" viewBox="0 0 460 494" role="img" aria-label="write_gate karar sırası: önce feedback ve triage dizinleri, sonra reviewer rolü, uygulayıcı değilse izin, worktree dışı, kart ve docs/delix, korumalı yol, test dosyası, kalan her şeye izin.">
++          <defs>
++            <marker id="wg-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
++          </defs>
++          <!-- satır 0 -->
++          <rect class="box" x="20" y="14" width="270" height="40" rx="6"/>
++          <text class="k" x="34" y="38">Feedback ya da triage dizini mi?</text>
++          <line class="ln" x1="290" y1="34" x2="319" y2="34" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="305" y="28" text-anchor="middle">evet</text>
++          <rect class="hk" x="322" y="19" width="124" height="30" rx="15"/>
++          <text class="s th" x="384" y="38" text-anchor="middle">DENY · her oturum</text>
++          <line class="ln" x1="155" y1="54" x2="155" y2="73" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="163" y="68">hayır</text>
++          <!-- satır 1 -->
++          <rect class="box" x="20" y="76" width="270" height="40" rx="6"/>
++          <text class="k" x="34" y="100">Rol delixcrew:* reviewer mı?</text>
++          <line class="ln" x1="290" y1="96" x2="319" y2="96" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="305" y="90" text-anchor="middle">evet</text>
++          <rect class="hk" x="322" y="81" width="124" height="30" rx="15"/>
++          <text class="s th" x="384" y="100" text-anchor="middle">DENY · salt-okunur</text>
++          <line class="ln" x1="155" y1="116" x2="155" y2="135" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="163" y="130">hayır</text>
++          <!-- satır 2 -->
++          <rect class="box" x="20" y="138" width="270" height="40" rx="6"/>
++          <text class="k" x="34" y="162">Yerel .delix/card yok mu?</text>
++          <line class="ln" x1="290" y1="158" x2="319" y2="158" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="305" y="152" text-anchor="middle">evet</text>
++          <rect class="ok" x="322" y="143" width="124" height="30" rx="15"/>
++          <text class="s tok" x="384" y="162" text-anchor="middle">İZİN · kural yok</text>
++          <line class="ln" x1="155" y1="178" x2="155" y2="197" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="163" y="192">hayır: uygulayıcı</text>
++          <!-- satır 3 -->
++          <rect class="box" x="20" y="200" width="270" height="40" rx="6"/>
++          <text class="k" x="34" y="224">Yol worktree'nin dışında mı?</text>
++          <line class="ln" x1="290" y1="220" x2="319" y2="220" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="305" y="214" text-anchor="middle">evet</text>
++          <rect class="hk" x="322" y="205" width="124" height="30" rx="15"/>
++          <text class="s th" x="384" y="224" text-anchor="middle">DENY</text>
++          <line class="ln" x1="155" y1="240" x2="155" y2="259" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="163" y="254">hayır</text>
++          <!-- satır 4 -->
++          <rect class="box" x="20" y="262" width="270" height="40" rx="6"/>
++          <text class="k" x="34" y="286">Kart dosyası ya da docs/delix/** mı?</text>
++          <line class="ln" x1="290" y1="282" x2="319" y2="282" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="305" y="276" text-anchor="middle">evet</text>
++          <rect class="hk" x="322" y="267" width="124" height="30" rx="15"/>
++          <text class="s th" x="384" y="286" text-anchor="middle">DENY</text>
++          <line class="ln" x1="155" y1="302" x2="155" y2="321" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="163" y="316">hayır</text>
++          <!-- satır 5 -->
++          <rect class="box" x="20" y="324" width="270" height="40" rx="6"/>
++          <text class="k" x="34" y="348">Korumalı yol mu (protected_paths)?</text>
++          <line class="ln" x1="290" y1="344" x2="319" y2="344" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="305" y="338" text-anchor="middle">evet</text>
++          <rect class="hu" x="322" y="324" width="124" height="40" rx="8"/>
++          <text class="s tu" x="384" y="340" text-anchor="middle">Files + onay → İZİN</text>
++          <text class="s" x="384" y="355" text-anchor="middle">yoksa DENY</text>
++          <line class="ln" x1="155" y1="364" x2="155" y2="383" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="163" y="378">hayır</text>
++          <!-- satır 6 -->
++          <rect class="box" x="20" y="386" width="270" height="40" rx="6"/>
++          <text class="k" x="34" y="410">Test yolu ve kartın Files'ında yok mu?</text>
++          <line class="ln" x1="290" y1="406" x2="319" y2="406" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="305" y="400" text-anchor="middle">evet</text>
++          <rect class="box2" x="322" y="386" width="124" height="40" rx="8"/>
++          <text class="s tok" x="384" y="402" text-anchor="middle">yeni dosya → İZİN</text>
++          <text class="s th" x="384" y="417" text-anchor="middle">var olan → DENY</text>
++          <line class="ln" x1="155" y1="426" x2="155" y2="445" marker-end="url(#wg-a)"/>
++          <text class="lbl" x="163" y="440">hayır</text>
++          <rect class="ok" x="95" y="448" width="120" height="32" rx="16"/>
++          <text class="s tok" x="155" y="468" text-anchor="middle">İZİN</text>
++        </svg>
++      </div>
++      <p class="swipe">Diyagramı yatay kaydırın.</p>
++      <figcaption><strong>write_gate karar sırası.</strong> <code>scripts/write_gate.py</code> soruları bu sırayla sorar ve ilk "evet"te durur. Write, Edit, MultiEdit ve NotebookEdit araçlarının çağrılarını denetler. Yeni test dosyası serbesttir, var olan test dosyasına yalnız kartın Files listesindeyse yazılabilir.</figcaption>
++    </figure>
++
++    <div class="notes">
++      <div class="note limit">
++        <h3><svg class="ico"><use href="../assets/icons.svg#i-shield"/></svg>Bilinen sınırlar</h3>
++        <ul>
++          <li>write_gate Bash ile yazılanı görmez (<code>echo &gt;</code>, <code>sed -i</code>, <code>tee</code>). bash_gate yalnız korumalı yola giden yönlendirmeyi, <code>cp</code>, <code>mv</code> ve <code>tee</code>'yi yakalar. Bu açığa karşı qa ajanı, diff'te kart ya da <code>docs/delix/**</code> değişikliği görürse bunu bulgu sayar.</li>
++          <li>Hook'lar gönderimin bilinen yollarını kapatır, her yolu kapatmaz. base64 ile kurulmuş bir komut, dosyaya yazılmış bir wrapper ya da gh kullanmayan bir HTTP isteği desen eşleşmesinden geçebilir. README, kullanıcının kendi <code>settings.json</code>'una <code>permissions.deny</code> eklemesini önerir.</li>
++          <li>Claude Code, plugin ajan tanımlarındaki <code>permissionMode</code>, <code>hooks</code> ve <code>mcpServers</code> alanlarını yok sayar. Bu yüzden kısıtlar <code>tools</code> listesinde ve <code>hooks.json</code> dosyasında durur.</li>
++          <li>Kendi <code>.git</code>'ini içeren bir arşivden gelen kartlarla ilgili durum açıktır ve issue #17'de izleniyor. T007, git'in izlediği ve symlink'li kartları kapattı.</li>
++        </ul>
++      </div>
++      <div class="note">
++        <h3><span class="pill ag">0.6.0</span>Triage hook kuralları</h3>
++        <p>bash_gate her oturumda <code>triage.py apply</code>'ı ve <code>triage.py</code>'yi <code>script</code>, <code>expect</code>, <code>unbuffer</code> ya da <code>pty.spawn</code> altında çalıştırmayı reddeder. delixcrew'u hedefleyen <code>gh issue close|reopen|lock|…</code>, <code>gh label</code> ve yazma yapan <code>gh api</code> çağrılarını (<code>-f</code>, <code>--input</code>, <code>graphql</code>, GET dışı metot) da reddeder. write_gate triage kayıt dizinine doğrudan yazmayı reddeder. Feedback'te olduğu gibi yalnız bilinen yollar kapalıdır.</p>
++      </div>
++    </div>
++  </div>
++
++  <div class="hooks">
++    <article class="hook">
++      <h3>write_gate.py</h3>
++      <p class="when">PreToolUse · Write | Edit | MultiEdit | NotebookEdit · timeout 10 sn</p>
++      <dl>
++        <div><dt>Her oturum</dt><dd>Feedback kuyruğuna ve triage kayıt dizinine doğrudan yazım reddedilir.</dd></div>
++        <div><dt>Reviewer</dt><dd>Hiçbir dosyaya yazamaz.</dd></div>
++        <div><dt>Uygulayıcı</dt><dd>Worktree dışı, kart ve <code>docs/delix/**</code> kapalı. Korumalı yola yazmak için yolun Files listesinde olması ve kartta güvenlik onayı satırı gerekir. Var olan test dosyası yalnız Files'taysa açılır.</dd></div>
++      </dl>
++    </article>
++    <article class="hook">
++      <h3>bash_gate.py</h3>
++      <p class="when">PreToolUse · Bash · timeout 60 sn</p>
++      <dl>
++        <div><dt>Her oturum</dt><dd><code>feedback.py send</code> reddedilir; <code>script</code>, <code>expect</code>, <code>unbuffer</code> ve <code>pty.spawn</code> sarmalayıcıları da reddedilir. delixcrew'u hedefleyen <code>gh issue create|comment|edit</code> ve <code>gh api … issues</code> çağrıları da reddedilir. Triage yazma yolları da kapalıdır (yukarıdaki not).</dd></div>
++        <div><dt>Reviewer</dt><dd>security yalnız tarayıcı (gitleaks, semgrep, pip-audit, trivy, …) ve git okuma komutu çalıştırır; diğer reviewer'lar Bash kullanamaz.</dd></div>
++        <div><dt>Uygulayıcı</dt><dd>Korumalı yola shell ile yazma reddedilir. <code>git commit</code> öncesinde staged değişikliklerde <code>gitleaks protect</code> koşar; bulgu varsa commit durur. gitleaks yoksa <code>.delix/warnings.log</code>'a not düşülür.</dd></div>
++      </dl>
++    </article>
++    <article class="hook">
++      <h3>stop_gate.py</h3>
++      <p class="when">Stop · komut başına 540 sn</p>
++      <dl>
++        <div><dt>Yalnız uygulayıcı</dt><dd><code>test_command</code> ve <code>extra_checks</code> koşar, çıktı <code>.delix/test-result.txt</code>'ye yazılır. Biri başarısızsa çıkış kodu 2 olur ve uygulayıcı işi bitiremez.</dd></div>
++        <div><dt>Çıkış yolu</dt><dd>Rapor <code>NEEDS_CONTEXT</code> ya da <code>BLOCKED</code> diyorsa uygulayıcı durabilir. <code>stop_hook_active</code> sonsuz döngüyü önler.</dd></div>
++        <div><dt>Sınır</dt><dd>Yalnız bu yerel komutlar koşar. Kartın doğrulama komutunu ve tam suite'i review'da ekip lideri çalıştırır.</dd></div>
++      </dl>
++    </article>
++  </div>
++  <p class="src"><b>Kaynak:</b> hooks/hooks.json · scripts/write_gate.py · scripts/bash_gate.py · scripts/stop_gate.py · scripts/common.py (card_path) · README.md (Known limits, Remaining risk) · CHANGELOG 0.5.0 (T007) · README.md (Triage) · CHANGELOG 0.6.0</p>
++</section>
++
++<section id="oz-besleme">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-loop"/></svg>Öz-besleme · 0.5.0 ve 0.6.0</div>
++    <h2>Plugin kendi hatasını bildirir, gönderen yine insandır</h2>
++    <p>delixcrew bir projede kendi kusurunu görünce bunu yerel bir taslağa yazar. Taslak temizlenir, kullanıcı tam metni görür ve gönderimi kendi terminalinde yapar. Bulgu GitHub Issue'a dönüşür, triage'dan geçer ve kabul edilirse <code>/delixcrew:start #&lt;n&gt;</code> ile yeniden iş akışına girer.</p>
++  </div>
++  <div class="split">
++    <figure class="dgm">
++      <div class="scroll">
++        <svg class="dg v" viewBox="0 0 460 762" role="img" aria-label="Öz-besleme döngüsü: bulgu feedback.py add ile yerel kuyruğa yazılır, preview deterministik temizlik yapar, kullanıcı tam metni görüp id ile onaylar, Claude gönderemez, kullanıcı kendi terminalinde send çalıştırır, public issue açılır, triage kararından sonra start yalnız accepted issue'yu UNTRUSTED alıntı olarak alır ve döngü yeni bulgulara döner.">
++          <defs>
++            <marker id="fb-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
++            <marker id="fb-p" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahp" d="M0,0 L10,5 L0,10 z"/></marker>
++          </defs>
++          <rect class="ag" x="40" y="10" width="320" height="58" rx="8"/>
++          <text class="t" x="200" y="31" text-anchor="middle">Bulgu</text>
++          <text class="s" x="200" y="48" text-anchor="middle">hook'un yanlış reddi · uygulanamayan adım</text>
++          <text class="s" x="200" y="62" text-anchor="middle">elle aşılan sınır · ya da feedback note</text>
++          <line class="ln" x1="200" y1="68" x2="200" y2="91" marker-end="url(#fb-a)"/>
++          <rect class="box" x="40" y="94" width="320" height="58" rx="8"/>
++          <text class="tm" x="200" y="116" text-anchor="middle">feedback.py add</text>
++          <text class="s" x="200" y="133" text-anchor="middle">~/.claude/delixcrew/feedback/ · ham metin</text>
++          <text class="s" x="200" y="147" text-anchor="middle">varsayılan kapalı · tekrar → count + 1</text>
++          <line class="ln" x1="200" y1="152" x2="200" y2="175" marker-end="url(#fb-a)"/>
++          <rect class="hk" x="40" y="178" width="320" height="76" rx="8"/>
++          <text class="t" x="200" y="199" text-anchor="middle">preview · deterministik temizlik</text>
++          <text class="s" x="200" y="217" text-anchor="middle">host · IP · MAC · e-posta · yol · ad · --terms</text>
++          <text class="s th" x="200" y="232" text-anchor="middle">BLOCKED: sır · gizli karakter · uzun gövde</text>
++          <text class="m" x="200" y="247" text-anchor="middle">sonuç: CLEAN / BLOCKED + hash</text>
++          <line class="ln" x1="200" y1="254" x2="200" y2="277" marker-end="url(#fb-a)"/>
++          <rect class="hu" x="40" y="280" width="320" height="50" rx="8"/>
++          <text class="t tu" x="200" y="301" text-anchor="middle">Kullanıcı tam metni görür</text>
++          <text class="s" x="200" y="318" text-anchor="middle">sohbette "yes F003" · id'siz evet sayılmaz</text>
++          <line class="ln" x1="200" y1="330" x2="200" y2="353" marker-end="url(#fb-a)"/>
++          <rect class="hk" x="40" y="356" width="320" height="44" rx="8"/>
++          <text class="t th" x="200" y="375" text-anchor="middle">Claude gönderemez</text>
++          <text class="s" x="200" y="391" text-anchor="middle">yalnız tek satırlık komutu verir · hook send'i reddeder</text>
++          <line class="ln" x1="200" y1="400" x2="200" y2="423" marker-end="url(#fb-a)"/>
++          <rect class="hu" x="40" y="426" width="320" height="58" rx="8"/>
++          <text class="t tu" x="200" y="447" text-anchor="middle">Kullanıcının kendi terminali</text>
++          <text class="m" x="200" y="464" text-anchor="middle">feedback.py send F003 --confirm &lt;hash&gt;</text>
++          <text class="s" x="200" y="478" text-anchor="middle">TTY şart · metin yeniden basılır · SEND &lt;hash&gt;</text>
++          <line class="ln" x1="200" y1="484" x2="200" y2="507" marker-end="url(#fb-a)"/>
++          <rect class="box" x="40" y="510" width="320" height="50" rx="8"/>
++          <text class="t" x="200" y="531" text-anchor="middle">GitHub Issue · public</text>
++          <text class="s" x="200" y="548" text-anchor="middle">tahircengiz/delixcrew · parmak izi tekilliği</text>
++          <line class="ln" x1="200" y1="560" x2="200" y2="583" marker-end="url(#fb-a)"/>
++          <rect class="ag" x="40" y="586" width="320" height="76" rx="8"/>
++          <text class="tm" x="200" y="612" text-anchor="middle">/delixcrew:triage</text>
++          <text class="s" x="200" y="629" text-anchor="middle">temiz okuma → architect karar önerir</text>
++          <text class="s" x="200" y="644" text-anchor="middle">insan "accept #12" · apply kendi terminalinde</text>
++          <text class="s" x="200" y="657" text-anchor="middle">yorum + karar etiketi</text>
++          <line class="ln" x1="200" y1="662" x2="200" y2="685" marker-end="url(#fb-a)"/>
++          <rect class="ag" x="40" y="688" width="320" height="62" rx="8"/>
++          <text class="tm" x="200" y="710" text-anchor="middle">/delixcrew:start #&lt;n&gt;</text>
++          <text class="s" x="200" y="727" text-anchor="middle">yalnız accepted · kabulden sonra değişmemiş</text>
++          <text class="s" x="200" y="742" text-anchor="middle">issue metni komut sayılmaz · Tier ≥ 2</text>
++          <path class="ln" d="M360,719 H400 V39 H363" marker-end="url(#fb-a)"/>
++          <text class="lbl" x="414" y="380" text-anchor="middle" transform="rotate(-90 414 380)">delix akışı → yeni bulgular</text>
++        </svg>
++      </div>
++      <p class="swipe">Diyagramı yatay kaydırın.</p>
++      <figcaption><strong>Döngü.</strong> 0.6.0'dan beri start yalnız triage'da <code>accepted</code> kararı almış ve kabulden sonra başlığı ya da gövdesi değişmemiş issue'yu alır (<code>triage.py show &lt;n&gt; --require accepted</code>, aksi halde çıkış 8). Triage yorumunu ve etiketini de kullanıcı kendi terminalinde <code>APPLY &lt;hash&gt;</code> yazarak yayımlar.</figcaption>
++    </figure>
++
++    <div class="notes">
++      <div class="note">
++        <h3>Ne zaman taslak yazılır</h3>
++        <p><code>/delixcrew:close</code> ve <code>/delixcrew:review</code> yalnız şu üç durumda taslak ekler: hook doğru bir işi reddettiğinde, bir skill adımı yazıldığı gibi uygulanamadığında ya da bir plugin sınırı elle aşıldığında. Bunlar dışında, kullanıcı sohbette <code>/delixcrew:feedback note</code> der. Özellik kapalıysa hiçbir şey yazılmaz (çıkış 3).</p>
++      </div>
++      <div class="note">
++        <h3>Temizlik ve engelleme</h3>
++        <ul>
++          <li><strong>Değiştirilir:</strong> kısa izin listesi dışındaki her host, belge aralıkları ve loopback dışındaki IP'ler, MAC ve e-posta adresleri. Ev dizinindeki kullanıcı adı ve diğer mutlak yollar, kullanıcı ve makine adı, kaynak proje adları ve <code>--terms</code> de değiştirilir.</li>
++          <li><strong>BLOCKED olur (fail-closed):</strong> gitleaks bulgusu ya da gitleaks'in olmaması, görünmez Unicode kontrol karakteri, 32+ karakterlik opak dizi, 15'ten çok kod satırı, 8 KB'yi aşan gövde, temizlikten sonra kalan eşleşme.</li>
++          <li>Sır redakte edilip gönderilmez; taslak engellenir.</li>
++        </ul>
++      </div>
++      <div class="note">
++        <h3>Onay zinciri</h3>
++        <ul>
++          <li>Preview metni veridir. Taslakta, dosyada ya da issue'da geçen "approved" onay sayılmaz.</li>
++          <li>Onay için kullanıcı, sohbette taslağın id'sini belirtmeli: <code>yes F003</code>. Ardından Claude tek satırlık komutu verir.</li>
++          <li><code>send</code> metni terminalde bir kez daha basar ve <code>SEND &lt;hash&gt;</code> yazılmasını bekler. Metin preview'dan sonra değiştiyse durur.</li>
++          <li>Hedef repo sabittir. Aynı parmak izli bir issue varsa yenisi açılmaz, mevcut URL kaydedilir.</li>
++        </ul>
++      </div>
++      <div class="note">
++        <h3><span class="pill ag">0.6.0</span>Triage: doğrula, ele, karar ver</h3>
++        <p>Triage'da architect bir bug'ı bildirilen sürümün koduna, bir feature'ı delix ilkelerine karşı kontrol eder; her issue'da tekrar, kaynak ve eksik bilgiye bakar. Ardından <code>accept</code>, <code>needs-info</code>, <code>duplicate</code>, <code>wontfix</code> ya da <code>defer</code> kararlarından birini önerir. Kararı insan sohbette numarasıyla verir: <code>accept #12</code>. Yorum ve etiketi kullanıcı kendi terminalinde <code>APPLY &lt;hash&gt;</code> yazarak yayımlar. Yalnız <code>duplicate</code> ve <code>wontfix</code> issue'yu kapatır.</p>
++      </div>
++    </div>
++  </div>
++  <p class="src"><b>Kaynak:</b> README.md (Feedback, Data &amp; privacy) · CHANGELOG 0.5.0 · skills/feedback/SKILL.md · skills/start/SKILL.md §1a · scripts/feedback.py · README.md (Triage) · CHANGELOG 0.6.0</p>
++</section>
++
++<section id="kart">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-card"/></svg>Kartın yaşam döngüsü</div>
++    <h2>Bir kart yedi durumdan birindedir</h2>
++    <p>Durum değerleri <code>STATE.json.status_values</code>'tan alındı: <code>open</code>, <code>in_progress</code>, <code>in_review</code>, <code>fixing</code>, <code>accepted</code>, <code>rejected</code>, <code>escalated</code>. Geçişleri dispatch, implement ve review skill'leri yazar.</p>
++  </div>
++  <figure class="dgm">
++    <div class="scroll">
++      <svg class="dg w600" viewBox="0 0 690 300" role="img" aria-label="Kart durum makinesi: open, dispatch ile in_progress, PR ve rapor ile in_review, P0 veya P1 bulguyla fixing ve geri in_review, tur sınırı aşılınca escalated, Kapı 2 merge ile accepted; rejected durum listesinde var ama geçişi tanımlı değil.">
++        <defs>
++          <marker id="sm-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
++          <marker id="sm-h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="ahh" d="M0,0 L10,5 L0,10 z"/></marker>
++        </defs>
++        <rect class="box" x="20" y="40" width="110" height="40" rx="20"/>
++        <text class="tm" x="75" y="64" text-anchor="middle">open</text>
++        <rect class="ag" x="200" y="40" width="110" height="40" rx="20"/>
++        <text class="tm" x="255" y="64" text-anchor="middle">in_progress</text>
++        <rect class="ag" x="380" y="40" width="110" height="40" rx="20"/>
++        <text class="tm" x="435" y="64" text-anchor="middle">in_review</text>
++        <rect class="ok" x="560" y="40" width="110" height="40" rx="20"/>
++        <text class="tm tok" x="615" y="64" text-anchor="middle">accepted</text>
++        <rect class="ag" x="380" y="200" width="110" height="40" rx="20"/>
++        <text class="tm" x="435" y="224" text-anchor="middle">fixing</text>
++        <rect class="hu" x="560" y="200" width="110" height="40" rx="20"/>
++        <text class="tm tu" x="615" y="224" text-anchor="middle">escalated</text>
++        <rect class="pl" x="20" y="200" width="110" height="40" rx="20"/>
++        <text class="tm tp" x="75" y="224" text-anchor="middle">rejected</text>
++        <text class="s" x="75" y="260" text-anchor="middle">listede var; geçişi</text>
++        <text class="s" x="75" y="274" text-anchor="middle">skill'lerde tanımlı değil</text>
++
++        <line class="ln" x1="130" y1="60" x2="197" y2="60" marker-end="url(#sm-a)"/>
++        <text class="lbl" x="165" y="52" text-anchor="middle">dispatch</text>
++        <line class="ln" x1="310" y1="60" x2="377" y2="60" marker-end="url(#sm-a)"/>
++        <text class="lbl" x="345" y="52" text-anchor="middle">PR + rapor</text>
++        <line class="ln h" x1="490" y1="60" x2="557" y2="60" marker-end="url(#sm-h)"/>
++        <text class="lh" x="525" y="52" text-anchor="middle">Kapı 2</text>
++        <text class="lh" x="525" y="78" text-anchor="middle">merge</text>
++        <line class="ln" x1="415" y1="80" x2="415" y2="197" marker-end="url(#sm-a)"/>
++        <text class="lbl" x="407" y="135" text-anchor="end">P0/P1 bulgu</text>
++        <text class="lbl" x="407" y="150" text-anchor="end">rounds + 1</text>
++        <line class="ln" x1="455" y1="200" x2="455" y2="83" marker-end="url(#sm-a)"/>
++        <text class="lbl" x="463" y="135">düzeltme commit'i</text>
++        <text class="lbl" x="463" y="150">kapsamlı yeniden inceleme</text>
++        <line class="ln" x1="490" y1="220" x2="557" y2="220" marker-end="url(#sm-a)"/>
++        <text class="lbl" x="524" y="212" text-anchor="middle">tur &gt; 3</text>
++        <path class="ln d" d="M615,240 V270 H435 V243" marker-end="url(#sm-a)"/>
++        <text class="lbl" x="525" y="288" text-anchor="middle">kullanıcı ek tur onaylar (ör. T002)</text>
++      </svg>
++    </div>
++    <p class="swipe">Diyagramı yatay kaydırın.</p>
++    <figcaption><strong>Durum makinesi.</strong> Uygulayıcı raporu ayrı bir sözleşme taşır: <code>DONE</code>, <code>DONE_WITH_CONCERNS</code>, <code>NEEDS_CONTEXT</code> ya da <code>BLOCKED</code>. Son ikisinde review açılmaz; ekip lideri cevap verir ya da kullanıcıya götürür. qa'nın <code>REJECT</code> kararı bir review sonucudur; kartı <code>rejected</code> durumuna taşıyan bir adım skill metinlerinde yok.</figcaption>
++  </figure>
++
++  <div class="split" style="margin-top:18px">
++    <div class="tbl">
++      <table>
++        <thead><tr><th>Kart</th><th>Rol</th><th>Tier</th><th>PR</th><th>Tur</th></tr></thead>
++        <tbody>
++          <tr><th>T001</th><td>backend</td><td class="num">3</td><td class="num">#6</td><td class="num"><span class="bar" style="width:14px"></span> 1</td></tr>
++          <tr><th>T002</th><td>backend</td><td class="num">3</td><td class="num">#4</td><td class="num"><span class="bar over" style="width:56px"></span> 4</td></tr>
++          <tr><th>T003</th><td>docs</td><td class="num">3</td><td class="num">#5</td><td class="num">0</td></tr>
++          <tr><th>T004</th><td>devops</td><td class="num">3</td><td class="num">#18</td><td class="num">0</td></tr>
++          <tr><th>T005</th><td>docs</td><td class="num">1</td><td class="num">#19</td><td class="num"><span class="bar" style="width:28px"></span> 2</td></tr>
++          <tr><th>T006</th><td>docs</td><td class="num">2</td><td class="num">#15</td><td class="num">0</td></tr>
++          <tr><th>T007</th><td>backend</td><td class="num">3</td><td class="num">#16</td><td class="num"><span class="bar" style="width:28px"></span> 2</td></tr>
++          <tr><th>T008</th><td>backend</td><td class="num">3</td><td class="num">#20</td><td class="num"><span class="bar" style="width:14px"></span> 1</td></tr>
++          <tr><th>T009</th><td>devops</td><td class="num">2</td><td class="num">#21</td><td class="num"><span class="bar" style="width:28px"></span> 2</td></tr>
++        </tbody>
++      </table>
++    </div>
++    <div class="notes">
++      <div class="note">
++        <h3>Gerçek bir kart: T002 hook kuralları</h3>
++        <p>Kademe 3, backend, wave 1. Dispatch'ten önce karta güvenlik onayı satırı (Approved) yazıldı ve PR #4 açıldı. Review dört tur sürdü: sınır 3'tü, dördüncü turu kullanıcı onayladı. Sonra Kapı 2'de merge edildi (<code>c43516d</code>) ve kart <code>accepted</code> oldu. PR açılışından merge'e 48 dakika geçti.</p>
++      </div>
++      <div class="note">
++        <h3>0.5.0 öz-besleme özeti</h3>
++        <p>4 wave'de 9 kart, hepsi <code>accepted</code>. 6'sı Tier 3, toplam 12 inceleme turu, 3 kart sıfır turla geçti. Kullanıcı kapılar dışında kart başına 1,6 (ilk tur) ve 1,5 (rev 3) kez araya girdi; hedef en çok 5. Oturum maliyeti USD olarak ölçülmedi, yalnız token sayıldı.</p>
++      </div>
++      <div class="note">
++        <h3><span class="pill ag">0.6.0</span>Triage kartları</h3>
++        <p>Wave 1: T010 (betik, 6 tur, PR #24), T011 (hook, 2 tur, PR #23) ve T012 (skill, 2 tur, PR #22). Wave 2: T013 (doküman, CI, sürüm, PR #27) ve T014 (T010'un 6. turundan çıkan karakter engelleri, PR #28). Beşi de Tier 3, güvenlik onaylı ve main'e merge edildi; 0.6.0 T013 ile çıktı.</p>
++      </div>
++    </div>
++  </div>
++  <p class="src"><b>Kaynak:</b> docs/delix/archive/0.5.0-self-feeding/STATE.json · docs/delix/metrics.md · STATUS.md K87 · docs/delix/STATE.json (origin/main) · templates/report.md · skills/review/SKILL.md §1, §3</p>
++</section>
++
++<section id="sozluk">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-book"/></svg>Sözlük</div>
++    <h2>Kısa sözlük</h2>
++  </div>
++  <dl class="gloss">
++    <div><dt>card <span>kart</span></dt><dd>Tek iş birimidir ve <code>docs/delix/tasks/T&lt;nnn&gt;-&lt;slug&gt;.md</code> dosyasında bulunur. Hedef, Files listesi, Interfaces, doğrulama komutu ve rapor sözleşmesi içerir. Files listeleri kartlar arasında çakışmaz.</dd></div>
++    <div><dt>wave <span>dalga</span></dt><dd>Birlikte açılan kart grubudur ve en çok <code>max_parallel</code> (3) kart içerir. Aynı dosyaya dokunan ya da başka bir karta bağımlı kart sonraki wave'e gider. <code>STATE.json.waves</code>'te durur.</dd></div>
++    <div><dt>tier <span>kademe</span></dt><dd>Kapıları belirleyen risk ekseni (1–3). Dosya yoluna, eyleme ve dış içeriğe bakar. Boydan (S/M/L, süreç ağırlığı) ayrı bir eksendir.</dd></div>
++    <div><dt>gate <span>kapı</span></dt><dd>İnsanın karar verdiği nokta. Kapı 1'de spec ya da kart onaylanır, Kapı 2'de PR merge edilir. Tier 3 kartta ayrıca güvenlik onayı gerekir. Test, CI ve gitleaks gibi otomatik kontroller de birer kapıdır (deterministik kapı): kararı makine verir ve bunlar LLM incelemesinden önce koşar.</dd></div>
++    <div><dt>drift <span>sapma</span></dt><dd>Spec ile merge edilen kod arasındaki fark: uygulanmamış REQ'ler ya da spec'te olmayan davranış. Close'ta architect arar, bulgular STATUS'un açık işlerine yazılır.</dd></div>
++    <div><dt>escalation <span>yükseltme</span></dt><dd>İnceleme turu <code>max_review_rounds</code> (3) sınırını aşınca kart <code>escalated</code> olur. Kullanıcı seçer: daha güçlü model, kapsamı daraltmak ya da kabul.</dd></div>
++    <div><dt>worktree</dt><dd>Uygulayıcının kart dalındaki kendi git çalışma ağacıdır. Diff ve uzak testler, dizinden değil dalın commit SHA'sından alınır.</dd></div>
++    <div><dt>K kararı</dt><dd>Numaralı karar kaydı (K1, K2, …). STATUS ve SPEC'te tutulur, "geri alınır" ya da "tek yön" olarak işaretlenir.</dd></div>
++  </dl>
++  <p class="src"><b>Kaynak:</b> templates/task-card.md · skills/dispatch/SKILL.md §2 · skills/start/SKILL.md §2 · skills/close/SKILL.md §3 · skills/review/SKILL.md §1, §3 · skills/spec/SKILL.md (Rules)</p>
++</section>
++
++<footer>
++  <p>delixcrew 0.6.0 · durum 2026-11-03. İçerik repo dosyalarından derlendi; her bölümün altında kaynağı yazar.</p>
++  <p>Kaynak kod ve issue'lar: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="../index.html" hreflang="en">English</a></p>
++</footer>
++</main>
++</body>
++</html>
+diff --git a/site/tr/usage.html b/site/tr/usage.html
+new file mode 100644
+index 0000000..fea6012
+--- /dev/null
++++ b/site/tr/usage.html
+@@ -0,0 +1,245 @@
++<!doctype html>
++<html lang="tr">
++<head>
++<meta charset="utf-8">
++<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
++<title>delixCrew nasıl kullanılır</title>
++<meta name="description" content="delixCrew kurulumu, ilk iş, komutlar, proje dosyaları, feedback ve bilinen sınırlar.">
++<meta name="color-scheme" content="light dark">
++<link rel="stylesheet" href="../assets/style.css">
++<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
++<link rel="alternate" hreflang="en" href="../usage.html">
++</head>
++<body>
++<a class="skip" href="#main">İçeriğe geç</a>
++<header class="topbar">
++  <div class="wrap">
++    <a class="brand" href="index.html">delix<span>Crew</span></a>
++    <nav class="pages" aria-label="Sayfalar">
++      <a href="index.html">Nedir</a>
++      <a href="usage.html" aria-current="page">Nasıl kullanılır</a>
++      <a href="https://github.com/tahircengiz/delixcrew"><svg class="ico" aria-hidden="true"><use href="../assets/icons.svg#i-code"/></svg>GitHub</a>
++    </nav>
++    <a class="lang" href="../usage.html" hreflang="en" lang="en" title="English">EN</a>
++  </div>
++</header>
++<main id="main" class="wrap">
++<header class="hero sm">
++  <div class="kicker"><span class="ver" data-version="0.6.0">delixcrew 0.6.0</span><span>Kurulum ve günlük kullanım</span></div>
++  <h1>Nasıl kullanılır</h1>
++  <p class="lede">delixCrew bir Claude Code plugin'idir. Kurduktan sonra işi tek bir istekle başlatırsın. Ekip lideri sonraki adımı her seferinde önerir ve iki kapıda senin kararını bekler. Bu sayfa kurulumu, ilk işi, komutları, projede oluşan dosyaları ve bilinen sınırları anlatır. Sistemin nasıl çalıştığı <a href="index.html">Nedir</a> sayfasında.</p>
++</header>
++
++<nav class="nav" aria-label="Bölümler">
++  <a href="#gereksinimler">Gereksinimler</a><a href="#kurulum">Kurulum</a><a href="#ilk-is">İlk iş</a><a href="#komutlar">Komutlar</a><a href="#dosyalar">Proje dosyaları</a><a href="#feedback">Feedback</a><a href="#board">delix-board</a><a href="#sinirlar">Sınırlar</a>
++</nav>
++
++<section id="gereksinimler">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-grid"/></svg>Gereksinimler</div>
++    <h2>Üç zorunlu araç, iki isteğe bağlı</h2>
++  </div>
++  <div class="tbl">
++    <table>
++      <thead><tr><th>Araç</th><th>Gerekli mi</th><th>Neden</th></tr></thead>
++      <tbody>
++        <tr><th>Claude Code</th><td><span class="pill ag">zorunlu</span></td><td>Plugin marketplace desteği olan bir sürüm. 2.1.309 ile test edildi; daha eski sürümler test edilmedi.</td></tr>
++        <tr><th><code>python3</code></th><td><span class="pill ag">zorunlu</span></td><td>Hook'lar Python betiğidir (3.9 ile test edildi) ve hata verince işlemi engeller. <code>python3</code> PATH'te yoksa her oturumda Write, Edit ve Bash engellenir.</td></tr>
++        <tr><th><code>git</code></th><td><span class="pill ag">zorunlu</span></td><td>Uygulayıcı oturumları kart dallarında, ayrı worktree'lerde çalışır.</td></tr>
++        <tr><th><code>gh</code></th><td><span class="pill">isteğe bağlı</span></td><td>Giriş yapılmış GitHub CLI; PR açmak ve okumak için. Yoksa commit'ler kart dalında kalır ve rapor <code>**PR:** none</code> der.</td></tr>
++        <tr><th><code>gitleaks</code></th><td><span class="pill">isteğe bağlı</span></td><td>Her uygulayıcı commit'inden önce sır taraması. Yoksa <code>.delix/warnings.log</code>'a not düşülür. Feedback göndermek için zorunludur.</td></tr>
++      </tbody>
++    </table>
++  </div>
++  <p class="src"><b>Kaynak:</b> README.md (Requirements) · hooks/hooks.json</p>
++</section>
++
++<section id="kurulum">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-down"/></svg>Kurulum</div>
++    <h2>İki komutla kur, iki komutla güncelle</h2>
++    <p>Kurulum hem masaüstü uygulamasında hem terminalde çalışır; <code>--plugin-dir</code> gerekmez. GitHub SSH anahtarı da gerekmez: <code>marketplace add</code> önce SSH dener, olmazsa HTTPS'e geçer.</p>
++  </div>
++  <div class="grid2">
++    <ol class="steps">
++      <li><h3>Marketplace'i ekle</h3><pre><code>claude plugin marketplace add tahircengiz/delixcrew</code></pre></li>
++      <li><h3>Plugin'i kur</h3><pre><code>claude plugin install delixcrew@delixcrew</code></pre><p>Yerel bir klondan kurmak için önce <code>claude plugin marketplace add /yol/delix</code>, sonra aynı <code>install</code> komutu.</p></li>
++    </ol>
++    <div class="stack">
++      <div class="note">
++        <h3><svg class="ico"><use href="../assets/icons.svg#i-loop"/></svg>Güncelleme</h3>
++        <pre><code>claude plugin marketplace update delixcrew
++claude plugin update delixcrew@delixcrew</code></pre>
++        <p>Ardından Claude'u yeniden başlat. Kurulum, plugin'i Claude'un önbelleğine sürüm başına bir klasör olarak kopyalar. Bu yüzden güncelleme yalnız <code>plugin.json</code>'daki sürüm değişince gelir; tek başına <code>git pull</code> yetmez.</p>
++      </div>
++      <div class="note limit">
++        <h3><svg class="ico"><use href="../assets/icons.svg#i-code"/></svg>Yerel değişikliği denemek</h3>
++        <p>Sürüm artırmadan bir klasörü yerinde okutmak için: <code>claude --plugin-dir /yol/delix</code>. 0.4.0'dan önce <code>delix</code> adıyla kurduysan geçiş adımları <a href="https://github.com/tahircengiz/delixcrew/blob/main/CHANGELOG.md#040--2026-11-03">CHANGELOG 0.4.0</a>'da.</p>
++      </div>
++    </div>
++  </div>
++  <p class="src"><b>Kaynak:</b> README.md (Installation)</p>
++</section>
++
++<section id="ilk-is">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-flow"/></svg>İlk iş</div>
++    <h2>Bir istekten merge'e: adım adım</h2>
++    <p>Komutları projenin ana checkout'unda, ekip lideri oturumunda yazarsın. Ekip lideri her adımın sonunda bir sonrakini önerir; sıra aşağıdaki gibidir. Kehribar renkli adımlar senin kararındır.</p>
++  </div>
++  <ol class="steps">
++    <li><h3><code>/delixcrew:start &lt;istek&gt;</code></h3><p>Ekip lideri <code>CLAUDE.md</code>, <code>STATUS.md</code> ve <code>docs/delix/</code>'i okur. <strong>Boy</strong> (S/M/L, süreç ağırlığı) ve <strong>kademe</strong> (1/2/3, risk) önerir ve <code>docs/delix/</code> klasörünü kurar. S için tek bir kart yazılır. İyi tarif edilmiş S ya da M boyunda, en çok Tier 2 bir iş için tam akış yerine tek oturum ve <code>/delixcrew:verify</code> önerilir.</p></li>
++    <li><h3><code>/delixcrew:spec</code> · boy M ve L</h3><p>Grill her seferinde tek soru sorar ve her soruya önerisini ekler. Sonuç <code>docs/delix/SPEC.md</code>'dir: gereksinimler <code>SHALL</code> ve <code>WHEN/THEN</code> biçiminde. Spec'i architect inceler, Tier 3'te security de. UI işinde spec <code>DESIGN.md</code>'ye ya da reponun token dosyasına bağlanır; ikisi de yoksa <code>DESIGN.md</code> üretilir.</p></li>
++    <li class="gate"><h3>Kapı 1 · spec onayı</h3><p>Spec'i (S'de kartı) sen onaylarsın. Tier 3 kartlar için ayrıca sohbette açıkça "evet" dersin; ekip lideri kartın başına <code>**🔐 Approved:** &lt;tarih&gt; &lt;kim&gt;</code> satırını yazar ve main'e commit eder.</p></li>
++    <li><h3><code>/delixcrew:dispatch</code></h3><p>architect kartları ve wave planını yazar, Files listelerinin çakışmadığını denetler. Her kart için bir dispatch prompt'u (<code>docs/delix/tasks/T&lt;nnn&gt;.dispatch.md</code>) üretilir ve oturumun nasıl açılacağı söylenir. Aynı anda en çok 3 kart çalışır. Tier 1–2 kartlar terminalde headless <code>claude -p</code> ile, Tier 3 kartlar etkileşimli bir oturumda açılır.</p></li>
++    <li><h3><code>/delixcrew:implement &lt;kart&gt;</code> · uygulayıcı oturumu</h3><p>Dispatch prompt'u bu skill'i çağırır; elle yazman gerekmez. Uygulayıcı önce başarısız bir test yazar, yalnız kartın Files listesine dokunur, doğrulama komutunu koşar, PR açar ve <code>.delix/report.md</code>'yi doldurur. Stop hook, testler geçmeden turu kapatmaz.</p></li>
++    <li><h3><code>/delixcrew:review &lt;kart&gt;</code></h3><p>Önce deterministik kapılar: test sonucu, CI, gitleaks. Sonra sıfır bağlamla qa, Tier 2 ve üstünde security de. Yalnız ciddi bulgular (P0/P1) düzeltme turu açar; en çok 3 tur, sonra karar sende.</p></li>
++    <li class="gate"><h3>Kapı 2 · merge</h3><p>PR'ı sen merge edersin; ekip lideri <code>gh pr merge</code> çalıştırmaz. Kart <code>accepted</code> olur ve sıradaki wave açılır.</p></li>
++    <li><h3><code>/delixcrew:close</code></h3><p>Bütün kartlar merge edilince: STATUS ve CHANGELOG, kart başına maliyet ve tur metrikleri, spec ile kod arasındaki sapma kontrolü, worktree temizliği. Çıkan dersler CLAUDE.md'ye ya da hafızaya yalnız senin onayınla yazılır.</p></li>
++  </ol>
++  <div class="callout ag" style="margin-top:18px">
++    <p><strong>Kısa yol: <code>/delixcrew:verify &lt;dal|commit|dizin&gt;</code>.</strong> Kartsız yapılmış bir işi yalnız doğrular. Sırasıyla gitleaks, yerel testler, uzak ve izole bir unit test (<code>delix.json</code>'da <code>verify</code> bloğu varsa), istenirse <code>--full</code> ile tam suite koşar. Sonra qa (Tier 2 ve üstünde security de) tek geçişte inceler; düzeltme turu yoktur. Sonuç <code>docs/delix/verifications/&lt;tarih&gt;-&lt;ad&gt;.md</code> raporuna ACCEPT ya da FIX olarak yazılır.</p>
++  </div>
++  <p class="src"><b>Kaynak:</b> README.md (Flow) · skills/start, spec, dispatch, implement, review, close, verify (SKILL.md)</p>
++</section>
++
++<section id="komutlar">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-term"/></svg>Komutlar</div>
++    <h2>Bütün komutlar tek tabloda</h2>
++    <p>Skill'ler kullanıcının dilinde cevap verir. Etiketler, durum değerleri ve karar sözcükleri (<code>ACCEPT</code>, <code>FIX</code>, <code>accepted</code>…) İngilizce kalır.</p>
++  </div>
++  <div class="tbl">
++    <table class="mx">
++      <thead><tr><th>Komut</th><th>Ne zaman</th><th>Ne yapar</th></tr></thead>
++      <tbody>
++        <tr><th><code>/delixcrew:start</code></th><td>Her yeni istek</td><td>Bağlamı okur, boy ve kademe önerir, <code>docs/delix/</code>'i kurar; S için tek kart.</td></tr>
++        <tr><th><code>/delixcrew:spec</code></th><td>Boy M ve L</td><td>Grill ile <code>SPEC.md</code>; architect (+ Tier 3'te security) incelemesi; Kapı 1.</td></tr>
++        <tr><th><code>/delixcrew:dispatch</code></th><td>Kapı 1'den sonra</td><td>Kartlar, wave planı, çakışma kontrolü, dispatch prompt'ları.</td></tr>
++        <tr><th><code>/delixcrew:implement</code></th><td>Uygulayıcı oturumunda</td><td>Önce test, yalnız Files, PR ve rapor. Dispatch prompt'u çağırır.</td></tr>
++        <tr><th><code>/delixcrew:review</code></th><td>PR açılınca</td><td>Deterministik kapılar, qa (+ security), en çok 3 düzeltme turu; Kapı 2.</td></tr>
++        <tr><th><code>/delixcrew:close</code></th><td>Bütün kartlar merge edilince</td><td>STATUS, CHANGELOG, metrikler, sapma kontrolü, worktree temizliği.</td></tr>
++        <tr><th><code>/delixcrew:verify</code></th><td>Kartsız iş</td><td>Yalnız doğrular: gitleaks, testler, tek geçiş inceleme; ACCEPT ya da FIX raporu.</td></tr>
++        <tr><th><code>/delixcrew:status</code></th><td>Her zaman</td><td>Salt-okunur pano: wave, kart, rol, tier, durum, tur, PR, maliyet, son rapor, bekleyen kapı. <code>--write</code> ile <code>docs/delix/BOARD.md</code> (commit edilmez). <code>-p</code> altında da çalışır.</td></tr>
++        <tr><th><code>/delixcrew:feedback</code></th><td>Plugin hata yapınca</td><td><code>note</code>: sorunu yerel taslağa yazar. <code>review</code>: taslakları gönderilecekleri haliyle gösterir. Kendisi hiçbir şey göndermez.</td></tr>
++        <tr><th><code>/delixcrew:triage</code></th><td>Yalnız delixcrew reposunda, issue gelince</td><td>Issue'ları temizleyerek okur; architect bir karar önerir. Kararı sen sohbette numarasıyla verirsin (<code>accept #12</code>); yorum ve etiketi kendi terminalinde yayımlarsın. Yalnız triage'da kabul edilen issue <code>/delixcrew:start #&lt;n&gt;</code> ile işe dönüşür.</td></tr>
++      </tbody>
++    </table>
++  </div>
++  <p class="src"><b>Kaynak:</b> README.md (Flow) · skills/*/SKILL.md (description) · README.md (Triage)</p>
++</section>
++
++<section id="dosyalar">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-doc"/></svg>Proje dosyaları</div>
++    <h2>delixCrew projende neyi oluşturur</h2>
++    <p>Ortak hafıza dosyalardadır. Ana dalda <code>docs/delix/</code>, her uygulayıcı worktree'sinde <code>.delix/</code> bulunur.</p>
++  </div>
++  <div class="grid2">
++    <div class="note">
++      <h3>Ana dalda · <code>docs/delix/</code></h3>
++      <ul>
++        <li><code>delix.json</code>: test komutu, korumalı yollar, test yolları, paralel kart sınırı, <code>verify</code> bloğu</li>
++        <li><code>SPEC.md</code>: onaylı tech spec</li>
++        <li><code>tasks/T&lt;nnn&gt;-&lt;slug&gt;.md</code>: kartlar ve dispatch prompt'ları</li>
++        <li><code>STATE.json</code>: kart durumları, wave'ler, <code>verifications</code> kayıtları</li>
++        <li><code>verifications/&lt;tarih&gt;-&lt;ad&gt;.md</code>: verify raporları</li>
++        <li><code>BOARD.md</code>: yalnız istenince üretilir, <code>.gitignore</code>'da</li>
++      </ul>
++    </div>
++    <div class="note">
++      <h3>Uygulayıcı worktree'sinde · <code>.delix/</code></h3>
++      <ul>
++        <li><code>card</code>: hook'ları açar; yerel olmalı, git'te izlenmez</li>
++        <li><code>report.md</code>: <code>DONE</code>, <code>DONE_WITH_CONCERNS</code>, <code>NEEDS_CONTEXT</code> ya da <code>BLOCKED</code></li>
++        <li><code>test-result.txt</code>: Stop hook'un test çıktısı</li>
++        <li><code>evidence/</code>: doğrulama kanıtları</li>
++      </ul>
++    </div>
++  </div>
++  <figure class="dgm" style="margin-top:18px">
++    <pre><code>{
++  "test_command": "pytest -q",
++  "extra_checks": ["ruff check .", "mypy ."],
++  "protected_paths": ["auth/**", ".env*", ".github/workflows/**", "*.lock", "docs/delix/delix.json"],
++  "test_paths": ["tests/**"],
++  "max_parallel": 3,
++  "max_review_rounds": 3,
++  "default_branch": "main"
++}</code></pre>
++    <figcaption><strong><code>docs/delix/delix.json</code>, kısaltılmış örnek.</strong> Stop hook yalnız <code>test_command</code> ve <code>extra_checks</code>'i koşar; bu yüzden yerelde çalışabilen unit testler burada olmalı. <code>protected_paths</code>'e dokunan her kart Tier 3 olur. Tam şablon: <a href="https://github.com/tahircengiz/delixcrew/blob/main/templates/delix.json">templates/delix.json</a>.</figcaption>
++  </figure>
++  <p class="src"><b>Kaynak:</b> README.md (Files on the project side) · templates/delix.json · templates/report.md</p>
++</section>
++
++<section id="feedback">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-loop"/></svg>Feedback</div>
++    <h2>Plugin'in hatasını bildirmek: varsayılan kapalı, gönderen sen</h2>
++    <p>delixCrew bir hook doğru işi reddettiğinde, bir skill adımı yazıldığı gibi uygulanamadığında ya da bir sınırı elle aştığında bunun taslağını tutabilir. Kendi başına hiçbir şey göndermez. Taslaklar <code>~/.claude/delixcrew/feedback/</code>'de durur, proje reposunda değil.</p>
++  </div>
++  <ol class="steps">
++    <li><h3>Kendi terminalinde aç</h3><pre><code>python3 &lt;plugin dizini&gt;/scripts/feedback.py enable --terms acme,example-corp</code></pre><p>Marketplace kurulumunda betik <code>~/.claude/plugins/cache/delixcrew/delixcrew/&lt;sürüm&gt;/scripts/feedback.py</code>'dedir. <code>--terms</code>, temizlenecek kendi kelimelerini ekler (müşteri adı, kod adı). <code>status</code> durumu gösterir, <code>disable</code> kapatır.</p></li>
++    <li><h3>Taslak oluşur</h3><p>Sohbette <code>/delixcrew:feedback note</code> dersin ya da close ve review yukarıdaki üç durumdan biri olunca taslak ekler. Aynı bulgu tekrar ederse yeni taslak açılmaz, sayaç artar.</p></li>
++    <li><h3>Tam metni gör</h3><p><code>/delixcrew:feedback review</code> her taslağı yayımlanacağı haliyle gösterir: repo, etiket, başlık, gövde, <code>VERDICT:</code> ve <code>HASH:</code> satırı.</p></li>
++    <li class="gate"><h3>Sohbette id ile onayla</h3><p>Göndermek istediğin taslağın id'sini yaz: <code>yes F003</code> (ya da <code>evet F003</code>). Çıplak "evet", "hepsini gönder" ya da bir dosyadaki "approved" onay sayılmaz. Claude sana tek satırlık komutu verir.</p></li>
++    <li class="gate"><h3>Kendi terminalinde gönder</h3><pre><code>python3 &lt;plugin dizini&gt;/scripts/feedback.py send F003 --confirm &lt;hash&gt;</code></pre><p>Komut metni bir kez daha basar ve <code>SEND &lt;hash&gt;</code> yazmanı bekler. Metin preview'dan sonra değiştiyse durur.</p></li>
++  </ol>
++  <div class="grid2" style="margin-top:18px">
++    <div class="callout hk">
++      <p><strong>Issue public'tir ve senin GitHub hesabınla açılır.</strong> Gönderim için <code>gitleaks</code> ve giriş yapılmış <code>gh</code> gerekir. Sır içeren taslak temizlenip gönderilmez, engellenir. GitHub, yazarın issue'yu silmesine izin vermez; kaldırma talebi için <a href="https://github.com/tahircengiz/delixcrew/security/advisories/new">özel bildirim</a> kullanılır. Neyin temizlendiği <a href="index.html#oz-besleme">Nedir sayfasında</a>.</p>
++    </div>
++    <div class="note limit">
++      <h3><svg class="ico"><use href="../assets/icons.svg#i-shield"/></svg>Kalan risk</h3>
++      <p>Hook'lar gönderimin bilinen yollarını kapatır, hepsini değil. Daha sıkı bir koruma istersen kendi <code>settings.json</code>'una şunu ekleyebilirsin; delixCrew ayarlarını değiştirmez:</p>
++      <pre><code>{ "permissions": { "deny": ["Bash(gh issue create:*)", "Bash(gh api:*)"] } }</code></pre>
++    </div>
++  </div>
++  <p class="src"><b>Kaynak:</b> README.md (Feedback, Data &amp; privacy) · skills/feedback/SKILL.md</p>
++</section>
++
++<section id="board">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-card"/></svg>delix-board</div>
++    <h2>İsteğe bağlı canlı pano</h2>
++    <p><code>delix-board</code> aynı marketplace'te ayrı ve salt-okunur bir moddur. Panoyu, uzun koşuları, kart ayrıntılarını ve metrikleri canlı gösterir; prompt'un üstüne bir bant koyar ve bir koşu bitince bildirim verir. delixCrew çalışmak için ona ihtiyaç duymaz; headless oturumlarda bir şey çizmez.</p>
++  </div>
++  <pre><code>claude plugin install delix-board@delixcrew</code></pre>
++  <p class="src"><b>Kaynak:</b> README.md (Companion: delix-board) · <a href="https://github.com/tahircengiz/delixcrew/blob/main/plugins/delix-board/README.md">plugins/delix-board/README.md</a></p>
++</section>
++
++<section id="sinirlar">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="../assets/icons.svg#i-alert"/></svg>Sınırlar ve sorun giderme</div>
++    <h2>Bilmen gerekenler</h2>
++  </div>
++  <div class="grid2">
++    <div class="note limit">
++      <h3><svg class="ico"><use href="../assets/icons.svg#i-shield"/></svg>Bilinen sınırlar</h3>
++      <ul>
++        <li>Hook'lar plugin'in kurulu olduğu her oturumda yüklenir. Uygulayıcı kuralları yalnız <code>cwd/.delix/card</code> varken, reviewer kuralları yalnız <code>agent_type</code> <code>delixcrew:*</code> iken çalışır.</li>
++        <li>write_gate yalnız Write, Edit, MultiEdit ve NotebookEdit araçlarını görür; Bash ile yazılanı görmez. Bu yüzden diff'te kart, <code>docs/delix/**</code> ya da onaysız korumalı yol değişikliği qa incelemesinde bulgu sayılır.</li>
++        <li>Plugin ajanları <code>permissionMode</code>, <code>hooks</code> ve <code>mcpServers</code> alanlarını yok sayar; kısıt <code>tools</code> listesinde ve <code>hooks/hooks.json</code>'da durur.</li>
++        <li>Deneysel Agent Teams kullanılmaz. Plugin'in bir monitor'ü yoktur.</li>
++      </ul>
++    </div>
++    <div class="note">
++      <h3><svg class="ico"><use href="../assets/icons.svg#i-alert"/></svg>Sorun giderme</h3>
++      <ul>
++        <li><code>delixcrew: python3 not found on PATH</code> görüyorsan Python 3'ü kur ya da plugin'i kapat: <code>claude plugin disable delixcrew@delixcrew</code>.</li>
++        <li>Güncelleme gelmiyorsa: kurulu kopya yalnız sürüm değişince yenilenir. <code>marketplace update</code>, <code>plugin update</code> ve yeniden başlatma üçlüsünü yap.</li>
++        <li>PR açılmıyorsa: <code>gh</code> kurulu ve giriş yapılmış mı bak. Uzak repo yoksa commit'ler kart dalında kalır.</li>
++        <li>Plugin'in kendisinde bir hata bulduysan <a href="#feedback">feedback</a> akışını kullan ya da GitHub'da elle bir <a href="https://github.com/tahircengiz/delixcrew/issues">issue</a> aç.</li>
++      </ul>
++    </div>
++  </div>
++  <p class="src"><b>Kaynak:</b> README.md (Known limits, Requirements) · hooks/hooks.json</p>
++</section>
++
++<footer>
++  <p>delixcrew 0.6.0 · durum 2026-11-03. Bu sayfa README'den ve skill dosyalarından derlendi. MIT lisansı.</p>
++  <p>Kaynak kod ve issue'lar: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="../usage.html" hreflang="en">English</a></p>
++</footer>
++</main>
++</body>
++</html>
+diff --git a/site/usage.html b/site/usage.html
+new file mode 100644
+index 0000000..0a6f3c6
+--- /dev/null
++++ b/site/usage.html
+@@ -0,0 +1,245 @@
++<!doctype html>
++<html lang="en">
++<head>
++<meta charset="utf-8">
++<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
++<title>How to use delixCrew</title>
++<meta name="description" content="Installing delixCrew, the first job, commands, project files, feedback and known limits.">
++<meta name="color-scheme" content="light dark">
++<link rel="stylesheet" href="assets/style.css">
++<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
++<link rel="alternate" hreflang="tr" href="tr/usage.html">
++</head>
++<body>
++<a class="skip" href="#main">Skip to content</a>
++<header class="topbar">
++  <div class="wrap">
++    <a class="brand" href="index.html">delix<span>Crew</span></a>
++    <nav class="pages" aria-label="Pages">
++      <a href="index.html">What it is</a>
++      <a href="usage.html" aria-current="page">How to use</a>
++      <a href="https://github.com/tahircengiz/delixcrew"><svg class="ico" aria-hidden="true"><use href="assets/icons.svg#i-code"/></svg>GitHub</a>
++    </nav>
++    <a class="lang" href="tr/usage.html" hreflang="tr" lang="tr" title="Türkçe">TR</a>
++  </div>
++</header>
++<main id="main" class="wrap">
++<header class="hero sm">
++  <div class="kicker"><span class="ver" data-version="0.6.0">delixcrew 0.6.0</span><span>Install and everyday use</span></div>
++  <h1>How to use</h1>
++  <p class="lede">delixCrew is a Claude Code plugin. Once it is installed, you start work with a single request. The lead proposes each next step and waits for your decision at two gates. This page covers installation, the first job, the commands, the files it creates in your project and the known limits. How the system works is on the <a href="index.html">What it is</a> page.</p>
++</header>
++
++<nav class="nav" aria-label="Sections">
++  <a href="#requirements">Requirements</a><a href="#install">Install</a><a href="#first-job">First job</a><a href="#commands">Commands</a><a href="#files">Project files</a><a href="#feedback">Feedback</a><a href="#board">delix-board</a><a href="#limits">Limits</a>
++</nav>
++
++<section id="requirements">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-grid"/></svg>Requirements</div>
++    <h2>Three required tools, two optional</h2>
++  </div>
++  <div class="tbl">
++    <table>
++      <thead><tr><th>Tool</th><th>Needed</th><th>Why</th></tr></thead>
++      <tbody>
++        <tr><th>Claude Code</th><td><span class="pill ag">required</span></td><td>A version with plugin marketplaces. Tested with 2.1.309; older versions are not tested.</td></tr>
++        <tr><th><code>python3</code></th><td><span class="pill ag">required</span></td><td>The hooks are Python scripts (tested with 3.9) and block on failure. Without <code>python3</code> on PATH, Write, Edit and Bash are blocked in every session.</td></tr>
++        <tr><th><code>git</code></th><td><span class="pill ag">required</span></td><td>Implementer sessions work on card branches in separate worktrees.</td></tr>
++        <tr><th><code>gh</code></th><td><span class="pill">optional</span></td><td>The GitHub CLI, signed in, to open and read PRs. Without it the commits stay on the card branch and the report says <code>**PR:** none</code>.</td></tr>
++        <tr><th><code>gitleaks</code></th><td><span class="pill">optional</span></td><td>A secret scan before every implementer commit. Without it a note goes to <code>.delix/warnings.log</code>. Required for sending feedback.</td></tr>
++      </tbody>
++    </table>
++  </div>
++  <p class="src"><b>Source:</b> README.md (Requirements) · hooks/hooks.json</p>
++</section>
++
++<section id="install">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-down"/></svg>Install</div>
++    <h2>Two commands to install, two to update</h2>
++    <p>Installation works in the desktop app and in the terminal; no <code>--plugin-dir</code> is needed. No GitHub SSH key is needed either: <code>marketplace add</code> tries SSH and falls back to HTTPS.</p>
++  </div>
++  <div class="grid2">
++    <ol class="steps">
++      <li><h3>Add the marketplace</h3><pre><code>claude plugin marketplace add tahircengiz/delixcrew</code></pre></li>
++      <li><h3>Install the plugin</h3><pre><code>claude plugin install delixcrew@delixcrew</code></pre><p>From a local clone: first <code>claude plugin marketplace add /path/to/delix</code>, then the same <code>install</code> command.</p></li>
++    </ol>
++    <div class="stack">
++      <div class="note">
++        <h3><svg class="ico"><use href="assets/icons.svg#i-loop"/></svg>Update</h3>
++        <pre><code>claude plugin marketplace update delixcrew
++claude plugin update delixcrew@delixcrew</code></pre>
++        <p>Then restart Claude. An install copies the plugin into Claude's cache, one folder per version, so an update arrives only when the version in <code>plugin.json</code> changes; <code>git pull</code> alone is not enough.</p>
++      </div>
++      <div class="note limit">
++        <h3><svg class="ico"><use href="assets/icons.svg#i-code"/></svg>Trying a local change</h3>
++        <p>To read a folder in place without a version bump: <code>claude --plugin-dir /path/to/delix</code>. If you installed it before 0.4.0 under the name <code>delix</code>, the migration steps are in <a href="https://github.com/tahircengiz/delixcrew/blob/main/CHANGELOG.md#040--2026-11-03">CHANGELOG 0.4.0</a>.</p>
++      </div>
++    </div>
++  </div>
++  <p class="src"><b>Source:</b> README.md (Installation)</p>
++</section>
++
++<section id="first-job">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-flow"/></svg>First job</div>
++    <h2>From a request to a merge, step by step</h2>
++    <p>You type the commands in the lead session, in the project's main checkout. The lead proposes the next step at the end of each one; the order is below. Amber steps are your decisions.</p>
++  </div>
++  <ol class="steps">
++    <li><h3><code>/delixcrew:start &lt;request&gt;</code></h3><p>The lead reads <code>CLAUDE.md</code>, <code>STATUS.md</code> and <code>docs/delix/</code>. It proposes a <strong>size</strong> (S/M/L, process weight) and a <strong>tier</strong> (1/2/3, risk) and sets up <code>docs/delix/</code>. For S a single card is written. For well-described work of size S or M and at most Tier 2, it proposes a single session plus <code>/delixcrew:verify</code> instead of the full flow.</p></li>
++    <li><h3><code>/delixcrew:spec</code> · size M and L</h3><p>The grill asks one question at a time and adds its recommendation to each. The result is <code>docs/delix/SPEC.md</code>, with requirements in <code>SHALL</code> and <code>WHEN/THEN</code> form. The architect reviews the spec, and security too at Tier 3. For UI work the spec links <code>DESIGN.md</code> or the repo's token file, and produces <code>DESIGN.md</code> when neither exists.</p></li>
++    <li class="gate"><h3>Gate 1 · spec approval</h3><p>You approve the spec (the card, for S). For Tier 3 cards you also say an explicit "yes" in chat; the lead writes the <code>**🔐 Approved:** &lt;date&gt; &lt;who&gt;</code> line into the card header and commits it to main.</p></li>
++    <li><h3><code>/delixcrew:dispatch</code></h3><p>The architect writes the cards and the wave plan and checks that Files lists do not overlap. Each card gets a dispatch prompt (<code>docs/delix/tasks/T&lt;nnn&gt;.dispatch.md</code>) and you are told how to open its session. At most 3 cards run at once. Tier 1–2 cards open headless with <code>claude -p</code> in a terminal, Tier 3 cards in an interactive session.</p></li>
++    <li><h3><code>/delixcrew:implement &lt;card&gt;</code> · implementer session</h3><p>The dispatch prompt calls this skill; you do not type it. The implementer writes a failing test first, touches only the card's Files list, runs the verification command, opens a PR and fills in <code>.delix/report.md</code>. The Stop hook does not end the turn until the tests pass.</p></li>
++    <li><h3><code>/delixcrew:review &lt;card&gt;</code></h3><p>First the deterministic gates: test result, CI, gitleaks. Then qa with zero context, plus security at Tier 2 and above. Only serious findings (P0/P1) open a fix round; at most 3 rounds, then the decision is yours.</p></li>
++    <li class="gate"><h3>Gate 2 · merge</h3><p>You merge the PR; the lead never runs <code>gh pr merge</code>. The card becomes <code>accepted</code> and the next wave opens.</p></li>
++    <li><h3><code>/delixcrew:close</code></h3><p>Once every card is merged: STATUS and CHANGELOG, per-card cost and round metrics, a spec-to-code drift check and worktree cleanup. Lessons learned go to CLAUDE.md or memory only with your approval.</p></li>
++  </ol>
++  <div class="callout ag" style="margin-top:18px">
++    <p><strong>Shortcut: <code>/delixcrew:verify &lt;branch|commit|dir&gt;</code>.</strong> It only verifies work done without a card. In order it runs gitleaks, the local tests, a remote isolated unit test (when <code>delix.json</code> has a <code>verify</code> block) and, on request, the full suite with <code>--full</code>. Then qa (plus security at Tier 2 and above) reviews in a single pass; there are no fix rounds. The result is written as ACCEPT or FIX to a <code>docs/delix/verifications/&lt;date&gt;-&lt;name&gt;.md</code> report.</p>
++  </div>
++  <p class="src"><b>Source:</b> README.md (Flow) · skills/start, spec, dispatch, implement, review, close, verify (SKILL.md)</p>
++</section>
++
++<section id="commands">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-term"/></svg>Commands</div>
++    <h2>Every command in one table</h2>
++    <p>The skills reply in the user's language. Labels, status values and verdict tokens (<code>ACCEPT</code>, <code>FIX</code>, <code>accepted</code>…) stay in English.</p>
++  </div>
++  <div class="tbl">
++    <table class="mx">
++      <thead><tr><th>Command</th><th>When</th><th>What it does</th></tr></thead>
++      <tbody>
++        <tr><th><code>/delixcrew:start</code></th><td>Every new request</td><td>Reads the context, proposes size and tier, sets up <code>docs/delix/</code>; a single card for S.</td></tr>
++        <tr><th><code>/delixcrew:spec</code></th><td>Size M and L</td><td><code>SPEC.md</code> through the grill; architect (+ security at Tier 3) review; Gate 1.</td></tr>
++        <tr><th><code>/delixcrew:dispatch</code></th><td>After Gate 1</td><td>Cards, wave plan, conflict check, dispatch prompts.</td></tr>
++        <tr><th><code>/delixcrew:implement</code></th><td>In the implementer session</td><td>Test first, Files only, PR and report. Called by the dispatch prompt.</td></tr>
++        <tr><th><code>/delixcrew:review</code></th><td>When the PR is open</td><td>Deterministic gates, qa (+ security), at most 3 fix rounds; Gate 2.</td></tr>
++        <tr><th><code>/delixcrew:close</code></th><td>When every card is merged</td><td>STATUS, CHANGELOG, metrics, drift check, worktree cleanup.</td></tr>
++        <tr><th><code>/delixcrew:verify</code></th><td>Card-less work</td><td>Only verifies: gitleaks, tests, a single-pass review; an ACCEPT or FIX report.</td></tr>
++        <tr><th><code>/delixcrew:status</code></th><td>Any time</td><td>Read-only board: wave, card, role, tier, status, rounds, PR, cost, last report, pending gate. With <code>--write</code> to <code>docs/delix/BOARD.md</code> (not committed). Also works under <code>-p</code>.</td></tr>
++        <tr><th><code>/delixcrew:feedback</code></th><td>When the plugin misbehaves</td><td><code>note</code>: writes the problem to a local draft. <code>review</code>: shows the drafts exactly as they would be sent. It never sends anything itself.</td></tr>
++        <tr><th><code>/delixcrew:triage</code></th><td>Only in the delixcrew repo, when issues arrive</td><td>Reads issues cleaned; the architect proposes a decision. You decide in chat with the number (<code>accept #12</code>) and publish the comment and labels from your own terminal. Only an issue accepted in triage becomes work through <code>/delixcrew:start #&lt;n&gt;</code>.</td></tr>
++      </tbody>
++    </table>
++  </div>
++  <p class="src"><b>Source:</b> README.md (Flow) · skills/*/SKILL.md (description) · README.md (Triage)</p>
++</section>
++
++<section id="files">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-doc"/></svg>Project files</div>
++    <h2>What delixCrew creates in your project</h2>
++    <p>The shared memory is in files: <code>docs/delix/</code> on the main branch, <code>.delix/</code> in each implementer worktree.</p>
++  </div>
++  <div class="grid2">
++    <div class="note">
++      <h3>On the main branch · <code>docs/delix/</code></h3>
++      <ul>
++        <li><code>delix.json</code>: test command, protected paths, test paths, parallel card limit, the <code>verify</code> block</li>
++        <li><code>SPEC.md</code>: the approved tech spec</li>
++        <li><code>tasks/T&lt;nnn&gt;-&lt;slug&gt;.md</code>: cards and dispatch prompts</li>
++        <li><code>STATE.json</code>: card states, waves, <code>verifications</code> records</li>
++        <li><code>verifications/&lt;date&gt;-&lt;name&gt;.md</code>: verify reports</li>
++        <li><code>BOARD.md</code>: generated only on request, in <code>.gitignore</code></li>
++      </ul>
++    </div>
++    <div class="note">
++      <h3>In the implementer worktree · <code>.delix/</code></h3>
++      <ul>
++        <li><code>card</code>: activates the hooks; must be local, not tracked by git</li>
++        <li><code>report.md</code>: <code>DONE</code>, <code>DONE_WITH_CONCERNS</code>, <code>NEEDS_CONTEXT</code> or <code>BLOCKED</code></li>
++        <li><code>test-result.txt</code>: the Stop hook's test output</li>
++        <li><code>evidence/</code>: verification evidence</li>
++      </ul>
++    </div>
++  </div>
++  <figure class="dgm" style="margin-top:18px">
++    <pre><code>{
++  "test_command": "pytest -q",
++  "extra_checks": ["ruff check .", "mypy ."],
++  "protected_paths": ["auth/**", ".env*", ".github/workflows/**", "*.lock", "docs/delix/delix.json"],
++  "test_paths": ["tests/**"],
++  "max_parallel": 3,
++  "max_review_rounds": 3,
++  "default_branch": "main"
++}</code></pre>
++    <figcaption><strong><code>docs/delix/delix.json</code>, shortened example.</strong> The Stop hook runs only <code>test_command</code> and <code>extra_checks</code>, so the unit tests that can run locally belong here. Every card that touches <code>protected_paths</code> becomes Tier 3. Full template: <a href="https://github.com/tahircengiz/delixcrew/blob/main/templates/delix.json">templates/delix.json</a>.</figcaption>
++  </figure>
++  <p class="src"><b>Source:</b> README.md (Files on the project side) · templates/delix.json · templates/report.md</p>
++</section>
++
++<section id="feedback">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-loop"/></svg>Feedback</div>
++    <h2>Reporting a plugin fault: off by default, you send</h2>
++    <p>When a hook rejects correct work, a skill step cannot be followed as written, or you work around a limit by hand, delixCrew can keep a draft of it. It never sends anything on its own. Drafts live in <code>~/.claude/delixcrew/feedback/</code>, not in your project repo.</p>
++  </div>
++  <ol class="steps">
++    <li><h3>Turn it on in your own terminal</h3><pre><code>python3 &lt;plugin dir&gt;/scripts/feedback.py enable --terms acme,example-corp</code></pre><p>For a marketplace install the script is at <code>~/.claude/plugins/cache/delixcrew/delixcrew/&lt;version&gt;/scripts/feedback.py</code>. <code>--terms</code> adds your own words to redact (customer names, codenames). <code>status</code> shows the state, <code>disable</code> turns it off.</p></li>
++    <li><h3>A draft is created</h3><p>You say <code>/delixcrew:feedback note</code> in chat, or close and review add a draft when one of the three events above happened. A repeated finding raises the draft's count instead of adding a new one.</p></li>
++    <li><h3>See the full text</h3><p><code>/delixcrew:feedback review</code> shows each draft exactly as it would be published: repo, label, title, body, a <code>VERDICT:</code> and a <code>HASH:</code> line.</p></li>
++    <li class="gate"><h3>Approve by id in chat</h3><p>Reply with the id of the draft you want to send: <code>yes F003</code> (or <code>evet F003</code>). A bare "yes", "send all" or an "approved" in a file is not consent. Claude then gives you one command.</p></li>
++    <li class="gate"><h3>Send from your own terminal</h3><pre><code>python3 &lt;plugin dir&gt;/scripts/feedback.py send F003 --confirm &lt;hash&gt;</code></pre><p>It prints the text once more and waits for you to type <code>SEND &lt;hash&gt;</code>. If the text changed since the preview, it stops.</p></li>
++  </ol>
++  <div class="grid2" style="margin-top:18px">
++    <div class="callout hk">
++      <p><strong>The issue is public and opened with your GitHub account.</strong> Sending needs <code>gitleaks</code> and a signed-in <code>gh</code>. A draft with a secret is blocked, never redacted and sent. GitHub does not let an author delete an issue; to have one removed, use <a href="https://github.com/tahircengiz/delixcrew/security/advisories/new">private reporting</a>. What gets redacted is on the <a href="index.html#self-feeding">What it is page</a>.</p>
++    </div>
++    <div class="note limit">
++      <h3><svg class="ico"><use href="assets/icons.svg#i-shield"/></svg>Remaining risk</h3>
++      <p>The hooks close the known send paths, not all of them. For a stronger guard you can add this to your own <code>settings.json</code>; delixCrew does not change your settings:</p>
++      <pre><code>{ "permissions": { "deny": ["Bash(gh issue create:*)", "Bash(gh api:*)"] } }</code></pre>
++    </div>
++  </div>
++  <p class="src"><b>Source:</b> README.md (Feedback, Data &amp; privacy) · skills/feedback/SKILL.md</p>
++</section>
++
++<section id="board">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-card"/></svg>delix-board</div>
++    <h2>An optional live board</h2>
++    <p><code>delix-board</code> is a separate, read-only mod in the same marketplace. It shows the board, long runs, card details and metrics live, puts a band above the prompt and shows a toast when a run ends. delixCrew does not need it to work, and it draws nothing in headless sessions.</p>
++  </div>
++  <pre><code>claude plugin install delix-board@delixcrew</code></pre>
++  <p class="src"><b>Source:</b> README.md (Companion: delix-board) · <a href="https://github.com/tahircengiz/delixcrew/blob/main/plugins/delix-board/README.md">plugins/delix-board/README.md</a></p>
++</section>
++
++<section id="limits">
++  <div class="sec-head">
++    <div class="eyebrow"><svg class="ico"><use href="assets/icons.svg#i-alert"/></svg>Limits and troubleshooting</div>
++    <h2>What you should know</h2>
++  </div>
++  <div class="grid2">
++    <div class="note limit">
++      <h3><svg class="ico"><use href="assets/icons.svg#i-shield"/></svg>Known limits</h3>
++      <ul>
++        <li>The hooks load in every session where the plugin is installed. The implementer rules run only when <code>cwd/.delix/card</code> exists, the reviewer rules only when <code>agent_type</code> is <code>delixcrew:*</code>.</li>
++        <li>write_gate sees only the Write, Edit, MultiEdit and NotebookEdit tools, not files written through Bash. That is why a change to the card, <code>docs/delix/**</code> or an unapproved protected path in the diff counts as a finding in the qa review.</li>
++        <li>Plugin agents ignore the <code>permissionMode</code>, <code>hooks</code> and <code>mcpServers</code> fields; the constraint lives in the <code>tools</code> list and <code>hooks/hooks.json</code>.</li>
++        <li>Experimental Agent Teams are not used. The plugin has no monitor.</li>
++      </ul>
++    </div>
++    <div class="note">
++      <h3><svg class="ico"><use href="assets/icons.svg#i-alert"/></svg>Troubleshooting</h3>
++      <ul>
++        <li>If you see <code>delixcrew: python3 not found on PATH</code>, install Python 3 or disable the plugin: <code>claude plugin disable delixcrew@delixcrew</code>.</li>
++        <li>No update arriving: the installed copy refreshes only when the version changes. Run <code>marketplace update</code>, <code>plugin update</code> and restart.</li>
++        <li>No PR opened: check that <code>gh</code> is installed and signed in. Without a remote the commits stay on the card branch.</li>
++        <li>Found a fault in the plugin itself? Use the <a href="#feedback">feedback</a> flow or open an <a href="https://github.com/tahircengiz/delixcrew/issues">issue</a> on GitHub by hand.</li>
++      </ul>
++    </div>
++  </div>
++  <p class="src"><b>Source:</b> README.md (Known limits, Requirements) · hooks/hooks.json</p>
++</section>
++
++<footer>
++  <p>delixcrew 0.6.0 · as of 2026-11-03. Compiled from the README and the skill files. MIT licence.</p>
++  <p>Source code and issues: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="tr/usage.html" hreflang="tr">Türkçe</a></p>
++</footer>
++</main>
++</body>
++</html>
+diff --git a/tests/site_tests.sh b/tests/site_tests.sh
+new file mode 100644
+index 0000000..becfeea
+--- /dev/null
++++ b/tests/site_tests.sh
+@@ -0,0 +1,54 @@
++#!/usr/bin/env bash
++# Deterministic checks for the GitHub Pages site (site/). Run: bash tests/site_tests.sh
++# Every page shows the plugin.json version, has its other-language twin, loads nothing from third parties,
++# and every local link, anchor and icon reference resolves. A version bump without a site update fails here.
++set -u
++ROOT="$(cd "$(dirname "$0")/.." && pwd)"
++python3 -I - "$ROOT" <<'PY'
++import json, os, re, sys
++root = sys.argv[1]; site = os.path.join(root, "site"); fail = 0
++def ok(m): print("✔ " + m)
++def bad(m):
++    global fail; fail = 1; print("✘ " + m)
++
++version = json.load(open(os.path.join(root, ".claude-plugin", "plugin.json"), encoding="utf-8"))["version"]
++pages = sorted(os.path.relpath(os.path.join(d, f), site) for d, _, fs in os.walk(site) for f in fs if f.endswith(".html"))
++text = {p: open(os.path.join(site, p), encoding="utf-8").read() for p in pages}
++ids = {p: set(re.findall(r'\bid="([^"]+)"', t)) for p, t in text.items()}
++icons_path = os.path.join(site, "assets", "icons.svg")
++symbols = set(re.findall(r'<symbol id="([^"]+)"', open(icons_path, encoding="utf-8").read())) if os.path.isfile(icons_path) else set()
++
++expected = ["index.html", "usage.html", "tr/index.html", "tr/usage.html"]
++missing = [p for p in expected if p not in text]
++ok("4 pages: EN and TR, what-is and usage") if not missing else bad(f"missing pages: {missing}")
++
++for p, t in text.items():
++    marks = re.findall(r'data-version="([^"]*)"[^>]*>([^<]*)<', t)
++    if marks and all(v == version and s.strip() == f"delixcrew {version}" for v, s in marks):
++        ok(f"{p}: version {version}")
++    else:
++        bad(f"{p}: version marks {marks or 'none'} do not match plugin.json {version}; update the site with the release")
++    lang = re.search(r'<html lang="(en|tr)">', t)
++    want = "tr" if p.startswith("tr/") else "en"
++    ok(f"{p}: lang={want}") if lang and lang.group(1) == want else bad(f"{p}: <html lang> should be {want}")
++    ext = re.findall(r'<script\b|<link\b[^>]*rel="stylesheet"[^>]*href="(?:https?:)?//|<img\b[^>]*src="(?:https?:)?//|@import', t)
++    ok(f"{p}: no scripts or third-party assets") if not ext else bad(f"{p}: scripts or third-party assets: {ext}")
++    broken = []
++    for attr, ref in re.findall(r'\b(href|src)="([^"]+)"', t):
++        if re.match(r"(?:[a-z]+:|//)", ref):
++            continue
++        path, _, frag = ref.partition("#")
++        target = os.path.normpath(os.path.join(os.path.dirname(p), path)) if path else p
++        full = os.path.join(site, target)
++        if os.path.isdir(full):
++            target = os.path.join(target, "index.html"); full = os.path.join(site, target)
++        if not os.path.isfile(full):
++            broken.append(ref); continue
++        if frag and target.endswith(".html") and frag not in ids.get(target, set()):
++            broken.append(ref)
++        if frag and target.endswith("icons.svg") and frag not in symbols:
++            broken.append(ref)
++    ok(f"{p}: local links, anchors and icons resolve") if not broken else bad(f"{p}: broken references {sorted(set(broken))}")
++
++sys.exit(fail)
++PY
