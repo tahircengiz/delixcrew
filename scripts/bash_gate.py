@@ -16,10 +16,14 @@ cwd = g.get("cwd") or os.getcwd()
 
 # REQ-7: known feedback send paths, in every session (before the card and agent_type checks); known paths only (K77)
 FEEDBACK_DENY = "delixcrew: feedback is sent only by the user from their own terminal"
-if re.search(r"\bfeedback\.py\b", cmd) and (re.search(r"\bsend\b", cmd)
-                                            or re.search(r"\b(script|expect|unbuffer)\b|\bpty\.spawn\b", cmd)):
+# (a) `send` as the subcommand, on the full command (also inside a heredoc fed to a shell); (b) on the command without
+# heredoc bodies, so a `feedback.py add <<'EOF'` draft that mentions `script` is not denied
+no_heredoc = re.sub(r"(?<!<)<<(?!<)-?\s*(['\"]?)([A-Za-z_][\w.-]*)\1([^\n]*)\n.*?(?:^\s*\2[ \t]*$|\Z)",
+                    lambda m: "<<" + m.group(3), cmd, flags=re.S | re.M)
+if re.search(r"\bfeedback\.py['\"]?(\s+-\S+)*\s+send\b", cmd) or (
+        re.search(r"\bfeedback\.py\b", no_heredoc) and re.search(r"\b(script|expect|unbuffer)\b|\bpty\.spawn\b", no_heredoc)):
     deny(FEEDBACK_DENY)
-if re.search(r"\bgh\s+issue\s+(create|comment|edit)\b", cmd) or (re.search(r"\bgh\s+api\b", cmd)
+if re.search(r"\bgh\s+issue\s+(create|new|comment|edit)\b", cmd) or (re.search(r"\bgh\s+api\b", cmd)
                                                                  and re.search(r"\bissues\b", cmd)):
     if "delixcrew" in cmd.lower():
         deny(FEEDBACK_DENY)

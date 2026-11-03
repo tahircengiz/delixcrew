@@ -103,4 +103,11 @@ fbdeny "queue dir write (default ~)"      write_gate.py "{\"tool_name\":\"Write\
 fbdeny "queue dir edit (env dir)"         write_gate.py "{\"tool_name\":\"Edit\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/q/F001.json\"}}" "DELIXCREW_FEEDBACK_DIR=$T/q"
 fbdeny "queue dir write, reviewer too"    write_gate.py "{\"tool_name\":\"MultiEdit\",\"agent_type\":\"delixcrew:qa\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/q/F001.json\"}}" "DELIXCREW_FEEDBACK_DIR=$T/q"
 DELIXCREW_FEEDBACK_DIR="$T/q" allow "queue lookalike dir is free" write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"${T}/qx/F001.json\"}}"
+# REQ-7 fix round 1: heredoc draft bodies do not trigger (a)/(b); `send` must be the subcommand; `gh issue new` = create
+bashjson(){ python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2"; }
+HD=$(printf '%s\n' "python3 \"/x/scripts/feedback.py\" add <<'EOF'" '{"title": "preview hash differs on second send", "body": "the script wrapper path also fails"}' 'EOF')
+allow  "heredoc add with send/script in body"  bash_gate.py "$(bashjson "$N" "$HD")"
+fbdeny "quoted path feedback.py send denied"   bash_gate.py "$(bashjson "$N" "python3 \"/x/scripts/feedback.py\" send F001")"
+fbdeny "send inside a shell heredoc denied"    bash_gate.py "$(bashjson "$N" "$(printf '%s\n' "bash <<'EOF'" 'python3 scripts/feedback.py send F001' 'EOF')")"
+fbdeny "gh issue new delixcrew denied"         bash_gate.py "{\"tool_name\":\"Bash\",\"cwd\":\"$N\",\"tool_input\":{\"command\":\"gh issue new -R tahircengiz/delixcrew -t x\"}}"
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
