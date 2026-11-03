@@ -107,6 +107,21 @@ http://[::1]:8080/	http://[::1]:8080/
 https://github.com//tahircengiz/delixcrew	https://<redacted:url>
 https://github.com\tahircengiz\delixcrew	https://<redacted:url>
 EOF
+# Review round 1 (F1 scheme, F2 Unicode TLD, F3 host after a dot, F4 long e-mail local part).
+cat > "$T/r1_absent.txt" <<'EOF'
+jenkins.acme-corp.internal://github.com/tahircengiz/delixcrew
+acme-corp.dev+https://github.com/anthropics/x
+ip-10-1-2-3.ec2.internal://code.claude.com/docs
+bücher.example-corp.de+https://github.com/tahircengiz/delixcrew
+see .jenkins.acme-corp.internal
+a..jenkins.acme-corp.internal
+EOF
+cat > "$T/r1_exact.txt" <<'EOF'
+intranet.corp.рф	<redacted:host>
+foo.рф/x	<redacted:url>
+notlar.md	notlar.md
+https://code.claude.com/.jenkins.acme-corp.internal	https://<redacted:url>
+EOF
 
 cat > "$T/cases.py" <<'PY'
 import os, sys, time
@@ -169,6 +184,13 @@ for x, want in pairs("req3.txt"):
 for x, want in pairs("edges.txt"):
     got = s(x)
     res(got == want, "edge %s → %s%s" % (x, want, "" if got == want else " (got %s)" % got))
+for x in lines("r1_absent.txt"):
+    got = s(x)
+    leak = [w for w in ("jenkins", "acme", "ec2.internal", "example-corp", "bücher") if w in got]
+    res(not leak, "round 1 %s → %s" % (x, got))
+for x, want in pairs("r1_exact.txt") + [("a" * 70 + "@corp.com", "<redacted:email>")]:
+    got = s(x)
+    res(got == want, "round 1 %s → %s%s" % (x[:40], want, "" if got == want else " (got %s)" % got))
 res(f.SANITIZER_VERSION == "3", "REQ-4 SANITIZER_VERSION is 3")
 
 once = [(x, r, f.sanitize(x, r)) for x, r in seen]
@@ -178,7 +200,8 @@ res(not bad, "REQ-4 sanitize(sanitize(x)) == sanitize(x) for %d inputs%s" % (len
 redos = [("slash", "/" * 50000), ("a-slash", "a/" * 25000), ("json-slash", "\\/" * 25000),
          ("http", ("http://" * 7143)[:50000]), ("backslash", "\\" * 50000), ("dot", "." * 50000),
          ("scheme-a", "x://" + "a" * 50000), ("github-a-slash", "https://github.com/" + "a/" * 25000),
-         ("query-amp", "http://x/?" + "a&" * 25000), ("u-dot", "ü." * 25000), ("a-dot-slash", "a." * 25000 + "/")]
+         ("query-amp", "http://x/?" + "a&" * 25000), ("u-dot", "ü." * 25000), ("a-dot-slash", "a." * 25000 + "/"),
+         ("email-a-at", "a" * 50000 + "@"), ("email-dot", "." * 50000)]
 for name, x in redos:
     t0 = time.perf_counter()
     f.sanitize(x, None)
