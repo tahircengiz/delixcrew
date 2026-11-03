@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T23:10:00Z",
+  "updated": "2026-11-03T23:20:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -26,10 +26,11 @@
       "file": "docs/delix/tasks/T016-feedback-url-allowlist.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_progress",
-      "pr": null,
+      "status": "in_review",
+      "pr": 33,
       "rounds": 0,
-      "cost_usd": null
+      "cost_usd": null,
+      "sha": "b8ca34f"
     },
     "T017": {
       "file": "docs/delix/tasks/T017-write-gate-queue-casefold.md",
@@ -55,7 +56,7 @@
       "file": "docs/delix/tasks/T019-ci-run-all-tests.md",
       "role": "devops",
       "tier": 3,
-      "status": "open",
+      "status": "in_progress",
       "pr": null,
       "rounds": 0,
       "cost_usd": null
