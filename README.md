@@ -187,8 +187,9 @@ the decision comment and the label changes are applied by you, from your own ter
 
 **Flow.**
 1. `/delixcrew:triage` runs `triage.py index` and takes the pending issues (open, no decision label) one at a time,
-   lowest number first; `/delixcrew:triage #12` takes one issue. `triage.py show <n>` reads it cleaned: control and
-   invisible characters and HTML comments are removed and counted (`removed:`), and the fixed fields (`url`, `state`,
+   lowest number first; `/delixcrew:triage #12` takes one issue. `triage.py show <n>` reads it cleaned: Unicode
+   control, format and private-use characters (Cc except newline and tab, Cf, Co) and HTML comments are removed and
+   counted (`removed:`); other invisible characters (e.g. Hangul fillers) stay. The fixed fields (`url`, `state`,
    `author`, `source`, `labels`, `decision`, `reported-version`, `issue-sha`) come first.
 2. The read-only `delixcrew:architect` runs a checklist (job D) and proposes one decision with a reason: a bug is checked
    against the tree of the reported version (its `v<X.Y.Z>` tag, or `main` when there is no such tag), a feature against
@@ -202,7 +203,9 @@ the decision comment and the label changes are applied by you, from your own ter
    a `VERDICT:` and a `HASH:` line.
 5. With `VERDICT: CLEAN`, Claude gives you one command:
    `python3 <plugin dir>/scripts/triage.py apply 12 --confirm <hash>`. Run it in **your own terminal**. It prints
-   everything again and waits for you to type `APPLY <hash>`; if anything changed since the preview, it stops.
+   everything again and waits for you to type `APPLY <hash>`. Before that it rebuilds the comment and stops if its
+   hash no longer matches (exit 5) or the comment is now blocked, e.g. the issue's title or body changed since the
+   record (exit 4). Labels, comments and the issue's state are read again after `APPLY`, not compared with the preview.
 
 **Labels.** Five decision labels: `accepted`, `needs-info`, `duplicate`, `wontfix`, `deferred` (`defer` sets
 `deferred`). `apply` creates a missing one, adds the decision label, removes the other four and posts the comment, whose
@@ -222,7 +225,8 @@ unchanged since acceptance: it reads the issue through `triage.py show 12 --requ
 Tier 2.
 
 **Records.** Decisions are stored in `~/.claude/delixcrew/triage/<n>.json` (`DELIXCREW_TRIAGE_DIR` overrides it), never
-in your project repo; only `triage.py` writes there. `apply` marks a record as applied. `preview` and `apply` need `gitleaks` on `PATH`;
+in your project repo; only `triage.py` is meant to write there: the hooks deny Write/Edit into it, but a shell write
+(redirection, `cp`, `tee`) is not denied. `apply` marks a record as applied. `preview` and `apply` need `gitleaks` on `PATH`;
 `apply` also needs a signed-in `gh` with write access to this repo.
 
 The known publish paths for Claude are closed: in every session the hooks deny `triage.py apply`, running `triage.py`
