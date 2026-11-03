@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T11:50:09Z",
+  "updated": "2026-11-03T13:20:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -24,9 +24,10 @@
     {
       "wave": 3,
       "cards": [
-        "T006"
+        "T006",
+        "T007"
       ],
-      "note": "independent S card (design-system step, request approved in chat 2026-11-03); not part of SPEC.md; no file overlap with T001–T005."
+      "note": "independent S card (design-system step, request approved in chat 2026-11-03); not part of SPEC.md; no file overlap with T001–T005. T007: S card from issue #8 (security), 🔐; overlaps T002 only on tests/hook_tests.sh line 5."
     }
   ],
   "cards": {
@@ -85,6 +86,15 @@
       "status": "accepted",
       "pr": 15,
       "rounds": 0,
+      "cost_usd": null
+    },
+    "T007": {
+      "file": "docs/delix/tasks/T007-stop-hook-trust.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "in_review",
+      "pr": 16,
+      "rounds": 2,
       "cost_usd": null
     }
   },
