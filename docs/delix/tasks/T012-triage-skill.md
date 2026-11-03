@@ -4,6 +4,8 @@
 |---|---|---|---|---|---|
 | T012 | M | 3 | docs | 1 | open |
 
+**🔐 Approved:** 2026-11-03 tahircengiz
+
 > 🔐 Tier 3 (the consent step of a publishing path; intake of untrusted issues). The orchestrator adds the Approved line after the human says "yes".
 
 **Goal (1 sentence):** Prompt text for triage, the architect's job D and start's accepted-only intake. · **Spec:** `docs/delix/SPEC.md#REQ-3`, `#REQ-4`, `#REQ-8` (skill side), §4

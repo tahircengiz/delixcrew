@@ -4,6 +4,8 @@
 |---|---|---|---|---|---|
 | T011 | M | 3 | backend | 1 | open |
 
+**🔐 Approved:** 2026-11-03 tahircengiz
+
 > 🔐 Tier 3 (protected `scripts/bash_gate.py`, `scripts/write_gate.py`). The orchestrator adds the Approved line after the human says "yes".
 
 **Goal (1 sentence):** Session-wide deny rules for triage `apply`, `gh issue`/`gh label`/`gh api` writes and writes into the triage dir. · **Spec:** `docs/delix/SPEC.md#REQ-7`

@@ -4,6 +4,8 @@
 |---|---|---|---|---|---|
 | T010 | L | 3 | backend | 1 | open |
 
+**🔐 Approved:** 2026-11-03 tahircengiz
+
 > 🔐 Tier 3: the path that writes comments, labels and closes on a public repo. The orchestrator adds the `**🔐 Approved:**` line after the human says "yes".
 
 **Goal (1 sentence):** One stdlib script that reads issues cleanly, records a triage decision and applies it from the user's own terminal. · **Spec:** `docs/delix/SPEC.md#REQ-1`, `#REQ-2`, `#REQ-5`, `#REQ-6`, `#REQ-8` (script side), §4
