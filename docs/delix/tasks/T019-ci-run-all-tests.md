@@ -6,6 +6,8 @@
 
 > 🔐 Tier 3: `.github/**` is a protected path (`docs/delix/delix.json:8`). The lead adds the Approved line after the human says "yes".
 
+**🔐 Approved:** 2026-11-03 tahircengiz
+
 **Goal (1 sentence):** CI runs the same test loop as `docs/delix/delix.json` `test_command`, so every current and future `tests/*_tests.sh` runs on each push and PR. · **Spec:** `docs/delix/SPEC.md` §9 K149; follow-up to the T017 round 0 P2 finding (`docs/delix/tasks/T017-write-gate-queue-casefold.md`, Round 0)
 
 ## Files
