@@ -85,7 +85,7 @@ export function emptyState(k: Kit, root: string): RenderElement {
         <Text weight="semibold">Bu klasör bir delix projesi değil</Text>
       </Box>
       <Text dimColor>{cut(`docs/delix/STATE.json bulunamadı: ${root}`, k.cols)}</Text>
-      <Text>Başlamak için sohbette /delix:start ve isteğini yaz; kartlar /delix:dispatch ile gelir.</Text>
+      <Text>Başlamak için sohbette /delixcrew:start ve isteğini yaz; kartlar /delixcrew:dispatch ile gelir.</Text>
       <Text dimColor>Bekleme sekmesi delix projesi dışında da uzun koşuları izler.</Text>
     </Box>
   )
@@ -283,7 +283,7 @@ function bekleme(ctx: Ctx): RenderElement {
             {k.icon('check', GOOD)}
             <Text weight="semibold">Bekleyen koşu yok</Text>
           </Box>
-          <Text dimColor>İzlenen komutlar: {DEFAULT_PATTERNS.map(p => p.label).join(', ')}; ve delix:* inceleyici alt ajanları.</Text>
+          <Text dimColor>İzlenen komutlar: {DEFAULT_PATTERNS.map(p => p.label).join(', ')}; ve delixcrew:* inceleyici alt ajanları.</Text>
         </Box>
       ) : (
         running.map(r => runBlock(ctx, r))
@@ -322,7 +322,7 @@ function kart($: EngineInterface, ctx: Ctx, snap: Snapshot): RenderElement {
   const cards = snap.cards
   const fallback = cards.find(c => c.gates.length > 0) ?? cards[cards.length - 1]
   const c = cards.find(x => x.id === selected) ?? fallback
-  if (!c) return <Text dimColor>Kart yok. Kartlar /delix:dispatch ile gelir.</Text>
+  if (!c) return <Text dimColor>Kart yok. Kartlar /delixcrew:dispatch ile gelir.</Text>
   const i = cards.indexOf(c)
   const go = (to: Card | undefined) => () => (to ? update($, selectedAtom, () => to.id) : undefined)
   const w = Math.max(10, k.cols - 4)

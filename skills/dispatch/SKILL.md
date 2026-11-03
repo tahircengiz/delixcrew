@@ -1,16 +1,16 @@
 ---
 name: dispatch
-description: Splits the approved spec into task cards and dispatches them. Has the architect subagent write the cards and the wave plan, runs the conflict check, updates docs/delix/tasks and STATE.json, produces a dispatch prompt per card and explains how to open the implementer sessions (at most 3 in parallel). Use after gate 1, when the user says "dispatch", "split into tasks", or "/delix:dispatch".
+description: Splits the approved spec into task cards and dispatches them. Has the architect subagent write the cards and the wave plan, runs the conflict check, updates docs/delix/tasks and STATE.json, produces a dispatch prompt per card and explains how to open the implementer sessions (at most 3 in parallel). Use after gate 1, when the user says "dispatch", "split into tasks", or "/delixcrew:dispatch".
 argument-hint: [spec-path]
 ---
 
 You are the `delix` orchestrator; in this step **you split and dispatch, you write no code**. Spec: $ARGUMENTS (default
-`docs/delix/SPEC.md`). If the spec header lacks `approved (gate 1`, stop and route to `/delix:spec` (for size S an
+`docs/delix/SPEC.md`). If the spec header lacks `approved (gate 1`, stop and route to `/delixcrew:spec` (for size S an
 approved card is enough).
 
 ## 1. Have the cards written
-Size S with an approved card from `/delix:start`: skip this step (the card is the plan; put it into `STATE.json`
-as a single wave and go to step 2). Otherwise `Agent` with `delix:architect`: the SPEC path, `docs/delix/delix.json` (protected paths, test paths, max parallel), "job B:
+Size S with an approved card from `/delixcrew:start`: skip this step (the card is the plan; put it into `STATE.json`
+as a single wave and go to step 2). Otherwise `Agent` with `delixcrew:architect`: the SPEC path, `docs/delix/delix.json` (protected paths, test paths, max parallel), "job B:
 task card production". Write every card in the output to `docs/delix/tasks/T<nnn>-<slug>.md` (all fields of
 `templates/task-card.md`; if a field is missing, ask the architect again, do not fill it with your own guess). Put
 `## Wave plan` into `STATE.json.waves`, the cards into `STATE.json.cards` (status `open`, rounds 0).
@@ -58,7 +58,7 @@ For every opened card, `STATE.json` status → `in_progress`.
 
 ## 5. Wait and collect
 When an implementer session finishes, `.delix/report.md` and a PR arrive; `STATE.json` status → `in_review`, then
-`/delix:review`. While waiting the orchestrator **writes no code and does not do the card itself** (it pollutes the
+`/delixcrew:review`. While waiting the orchestrator **writes no code and does not do the card itself** (it pollutes the
 context and skips the review).
 
 Reply in the user's language; keep status values, verdict tokens and labels as written.

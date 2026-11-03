@@ -1,6 +1,6 @@
 ---
 name: review
-description: Reviews a task card's PR. First checks the evidence of the deterministic gates (test result, CI); then runs the qa (and, at Tier ≥ 2, security) subagents in parallel with zero context, writes only high-confidence findings to the card, manages at most 3 fix rounds, then presents gate 2 (merge) to the user. Use when the user says "review the PR", "review", or "/delix:review T003".
+description: Reviews a task card's PR. First checks the evidence of the deterministic gates (test result, CI); then runs the qa (and, at Tier ≥ 2, security) subagents in parallel with zero context, writes only high-confidence findings to the card, manages at most 3 fix rounds, then presents gate 2 (merge) to the user. Use when the user says "review the PR", "review", or "/delixcrew:review T003".
 argument-hint: [card-id-or-pr]
 ---
 
@@ -20,7 +20,7 @@ if empty, the cards in `in_review` in `STATE.json`).
   `git diff <default_branch>...<sha> > .delix/diff.patch`, shipping to the remote test environment with
   `git archive <sha>`; **never from the worktree directory** (Desktop reuses worktree directory names; a directory may
   hold another card's content). The SHA goes into the acceptance record and `STATE.json.pr`.
-  For the remote isolated unit test, if the `delix.json.verify` block exists, use the `/delix:verify` step 3 recipe
+  For the remote isolated unit test, if the `delix.json.verify` block exists, use the `/delixcrew:verify` step 3 recipe
   (separate directory and image, `{name}` = card number); **per-test env** comes from the `case $t in …` inside the
   `unit_test` command (K46), do not complete the command by hand; a test red only from a missing env is not an
   implementer finding but a `delix.json` fix (protected path, 🔐).
@@ -33,9 +33,9 @@ if empty, the cards in `in_review` in `STATE.json`).
 
 ## 2. Independent review (parallel, zero chat context)
 With the `Agent` tool, at the same time:
-- `delix:qa` — diff path, card path, SPEC path, test result file, round count. Expected: `ACCEPT | ACCEPT_WITH_NOTES |
+- `delixcrew:qa` — diff path, card path, SPEC path, test result file, round count. Expected: `ACCEPT | ACCEPT_WITH_NOTES |
   REJECT | ESCALATE`.
-- Tier ≥ 2: `delix:security` — same inputs + tier + protected paths. Expected: `CLEAN | FIX | 🔐 HUMAN_APPROVAL`.
+- Tier ≥ 2: `delixcrew:security` — same inputs + tier + protected paths. Expected: `CLEAN | FIX | 🔐 HUMAN_APPROVAL`.
 - Tier 3 with the `/security-review` skill available: run it too; with Claude Security installed, "scan changes" at
   size L.
 Give the reviewers **neither your own opinion nor the implementer's reasoning**; file paths only.
@@ -49,7 +49,7 @@ Give the reviewers **neither your own opinion nor the implementer's reasoning**;
   fix it yourself. Default for a headless (`claude -p`) card: a **new** `-p` session in the same worktree (cwd = worktree,
   no `-w`): prompt = dispatch file + `Fix round n: the card is already implemented and committed (<sha>); fix only the
   P0/P1s below` + the card's "Review findings" section + a `git diff <default_branch>...<sha> --stat` summary (the
-  `/delix:dispatch` step 4 command). Do not use `--resume`: measured (LLMPortal T009, A2, 2026-11-02): same finding,
+  `/delixcrew:dispatch` step 4 command). Do not use `--resume`: measured (LLMPortal T009, A2, 2026-11-02): same finding,
   `--resume` 1.11 USD / 1.74M cache reads, new `-p` **0.44 USD** / 218K; both green and equivalent (pilot T004 `--resume`
   1.8–2.1 USD). `--resume` only when the implementer's half-finished context is needed (a `NEEDS_CONTEXT` answer). Put
   the finding text into the prompt **in full**: the card file in the worktree does not contain the current findings on
@@ -62,6 +62,6 @@ Give the reviewers **neither your own opinion nor the implementer's reasoning**;
 When all reviewers say ACCEPT/CLEAN, one screen for the user: PR link, the card's DoD ✔/✘, reviewer verdicts, and the
 security approval message (global CLAUDE.md format) if there is a 🔐 note. **The merge is the user's**; you do not run
 `gh pr merge`. After the merge `STATE.json` → `accepted`; if a dependent wave exists, open the next wave with
-`/delix:dispatch` step 4.
+`/delixcrew:dispatch` step 4.
 
 Reply in the user's language; keep status values and verdict tokens as written.

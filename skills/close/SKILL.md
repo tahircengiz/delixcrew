@@ -1,6 +1,6 @@
 ---
 name: close
-description: Closes a spec once all its cards are merged: updates STATUS.md and CHANGELOG, collects per-card cost/rounds/cache metrics, runs the spec↔code drift check (architect; EGM drift-report at size L), writes lessons learned to CLAUDE.md/memory only with human approval, cleans up worktrees. Use when the user says "close", "retro", or "/delix:close".
+description: Closes a spec once all its cards are merged: updates STATUS.md and CHANGELOG, collects per-card cost/rounds/cache metrics, runs the spec↔code drift check (architect; EGM drift-report at size L), writes lessons learned to CLAUDE.md/memory only with human approval, cleans up worktrees. Use when the user says "close", "retro", or "/delixcrew:close".
 argument-hint: [spec-path]
 ---
 
@@ -20,7 +20,7 @@ Append the total and, if one exists, the comparison with the "single-session bas
 Whatever was not measured is written as "not measured".
 
 ## 3. Drift check
-`Agent` with `delix:architect`: compare the SPEC with the merged code, list unimplemented REQs and behaviour not in the
+`Agent` with `delixcrew:architect`: compare the SPEC with the merged code, list unimplemented REQs and behaviour not in the
 spec. Size L with EGM: `egm-drift-report`. Findings go to STATUS "Open work".
 
 ## 4. Docs and memory

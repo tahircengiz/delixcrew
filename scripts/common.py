@@ -4,7 +4,7 @@ import json
 import os
 import sys
 
-REVIEWERS = {"delix:architect", "delix:qa", "delix:security", "delix:scout",
+REVIEWERS = {"delixcrew:architect", "delixcrew:qa", "delixcrew:security", "delixcrew:scout",
              "architect", "qa", "security", "scout"}
 
 

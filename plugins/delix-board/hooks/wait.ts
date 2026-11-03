@@ -1,5 +1,5 @@
 // Long runs the session waits on: a Bash command matching a wait pattern, or a
-// delix:* subagent. A foreground call is followed through its `next`; a
+// delixcrew:* subagent. A foreground call is followed through its `next`; a
 // background one through its output file and the task notification.
 
 import { atom, read, update } from 'claude-code'

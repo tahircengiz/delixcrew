@@ -12,7 +12,7 @@ from common import REVIEWERS, card_path, delix_json, deny, matches, read_input  
 g = read_input()
 agent = (g.get("agent_type") or "").strip()
 if agent in REVIEWERS:
-    deny(f"delix: role '{agent}' is read-only; it cannot write files. Put the finding in your report, the orchestrator applies it.")
+    deny(f"delixcrew: role '{agent}' is read-only; it cannot write files. Put the finding in your report, the orchestrator applies it.")
 
 cwd = g.get("cwd") or os.getcwd()
 if not card_path(cwd):
@@ -55,11 +55,11 @@ protected = cfg.get("protected_paths") or []
 test_paths = cfg.get("test_paths") or ["tests/**"]
 
 if path and outside_cwd(path):
-    deny(f"delix: '{path}' is outside the worktree ({cwd}); the implementer writes only inside its own worktree (A13). "
+    deny(f"delixcrew: '{path}' is outside the worktree ({cwd}); the implementer writes only inside its own worktree (A13). "
          f"Build the path relative to cwd; if the file really lives elsewhere, write NEEDS_CONTEXT in the report.")
 
 if matches(path, ["docs/delix/**", card], cwd):
-    deny(f"delix: '{path}' is the card or under docs/delix; the implementer cannot change these. If needed, explain "
+    deny(f"delixcrew: '{path}' is the card or under docs/delix; the implementer cannot change these. If needed, explain "
          f"with NEEDS_CONTEXT in the report, the orchestrator updates them.")
 
 files, approved = read_card()
@@ -72,7 +72,7 @@ if d:
     reason = "" if listed else " The path is not in the card's Files list."
     if not approved:
         reason += " The card has no 🔐 Approved line."
-    deny(f"delix: '{path}' is a protected path ({d}, Tier 3). This card cannot touch it;{reason} Explain with "
+    deny(f"delixcrew: '{path}' is a protected path ({d}, Tier 3). This card cannot touch it;{reason} Explain with "
          f"BLOCKED/NEEDS_CONTEXT in the report, the orchestrator obtains human approval.")
 
 if matches(path, test_paths, cwd) and not listed:
@@ -80,6 +80,6 @@ if matches(path, test_paths, cwd) and not listed:
     tool = g.get("tool_name") or ""
     if tool == "Write" and not os.path.exists(full):
         sys.exit(0)  # new test file is free
-    deny(f"delix: existing test file '{path}' cannot be modified (no test weakening). Add a new file or a new function "
+    deny(f"delixcrew: existing test file '{path}' cannot be modified (no test weakening). Add a new file or a new function "
          f"for new tests; if the test looks wrong, stop and write NEEDS_CONTEXT in the report.")
 sys.exit(0)

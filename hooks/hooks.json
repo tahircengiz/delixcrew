@@ -4,13 +4,13 @@
       {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit",
         "hooks": [
-          { "type": "command", "command": "command -v python3 >/dev/null 2>&1 || { echo 'delix: python3 not found on PATH; Write, Edit and Bash stay blocked until Python 3 is installed (or the plugin is disabled: claude plugin disable delix@delixcrew)' >&2; exit 2; }; python3 \"${CLAUDE_PLUGIN_ROOT}\"/scripts/write_gate.py", "timeout": 10, "onFailure": "block" }
+          { "type": "command", "command": "command -v python3 >/dev/null 2>&1 || { echo 'delixcrew: python3 not found on PATH; Write, Edit and Bash stay blocked until Python 3 is installed (or the plugin is disabled: claude plugin disable delixcrew@delixcrew)' >&2; exit 2; }; python3 \"${CLAUDE_PLUGIN_ROOT}\"/scripts/write_gate.py", "timeout": 10, "onFailure": "block" }
         ]
       },
       {
         "matcher": "Bash",
         "hooks": [
-          { "type": "command", "command": "command -v python3 >/dev/null 2>&1 || { echo 'delix: python3 not found on PATH; Write, Edit and Bash stay blocked until Python 3 is installed (or the plugin is disabled: claude plugin disable delix@delixcrew)' >&2; exit 2; }; python3 \"${CLAUDE_PLUGIN_ROOT}\"/scripts/bash_gate.py", "timeout": 60, "onFailure": "block" }
+          { "type": "command", "command": "command -v python3 >/dev/null 2>&1 || { echo 'delixcrew: python3 not found on PATH; Write, Edit and Bash stay blocked until Python 3 is installed (or the plugin is disabled: claude plugin disable delixcrew@delixcrew)' >&2; exit 2; }; python3 \"${CLAUDE_PLUGIN_ROOT}\"/scripts/bash_gate.py", "timeout": 60, "onFailure": "block" }
         ]
       }
     ],

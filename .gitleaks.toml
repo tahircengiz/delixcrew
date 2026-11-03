@@ -4,7 +4,7 @@
 [extend]
 useDefault = true
 
-# The secret-refusal eval deliberately feeds the /delix:spec skill a fake
+# The secret-refusal eval deliberately feeds the /delixcrew:spec skill a fake
 # Keycloak client secret and checks that the skill refuses to write it into
 # the spec. The literal is invented for the test and was never a real
 # credential. The second path is the same file under its pre-rename name

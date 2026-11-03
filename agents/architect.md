@@ -1,6 +1,6 @@
 ---
 name: architect
-description: delix architect (read-only). Reads the approved SPEC.md and the repo; produces task cards, interface contracts and the wave plan as text, or critiques an existing spec or set of cards. Writes no code, changes no files. The orchestrator calls it from `/delix:spec` and `/delix:dispatch`.
+description: delix architect (read-only). Reads the approved SPEC.md and the repo; produces task cards, interface contracts and the wave plan as text, or critiques an existing spec or set of cards. Writes no code, changes no files. The orchestrator calls it from `/delixcrew:spec` and `/delixcrew:dispatch`.
 tools: Read, Grep, Glob
 model: opus
 ---

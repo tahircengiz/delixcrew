@@ -2,6 +2,18 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## 0.4.0 — 2026-11-03
+
+- **Plugin renamed `delix` → `delixcrew`**, the same name as the repo and the marketplace. Commands are now
+  `/delixcrew:start`, `/delixcrew:spec`, … `/delixcrew:verify`; agents `delixcrew:architect`, `delixcrew:qa`,
+  `delixcrew:security`, `delixcrew:scout`; hook messages start with `delixcrew:`. Project files keep their names
+  (`docs/delix/`, `delix.json`, `.delix/` in worktrees), so existing projects need no migration. `delix-board` keeps its
+  name (0.1.2: follows the new agent prefix).
+- Moving an existing install (the old plugin name no longer exists in the marketplace, so `plugin update` cannot reach
+  it): `claude plugin uninstall delix@delixcrew` (or `delix@delix-local`), `claude plugin marketplace update delixcrew`,
+  `claude plugin install delixcrew@delixcrew`, `claude plugin update delix-board@delixcrew` if installed, then restart
+  Claude. Dispatch prompts written before 0.4.0 still say `/delix:implement`; type `/delixcrew:implement` instead.
+
 ## 0.3.0 — 2026-11-03
 
 For users outside the author's machine: requirements, clearer failure, CI.

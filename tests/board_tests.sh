@@ -34,7 +34,7 @@ echo "$out" | grep -q "| 2 | T003 | frontend | 1 | open | 0 | - | not measured |
 [ -f docs/delix/BOARD.md ] && grep -q "T001" docs/delix/BOARD.md && ok "--write: BOARD.md written" || bad "BOARD.md missing"
 python3 "$S/board.py" --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert len(d["cards"])==3 and d["cards"][0]["worktree"], d' && ok "--json output" || bad "--json"
 
-# 3) /delix:verify record (STATE.json.verifications) → "Verifications" table; with and without cards
+# 3) /delixcrew:verify record (STATE.json.verifications) → "Verifications" table; with and without cards
 python3 - <<'PYS'
 import json; p="docs/delix/STATE.json"; d=json.load(open(p))
 d["verifications"]=[{"name":"a10c-e7","date":"2026-11-02","sha":"abcdef0123","base":"40735be","input":"a10c-e7","tier":"3 🔐","verdict":"FIX 🔐",

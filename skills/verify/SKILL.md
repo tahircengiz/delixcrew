@@ -1,6 +1,6 @@
 ---
 name: verify
-description: As the orchestrator, only verifies work done without a card (the user's or a single session's branch, commit or working directory) (K43). Deterministic gates (local tests, gitleaks, remote isolated unit test; full suite on request) and a single zero-context qa (+ security at Tier ≥ 2) review pass; no fix rounds. Output is a docs/delix/verifications/<date>-<name>.md report (ACCEPT / FIX) and a STATE.json record. Use when the user says "verify", "check this branch", or "/delix:verify <branch>"; for a PR with a card use /delix:review.
+description: As the orchestrator, only verifies work done without a card (the user's or a single session's branch, commit or working directory) (K43). Deterministic gates (local tests, gitleaks, remote isolated unit test; full suite on request) and a single zero-context qa (+ security at Tier ≥ 2) review pass; no fix rounds. Output is a docs/delix/verifications/<date>-<name>.md report (ACCEPT / FIX) and a STATE.json record. Use when the user says "verify", "check this branch", or "/delixcrew:verify <branch>"; for a PR with a card use /delixcrew:review.
 argument-hint: <branch|commit|dir> [--request <file>] [--tier 1|2|3] [--full] [--keep]
 ---
 
@@ -9,7 +9,7 @@ report; applying them is the user's. Input: $ARGUMENTS
 
 When this mode applies (K43): a well-described S/M job finished without a card in a single session or by the user; what
 the delix flow actually adds here is a run in the remote environment, a secret scan, a `security` review and a human
-decision. PRs with a card go to `/delix:review` (with fix rounds); here it is a **single pass**.
+decision. PRs with a card go to `/delixcrew:review` (with fix rounds); here it is a **single pass**.
 
 ## 0. Resolve the input (pin it to a SHA)
 - `<name>` = the branch name or the label given by the user (file-name safe: `[a-z0-9-]`); `<date>` = today `YYYY-MM-DD`.
@@ -61,10 +61,10 @@ decision. PRs with a card go to `/delix:review` (with fix rounds); here it is a 
 ## 2. Independent review (single pass, parallel, zero chat context)
 With the `Agent` tool, at the same time; give only file paths and the tier, **not your own opinion, the implementer's
 reasoning or your reading of the gate results** (give the path of the test output file, not your interpretation):
-- `delix:qa` — patch path, `archive/` path, request/spec path, gate output file (`<workspace>/gates.txt`), "no card:
+- `delixcrew:qa` — patch path, `archive/` path, request/spec path, gate output file (`<workspace>/gates.txt`), "no card:
   acceptance criteria come from the request text; the Files rule does not apply; deleting or loosening an existing line
   in a test file is P0". Expected: `ACCEPT | ACCEPT_WITH_NOTES | REJECT` + P0/P1/P2 list.
-- Tier ≥ 2: `delix:security` — same inputs + tier + `protected_paths`. Expected: `CLEAN | FIX | 🔐 HUMAN_APPROVAL`.
+- Tier ≥ 2: `delixcrew:security` — same inputs + tier + `protected_paths`. Expected: `CLEAN | FIX | 🔐 HUMAN_APPROVAL`.
 - Tier 3 with the `/security-review` skill available: run it only if it can review the `$sha` diff alone; if it reviews
   the main checkout's pending changes, skip it and write "not run" (dry-run finding).
 Take the reviewer output into the report without shortening it; no "fix this" requests, no sessions, no `SendMessage`.
@@ -104,12 +104,12 @@ Request / acceptance criteria source: `<path>` · Patch: `docs/delix/verificatio
 ## Not run
 - <gate>: <reason>
 ## Verdict
-**ACCEPT / FIX** · <one-line reason> · applying is the user's; after the fix run `/delix:verify <input>` again.
+**ACCEPT / FIX** · <one-line reason> · applying is the user's; after the fix run `/delixcrew:verify <input>` again.
 ```
 
 Append to the `STATE.json.verifications` list (create it if missing):
 `{"name","date","sha","base","input","tier","verdict","report","gates":{"gitleaks":"PASS","local":"PASS","remote_unit":"PASS 41/41","full":"not run"},"qa":"ACCEPT","security":"CLEAN","cost_usd":null}`;
-refresh the `updated` field. `/delix:status` shows it in the "Verifications" table. When a `FIX` record is later fixed
+refresh the `updated` field. `/delixcrew:status` shows it in the "Verifications" table. When a `FIX` record is later fixed
 and merged, or dropped, add `"resolution": "merged <sha>"` / `"abandoned: <why>"`; it then leaves "Pending fixes".
 
 **Cost:** in a headless run, `total_cost_usd` from the result JSON (subagents included) is written to the report and STATE

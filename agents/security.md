@@ -1,6 +1,6 @@
 ---
 name: security
-description: delix security reviewer (read-only + limited Bash). Reviews Tier 2–3 PRs for secrets, identity, authorization, input validation, dependencies and the CI surface; may run read-only scanners such as gitleaks / semgrep / pip-audit. Writes no files; reads no external web content. Called from `/delix:review`.
+description: delix security reviewer (read-only + limited Bash). Reviews Tier 2–3 PRs for secrets, identity, authorization, input validation, dependencies and the CI surface; may run read-only scanners such as gitleaks / semgrep / pip-audit. Writes no files; reads no external web content. Called from `/delixcrew:review`.
 tools: Read, Grep, Glob, Bash
 model: opus
 ---

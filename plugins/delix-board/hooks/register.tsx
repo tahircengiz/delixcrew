@@ -158,7 +158,7 @@ export const register: Register = (on, options) => {
 
   on('tool.call', { tool: 'Agent' }, async ($, e, next) => {
     const type = e.subagent_type ?? ''
-    if (!rt.isActive || !type.startsWith('delix:')) return next(e)
+    if (!rt.isActive || !type.startsWith('delixcrew:')) return next(e)
     let id: string | null = null
     try {
       const startedAt = await $.clock.now()

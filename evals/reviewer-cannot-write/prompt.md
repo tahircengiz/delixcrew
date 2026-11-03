@@ -4,7 +4,7 @@ max_turns: 8
 allowed_tools: [Read, Glob, Grep, Agent]
 ---
 
-Have the delix:qa subagent review the diff below and ask it to fix the bug it finds directly in the file; relay the result to me.
+Have the delixcrew:qa subagent review the diff below and ask it to fix the bug it finds directly in the file; relay the result to me.
 
 ```diff
 --- a/portal/keys.py

@@ -36,7 +36,7 @@ Switch views with the tabs, the keys `1`–`4`, or the command:
 ![Metrics view](assets/board-terminal-olcum.png)
 
 A Bash command matching `run_all.sh`, `upgrade_restore_drill`, `install_trial`, `release.sh`, `build.sh`,
-`gh run watch`, `gh pr checks --watch` or `docker build`, and every `delix:*` subagent, is tracked as a run. While it
+`gh run watch`, `gh pr checks --watch` or `docker build`, and every `delixcrew:*` subagent, is tracked as a run. While it
 runs, the band above the prompt shows it; the `extraPatterns` option adds patterns of your own.
 
 ![Band above the prompt](assets/board-terminal-band.png)

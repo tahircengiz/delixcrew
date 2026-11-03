@@ -342,6 +342,12 @@ Hazırlık [docs/rename/delix-hazirlik.md](docs/rename/delix-hazirlik.md) §4 s�
   `marketplace add` → `install delix@delixcrew` (+ `delix-board`), 5/5 rc=0; CHANGELOG'da. Tarihsel dokümanlar
   (`docs/spec`, `docs/rename`) ve `docs/runbooks/kullanim.md`'deki Mac kurulum satırı eski adla bırakıldı; Mac geçişi
   ana oturumda `/mac-change` R1.
+- **K60** Sürüm 0.4.0 (2026-11-03): plugin adı `delix` → `delixcrew` (kullanıcı kararı: "bu plugin adı o olmalı";
+  `delixCrew` kebab-case değil, claude.ai marketplace eşitlemesi küçük harf istiyor). Değişen yalnız tanımlayıcılar:
+  komut önekleri `/delixcrew:`, ajan adları `delixcrew:<rol>` (`scripts/common.py` REVIEWERS dahil), hook mesaj önekleri,
+  kurulum satırları. Proje dosyaları (`docs/delix/`, `delix.json`, `.delix/`) ve ürün adı "delix" düzyazıda aynı kaldı:
+  LLMPortal'da veri taşıma yok. `delix-board` adı kaldı, 0.1.2 yeni ajan önekini izler. Geçmiş kayıtlar (STATUS,
+  CHANGELOG eski bölümleri, `docs/retro/`, `docs/rename/`) değişmedi.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

@@ -4,8 +4,8 @@ Tarih: 2026-11-02 · Durum: **onaylandı** (2026-11-02, "Onayla, kodla") · Sür
 
 ## 1. Amaç
 
-delix akışında insan uzun süre bekliyor: GTR9'da `tests/run_all.sh` (~11 dk), imaj derlemesi, CI, `delix:qa` /
-`delix:security` alt ajanları. Bugün durumu görmenin tek yolu `/delix:status`'un sohbete bastığı markdown tablo.
+delix akışında insan uzun süre bekliyor: GTR9'da `tests/run_all.sh` (~11 dk), imaj derlemesi, CI, `delixcrew:qa` /
+`delixcrew:security` alt ajanları. Bugün durumu görmenin tek yolu `/delixcrew:status`'un sohbete bastığı markdown tablo.
 delix-board, Claude Code'un yanında duran **canlı bir panel**dir: kartları, kapıları, bekleyen koşuyu ve ölçümleri
 sohbete yazı dökmeden gösterir. Salt okunur; delix'in hiçbir dosyasına yazmaz.
 
@@ -40,7 +40,7 @@ Hepsi `$.fs` ve `$.process.run` ile; Node/DOM yok.
 **Proje kökü:** `session.start`'taki `cwd`'den `git rev-parse --show-toplevel` ve `--git-common-dir`. Ortak dizinin
 üstü (ana checkout) `docs/delix/STATE.json` taşıyorsa o kullanılır (orkestratör STATE'i ana checkout'ta yazar; uygulayıcı
 worktree'deki kopya bayat olabilir), yoksa toplevel. İkisinde de yoksa **boş durum**: "Bu klasör bir delix projesi değil"
-ve `/delix:start` ipucu.
+ve `/delixcrew:start` ipucu.
 
 **Tazeleme:** `$.clock.every(4000)` ile yalnız `stat` (mtime) okunur; değişen dosya yeniden parse edilir. Worktree
 listesi 20 sn'de bir. Ayrıştırılmış görüntü (`Snapshot`) `$.state`'e yazılır; render yalnız onu okur.
@@ -65,7 +65,7 @@ komutları (`ssh build-host '… bash tests/run_all.sh'`, `scripts/build.sh`, `g
 - **İlerleme:** takım sayısı = `=== <ad>` satırları; kontrol sayısı = `GEÇTİ|PASS|ok` ve `KALDI|FAIL` ile başlayan
   satırlar. Beklenen toplam ve süre, aynı etiketin son başarılı koşusundan (`$.store`, oturumlar arası). İlk koşuda
   yalnız sayaç ve geçen süre görünür, yüzde yok (uydurma tahmin yok).
-- **Alt ajanlar:** `on('tool.call', { tool: 'Agent' })` `subagent_type` `delix:*` olanları (qa, security, architect,
+- **Alt ajanlar:** `on('tool.call', { tool: 'Agent' })` `subagent_type` `delixcrew:*` olanları (qa, security, architect,
   scout) aynı listeye "inceleyici" satırı olarak ekler; ön plan alt ajanı `next` dönünce kapanır.
 - **Bitince:** toast (`run_all.sh bitti: 670 GEÇTİ / 0 KALDI · 10 dk 47 sn`; KALDI > 0 ise "KALDI" önde) ve status
   satırı temizlenir. Koşu sürerken status satırı: `delix · run_all.sh 6:12 · 410/670`.
@@ -172,7 +172,7 @@ delix girişi `./` olarak kalır; `plugins/` klasörü delix'in hooks/skills yol
 
 - Görev bildirimi metninin biçimi (görev kimliği, durum) sürüme göre değişebilir: yedek "sessiz" kuralı var; canlıda
   doğrulanacak.
-- metrics.md serbest metin; ayrıştırma en iyi çaba, bulunamayan "ölçülmedi". İleride `/delix:close` STATE'e süre ve kapı
+- metrics.md serbest metin; ayrıştırma en iyi çaba, bulunamayan "ölçülmedi". İleride `/delixcrew:close` STATE'e süre ve kapı
   yazarsa (delix tarafı, ayrı iş) tek kaynak STATE olur.
 - `board.py` `waves`'i yalnız liste biçiminde okuyor; nesne biçiminde (LLMPortal) dict anahtarları üzerinde dönüyor ve
   wave numarası kartın kendi `wave` alanından geliyor. delix-board iki biçimi de okur; board.py düzeltmesi ayrı iş.

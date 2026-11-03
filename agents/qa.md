@@ -1,6 +1,6 @@
 ---
 name: qa
-description: delix QA and spec-conformance reviewer (read-only, zero chat context). Reviews a PR diff or a worktree against SPEC.md and the task card, reads the test evidence, reports only high-confidence findings. Writes no code, runs no tests (the Stop hook / CI runs them). Called from `/delix:review`.
+description: delix QA and spec-conformance reviewer (read-only, zero chat context). Reviews a PR diff or a worktree against SPEC.md and the task card, reads the test evidence, reports only high-confidence findings. Writes no code, runs no tests (the Stop hook / CI runs them). Called from `/delixcrew:review`.
 tools: Read, Grep, Glob
 model: sonnet
 ---

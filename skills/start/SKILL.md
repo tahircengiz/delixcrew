@@ -1,6 +1,6 @@
 ---
 name: start
-description: Starts the delix flow. Takes a request, reads the project context (CLAUDE.md, STATUS.md, docs/delix), proposes the size (S/M/L) and tier (1/2/3), sets up docs/delix, and routes to a single task card for S or to /delix:spec for M/L. Use when the user says "start with delix", "hand this to delix", "delix ile başla", "bunu ekibe ver", or "/delix:start".
+description: Starts the delix flow. Takes a request, reads the project context (CLAUDE.md, STATUS.md, docs/delix), proposes the size (S/M/L) and tier (1/2/3), sets up docs/delix, and routes to a single task card for S or to /delixcrew:spec for M/L. Use when the user says "start with delix", "hand this to delix", "delix ile başla", "bunu ekibe ver", or "/delixcrew:start".
 argument-hint: [request]
 ---
 
@@ -10,7 +10,7 @@ Request: $ARGUMENTS
 
 ## 1. Read the context (little and targeted)
 - `CLAUDE.md`, `STATUS.md` (if any) and the `README.md` heading map in the project root; `docs/delix/delix.json`,
-  `docs/delix/STATE.json` (if any). Do not read the whole repo; use `delix:scout` for targeted searches.
+  `docs/delix/STATE.json` (if any). Do not read the whole repo; use `delixcrew:scout` for targeted searches.
 - If `docs/delix/` is missing, create it: `${CLAUDE_PLUGIN_ROOT}/templates/delix.json` → `docs/delix/delix.json`
   (adjust `test_command`, `protected_paths`, `test_paths` to the repo and show them to the user; `test_command` must
   include the unit tests that run locally; if it is only build/lint, tell the user: the Stop gate will let logic errors
@@ -29,18 +29,18 @@ ask one question (the most critical ambiguity, 2–3 options, `My pick: … beca
 
 **Mode proposal (K43):** when size is **S or M**, tier **≤ 2** and the work is **well described** (symptom, wanted
 behaviour and acceptance criterion/test can be written in the user's words; no open branch needing a grill question; no
-parallel cards), do **not** propose the full flow: say `Mode: single session + /delix:verify · because …`. The user does
-the work in one session (or by hand) and runs `/delix:verify <branch>` at the end for the remote run, gitleaks and a
+parallel cards), do **not** propose the full flow: say `Mode: single session + /delixcrew:verify · because …`. The user does
+the work in one session (or by hand) and runs `/delixcrew:verify <branch>` at the end for the remote run, gitleaks and a
 single `qa`/`security` pass (measured: the A10 series, same outcome at 4–12% of the cost). The full flow (spec → cards →
 implementer → review) when any of these holds: **Tier 3**, **parallel cards** (≥ 2 independent cards), **unclear spec**
 (at least one open branch in the grill). If the user still wants the full flow, do as asked.
 
 ## 3. Route
-- **S:** no spec. Give the request and context to the `architect` subagent (Agent tool, `delix:architect`) and have it
+- **S:** no spec. Give the request and context to the `architect` subagent (Agent tool, `delixcrew:architect`) and have it
   write **one card** (fields of `templates/task-card.md`); write the card to `docs/delix/tasks/T<nnn>-<slug>.md`, add it
   to `STATE.json`. Show the card to the user: **for S, gate 1 is the approval of the card.** After approval, follow the
-  `/delix:dispatch` steps.
-- **M / L:** switch to the `/delix:spec` skill (call it with the `Skill` tool, passing the request and the size/tier
+  `/delixcrew:dispatch` steps.
+- **M / L:** switch to the `/delixcrew:spec` skill (call it with the `Skill` tool, passing the request and the size/tier
   proposal).
 
 ## Rules

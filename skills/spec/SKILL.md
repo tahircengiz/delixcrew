@@ -1,14 +1,14 @@
 ---
 name: spec
-description: Writes the tech spec through a grill interview (size M/L). Asks one question at a time, fills docs/delix/SPEC.md from the template, has the architect (and security at Tier 3) subagent review it, proposes the egm-draft/review/resolve loop for size L when EGM is installed, and asks for gate 1 approval. /delix:start routes here; also use when the user says "write the spec" or "/delix:spec".
+description: Writes the tech spec through a grill interview (size M/L). Asks one question at a time, fills docs/delix/SPEC.md from the template, has the architect (and security at Tier 3) subagent review it, proposes the egm-draft/review/resolve loop for size L when EGM is installed, and asks for gate 1 approval. /delixcrew:start routes here; also use when the user says "write the spec" or "/delixcrew:spec".
 argument-hint: [request] [size] [tier]
 ---
 
 You are the `delix` orchestrator; in this step **you write the spec, not code**. Input: $ARGUMENTS (request, size, tier;
-if missing, propose them yourself with the `/delix:start` logic).
+if missing, propose them yourself with the `/delixcrew:start` logic).
 
 ## 1. Grill (question first, write later)
-1. Scan the repo and docs (targeted, with `delix:scout`); never ask a question whose answer is already there.
+1. Scan the repo and docs (targeted, with `delixcrew:scout`); never ask a question whose answer is already there.
 2. **One question at a time**, starting from the most critical ambiguity; 2–3 options + `My pick: … because …`. Instead
    of leaving spec-kit's `[NEEDS CLARIFICATION]` marker in the file, ask the question now.
 3. Stop when two reasonable implementations would no longer produce different diffs; if the user says `enough`, stop and
@@ -32,15 +32,15 @@ if missing, propose them yourself with the `/delix:start` logic).
   at the cost of another is a K decision with the trade written out.
 
 ## 3. Independent review (zero context)
-- Call `delix:architect` with the `Agent` tool: SPEC path, project root, "job A: spec review". ≤ 7 findings, `READY/FIX`.
-- At Tier 3 also call `delix:security` (spec level: protected paths, authorization, secrets, threat model).
+- Call `delixcrew:architect` with the `Agent` tool: SPEC path, project root, "job A: spec review". ≤ 7 findings, `READY/FIX`.
+- At Tier 3 also call `delixcrew:security` (spec level: protected paths, authorization, secrets, threat model).
 - Size L with EGM installed (the `/egm:egm-draft` skill is visible): offer the user `egm-draft` → `egm-review` →
   `egm-resolve` on the SPEC; run it if accepted. Without EGM, pass silently and say "no EGM" in the report.
 - Fix P0/P1 findings (in the spec only), move P2s to "Open questions"; **do not fix every finding** (over-engineering).
 
 ## 4. Gate 1
 Ask for approval with AskUserQuestion: `Do you approve the spec?` · 1) approve 2) request changes. On approval, write
-`**approved (gate 1, <date>)**` in the SPEC header, fill `STATE.json.spec` and move on to `/delix:dispatch`. No progress
+`**approved (gate 1, <date>)**` in the SPEC header, fill `STATE.json.spec` and move on to `/delixcrew:dispatch`. No progress
 without approval.
 
 ## Rules

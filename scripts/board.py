@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """delix board: docs/delix/STATE.json + cards + worktree .delix/report.md → one Markdown table
-(+ a "Verifications" table when STATE.json.verifications exists: card-less /delix:verify records, K43).
+(+ a "Verifications" table when STATE.json.verifications exists: card-less /delixcrew:verify records, K43).
 
 Usage (in the project root):
     python3 board.py             # prints the table to stdout (writes no file)
@@ -205,12 +205,12 @@ def collect(root):
 
 
 def verifications_table(records):
-    """STATE.json.verifications → Markdown table rows (/delix:verify, card-less work). [] when empty."""
+    """STATE.json.verifications → Markdown table rows (/delixcrew:verify, card-less work). [] when empty."""
     if not records:
         return []
     def h(x):
         return str(x if x not in (None, "") else "-").replace("|", "/").replace("\n", " ")
-    out = ["", "## Verifications (card-less, `/delix:verify`)", "",
+    out = ["", "## Verifications (card-less, `/delixcrew:verify`)", "",
            "| date | name | sha | tier | gitleaks | local | remote unit | full | qa | security | verdict | cost | report |",
            "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for v in records:
@@ -236,11 +236,11 @@ def table(data):
     out = [f"# delix board — {os.path.basename(data['project'].rstrip('/'))}", "",
            f"Generated: {now} · spec: `{data.get('spec') or '-'}` · size: {data.get('size') or '-'} · "
            f"STATE updated: {data.get('updated') or '-'}  ",
-           "Read-only; `/delix:status` regenerates it. Sources: `docs/delix/STATE.json`, `docs/delix/tasks/`, "
+           "Read-only; `/delixcrew:status` regenerates it. Sources: `docs/delix/STATE.json`, `docs/delix/tasks/`, "
            "worktree `.delix/report.md`.", ""]
     if not data["cards"]:
         out += ["**No cards.** `docs/delix/STATE.json` or `docs/delix/tasks/` is missing or empty. "
-                "Start with `/delix:start <request>`, create cards with `/delix:dispatch`.", ""]
+                "Start with `/delixcrew:start <request>`, create cards with `/delixcrew:dispatch`.", ""]
         out += verifications_table(data.get("verifications"))
         return "\n".join(out)
     count = {}
