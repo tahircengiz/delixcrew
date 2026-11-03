@@ -4,6 +4,8 @@
 |---|---|---|---|---|---|
 | T014 | S | 3 | backend | 2 | open |
 
+**🔐 Approved:** 2026-11-03 tahircengiz
+
 > 🔐 Tier 3 (the path that publishes comments on a public repo). The orchestrator adds the Approved line after the human says "yes".
 
 **Goal (1 sentence):** Close the hidden channels left open in T010 round 6 (conjoining Hangul jamo, U+1D159, trailing spaces) and add the direct tests qa asked for. · **Spec:** `docs/delix/SPEC.md#REQ-5`, §6 (the user sees the comment exactly); T010 card K132/K133, Round 6
