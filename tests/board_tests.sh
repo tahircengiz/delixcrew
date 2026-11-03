@@ -29,7 +29,7 @@ out=$(python3 "$S/board.py")
 [ ! -e docs/delix/BOARD.md ] && ok "default: BOARD not written" || bad "default: BOARD must not be written"
 out=$(python3 "$S/board.py" --write)
 echo "$out" | grep -q "| 1 | T001 | backend | 2 | in_progress | 0 | #7 | not measured | NEEDS_CONTEXT · Keycloak realm name missing from spec | needs_context |" && ok "T001 row (report, PR, gate)" || { bad "T001 row"; echo "$out"; }
-echo "$out" | grep -q "| 1 | T002 | backend | 3 | accepted | 2 | #12 | \$1.50 | - | merge |" && ok "T002 row (cost, merge gate)" || { bad "T002 row"; echo "$out"; }
+echo "$out" | grep -q "| 1 | T002 | backend | 3 | accepted | 2 | #12 | \$1.50 | - | - |" && ok "T002 row (accepted = merged, no gate)" || { bad "T002 row"; echo "$out"; }
 echo "$out" | grep -q "| 2 | T003 | frontend | 1 | open | 0 | - | not measured | - | - |" && ok "T003 from card file only" || { bad "T003 row"; echo "$out"; }
 [ -f docs/delix/BOARD.md ] && grep -q "T001" docs/delix/BOARD.md && ok "--write: BOARD.md written" || bad "BOARD.md missing"
 python3 "$S/board.py" --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert len(d["cards"])==3 and d["cards"][0]["worktree"], d' && ok "--json output" || bad "--json"
@@ -52,6 +52,17 @@ PYS
 rm -f docs/delix/tasks/*.md
 out=$(python3 "$S/board.py")
 echo "$out" | grep -q "No cards" && echo "$out" | grep -qF "| 2026-11-02 | a10c-e7 |" && ok "verifications: visible without cards too" || { bad "verifications without cards"; echo "$out"; }
+
+# 3b) resolution closes a FIX record; in_review with a PR waits for the merge
+python3 - <<'PYS'
+import json; p="docs/delix/STATE.json"; d=json.load(open(p))
+d["verifications"].append(dict(d["verifications"][0], name="old-fix", resolution="merged 5ea299f"))
+d["cards"]={"T006":{"role":"backend","tier":2,"status":"in_review","pr":21}}
+json.dump(d,open(p,"w"),ensure_ascii=False)
+PYS
+out=$(python3 "$S/board.py")
+echo "$out" | grep -qF "| FIX 🔐 · merged 5ea299f |" && echo "$out" | grep -qF "Pending fixes:** a10c-e7 ·" && ok "verifications: resolution shown, not pending" || { bad "verification resolution"; echo "$out"; }
+echo "$out" | grep -qF "| T006 | backend | 2 | in_review | 0 | #21 | not measured | - | merge |" && ok "in_review + PR: merge gate" || { bad "in_review merge gate"; echo "$out"; }
 
 # 4) object-shaped waves ([{wave, cards, note}]) → the wave number comes from the "wave" field
 python3 - <<'PYS'

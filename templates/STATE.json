@@ -10,7 +10,7 @@
     "T001": { "file": "docs/delix/tasks/T001-example.md", "role": "backend", "tier": 2, "status": "open", "pr": null, "rounds": 0, "cost_usd": null }
   },
   "status_values": ["open", "in_progress", "in_review", "fixing", "accepted", "rejected", "escalated"],
-  "$comment_verifications": "/delix:verify records (card-less work, K43); only the orchestrator writes them, /delix:status shows them in the 'Verifications' table.",
+  "$comment_verifications": "/delix:verify records (card-less work, K43); only the orchestrator writes them, /delix:status shows them in the 'Verifications' table. Optional \"resolution\" closes a FIX record (\"merged <sha>\", \"abandoned: <why>\"); it then leaves Pending fixes.",
   "verifications": [
     { "name": "example-branch", "date": "2026-01-01", "sha": "0000000", "base": "0000000", "input": "example-branch", "tier": 2, "verdict": "ACCEPT",
       "report": "docs/delix/verifications/2026-01-01-example-branch.md",

@@ -183,7 +183,7 @@ def collect(root):
         gates = []
         if tier == 3 and status in OPEN_STATUSES:
             gates.append("🔐")
-        if status == "accepted" and pr:
+        if status == "in_review" and pr:  # accepted = merged (review §4), so gate 2 is still open only here
             gates.append("merge")
         if status == "escalated":
             gates.append("escalated")
@@ -219,10 +219,12 @@ def verifications_table(records):
         cost = f"${m:.2f}" if isinstance(m, (int, float)) else "not measured"
         sha = h(v.get("sha"))[:7]
         report = f"`{v['report']}`" if v.get("report") else "-"
+        verdict = h(v.get("verdict")) + (f" · {h(v['resolution'])}" if v.get("resolution") else "")
         out.append(f"| {h(v.get('date'))} | {h(v.get('name'))} | {sha} | {h(v.get('tier'))} | {h(gates.get('gitleaks'))} | "
                    f"{h(gates.get('local'))} | {h(gates.get('remote_unit'))} | {h(gates.get('full'))} | {h(v.get('qa'))} | "
-                   f"{h(v.get('security'))} | {h(v.get('verdict'))} | {cost} | {report} |")
-    pending = [v.get("name") for v in records if str(v.get("verdict", "")).startswith("FIX")]
+                   f"{h(v.get('security'))} | {verdict} | {cost} | {report} |")
+    pending = [v.get("name") for v in records
+               if str(v.get("verdict", "")).startswith("FIX") and not v.get("resolution")]
     out.append("")
     out.append("**Pending fixes:** " + (", ".join(map(str, pending)) if pending else "none") +
                " · verdict ACCEPT/FIX; fixing and merging are the user's; 🔐 = a protected path was touched, asks for approval in chat.")
@@ -263,7 +265,7 @@ def table(data):
     pending = [f"{s['id']} ({', '.join(s['gates'])})" for s in data["cards"] if s["gates"]]
     out.append("")
     out.append("**Pending gates:** " + ("; ".join(pending) if pending else "none") +
-               "  \n🔐 = Tier 3, interactive session + security approval · merge = gate 2, a human merges.")
+               "  \n🔐 = Tier 3, interactive session + security approval · merge = gate 2, PR in review, a human merges.")
     out += verifications_table(data.get("verifications"))
     return "\n".join(out) + "\n"
 

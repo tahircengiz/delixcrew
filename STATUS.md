@@ -305,6 +305,10 @@ Hazırlık [docs/rename/delix-hazirlik.md](docs/rename/delix-hazirlik.md) §4 s�
   körüne kesmek erişilebilirliği bozardı). `spec` §2: her karar UX, DX ve AX'i birlikte iyileştirmeli; birini ötekinin
   pahasına alan karar K kararı olur. `architect` A) soru (6) bunu denetler; kural yazılı ama denetimsiz kalmasın diye.
   Kaynak: kullanıcının bulduğu kullanım örneği; marka adları (örnek siteler) metne alınmadı.
+- **K54** Sürüm 0.2.4 (2026-11-03): panonun yanlış alarmı. `review` §4 kartı merge'den sonra `accepted` yapar, ama
+  `board.py` `accepted + pr` için `merge` kapısı gösteriyordu; LLMPortal panosunda 7 merge edilmiş kart "bekliyor"
+  göründü. Kapı artık `in_review + pr`'de. Doğrulama kayıtlarına isteğe bağlı `resolution`: düzeltilip merge edilen ya da
+  bırakılan `FIX` kaydı "Pending fixes"ten çıkar (LLMPortal goofy-dijkstra merge 5ea299f, a10c-e7 ölçüm deneyi).
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

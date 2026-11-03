@@ -109,7 +109,8 @@ Request / acceptance criteria source: `<path>` · Patch: `docs/delix/verificatio
 
 Append to the `STATE.json.verifications` list (create it if missing):
 `{"name","date","sha","base","input","tier","verdict","report","gates":{"gitleaks":"PASS","local":"PASS","remote_unit":"PASS 41/41","full":"not run"},"qa":"ACCEPT","security":"CLEAN","cost_usd":null}`;
-refresh the `updated` field. `/delix:status` shows it in the "Verifications" table.
+refresh the `updated` field. `/delix:status` shows it in the "Verifications" table. When a `FIX` record is later fixed
+and merged, or dropped, add `"resolution": "merged <sha>"` / `"abandoned: <why>"`; it then leaves "Pending fixes".
 
 **Cost:** in a headless run, `total_cost_usd` from the result JSON (subagents included) is written to the report and STATE
 afterwards; interactively `/cost`. If not measured, `not measured` stays; never estimate.

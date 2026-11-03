@@ -2,6 +2,13 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## 0.2.4 — 2026-11-03
+
+- `board.py`: an `accepted` card is merged (review §4), so it no longer shows a `merge` gate; the gate now shows on an
+  `in_review` card with a PR.
+- Verification records take an optional `resolution` (`merged <sha>`, `abandoned: <why>`): shown next to the verdict,
+  left out of "Pending fixes".
+
 ## 0.2.3 — 2026-11-03
 
 - `roles/ui-ux.md`: no taglines, helper text or secondary labels; a screen that needs them gets a better layout.
