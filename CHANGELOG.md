@@ -33,6 +33,10 @@ Self-feeding feedback: problems with delixcrew itself become sanitized GitHub is
   that repo's test command. The remaining case, an archive that brings its own `.git`, is tracked in issue #17.
 - README → Feedback → Data & privacy: what is sent, what is not, where it goes (a public issue under your own GitHub
   account), the local queue and how to delete it, and how to ask for a sent issue to be removed.
+- **Feedback hardening (T008, sanitizer v2):** `add` rejects a non-string `kind` without a traceback; single-segment
+  paths (`/srv`) and `name:/path` (`nas:/volume1/x`) are redacted, except `/delixcrew:<skill>` and Claude Code's
+  built-in commands; `send` runs only for a draft (`sent`, `duplicate`, `dropped` exit 2, nothing sent). Hashes from an
+  earlier preview are no longer valid; run `preview` again.
 
 ## 0.4.0 — 2026-11-03
 

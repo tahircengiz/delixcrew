@@ -31,7 +31,7 @@ from urllib.parse import urlsplit
 REPO = "tahircengiz/delixcrew"
 REPO_URL = "https://github.com/" + REPO
 GH_REPO_ARG = "github.com/" + REPO
-SANITIZER_VERSION = "1"
+SANITIZER_VERSION = "2"
 LABELS = {"bug": "bug", "feature": "enhancement"}
 GH_SCRUB = ("GH_HOST", "GH_REPO", "GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TOKEN")
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -57,7 +57,12 @@ PLACEHOLDER_RE = re.compile(r"(<redacted:[a-z]+>)")
 _SEG = r"[^\s/`'\"<>()\[\],;]"
 HOME_RE = re.compile(r"(?<![\w.~/:<>\]\\-])/(?:Users|home)/[^/\s,;:'\"`()<>]+(?=/|\s|$|[,;:'\"`()<>])")
 WIN_HOME_RE = re.compile(r"(?<![\w])[A-Za-z]:\\Users\\[^\\\s]+", re.IGNORECASE)
-ABS_PATH_RE = re.compile(r"(?<![\w.~/:<>\]\\-])/" + _SEG + r"+(?:/" + _SEG + r"*)+")
+_PATH_LB = r"(?<![\w.~/<>\]\\-])"  # K101: no ':' here, so name:/path is a path; '//' in a URL still is not
+ABS_PATH_RE = re.compile(_PATH_LB + "/" + _SEG + r"+(?:/" + _SEG + r"*)+")
+SINGLE_SEG_RE = re.compile(_PATH_LB + "/" + _SEG + r"+(?!/|" + _SEG + ")")  # REQ-12: /srv, /acme:builds
+SKILLS_DIR = os.path.join(SCRIPT_DIR, "..", "skills")
+BUILTIN_COMMANDS = set("""/agents /clear /compact /config /context /cost /doctor /exit /export /help /hooks /init /login
+/logout /mcp /memory /model /permissions /plugin /resume /review /status""".split())
 WIN_ABS_RE = re.compile(r"(?<![\w])[A-Za-z]:\\[^\s]+")
 EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")
 MAC_RE = re.compile(r"(?<![\w:-])[0-9A-Fa-f]{2}([:-])[0-9A-Fa-f]{2}(?:\1[0-9A-Fa-f]{2}){4}(?![\w:-])")
@@ -223,11 +228,29 @@ def term_regex(terms):
     return re.compile("|".join(re.escape(t) for t in ts), re.IGNORECASE) if ts else None
 
 
+def _single_seg_repl(m):
+    """REQ-12 allowlist: only /delixcrew:<skill> and the built-in commands stay (K94, K100); trailing .,;:) is kept."""
+    tok = m.group(0)
+    core = tok.rstrip(".,;:)")
+    if core.isascii() and (core in BUILTIN_COMMANDS or
+                           (core.startswith("/delixcrew:") and core[len("/delixcrew:"):] in plugin_skills())):
+        return tok
+    return "<redacted:path>" + tok[len(core):]
+
+
+def plugin_skills():
+    """Directory names under the plugin's skills/, read at run time; empty if unreadable (fail-closed)."""
+    try:
+        return {n for n in os.listdir(SKILLS_DIR) if os.path.isdir(os.path.join(SKILLS_DIR, n))}
+    except OSError:
+        return set()
+
+
 def sanitize(text, term_re):
     t = unicodedata.normalize("NFKC", text)
     t = HOME_RE.sub("~", t)
     t = WIN_HOME_RE.sub("~", t)
-    for regex, repl in ((ABS_PATH_RE, "<redacted:path>"), (WIN_ABS_RE, "<redacted:path>"),
+    for regex, repl in ((ABS_PATH_RE, "<redacted:path>"), (SINGLE_SEG_RE, _single_seg_repl), (WIN_ABS_RE, "<redacted:path>"),
                         (EMAIL_RE, "<redacted:email>"), (MAC_RE, "<redacted:mac>"),
                         (IPV4_RE, _ipv4_repl), (IPV6_RE, _ipv6_repl), (TOKEN_RE, _host_repl)):
         t = _sub_outside(regex, repl, t)
@@ -335,7 +358,7 @@ def validate(d):
     for k in REQUIRED:
         if k not in d:
             return "%s: missing required field" % k
-    if d["kind"] not in LABELS:
+    if not isinstance(d["kind"], str) or d["kind"] not in LABELS:
         return "kind: must be bug or feature"
     for k in ("component", "title", "actual", "expected", "context"):
         if k in d and not isinstance(d[k], str):
@@ -567,6 +590,11 @@ def cmd_send(args):
     rec = get_record(args.id, records)
     if rec is None:
         err("error: unknown id %s" % args.id)
+        return 2
+    # REQ-13: only a draft is sent; a value read from disk is never printed
+    status = rec.get("status")
+    if status != "draft":
+        err("error: %s is %s; nothing sent" % (args.id, status if status in ("sent", "duplicate", "dropped") else "unknown"))
         return 2
     content, reasons, h = build(rec, records, load_config(), bad)
     if reasons:
