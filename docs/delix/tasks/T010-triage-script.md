@@ -127,3 +127,4 @@ Open (third form of the same class):
   cases above and `&#64;alice` BLOCKED; `bob@example.com` CLEAN.
 Noted, no fix: Markdown link reference definitions and link targets hide text (visible as raw Markdown in preview);
 `gh issue view --json comments` paging unverified; carried-over Lows and P2 from rounds 1–2.
+Decision (user, chat, 2026-11-03; K131): one last fix round with the class-wide rule above → fixing (round 4).
