@@ -1,7 +1,7 @@
 {
   "name": "delix-board",
   "displayName": "Delix Board",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Live board for delix: cards, gates, long runs and metrics in a pane beside the chat, a band above the prompt, toasts when a run ends. Read-only; does nothing in headless sessions.",
   "author": {
     "name": "Tahir Cengiz"

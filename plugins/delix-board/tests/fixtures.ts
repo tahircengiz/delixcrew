@@ -121,5 +121,26 @@ const tree = (path: string, head: number, branch: string) => `worktree ${path}\n
 export const MAIN_TREE = tree(MAIN, 1, 'main')
 export const LAYOUT_TREES = MAIN_TREE + tree(ORCH, 2, 'claude/orch') + tree(IMPL, 3, 'claude/impl')
 
+const at = (hhmm: string) => Date.parse(`2026-11-03T${hhmm}:00Z`)
+/** The commit time (s) of STATE's last change in each worktree. */
+export const LAYOUT_COMMITS = { [MAIN]: at('12:45') / 1000, [ORCH]: at('17:45') / 1000, [IMPL]: at('18:00') / 1000 }
+
+/**
+ * As seen live: both copies say `updated` 18:30, the orchestrator did not move it. The main checkout was pulled at
+ * 18:19 (fresh mtime) to a commit of 18:06; the orchestrator committed at 18:00 and wrote again at 18:15, uncommitted.
+ */
+export const TIE = {
+  files: {
+    ...LAYOUT,
+    [`${MAIN}/docs/delix/STATE.json`]: layoutState('2026-11-03T18:30:00Z', { T010: 'in_progress', T011: 'fixing' }),
+    [`${ORCH}/docs/delix/STATE.json`]: layoutState('2026-11-03T18:30:00Z', { T010: 'fixing', T011: 'accepted' }),
+  },
+  repo: {
+    commits: { [MAIN]: at('18:06') / 1000, [ORCH]: at('18:00') / 1000 },
+    dirty: [ORCH],
+    mtimes: { [`${MAIN}/docs/delix/STATE.json`]: at('18:19'), [`${ORCH}/docs/delix/STATE.json`]: at('18:15') },
+  },
+}
+
 /** The template's list-of-lists waves. */
 export const TEMPLATE_STATE = JSON.stringify({ waves: [['T001', 'T002'], ['T003']], cards: { T001: { tier: 2, status: 'open' } } })
