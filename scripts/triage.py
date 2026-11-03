@@ -48,11 +48,10 @@ HTML_COMMENT_RE = re.compile(r"<!--.*?(?:-->|\Z)", re.S)
 HTML_RE = re.compile(r"<[A-Za-z/!]")
 MENTION_RE = re.compile(r"(?<![\w.])@[A-Za-z0-9]")
 COMMENT_MENTION_RE = re.compile(r"@[A-Za-z0-9]")
-# K132: invisible code points outside Cc/Cf/Co (bad_char); they survive NFKC and sanitize.
-_INVISIBLE = ("\u034f\u115f\u1160\u180b-\u180d\u180f\u2028\u2029\u2800\u3164\uffa0\ufe00-\ufe0f"
-              "\U000e0100-\U000e01ef")
-INVISIBLE_RE = re.compile("[" + _INVISIBLE + "]")
-EMOJI_VS_RE = re.compile(r"(?<=[^\s" + _INVISIBLE + "])[\ufe0e\ufe0f](?![" + _INVISIBLE + "])")  # one, after a visible char
+# K133: allowlist. Every character is a newline, L*, N*, P*, S* or Zs; minus these invisible ones (Hangul fillers,
+# blank Braille). One emoji selector (U+FE0E/U+FE0F) may follow a visible So symbol (emoji such as U+2764).
+INVISIBLE_IN_ALLOWED = {chr(c) for c in (0x115F, 0x1160, 0x3164, 0xFFA0, 0x2800)}
+SELECTORS = (chr(0xFE0E), chr(0xFE0F))
 CHAR_REF_RE = re.compile(r"&(#[0-9]+|#[xX][0-9A-Fa-f]+|[A-Za-z][A-Za-z0-9]*);")
 VERSION_RE = re.compile(r"\bplugin[ \t]+([^\s,]+)")
 SEMVER_RE = re.compile(r"\d+\.\d+\.\d+")
@@ -283,6 +282,24 @@ def load_record(n):
     return (rec if validate(rec, n, stored=True) is None else None), True
 
 
+def visible(c):
+    cat = unicodedata.category(c)
+    return c == "\n" or cat == "Zs" or (cat[0] in "LNPS" and c not in INVISIBLE_IN_ALLOWED)
+
+
+def invisible(text):
+    """K133: True if text has a character outside the allowlist (one emoji selector after a visible So symbol passes)."""
+    prev = None
+    for c in text:
+        if c in SELECTORS:
+            if prev is None or unicodedata.category(prev) != "So" or not visible(prev):  # else a hidden-data channel
+                return True
+        elif not visible(c):
+            return True
+        prev = c
+    return False
+
+
 def actions(decision):
     label = DECISIONS[decision]
     return "ensure-label %s; comment; add-label %s; remove-labels %s; close %s" % (
@@ -308,7 +325,7 @@ def build(n, rec, live_sha):
             reasons.append(r)
     if any(bad_char(c) for c in raw + comment):
         reasons.append("unicode control character (Cc/Cf/Co)")
-    if INVISIBLE_RE.search(EMOJI_VS_RE.sub("", raw + "\n" + comment)):
+    if any(invisible(t) for t in (unicodedata.normalize("NFKC", raw), comment)):
         reasons.append("invisible character")
     if OPAQUE_RE.search(raw) or OPAQUE_RE.search(comment):
         reasons.append("opaque string of 32+ characters")

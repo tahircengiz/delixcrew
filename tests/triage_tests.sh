@@ -323,6 +323,24 @@ blocked "selector at the start of reason"    'd["reason"]="\ufe0fx"'            
 mkj "$J17" 'd["reason"]="I \u2764\ufe0f it"' | tr_ record 17 >/dev/null; pv=$(tr_ preview 17); rc=$?
 [ $rc -eq 0 ] && echo "$pv" | grep -q "^VERDICT: CLEAN" && ok "R4 single emoji selector after a visible character (I U+2764 U+FE0F it): CLEAN" \
   || bad "R4 emoji selector blocked (rc=$rc, $(echo "$pv" | grep VERDICT))"
+# Review round 5 (K133): allowlist; code points written with chr() so they stay visible in review.
+blocked "Khmer inherent vowel (U+17B4, Mn)"  'd["reason"]="a"+chr(0x17b4)+"b"'                     invisible
+blocked "combining acute on x (U+0301)"      'd["reason"]="x"+chr(0x301)'                          invisible
+blocked "tab (U+0009)"                       'd["reason"]="a"+chr(0x9)+"b"'                        invisible
+clean(){ # name, python mutation of J17
+  mkj "$J17" "$2" | tr_ record 17 >/dev/null; pv=$(tr_ preview 17); rc=$?
+  [ $rc -eq 0 ] && echo "$pv" | grep -q "^VERDICT: CLEAN" && ok "R5 $1: CLEAN" || bad "R5 $1 (rc=$rc, $(echo "$pv" | grep VERDICT))"; }
+clean "precomposed e-acute (U+00E9, Ll)"     'd["reason"]="Caf"+chr(0xe9)+" works"'
+clean "CJK letters (U+4E2D U+6587)"          'd["reason"]=chr(0x4e2d)+chr(0x6587)+" text"'
+clean "em dash (U+2014, Pd)"                 'd["reason"]="a "+chr(0x2014)+" b"'
+clean "needs-info Questions: list" 'd["decision"]="needs-info"; d["questions"]=["Which OS?","Which command?"]'
+# K133 addendum: a selector passes only after a So symbol; Cn (unassigned) is blocked; NFKC folds Zs to U+0020.
+blocked "selector after a letter"            'd["reason"]="a"+chr(0xfe0f)+"b"'                     invisible
+blocked "selectors after letters (channel)"  'd["reason"]="x"+chr(0xfe0f)+"y"+chr(0xfe0e)+"z"+chr(0xfe0f)' invisible
+blocked "unassigned tag area (U+E0080, Cn)"  'd["reason"]="x"+chr(0xe0080)+"y"'                    invisible
+blocked "unassigned U+FFF0 (Cn)"             'd["reason"]="x"+chr(0xfff0)+"y"'                     invisible
+clean "no-break space (U+00A0, Zs)"          'd["reason"]="a"+chr(0xa0)+"b"'
+clean "emoji selector after U+2764 (So)"     'd["reason"]="I "+chr(0x2764)+chr(0xfe0f)+" it"'
 printf '%s' "$J17" | tr_ record 17 >/dev/null; pv=$(tr_ preview 17); rc=$?
 [ $rc -eq 0 ] && echo "$pv" | grep -q "^VERDICT: CLEAN" && echo "$pv" | grep -qF "mail <redacted:email>." \
   && ok "R2 email (bob@example.com) still CLEAN" || bad "R2 email blocked (rc=$rc, $(echo "$pv" | grep VERDICT))"
