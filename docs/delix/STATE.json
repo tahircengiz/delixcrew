@@ -54,10 +54,11 @@
       "file": "docs/delix/tasks/T003-feedback-skills.md",
       "role": "docs",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 5,
       "rounds": 0,
-      "cost_usd": null
+      "cost_usd": null,
+      "merge": "0a15bc0"
     },
     "T004": {
       "file": "docs/delix/tasks/T004-github-forms-ci-version.md",
