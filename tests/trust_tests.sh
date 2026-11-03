@@ -40,7 +40,20 @@ ran "$R" && ok "local card: Stop gate runs the test command" || ko "local card: 
 out=$(printf '{"tool_name":"Edit","cwd":"%s","tool_input":{"file_path":"docs/delix/delix.json"}}' "$R" | python3 "$S/write_gate.py" 2>/dev/null)
 echo "$out" | grep -q deny && ok "local card: write gate active" || ko "local card: write gate inactive"
 
-# 5) Foreign repo: case variant .Delix/card (case-insensitive file systems see it as .delix/card; git pathspecs do not)
+# 4b) Real dispatch shape: linked worktree (git worktree add), .delix/ excluded in the common .git/info/exclude
+R="$T/wt-main"; mkrepo "$R"; git -C "$R" init -q && $G -C "$R" add -A && $G -C "$R" commit -qm x
+echo ".delix/" >> "$R/.git/info/exclude"; W="$T/wt-linked"; git -C "$R" worktree add -q --detach "$W"
+sed -i.bak "s|$R/MARK|$W/MARK|" "$W/docs/delix/delix.json"; rm -f "$W/docs/delix/delix.json.bak"
+mkdir -p "$W/.delix"; echo "docs/delix/tasks/T001-x.md" > "$W/.delix/card"
+stop "$W"; ran "$W" && ok "linked worktree: Stop gate runs the test command" || ko "linked worktree: test command not run"
+
+# 4c) Foreign repo: only 'card' is a committed symlink into a tracked dir
+R="$T/cardlink"; mkrepo "$R"; mkdir -p "$R/docs/x" "$R/.delix"; echo "docs/delix/tasks/T001-x.md" > "$R/docs/x/card"
+ln -s ../docs/x/card "$R/.delix/card"; git -C "$R" init -q && $G -C "$R" add -A && $G -C "$R" commit -qm x
+stop "$R"; ran "$R" && ko "symlinked card: repo command ran" || ok "symlinked card: repo command not run"
+
+# 5) Foreign repo: case variant .Delix/card (case-insensitive file systems see it as .delix/card; git pathspecs do not).
+#    Proves something only on a case-insensitive file system (macOS); on Linux .delix/card does not exist at all.
 R="$T/case"; mkrepo "$R"; mkdir -p "$R/.Delix"; echo "docs/delix/tasks/T001-x.md" > "$R/.Delix/card"
 git -C "$R" init -q && $G -C "$R" add -A && $G -C "$R" commit -qm x
 stop "$R"; ran "$R" && ko "case variant .Delix: repo command ran" || ok "case variant .Delix: repo command not run"
