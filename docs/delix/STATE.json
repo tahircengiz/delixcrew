@@ -26,7 +26,7 @@
       "file": "docs/delix/tasks/T010-triage-script.md",
       "role": "backend",
       "tier": 3,
-      "status": "escalated",
+      "status": "fixing",
       "pr": 24,
       "rounds": 4,
       "cost_usd": null,

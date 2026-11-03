@@ -143,3 +143,5 @@ Open (new class, outside K131):
   U+FE00–FE0F, U+E0100–E01EF in `raw + comment`; optionally allow a single U+FE0E/U+FE0F after a non-selector (emoji).
 Unsure (security, not verified): Markdown links to `github.com` survive host redaction (visible in preview); IDN,
 U+3002-dot and decimal-IP hosts may escape `feedback.py` host redaction (K115 scope).
+Decision (user, chat, 2026-11-03; K132): one more round, limited to the invisible-character finding → fixing
+(round 5). Any new finding after it goes to a separate card, not another round.
