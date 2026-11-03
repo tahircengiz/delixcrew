@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T12:26:44Z",
+  "updated": "2026-11-03T12:45:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -65,19 +65,21 @@
       "file": "docs/delix/tasks/T004-github-forms-ci-version.md",
       "role": "devops",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 18,
       "rounds": 0,
-      "cost_usd": null
+      "cost_usd": null,
+      "merge": "8b8ae5e"
     },
     "T005": {
       "file": "docs/delix/tasks/T005-docs-feedback.md",
       "role": "docs",
       "tier": 1,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 19,
       "rounds": 2,
-      "cost_usd": null
+      "cost_usd": null,
+      "merge": "e83ecad"
     },
     "T006": {
       "file": "docs/delix/tasks/T006-design-system-step.md",

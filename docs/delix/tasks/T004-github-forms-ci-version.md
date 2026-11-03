@@ -50,3 +50,4 @@
 
 ## Review findings (filled by the orchestrator)
 - Round 0 (2026-11-03, 9e5b4ff): qa ACCEPT_WITH_NOTES, security 🔐 HUMAN_APPROVAL (no finding; protected `.github/**`, `.claude-plugin/**`). Orchestrator (git archive 9e5b4ff): card greps `1` / `0.5.0`, `claude plugin validate .` passed, board/feedback/hook/trust ALL PASSED, CI pass, gitleaks and internal-address scan clean. Notes (P2): `Steps to reproduce` and `Context` are optional in the forms (spec silent); merge after T005 so 0.5.0 never sits on main without its CHANGELOG/README (SPEC §187). Gate 2 → user.
+- Accepted (2026-11-03): merged by the user as 8b8ae5e (squash, PR #18), one minute before T005 (e83ecad).
