@@ -151,3 +151,8 @@ only Unicode categories L*, N*, P*, S*, Zs and `\n` pass; every other character 
 is BLOCKED `invisible character`. Known invisible code points inside allowed categories are excluded explicitly:
 U+115F, U+1160, U+3164, U+FFA0 (Lo fillers), U+2800 (So). Exception: a single U+FE0E/U+FE0F right after a visible
 character. U+200D (ZWJ) stays BLOCKED (existing Cf rule). The first round 5 commit (7c915eb, blocklist) is replaced.
+Review of 7c915eb (qa ACCEPT_WITH_NOTES; security FIX, 2 Medium, folded into K133): (1) the emoji exception allowed a
+selector after any visible character, a hidden channel of ~1.58 bits per character; now only after category `So`.
+(2) Cn code points (U+E0000–E0FFF, U+FFF0–FFF8, U+2065) and U+17B4/U+17B5 (Mn) passed the blocklist; the allowlist
+blocks them. Other Zs spaces are NFKC-mapped to U+0020 before the check. Not verified live: GitHub and terminal
+rendering of these code points.
