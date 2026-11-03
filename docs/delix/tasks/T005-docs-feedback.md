@@ -10,6 +10,7 @@
 - Modify: `README.md` (new `## Feedback` before `## Known limits`; update the paragraph about what `bash_gate.py` intercepts)
 - Modify: `README.tr.md` (same, `## Geri bildirim` before `## Bilinen sınırlar`)
 - Modify: `CHANGELOG.md` (insert `## 0.5.0 — <date>` above the 0.4.0 section)
+- Modify: `templates/spec-M.md` (line 29) and `templates/spec-L.md` (line 11): ``link to `DESIGN.md` `` → ``link to `DESIGN.md` (or the repo's token file)`` (T006 leftover, verification r2 qa P2)
 
 ## Interfaces
 - Consumed: T001 CLI (SPEC §4), T002 deny message, T003 `/delixcrew:feedback [note | review]`.
@@ -27,16 +28,18 @@
 ## Steps
 1. Check: `grep -c '^## Feedback' README.md` → `0` (red).
 2. Write both READMEs and the CHANGELOG entry (feedback queue, hook rules, issue forms, `start #<n>`).
+   Also (T006 leftover, PR #15 `f84e675`): in both READMEs, one short note where the spec step is described that `/delixcrew:spec` adds a conditional design-system step for UI work (link to `DESIGN.md` or the repo's token file); add the same item to the 0.5.0 CHANGELOG entry. Then the two template lines above.
 3. Green, then commit `T005: README feedback section, CHANGELOG 0.5.0`.
 
 ## Verification command → expected output
 `grep -c '^## Feedback' README.md; grep -c '^## Geri bildirim' README.tr.md; grep -c '^## 0.5.0' CHANGELOG.md` → `1` `1` `1`
+`grep -c "or the repo's token file" templates/spec-M.md templates/spec-L.md` → `1` each; `grep -c 'DESIGN.md' README.md README.tr.md CHANGELOG.md` → ≥ `1` each
 
 ## Review Focus
 - No claim of full blocking; no internal addresses; the examples use `example-corp.dev` / `10.x`.
 
 ## Don'ts
-- Untouchable: `.claude-plugin/**` (version is T004), `skills/**`, `scripts/**`, `docs/delix/**`.
+- Untouchable: `.claude-plugin/**` (version is T004; no other version bump), `skills/**`, `scripts/**`, `docs/delix/**`.
 
 ## Report contract
 `.delix/report.md` (≤ 1K tokens): status · grep output · PR number.

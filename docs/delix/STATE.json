@@ -44,10 +44,11 @@
       "file": "docs/delix/tasks/T002-hook-rules.md",
       "role": "backend",
       "tier": 3,
-      "status": "fixing",
+      "status": "accepted",
       "pr": 4,
-      "rounds": 3,
-      "cost_usd": null
+      "rounds": 4,
+      "cost_usd": null,
+      "merge": "c43516d"
     },
     "T003": {
       "file": "docs/delix/tasks/T003-feedback-skills.md",
