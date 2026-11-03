@@ -1,0 +1,82 @@
+{
+  "spec": "docs/delix/SPEC.md",
+  "size": "M",
+  "updated": "2026-11-03T10:56:06Z",
+  "env_owner": null,
+  "waves": [
+    {
+      "wave": 1,
+      "cards": [
+        "T001",
+        "T002",
+        "T003"
+      ],
+      "note": "parallel; T003 written against T001's CLI interface (SPEC §4); T002 matches command text only. All 🔐: Approved line before dispatch."
+    },
+    {
+      "wave": 2,
+      "cards": [
+        "T004",
+        "T005"
+      ],
+      "note": "after T001 merged (CI step needs tests/feedback_tests.sh; docs need final CLI messages). T004 🔐."
+    }
+  ],
+  "cards": {
+    "T001": {
+      "file": "docs/delix/tasks/T001-feedback-script.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T002": {
+      "file": "docs/delix/tasks/T002-hook-rules.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T003": {
+      "file": "docs/delix/tasks/T003-feedback-skills.md",
+      "role": "docs",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T004": {
+      "file": "docs/delix/tasks/T004-github-forms-ci-version.md",
+      "role": "devops",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T005": {
+      "file": "docs/delix/tasks/T005-docs-feedback.md",
+      "role": "docs",
+      "tier": 1,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    }
+  },
+  "status_values": [
+    "open",
+    "in_progress",
+    "in_review",
+    "fixing",
+    "accepted",
+    "rejected",
+    "escalated"
+  ],
+  "verifications": []
+}

@@ -1,0 +1,26 @@
+{
+  "$comment": "delixcrew dogfooding: the plugin's own repo. Hooks and skills read this file.",
+  "test_command": "for t in tests/*_tests.sh; do bash \"$t\" || exit 1; done",
+  "extra_checks": [
+    "claude plugin validate ."
+  ],
+  "protected_paths": [
+    ".github/**",
+    "hooks/hooks.json",
+    "scripts/write_gate.py",
+    "scripts/bash_gate.py",
+    "scripts/stop_gate.py",
+    "scripts/common.py",
+    ".gitleaks.toml",
+    ".claude-plugin/**",
+    "docs/delix/delix.json"
+  ],
+  "test_paths": [
+    "tests/**",
+    "evals/**"
+  ],
+  "max_parallel": 3,
+  "max_review_rounds": 3,
+  "default_branch": "main",
+  "pr_body_section": "## How I tested"
+}
