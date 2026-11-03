@@ -77,4 +77,10 @@
 `.delix/report.md` (≤ 2K tokens): `DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED` · test output tail with ✔ counts · PR number · assumptions. Read only this card and SPEC REQ-3, 4, 8, 11–13, §4, K94–K102.
 
 ## Review findings
-(empty; filled by `/delixcrew:review`)
+### Round 1 (26758b7) — qa ACCEPT · security 🔐 HUMAN_APPROVAL (no finding in this change)
+Deterministic gates: CI `test` pass; from `git archive 26758b7`: 4× `ALL PASSED`, 0 `✘` (feedback ✔84); test file diff 86 insertions, 0 deletions.
+Pre-existing (not introduced here; follow-up, K104):
+- [Medium] `_PATH_LB` still excludes `>`, `\`, `-`, `.`: `cmd >/srv/acme-prod/out.log`, `2>/var/lib/acme/x`, JSON-escaped `\/srv\/acme`, `x-/srv` are not redacted.
+- [Medium] URL authority with a single-label host is kept: `smb://nas/volume1/acme`, `http://jenkins:8080/job/acme-x`, `//fileserver/share/x`, `file:///etc/passwd` (K101's "host rule after `//`" only covers dotted names).
+- [Low] `cmd_add` duplicate line and `cmd_list` print disk values raw (ANSI/OSC if a record is edited on disk).
+- Unsure (noted): concurrent `send` on one draft; U+2215 slash look-alikes; `/export` as a real dir name kept.

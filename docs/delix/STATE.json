@@ -112,19 +112,23 @@
       "file": "docs/delix/tasks/T008-feedback-rev3.md",
       "role": "backend",
       "tier": 3,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
-      "cost_usd": null
+      "status": "accepted",
+      "pr": 20,
+      "rounds": 1,
+      "cost_usd": null,
+      "sha": "26758b7",
+      "merge": "1a0a0a7"
     },
     "T009": {
       "file": "docs/delix/tasks/T009-feedback-eval.md",
       "role": "devops",
       "tier": 2,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
-      "cost_usd": null
+      "status": "accepted",
+      "pr": 21,
+      "rounds": 2,
+      "cost_usd": 2.03,
+      "sha": "9acc005",
+      "merge": "9d7b79d"
     }
   },
   "status_values": [
