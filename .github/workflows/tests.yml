@@ -17,14 +17,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Hook tests
-        run: bash tests/hook_tests.sh
-      - name: Board tests
-        run: bash tests/board_tests.sh
-      - name: Feedback tests
-        run: bash tests/feedback_tests.sh
-      - name: Triage tests
-        run: bash tests/triage_tests.sh
+      - name: All tests (tests/*_tests.sh)
+        # same command as docs/delix/delix.json test_command; -x logs one "+ bash tests/<file>" line per file
+        shell: bash --noprofile --norc -x -eo pipefail {0}
+        run: for t in tests/*_tests.sh; do bash "$t" || exit 1; done
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
