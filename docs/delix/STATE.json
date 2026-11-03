@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-03T23:20:00Z",
+  "updated": "2026-11-03T23:40:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -26,9 +26,9 @@
       "file": "docs/delix/tasks/T016-feedback-url-allowlist.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_review",
+      "status": "fixing",
       "pr": 33,
-      "rounds": 0,
+      "rounds": 1,
       "cost_usd": null,
       "sha": "b8ca34f"
     },
