@@ -58,24 +58,34 @@ async function readIfChanged<T>($: EngineInterface, cache: Cache, path: string, 
 }
 
 /**
+ * When a worktree's STATE.json last really changed: its mtime while it has uncommitted changes, else the time of
+ * the commit that last touched it. A checkout or pull gives an old copy a fresh mtime, and the orchestrator does
+ * not always move `updated`, so neither is trusted alone.
+ */
+async function changedAt($: EngineInterface, dir: string, mtimeMs: number): Promise<number> {
+  const git = (args: string[]) => $.process.run(['git', ...args], { cwd: dir, timeoutMs: 5000 }).catch(() => undefined)
+  const status = await git(['status', '--porcelain', '--', 'docs/delix/STATE.json'])
+  if (status?.exitCode === 0 && status.stdout.trim() !== '') return mtimeMs
+  const log = await git(['log', '-1', '--format=%ct', '--', 'docs/delix/STATE.json'])
+  const seconds = log?.exitCode === 0 ? Number(log.stdout.trim()) : NaN
+  return Number.isFinite(seconds) ? seconds * 1000 : 0
+}
+
+/**
  * The checkout whose STATE.json is live. The orchestrator may write it in its own worktree (the desktop app opens
  * one per session) while the main checkout stays behind, and every implementer worktree holds the copy of its
- * dispatch. Among the worktrees holding one, implementer worktrees (`.delix/card`) left out: the newest `updated`;
- * on a tie the session's own checkout, then the main checkout (listed first), then the newest mtime. A fresh
- * checkout has a fresh mtime, so mtime only breaks ties.
+ * dispatch. Among the worktrees holding one, implementer worktrees (`.delix/card`) left out: the copy changed last;
+ * on a tie the session's own checkout, then the main checkout (listed first).
  */
-async function chooseRoot($: EngineInterface, cache: Cache, top: string, trees: { path: string }[]): Promise<string> {
-  const found: { path: string; updated: number; rank: number; mtimeMs: number }[] = []
+async function chooseRoot($: EngineInterface, top: string, trees: { path: string }[]): Promise<string> {
+  const found: { path: string; changedAt: number; rank: number }[] = []
   for (const [i, tree] of trees.entries()) {
-    const path = join(tree.path, 'docs/delix/STATE.json')
-    const stat = await $.fs.stat(path).catch(() => undefined)
+    const stat = await $.fs.stat(join(tree.path, 'docs/delix/STATE.json')).catch(() => undefined)
     if (!stat || stat.kind !== 'file') continue
     if (await $.fs.exists(join(tree.path, '.delix/card')).catch(() => false)) continue
-    const state = await readIfChanged<ParsedState | null>($, cache, path, stat.mtimeMs, parseState)
-    const updated = Date.parse(state?.updated ?? '')
-    found.push({ path: tree.path, updated: Number.isNaN(updated) ? 0 : updated, rank: tree.path === top ? 0 : i === 0 ? 1 : 2, mtimeMs: stat.mtimeMs })
+    found.push({ path: tree.path, changedAt: await changedAt($, tree.path, stat.mtimeMs), rank: tree.path === top ? 0 : i === 0 ? 1 : 2 })
   }
-  found.sort((a, b) => b.updated - a.updated || a.rank - b.rank || b.mtimeMs - a.mtimeMs)
+  found.sort((a, b) => b.changedAt - a.changedAt || a.rank - b.rank)
   return found[0]?.path ?? top
 }
 
@@ -83,7 +93,7 @@ async function worktrees($: EngineInterface, cache: Cache, top: string, now: num
   if (now - cache.worktrees.at < 20_000 && cache.worktrees.at !== 0) return cache.worktrees
   const run = await $.process.run(['git', 'worktree', 'list', '--porcelain'], { cwd: top, timeoutMs: 5000 }).catch(() => undefined)
   const list = run?.exitCode === 0 ? parseWorktrees(run.stdout) : []
-  cache.worktrees = { at: now, list, root: await chooseRoot($, cache, top, list) }
+  cache.worktrees = { at: now, list, root: await chooseRoot($, top, list) }
   return cache.worktrees
 }
 

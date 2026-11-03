@@ -2,7 +2,7 @@ import type { On } from 'claude-code'
 import { expect, mock, test } from 'claude-code/testing'
 
 import { cut, minutes, parseCard, parseMetrics, parseState, runProgress } from '../hooks/parse'
-import { FILES, IMPL, LAYOUT, LAYOUT_TREES, MAIN, MAIN_TREE, ORCH, ROOT, RUN_ALL, TEMPLATE_STATE, WORKTREES } from './fixtures'
+import { FILES, IMPL, LAYOUT, LAYOUT_COMMITS, LAYOUT_TREES, MAIN, MAIN_TREE, ORCH, ROOT, RUN_ALL, TEMPLATE_STATE, TIE, WORKTREES } from './fixtures'
 
 const SURFACES = ['terminal', 'desktop'] as const
 
@@ -19,22 +19,28 @@ const BAND = {
   props: { hasSurvey: false, isWorking: false, maxRows: 6, bodyColumns: 80, scroll: { offset: 0, bodyRows: 6 }, view: {} },
 } as const
 
+/** Git as a worktree sees it: STATE's last commit time (s) and uncommitted STATE changes per worktree, file mtimes. */
+type Repo = { top: string; common: string; trees: string; commits?: Record<string, number>; dirty?: string[]; mtimes?: Record<string, number> }
+
 /** The engine beneath the plugin: a project on disk, git, commands, panes, toasts. `git` may change mid-test. */
-function world(on: On, files: Record<string, string>, git = { top: ROOT, common: '.git', trees: WORKTREES }) {
+function world(on: On, files: Record<string, string>, git: Repo = { top: ROOT, common: '.git', trees: WORKTREES }) {
   const toasts: string[] = []
   const now = mock.clock(on, { now: 1_000_000 })
   mock.store(on)
   const missing = (path: string) => new Error(`ENOENT: ${path}`)
-  on('process.run', (_, e) => ({
-    value: e.argv.includes('rev-parse')
-      ? { exitCode: 0, stdout: `${git.top}\n${git.common}\n`, stderr: '', isStdoutTruncated: false, isStderrTruncated: false }
-      : { exitCode: 0, stdout: git.trees, stderr: '', isStdoutTruncated: false, isStderrTruncated: false },
-  }))
+  const out = (stdout: string) => ({ value: { exitCode: 0, stdout, stderr: '', isStdoutTruncated: false, isStderrTruncated: false } })
+  on('process.run', (_, e) => {
+    if (e.argv.includes('rev-parse')) return out(`${git.top}\n${git.common}\n`)
+    const cwd = e.init?.cwd ?? ''
+    if (e.argv.includes('log')) return out(`${git.commits?.[cwd] ?? ''}\n`)
+    if (e.argv.includes('status')) return out(git.dirty?.includes(cwd) ? ' M docs/delix/STATE.json\n' : '')
+    return out(git.trees)
+  })
   on('fs.exists', (_, e) => ({ value: e.path in files }))
   on('fs.stat', (_, e) => {
     const text = files[e.path]
     if (text === undefined) throw missing(e.path)
-    return { value: { kind: 'file', size: text.length, mtimeMs: 1, isLink: false } }
+    return { value: { kind: 'file', size: text.length, mtimeMs: git.mtimes?.[e.path] ?? 1, isLink: false } }
   })
   on('fs.read', (_, e) => {
     const text = files[e.path]
@@ -237,7 +243,7 @@ test('a desktop session (SDK, not interactive at start) starts when the desktop 
 })
 
 test('a session in the orchestrator worktree reads that worktree STATE, not the main checkout behind it', async ($, on) => {
-  world(on, LAYOUT, { top: ORCH, common: `${MAIN}/.git`, trees: LAYOUT_TREES })
+  world(on, LAYOUT, { top: ORCH, common: `${MAIN}/.git`, trees: LAYOUT_TREES, commits: LAYOUT_COMMITS })
   await $.session.start({ cwd: ORCH, surface: 'desktop', isInteractive: true })
   for (const surface of SURFACES) {
     const ui = await $.ui.mount({ ...PANE, surface })
@@ -249,7 +255,7 @@ test('a session in the orchestrator worktree reads that worktree STATE, not the 
 })
 
 test('an implementer worktree session reads the orchestrator STATE, not its own dispatch-time copy', async ($, on) => {
-  world(on, LAYOUT, { top: IMPL, common: `${MAIN}/.git`, trees: LAYOUT_TREES })
+  world(on, LAYOUT, { top: IMPL, common: `${MAIN}/.git`, trees: LAYOUT_TREES, commits: LAYOUT_COMMITS })
   await $.session.start({ cwd: IMPL, surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
   expect(await ui.find({ type: 'Button', key: 'card-T011' })).toBeDefined()
@@ -257,7 +263,7 @@ test('an implementer worktree session reads the orchestrator STATE, not its own 
 })
 
 test('a main checkout session follows an orchestrator worktree opened after it started', async ($, on) => {
-  const git = { top: MAIN, common: `${MAIN}/.git`, trees: MAIN_TREE }
+  const git = { top: MAIN, common: `${MAIN}/.git`, trees: MAIN_TREE, commits: LAYOUT_COMMITS }
   const { now } = world(on, LAYOUT, git)
   await $.session.start({ cwd: MAIN, surface: 'desktop', isInteractive: true })
   let ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
@@ -268,5 +274,14 @@ test('a main checkout session follows an orchestrator worktree opened after it s
   await now.advance(20_100)
   ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
   expect(await ui.find({ type: 'Button', key: 'card-T010' })).toBeDefined()
+  await ui.unmount()
+})
+
+test('equal `updated` stamps: the copy changed last wins, not the freshly pulled main checkout', async ($, on) => {
+  world(on, TIE.files, { top: MAIN, common: `${MAIN}/.git`, trees: LAYOUT_TREES, ...TIE.repo })
+  await $.session.start({ cwd: MAIN, surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(await ui.find({ type: 'Text', text: /kabul/ })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /kaynak: orch/ })).toBeDefined()
   await ui.unmount()
 })
