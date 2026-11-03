@@ -156,3 +156,18 @@ selector after any visible character, a hidden channel of ~1.58 bits per charact
 (2) Cn code points (U+E0000–E0FFF, U+FFF0–FFF8, U+2065) and U+17B4/U+17B5 (Mn) passed the blocklist; the allowlist
 blocks them. Other Zs spaces are NFKC-mapped to U+0020 before the check. Not verified live: GitHub and terminal
 rendering of these code points.
+
+### Round 6 (f805e17) — qa ACCEPT_WITH_NOTES · security 🔐 HUMAN_APPROVAL (1 Medium, to T014 per K132) → gate 2
+Deterministic gates: CI `test` pass; from `git archive f805e17`: 5× `ALL PASSED`; validate passed; 5× `ALL PASSED`
+laid over current main; `invisible()` 200k characters in 0.037 s. K133 allowlist verified by both reviewers and by
+the orchestrator (selector channel after letters, U+17B4, Cn, tab BLOCKED; `I ❤️ it`, `Café 中文 a — b`, comment
+header CLEAN). Test edits to earlier lines are literal-to-escape rewrites of the same code points (qa checked each).
+Open, to a separate card (K132):
+- [Medium] `scripts/triage.py:285-287`: conjoining Hangul jamo (Lo) U+1161–U+11FF, U+D7B0–U+D7C6, U+D7CB–U+D7FB pass
+  `visible()` and NFKC after a non-Hangul letter; zero-width in common wcwidth tables, so a hidden channel in the
+  preview. Reproduced by the orchestrator: `"a"+U+11A8+"b"` and `"x"+U+1161×8` give `invisible() == False`. Fix:
+  block U+1160–U+11FF and U+D7B0–U+D7FF in `visible()`; tests `"a"+U+11A8+"b"`, `"x"+U+1161×8` BLOCKED, `한국` CLEAN.
+- [Low] U+1D159 (So, blank glyph) passes; add to `INVISIBLE_IN_ALLOWED`.
+- Unsure: trailing spaces before `\n` in `reason` (count channel); `show`/`index` still pass Mn characters to the model.
+Noted (qa P2): no direct tests for U+115F, U+1160, U+FFA0 or for an invisible character in `questions`; K133 blocks
+reasons using combining marks (Devanagari, Thai, niqqud), keycaps, ZWJ and flag-tag emoji (spec note at close).
