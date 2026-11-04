@@ -76,3 +76,25 @@ Orchestrator session (spec, dispatch, reviews, close): output 244K, cache read 5
   decision K133, merge relays) are not counted here.
 
 **No single-session baseline** exists for this feature.
+
+## Feedback temizliği (closed 2026-11-04; SPEC `docs/delix/SPEC.md`, cards T016–T019)
+
+Source: `STATE.json`, `gh pr view` (createdAt → mergedAt), the session transcripts (`message.usage`, summed per
+assistant message, not deduplicated). Session cost in USD: not measured.
+
+| card | tier | PR | review rounds | PR open → merge | implementer tokens (out / cache read / cache write) | note |
+|---|---|---|---|---|---|---|
+| T016 feedback.py URL allowlist | 3 | #33 | 3 (4 review passes) | 627 min (merge waited overnight) | 232K / 22.7M / 477K | F1–F4, G1–G2, H1–H2; every round found a new plain-text host form |
+| T017 write_gate casefold | 3 | #32 | 0 | 13 min | 27K / 3.7M / 209K | |
+| T019 CI runs all tests | 3 | #37 | 0 | 23 min | 15K / 3.6M / 161K | added during review (K149) |
+| T018 README + CHANGELOG | 1 | #38 | 0 | 12 min | 30K / 5.4M / 268K | |
+
+Lead session (spec, dispatch, reviews, close, both context windows): output 423K, cache read 85.6M, cache write 1.74M.
+Subagents (18: scout, architect, qa, security): output 821K, cache read 13.9M, cache write 2.95M.
+
+**Gates and interventions** (counted from the lead transcript, not estimated):
+- `AskUserQuestion` calls: 4. These were grill 1, gate 1, 🔐 T016+T017 with push, and 🔐 T019 with push.
+- Button and typed replies: 10. Gates among them were 4 merge approvals (the merges themselves ran in the user's terminal) and 1 push approval.
+- Interventions outside gates: 3 ("İkisini başlat", "Evet, T019 ekle", "Başlat"), plus the grill answer, which makes 4 → 1.0 per card (target ≤ 5).
+
+**No single-session baseline** exists for this feature.
