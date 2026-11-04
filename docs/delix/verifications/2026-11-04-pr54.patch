@@ -1,0 +1,255 @@
+diff --git a/README.md b/README.md
+index 1495caa..b872bf3 100644
+--- a/README.md
++++ b/README.md
+@@ -154,7 +154,9 @@ python3 <plugin dir>/scripts/feedback.py enable --terms acme,example-corp
+ ```
+ 
+ `--terms` adds your own words to redact (customer names, codenames). `status` shows whether it is on, the queue
+-directory and the number of drafts; `disable` turns it off. While it is off nothing is written: `/delixcrew:feedback note` shows
++directory and the number of drafts; `disable` turns it off. `enable` without `--terms` and `disable` keep your terms;
++when `config.json` is there but cannot be read, or its `extra_terms` is not a list of strings, they exit 2 and leave the
++file as it is: fix or remove it, or give the terms again with `enable --terms`. While it is off nothing is written: `/delixcrew:feedback note` shows
+ `delixcrew feedback is off; enable: python3 <path>/feedback.py enable` with the real path, and `/delixcrew:close` and
+ `/delixcrew:review` stay silent. Drafts live in
+ `~/.claude/delixcrew/feedback/` (`DELIXCREW_FEEDBACK_DIR` overrides it), never in your project repo.
+@@ -218,7 +220,8 @@ selector such as U+FE0F may only follow a visible symbol such as U+2764), so tex
+ not merge into one character (Devanagari, for example) is blocked too; an opaque string of 32+ characters
+ (`[A-Za-z0-9+=_-]`, so a full git SHA is blocked too; use the short one); more than 15 code lines; a body over 8 KB;
+ anything still matching the redaction rules after redaction; a record changed on disk since it was queued
+-(`fingerprint mismatch`); an unreadable queue record.
++(`fingerprint mismatch`); an unreadable queue record; a feedback `config.json` (your `--terms`) that is there but not a
++readable JSON object, or whose `extra_terms` is not a list of strings, so a draft is never redacted without your terms.
+ 
+ **Remaining risk.** The hooks close the *known* ways to send; they do not block everything. Claude runs with your `gh`
+ login, and a disguised command (one built from base64, a wrapper written to a file, an HTTP request without `gh`) can get
+@@ -289,7 +292,7 @@ work. Re-running `apply` after a failed step does only the steps still missing.
+ since it was triaged; an `@` mention, HTML or a character reference in the reason or questions; invisible characters; a
+ `gitleaks` finding, or `gitleaks` missing or failing; a 32+ character opaque string; a feedback `config.json` (your
+ `--terms`) that is there but not a readable JSON object (malformed, over 1 MiB or 32 levels deep, not a regular file),
+-so the comment is never redacted without your terms. The comment is built only from the recorded reason, questions and
++or whose `extra_terms` is not a list of strings, so the comment is never redacted without your terms. The comment is built only from the recorded reason, questions and
+ duplicate number, never from the issue text.
+ 
+ **From issue to work.** `/delixcrew:start #12` takes only an issue triaged as `accepted` whose title and body are
+diff --git a/README.tr.md b/README.tr.md
+index 98d523c..af0b90c 100644
+--- a/README.tr.md
++++ b/README.tr.md
+@@ -155,7 +155,9 @@ python3 <plugin dizini>/scripts/feedback.py enable --terms acme,example-corp
+ ```
+ 
+ `--terms` redakte edilecek kendi kelimelerinizi ekler (müşteri adı, kod adı). `status` açık mı, kuyruk dizini ve taslak
+-sayısını gösterir; `disable` kapatır. Kapalıyken hiçbir şey yazılmaz: `/delixcrew:feedback note`
++sayısını gösterir; `disable` kapatır. `--terms` olmadan `enable` ve `disable` terimlerinizi korur; `config.json` var
++ama okunamıyorsa ya da `extra_terms` bir string listesi değilse 2 ile çıkar ve dosyaya dokunmaz: dosyayı düzeltin ya da
++silin, veya terimleri `enable --terms` ile yeniden verin. Kapalıyken hiçbir şey yazılmaz: `/delixcrew:feedback note`
+ `delixcrew feedback is off; enable: python3 <path>/feedback.py enable` satırını gerçek yolla gösterir;
+ `/delixcrew:close` ve `/delixcrew:review` sessiz kalır. Taslaklar
+ `~/.claude/delixcrew/feedback/` altında durur (`DELIXCREW_FEEDBACK_DIR` ile değişir), asla proje reposunda değil.
+@@ -219,7 +221,8 @@ bir emoji seçici yalnız U+2764 gibi görünür bir sembolden sonra gelebilir),
+ birleştirmediği birleşik işaretli metin de (ör. Devanagari) takılır; 32+ karakterlik opak dizi (`[A-Za-z0-9+=_-]`; tam
+ git SHA'sı da takılır, kısasını kullanın); 15'ten fazla kod satırı; 8 KB'tan büyük gövde; redaksiyondan sonra hâlâ
+ redaksiyon kuralına uyan bir şey; kuyruğa alındıktan sonra diskte değişmiş kayıt (`fingerprint mismatch`); okunamayan
+-kuyruk kaydı.
++kuyruk kaydı; feedback `config.json`'ı (`--terms` terimleriniz) var ama okunabilir bir JSON nesnesi değilse ya da
++`extra_terms` bir string listesi değilse, çünkü taslak terimleriniz olmadan redakte edilmez.
+ 
+ **Kalan risk.** Hook'lar göndermenin *bilinen* yollarını kapatır; her şeyi engellemez. Claude sizin `gh` oturumunuzla
+ çalışır ve gizlenmiş bir komut (base64'ten kurulan komut, dosyaya yazılmış bir sarmalayıcı, `gh` dışı bir HTTP isteği)
+@@ -290,7 +293,7 @@ Bir adım başarısız olduktan sonra `apply` yeniden çalıştırılırsa yaln
+ değişmişse; gerekçe ya da sorularda `@` mention, HTML ya da karakter referansı; görünmez karakterler; bir `gitleaks`
+ bulgusu, ya da `gitleaks`'in olmaması veya hata vermesi; 32+ karakterlik opak dizi; feedback `config.json`'ı
+ (`--terms` terimleriniz) var ama okunabilir bir JSON nesnesi değilse (bozuk, 1 MiB'tan büyük ya da 32 seviyeden derin,
+-normal dosya değil), çünkü yorum terimleriniz olmadan redakte edilmez. Yorum yalnız kaydedilmiş gerekçe,
++normal dosya değil) ya da `extra_terms` bir string listesi değilse, çünkü yorum terimleriniz olmadan redakte edilmez. Yorum yalnız kaydedilmiş gerekçe,
+ sorular ve kopya numarasından kurulur, asla issue metninden değil.
+ 
+ **Issue'dan işe.** `/delixcrew:start #12` yalnız `accepted` olarak triage edilmiş ve başlığı ile gövdesi kabulden beri
+diff --git a/scripts/feedback.py b/scripts/feedback.py
+index 968e77d..8cc66a8 100644
+--- a/scripts/feedback.py
++++ b/scripts/feedback.py
+@@ -169,9 +169,10 @@ def ensure_queue():
+ 
+ 
+ def load_config(strict=False):
+-    """The config, or the defaults when config.json is missing or not a readable JSON object. strict (triage): None
+-    instead of the defaults when config.json is there but unusable, so the caller fails closed rather than redact
+-    without the user's extra_terms."""
++    """The config, or the defaults when config.json is missing or not a readable JSON object. strict (preview, send,
++    triage, enable, disable): None instead of the defaults when config.json is there but unusable, or its extra_terms
++    is there but not a list of strings, so the caller fails closed rather than redact without the user's extra_terms
++    or write over them."""
+     path = os.path.join(queue_dir(), "config.json")
+     c = read_json(path)
+     if not isinstance(c, dict):
+@@ -185,6 +186,8 @@ def load_config(strict=False):
+                 return None  # cannot tell: fail closed
+         return {"enabled": False, "extra_terms": []}
+     terms = c.get("extra_terms")
++    if strict and "extra_terms" in c and not (isinstance(terms, list) and all(isinstance(t, str) for t in terms)):
++        return None  # a hand edit enable never writes: any of its values may be a term the user meant
+     return {"enabled": c.get("enabled") is True,
+             "extra_terms": [t for t in terms if isinstance(t, str)] if isinstance(terms, list) else []}
+ 
+@@ -510,7 +513,11 @@ def tty_escape(s):
+ 
+ 
+ def build(rec, records, config, bad_ids=()):
+-    """Builds the issue content in memory. Returns (content dict, BLOCKED reasons, 12-hex hash)."""
++    """Builds the issue content in memory. Returns (content dict, BLOCKED reasons, 12-hex hash). config None
++    (load_config strict): no draft is built without the user's extra_terms."""
++    if config is None:
++        return ({"repo": REPO, "label": LABELS.get(rec.get("kind"), "bug"), "title": "", "body": ""},
++                ["feedback config.json unreadable; fix it so its extra_terms apply"], "")
+     terms = set(config["extra_terms"]) | local_terms()
+     for r in records:
+         terms.update(t for t in (r.get("origin_terms") or []) if isinstance(t, str))
+@@ -702,9 +709,18 @@ def cmd_add(_args):
+ 
+ 
+ # --- other commands -----------------------------------------------------------
++def config_refused():
++    """enable without --terms and disable never write over a config.json that load_config(strict=True) rejects."""
++    err("error: %s is unreadable or its extra_terms is not a list of strings; fix or remove it, or give new terms with "
++        "enable --terms; nothing written" % os.path.join(queue_dir(), "config.json"))
++    return 2
++
++
+ def cmd_enable(args):
+     ensure_queue()
+-    c = load_config()
++    c = load_config(strict=args.terms is None)  # --terms replaces the terms, so an unreadable file may be replaced
++    if c is None:
++        return config_refused()
+     c["enabled"] = True
+     if args.terms is not None:
+         c["extra_terms"] = [t.strip() for t in args.terms.split(",") if t.strip()]
+@@ -715,7 +731,9 @@ def cmd_enable(args):
+ 
+ def cmd_disable(_args):
+     ensure_queue()
+-    c = load_config()
++    c = load_config(strict=True)
++    if c is None:
++        return config_refused()
+     c["enabled"] = False
+     write_json(os.path.join(queue_dir(), "config.json"), c)
+     print("delixcrew feedback disabled")
+@@ -755,7 +773,7 @@ def cmd_preview(args):
+     if rec is None:
+         err("error: unknown id %s" % args.id)
+         return 2
+-    content, reasons, h = build(rec, records, load_config(), bad)
++    content, reasons, h = build(rec, records, load_config(strict=True), bad)
+     if reasons:
+         # Title and body are withheld: they may contain the very value that blocked them.
+         print("VERDICT: BLOCKED: " + "; ".join(reasons))
+@@ -819,7 +837,7 @@ def cmd_send(args):
+     if status != "draft":
+         err("error: %s is %s; nothing sent" % (args.id, status if status in ("sent", "duplicate", "dropped") else "unknown"))
+         return 2
+-    content, reasons, h = build(rec, records, load_config(), bad)
++    content, reasons, h = build(rec, records, load_config(strict=True), bad)
+     if reasons:
+         print("VERDICT: BLOCKED: " + "; ".join(reasons))
+         return 4
+diff --git a/tests/feedback_tests.sh b/tests/feedback_tests.sh
+index 67588dd..f88631a 100644
+--- a/tests/feedback_tests.sh
++++ b/tests/feedback_tests.sh
+@@ -360,5 +360,61 @@ out=$(guard python3 "$S/feedback.py" drop F900 2>&1); rc=$?
+ [ $rc -eq 2 ] && echo "$out" | grep -qx "error: unknown id F900" && cmp -s "$Q/F900.json" "$T/F900.bak" \
+   && ok "read_json record nested 500 levels: drop exit 2, unknown id, file unchanged" || bad "read_json nested 500: drop (rc=$rc, $(echo "$out" | tail -1))"
+ rm -f "$Q/F900.json"
++# --- unreadable config.json (PR #53 verification, Low): preview and send stop, enable and disable leave it alone -------
++# A config.json that is there but unreadable, or whose extra_terms is not a list of strings, never yields a draft
++# without the user's terms; enable without --terms and disable refuse to write over it (exit 2, file unchanged).
++CFG="$Q/config.json"; cp "$CFG" "$T/cfg.bak"
++FCFGB="VERDICT: BLOCKED: feedback config.json unreadable; fix it so its extra_terms apply"
++FCFGW="error: $CFG is unreadable or its extra_terms is not a list of strings; fix or remove it, or give new terms with enable --terms; nothing written"
++out=$(add3 'd["title"]="Config unreadable"; d["actual"]="the acme build broke"'); id=${out%% *}
++pv=$(fb preview "$id"); rc=$?; H=$(hash_of "$pv")
++[ $rc -eq 0 ] && echo "$pv" | grep -qx "VERDICT: CLEAN" && echo "$pv" | grep -qx "the <redacted:term> build broke" \
++  && ok "config control: $id previews CLEAN, acme redacted" || bad "config control (rc=$rc, $(echo "$pv" | head -1))"
++unchanged(){ if [ "$1" = fifo ]; then [ -p "$CFG" ]; else [ -f "$CFG" ] && cmp -s "$CFG" "$T/cfg.case"; fi; }
++fcfg(){ # name, kind (broken / fifo / string / mixed / null): config.json is made that way, each command runs, then it is restored
++  rm -f "$CFG"
++  case "$2" in
++    broken) printf '{"enabled":true,"extra_terms":["acme"]' > "$CFG";;
++    fifo) mkfifo "$CFG";;
++    string) printf '{"enabled":true,"extra_terms":"acme"}' > "$CFG";;
++    mixed) printf '{"enabled":true,"extra_terms":["acme",1]}' > "$CFG";;
++    null) printf '{"enabled":true,"extra_terms":null}' > "$CFG";;
++  esac
++  [ -p "$CFG" ] || cp "$CFG" "$T/cfg.case"
++  pv=$(guard python3 "$S/feedback.py" preview "$id" 2>&1); rc=$?
++  [ $rc -eq 4 ] && [ "$(echo "$pv" | grep '^VERDICT')" = "$FCFGB" ] && ! echo "$pv" | grep -qE '^(HASH:|TITLE:|---$)|acme' \
++    && ok "config.json $1: preview BLOCKED, exit 4, no draft text" || bad "config.json $1: preview (rc=$rc, $(echo "$pv" | head -1))"
++  : > "$T/gh.log"; out=$(GH_MODE=new tty_run "SEND $H" python3 "$S/feedback.py" send "$id" --confirm "$H"); rc=$?
++  [ $rc -eq 4 ] && printf '%s\n' "$out" | tr -d '\r' | grep -qx "$FCFGB" && [ ! -s "$T/gh.log" ] && [ "$(jq_ "$Q/$id.json" "d['status']")" = draft ] \
++    && ok "config.json $1: send with the earlier HASH on a TTY stops, exit 4, gh not called" \
++    || bad "config.json $1: send (rc=$rc, $(printf '%s\n' "$out" | tr -d '\r' | grep -m1 -E 'VERDICT|status|error'))"
++  for c in enable disable; do
++    out=$(guard python3 "$S/feedback.py" "$c" 2>&1); rc=$?
++    [ $rc -eq 2 ] && [ "$out" = "$FCFGW" ] && unchanged "$2" && ok "config.json $1: $c without --terms exit 2, file unchanged" \
++      || bad "config.json $1: $c (rc=$rc, $out)"
++  done
++  out=$(guard python3 "$S/feedback.py" enable --terms acme,zz 2>&1); rc=$?
++  [ $rc -eq 0 ] && [ -f "$CFG" ] && [ "$(jq_ "$CFG" 'd=={"enabled":True,"extra_terms":["acme","zz"]}')" = True ] \
++    && ok "config.json $1: enable --terms replaces it, exit 0" || bad "config.json $1: enable --terms (rc=$rc, $out)"
++  rm -f "$CFG"; cp "$T/cfg.bak" "$CFG"; }
++fcfg "malformed JSON"                 broken
++fcfg "FIFO at the config path"        fifo
++fcfg "extra_terms a string"           string
++fcfg "extra_terms with a non-string"  mixed
++fcfg "extra_terms null"               null
++rm -f "$CFG"; pv=$(fb preview "$id"); rc=$?
++[ $rc -eq 0 ] && echo "$pv" | grep -qx "VERDICT: CLEAN" && echo "$pv" | grep -qx "the acme build broke" \
++  && ok "no config.json: preview CLEAN without extra terms (unchanged)" || bad "no config.json: preview (rc=$rc, $(echo "$pv" | head -1))"
++out=$(fb disable 2>&1); rc=$?
++[ $rc -eq 0 ] && [ "$(jq_ "$CFG" 'd=={"enabled":False,"extra_terms":[]}')" = True ] \
++  && ok "no config.json: disable writes the defaults (unchanged)" || bad "no config.json: disable (rc=$rc, $out)"
++rm -f "$CFG"; out=$(fb enable 2>&1); rc=$?
++[ $rc -eq 0 ] && [ "$(jq_ "$CFG" 'd=={"enabled":True,"extra_terms":[]}')" = True ] \
++  && ok "no config.json: enable writes the defaults (unchanged)" || bad "no config.json: enable (rc=$rc, $out)"
++printf '{"enabled":true}' > "$CFG"; pv=$(fb preview "$id"); rc=$?
++[ $rc -eq 0 ] && echo "$pv" | grep -qx "VERDICT: CLEAN" && echo "$pv" | grep -qx "the acme build broke" \
++  && ok "config.json without extra_terms: preview CLEAN, no terms (unchanged)" || bad "config.json without extra_terms: preview (rc=$rc, $(echo "$pv" | head -1))"
++rm -f "$CFG"; cp "$T/cfg.bak" "$CFG"
++[ "$(hash_of "$(fb preview "$id")")" = "$H" ] && ok "config.json restored: preview HASH as before" || bad "config.json restored: HASH changed"
+ 
+ rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
+diff --git a/tests/triage_config_tests.sh b/tests/triage_config_tests.sh
+index 2905c7d..edf323f 100644
+--- a/tests/triage_config_tests.sh
++++ b/tests/triage_config_tests.sh
+@@ -62,6 +62,9 @@ for _ in range(40):
+     x = [x]
+ open(sys.argv[1], "w").write(json.dumps({"enabled": False, "extra_terms": ["acme"], "x": x}))' "$CFG";;
+     array) printf '["acme"]' > "$CFG";;
++    string) printf '{"enabled":false,"extra_terms":"acme"}' > "$CFG";;
++    mixed) printf '{"enabled":false,"extra_terms":["acme",1]}' > "$CFG";;
++    null) printf '{"enabled":false,"extra_terms":null}' > "$CFG";;
+   esac
+   pv=$(tg preview 17 2>&1); rc=$?
+   [ $rc -eq 4 ] && [ "$(echo "$pv" | grep '^VERDICT')" = "$CFGB" ] && ! echo "$pv" | grep -qE '^(HASH:|---$)|Triage:|acme' \
+@@ -75,10 +78,17 @@ badcfg "FIFO at the config path"          fifo
+ badcfg "valid config padded past 1 MiB"   big
+ badcfg "valid config 41 levels deep"      deep
+ badcfg "valid JSON that is not an object" array
++badcfg "extra_terms a string"             string
++badcfg "extra_terms with a non-string"    mixed
++badcfg "extra_terms null"                 null
+ 
+ rm -f "$CFG"; pv=$(tg preview 17); rc=$?
+ [ $rc -eq 0 ] && echo "$pv" | grep -q "^VERDICT: CLEAN" && echo "$pv" | grep -qF "Ship it to the acme team;" \
+   && ok "no config.json: preview CLEAN without extra terms (unchanged)" || bad "no config.json: preview (rc=$rc, $(echo "$pv" | grep VERDICT))"
++printf '{"enabled":false}' > "$CFG"; pv=$(tg preview 17); rc=$?
++[ $rc -eq 0 ] && echo "$pv" | grep -q "^VERDICT: CLEAN" && echo "$pv" | grep -qF "Ship it to the acme team;" \
++  && ok "config.json without extra_terms: preview CLEAN, no terms (unchanged)" || bad "config.json without extra_terms: preview (rc=$rc, $(echo "$pv" | grep VERDICT))"
++rm -f "$CFG"
+ cp "$T/cfg.bak" "$CFG"; [ "$(field "$(tg preview 17)" HASH)" = "$H" ] && ok "config.json restored: preview HASH as before" \
+   || bad "config.json restored: HASH changed"
+ 
