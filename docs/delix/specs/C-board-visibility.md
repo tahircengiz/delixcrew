@@ -1,9 +1,9 @@
 # SPEC — Spec C: board'da ajanlar, onay/merge kuyruğu ve bekleyen git işleri
 
-> Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: draft (rev 3: architect FIX işlendi, P0×2 P1×3 P2×2; yeniden
-> kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi)
+> Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
+> işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 (kullanıcı), lead kararları
-> K244–K259. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
+> K244–K261. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
 > burada durur ve K numaraları K240'tan başlar (K244).
 
 ## 1. Goal
@@ -91,7 +91,7 @@ The system SHALL bekleyen git işlerini §4'teki sırayla ve komutuyla listeler:
 - **delete_branch:** hiçbir worktree'de checkout edilmemiş, kartının `merged` kaydı olan ve yerel ucu `merged.head`'e
   eşit dal: `git branch -D <branch>` (K249)
 - commit'lenmemiş dosyası olan worktree'ye komut yok: `uncommitted <n> files: commit or discard in its session`.
-Komut yalnız dal adı `^[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*$`, yol `^/[A-Za-z0-9._/-]+$`, PR
+Komut yalnız dal adı `^[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*$`, yol `^/[A-Za-z0-9_./-]+$`, PR
 numarası pozitif tamsayı ve SHA `^[0-9a-f]{40}$` iken üretilir; aksi halde `unsafe name: run by hand` (K248).
 `/delixcrew:status` her komutu kendi tek satırlık ` ```bash ` bloğunda basar ve komutları kendisi çalıştırmaz; panel
 aynı listeyi düz metin gösterir.
@@ -200,3 +200,7 @@ lead'in `gh pr merge` çalıştırmasını bir hook engellemez (yalnız skill me
   Leads tablosunda sayı olarak görünür, komutu o lead'in `/delixcrew:status`'unda.
 - **K259** (lead, geri alınır) delix-board spec §8 git izin listesi ve §6 görünümleri bu spec'le güncellenir (docs
   kartı); delix-board sürümü artar, kök plugin sürümü değil.
+- **K260** (lead, geri alınır; architect job B) Yol kalıbına `_` eklendi: bu repodaki her worktree yolu `prj_Ekip`
+  içeriyor, eski kalıpla hiçbir komut üretilmezdi; `_` kabukta tırnaksız güvenli. Dal kalıbı aynen.
+- **K261** (lead, geri alınır) Panel kopyası `plugins/delix-board/tests/board_parity.ts` = `export const PARITY = ` +
+  JSON dosyasının baytları (panelde JSON import örneği yok); fixture ASCII, ham karakterler `\uXXXX` kaçışlı.
