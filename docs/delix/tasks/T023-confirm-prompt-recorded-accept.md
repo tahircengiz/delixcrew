@@ -175,4 +175,11 @@ out=$(tty_run "SEND" python3 "$S/feedback.py" send F002 --confirm "$H"); rc=$?
 `.delix/report.md` (≤ 1.5K tokens): `DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED` · commands + output (✔/✘ counts per file) · PR number · assumptions. Read only this card and SPEC REQ-1, REQ-2, §4, §6, §9.
 
 ## Review findings (filled by the lead)
-- Round 1: …
+- Round 0 (PR #49 @ e415c2c): qa ACCEPT (P0 0, P1 0). security 🔐 HUMAN_APPROVAL (Tier 3, K186), 0 findings;
+  gitleaks on the diff: no leaks. `/security-review` on the diff: no findings. CI green (test, check). Lead ran all 8
+  suites from `git archive e415c2c`: 0 ✘ (triage 147 ✔ with 12 `✔ T023`, feedback 85 ✔ with 1 `✔ T023`); removed
+  test lines 0; internal address scan of `+` lines 0.
+  - P2, no fix: `read_json` catches only `OSError`/`ValueError`, so a record nested deep enough for `RecursionError`
+    makes `show --require accepted` exit 1 with a traceback instead of 8 (lead read the code at e415c2c). Needs local
+    write to the record directory, still stops `/start`, and `preview`/`apply` already behave this way.
+  - Note: the security reviewer saw `.delix/test-result.txt` as empty; it is 36404 bytes (lead checked).

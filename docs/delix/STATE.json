@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-04T14:00:00Z",
+  "updated": "2026-11-04T17:00:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -43,19 +43,21 @@
       "file": "docs/delix/tasks/T023-confirm-prompt-recorded-accept.md",
       "role": "backend",
       "tier": 3,
-      "status": "open",
-      "pr": null,
+      "status": "accepted",
+      "pr": 49,
       "rounds": 0,
-      "cost_usd": null
+      "cost_usd": null,
+      "sha": "e2a82db"
     },
     "T024": {
       "file": "docs/delix/tasks/T024-bash-gate-cross-capture.md",
       "role": "backend",
       "tier": 3,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
-      "cost_usd": null
+      "status": "in_review",
+      "pr": 48,
+      "rounds": 1,
+      "cost_usd": null,
+      "sha": "e58d867"
     },
     "T025": {
       "file": "docs/delix/tasks/T025-dependabot-main-rulesets.md",

@@ -119,7 +119,8 @@ rtime "ReDoS: 67 KB cross body in record heredoc" "$T/probe-xrec.json"
 
 ## Verification command → expected output
 - `for t in tests/*_tests.sh; do bash "$t" || exit 1; done` → exit 0; `claude plugin validate .` → passes
-- `bash tests/hook_tests.sh | grep -c '^✔ T024'` → `40`
+- `bash tests/hook_tests.sh | grep -c '^✔ T024'` → `40` at round 0; `44` after fix round 1 (K197 adds 4 `T024 glob path` denies)
+- After fix round 1: `grep -cF '~^]*/' scripts/bash_gate.py` → `2` (`-F`: some `grep` builds read a mid-pattern `^` as an anchor)
 - `bash tests/hook_tests.sh | grep '^✔ ReDoS'` → 6 lines (4 existing + 2 new), each Δ < 0.1 s
 - `bash tests/hook_tests.sh | grep -c '^✘'` → `0`; last line `ALL PASSED`
 - `grep -c '(?!-)' scripts/bash_gate.py` → `4`
@@ -150,4 +151,27 @@ rtime "ReDoS: 67 KB cross body in record heredoc" "$T/probe-xrec.json"
 `.delix/report.md` (≤ 1.5K tokens): `DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED` · commands + output (✔/✘ counts, the names of the red lines from step 1, the six ReDoS Δ) · PR number · assumptions. Read only this card and SPEC REQ-3, §4, §6, §9.
 
 ## Review findings (filled by the lead)
-- Round 1: …
+- Round 0 (PR #48 @ c90163a): qa ACCEPT (P0 0, P1 0). security 🔐 HUMAN_APPROVAL (protected path), 0 findings;
+  gitleaks on the diff, `scripts/` and `tests/`: no leaks. `/security-review` on the diff: no findings. CI green (test,
+  check). Lead ran all 8 suites from `git archive c90163a`: 0 ✘ (hook 182 ✔, 40 `✔ T024`, `(?!-)` 4); removed test
+  lines 0; internal address scan of `+` lines 0. Lead probe: the 4 option-like shapes allowed on main 9f6f8e7 are
+  denied on c90163a; the normal add shape is still allowed.
+  - Low (security "unsure", reproduced by the lead): the unquoted path classes `_PATH`/`_TPATH` still allow `^`. With
+    zsh `extendedglob` (not the zsh default; off in the lead's shell) `^q/x.py` expands to `-ic/x.py` when that
+    directory exists (measured: default zsh and bash keep it literal). `python3 ^x/feedback.py add <<'EOF'` and
+    `python3 ^x/triage.py record 12 <<'EOF'` with a pty body are allowed on c90163a (3/3, cross included) and on main
+    (2/3, cross denied), so the K187 shape reopens at expansion time. Lead prototype on a scratch copy: `~^]` in both
+    classes makes 3/3 deny, all hook tests pass, 4 new tests go from 4 ✘ (c90163a) to 44 `✔ T024`, ReDoS unchanged.
+  - Decision (user, in chat, 2026-11-04): fix it in this card, round 1. K197 (reversible): `^` joins the excluded
+    characters of `_PATH`/`_TPATH`; this is the only class change beyond `(?!-)` that K182 now allows.
+- Round 1 (PR #48 @ e58d867, fix round 1): the fix is byte-identical to the lead's prototype (`cmp` on both files).
+  qa ACCEPT_WITH_NOTES (P0 0, P1 0); security 🔐 HUMAN_APPROVAL, 0 findings; gitleaks on the diff, `scripts/` and
+  `tests/`: no leaks. CI green (test, check). Lead ran all 8 suites from `git archive e58d867`: 0 ✘ (hook 186 ✔, 44
+  `✔ T024`, `(?!-)` 4, `~^]*/` 2), and again on `git merge-tree origin/main e58d867` (main e2a82db, T023 merged): no
+  conflict, 0 ✘. Lead probe: the 4 `-ic` shapes, the 3 `^x` shapes and plain `python3 -` are denied; the normal add
+  shape is allowed. Gate 2: user.
+  - P2, fixed by the lead in this card: the Verification count was 40; it is 44 after K197 (line above).
+  - Security "unsure", checked by the lead, no finding: zsh `EQUALS` keeps `=ls/../x.py` from running (`not found`,
+    the command aborts) and bash leaves it literal; a `-` result would need a PATH or hash entry that a fullmatch
+    command cannot set. `.strip()` of Unicode whitespace before `python3` predates this card and needs a planted
+    executable (SPEC §6 class).
