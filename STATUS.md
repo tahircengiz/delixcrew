@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-04 · **Faz:** 10 kapandı: feedback süzgeci kalan açıklar T020–T021 merge edildi (§10); sürüm etiketi kararı kullanıcıda. §9: feedback temizliği arşivi `docs/delix/archive/0.6.x-feedback-cleanup/`.
+**Son güncelleme:** 2026-11-04 · **Sürüm:** 0.6.2 (2026-11-04, feedback süzgeci sertleştirmesi T016–T021 ve PR #44; `SANITIZER_VERSION` 3; K177) · **Faz:** 10 kapandı: feedback süzgeci kalan açıklar T020–T021 merge edildi (§10). §9: feedback temizliği arşivi `docs/delix/archive/0.6.x-feedback-cleanup/`.
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -484,6 +484,11 @@ Kararlar: `docs/delix/SPEC.md` §9. Öne çıkanlar: **K159** (kullanıcı) host
 U+2028/U+2029/surrogate BLOCKED · **K170** triage K133 izin listesi feedback'te (tab ek) · **K173** `_url_pass` liste
 birleştirme, 50K/400K büyüme testi ×12 (K163'ün yerine; ölçüm: main 200K→800K 0,533→5,514 sn) · **K176** son incelemenin
 Low bulgusu §6'da, 4. tur yok.
+
+**Sürüm 0.6.2 (2026-11-04):** **K177** (kullanıcı) 0.6.2 patch sürümü: yeni komut, hook kuralı ya da dosya biçimi yok,
+yalnız redaksiyon daha katı. Etiketler: v0.6.2 (merge commit'i) ile etiketsiz kalan v0.5.0, v0.6.0, v0.6.1; 0.2.x ve 0.3.0
+etiketsiz kalır. Eski etiketler sürüm atlatan commit'e değil, o sürümün son commit'ine konur (sonraki spec'in ilk
+commit'inden hemen önce): v0.5.0 `806febf`, v0.6.0 `fb6939d`, v0.6.1 `ff79206`. Etiketleri kullanıcı kendi terminalinden push eder.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
