@@ -8,12 +8,14 @@ import re
 import sys
 import unicodedata
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import REVIEWERS, card_path, delix_json, deny, matches, read_input  # noqa: E402
+from common import REVIEWERS, card_path, delix_json, deny, matches, read_input, trust_file  # noqa: E402
 
 
 def _fold(p):
     """REQ-6 (K129): APFS ignores letter case and Unicode normalization; realpath keeps both as given."""
     return unicodedata.normalize("NFD", os.path.realpath(p)).casefold()
+
+TRUST_DENY = "delixcrew: Stop gate commands are approved only by the user from their own terminal"  # K210: literal here and in bash_gate.py
 
 
 g = read_input()
@@ -30,6 +32,13 @@ if _path:
     triage = _fold(os.path.expanduser(os.environ.get("DELIXCREW_TRIAGE_DIR") or "~/.claude/delixcrew/triage"))
     if os.path.commonpath([triage, target]) == triage:
         deny("delixcrew: triage decisions are applied only by the user from their own terminal")
+    # REQ-4 (K203): the Stop gate trust record, in every session; its path comes from the passwd entry, never env
+    try:
+        record = _fold(trust_file())
+    except (KeyError, OSError):
+        record = None  # no passwd entry: there is no record to protect
+    if record and target == record:
+        deny(TRUST_DENY)
 
 agent = (g.get("agent_type") or "").strip()
 if agent in REVIEWERS:
