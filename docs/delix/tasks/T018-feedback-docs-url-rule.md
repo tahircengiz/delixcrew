@@ -55,3 +55,8 @@
 `.delix/report.md` (≤ 1K tokens): status · commands + output · PR number. Read only this card and SPEC REQ-8.
 
 ## Review findings (filled by the lead)
+
+### Round 0 (2026-11-04, PR #38, a3a4e63, base 63f3d7b)
+- Deterministic gates (lead, from `git archive a3a4e63`): the card's verification command prints only `done` (verified for both READMEs); `bash tests/site_tests.sh` passes; full loop exit 0; diff touches only `README.md`, `README.tr.md`, `CHANGELOG.md`; CI `test` + `check` SUCCESS; internal-address scan 0.
+- qa: ACCEPT_WITH_NOTES (P0 0, P1 0, P2 1). Tier 1, no security review.
+- [P2, follow-up] The README tail sentence omits the T016 round 2 rule (K146 allowlist): a dotted tail part keeps only a known file extension or a number after each dot (`…/delixcrew/foo.bar` → `<redacted:url>`). The card fixed the wording; goes to the follow-up card.
