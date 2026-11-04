@@ -349,5 +349,16 @@ cp "$Q/config.json" "$T/config.bak"; rm -f "$Q/config.json"; mkfifo "$Q/config.j
 out=$(guard python3 "$S/feedback.py" status 2>&1); rc=$?
 [ $rc -eq 0 ] && echo "$out" | grep -qx "enabled: no" && ok "read_json FIFO config.json: status exit 0, enabled: no" || bad "read_json FIFO config (rc=$rc, $out)"
 rm -f "$Q/config.json"; cp "$T/config.bak" "$Q/config.json"
+# A valid record nested 500 levels parses on every Python (3.13 parses about 10,000 levels), but writing it back
+# recurses (RecursionError on 3.12+): past JSON_DEPTH it is an unreadable record, and drop says "unknown id" (exit 2).
+python3 -c 'import sys; open(sys.argv[1], "w").write(sys.argv[2] + "[" * 500 + "]" * 500 + "}")' "$Q/F900.json" '{"id": "F900", "status": "draft", "title": '
+cp "$Q/F900.json" "$T/F900.bak"
+guard python3 "$S/feedback.py" list >/dev/null 2>"$T/err"; rc=$?
+[ $rc -eq 0 ] && grep -qx "warning: unreadable record F900" "$T/err" && ok "read_json record nested 500 levels: list exit 0, F900 unreadable" \
+  || bad "read_json nested 500: list (rc=$rc, $(head -c 300 "$T/err"))"
+out=$(guard python3 "$S/feedback.py" drop F900 2>&1); rc=$?
+[ $rc -eq 2 ] && echo "$out" | grep -qx "error: unknown id F900" && cmp -s "$Q/F900.json" "$T/F900.bak" \
+  && ok "read_json record nested 500 levels: drop exit 2, unknown id, file unchanged" || bad "read_json nested 500: drop (rc=$rc, $(echo "$out" | tail -1))"
+rm -f "$Q/F900.json"
 
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

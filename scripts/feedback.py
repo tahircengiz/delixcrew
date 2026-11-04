@@ -108,16 +108,29 @@ def now():
     return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-JSON_MAX = 1 << 20  # bytes; the records and the config these tools write are a few KB
+JSON_MAX, JSON_DEPTH = 1 << 20, 32  # bytes, nesting levels; the files read here are a few KB and 3 levels deep
+
+
+def _shallow(x):
+    """True if no dict or list in `x` sits deeper than JSON_DEPTH. An explicit stack, so the walk never recurses."""
+    stack = [(x, 1)]
+    while stack:
+        v, depth = stack.pop()
+        if isinstance(v, (dict, list)):
+            if depth > JSON_DEPTH:
+                return False
+            stack.extend((c, depth + 1) for c in (v.values() if isinstance(v, dict) else v))
+    return True
 
 
 def read_json(path):
-    """Parsed JSON of a regular file of at most JSON_MAX bytes, else None. O_NONBLOCK: a FIFO at `path` opens at once
-    instead of waiting for a writer, then fails the regular-file check like a device or a directory. Malformed, too
-    deeply nested (RecursionError) or oversized JSON is unreadable too: never a traceback, never a hang."""
+    """Parsed JSON of a regular file of at most JSON_MAX bytes and JSON_DEPTH levels, else None. O_NONBLOCK: a FIFO at
+    `path` opens at once instead of waiting for a writer, then fails the regular-file check like a device or a
+    directory. Malformed, oversized or deeper JSON is unreadable too; the parser's own depth limit depends on the Python
+    version (3.12+ parses far deeper than json.dump can write back): never a traceback, never a hang."""
     try:
         fd = os.open(path, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
-    except OSError:
+    except (OSError, ValueError):
         return None
     try:
         st = os.fstat(fd)
@@ -125,7 +138,10 @@ def read_json(path):
             return None
         with os.fdopen(fd, encoding="utf-8", closefd=False) as f:
             data = f.read(JSON_MAX + 1)
-        return json.loads(data) if len(data) <= JSON_MAX else None
+        if len(data) > JSON_MAX:
+            return None
+        obj = json.loads(data)
+        return obj if _shallow(obj) else None
     except (OSError, ValueError, RecursionError, MemoryError):
         return None
     finally:
