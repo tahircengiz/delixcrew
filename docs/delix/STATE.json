@@ -117,9 +117,9 @@
       "file": "docs/delix/tasks/T029-board-derive-git-actions.md",
       "role": "backend",
       "tier": 2,
-      "status": "in_review",
+      "status": "fixing",
       "pr": 60,
-      "rounds": 0,
+      "rounds": 1,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
       "agents": [
@@ -130,6 +130,32 @@
           "sha": null,
           "verdict": null,
           "at": "2026-11-04T20:50:24Z",
+          "branch": "claude/xenodochial-goldwasser-185cc2",
+          "session": "t029-board-py-ajanlar-ku"
+        },
+        {
+          "role": "qa",
+          "by": "claude/spec-c-board",
+          "round": 1,
+          "sha": "3423549aeba709d6893b39497b5836975e319865",
+          "verdict": "ACCEPT",
+          "at": "2026-11-04T21:27:00Z"
+        },
+        {
+          "role": "security",
+          "by": "claude/spec-c-board",
+          "round": 1,
+          "sha": "3423549aeba709d6893b39497b5836975e319865",
+          "verdict": "FIX",
+          "at": "2026-11-04T21:27:00Z"
+        },
+        {
+          "role": "implementer",
+          "by": "claude/spec-c-board",
+          "round": 1,
+          "sha": null,
+          "verdict": null,
+          "at": "2026-11-04T21:27:00Z",
           "branch": "claude/xenodochial-goldwasser-185cc2",
           "session": "t029-board-py-ajanlar-ku"
         }

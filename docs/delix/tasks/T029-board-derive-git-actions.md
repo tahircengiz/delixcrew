@@ -259,4 +259,7 @@ rm -rf "$G"
 Read only this card and spec §3–§6.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 1 (3423549, 2026-11-04): deterministic gates pass (board_tests 20 ✔ on python3 3.9.6 and 3.13; full loop 903 ✔ 0 ✘; validate passes; 0 removed test lines). qa `ACCEPT` (0 P0/P1). security `FIX`.
+- **Medium (security, fix round 1):** CR (U+000D) and other control or separator characters in STATE.json string fields reach the Markdown output unchanged; a CR followed by a `bash` fence line opens a fenced block that Desktop shows with a Run button. Lead repro on 3423549 and on main: `spec`, `cards.<T>.role`, `cards.<T>.status`, `verifications[].name` and `verifications[].verdict` each open a fence. Not reproduced: spec title, worktree path, report line (`splitlines` cuts them at the CR). Fix: `one_line()` at the two `table()` joins; the Pending gates element splits in two so the output stays byte-identical (real repo, 87 lines). New test appended; red on 3423549, green after.
+- Low (follow-up K262, no fix here): (a) `git status --porcelain` without `--no-optional-locks` can write other worktrees' index (`board.py:218`); (b) `spec` and card `file` from another lead's STATE are read without a containment, regular-file or size check (`board.py:162`, `:173-177`); (c) `worktree list --porcelain` without `-z`: a path with `\n` (or `\r`, because of `splitlines`) forges blocks, and exclusion is by index (`board.py:204`, `:285-303`, `:544`). (a) and (c) also apply to the panel (T030) and change spec §4/R2.
+- P2 notes: `_pr` takes `"#0"` as pr 0 (`board.py:306`; the merge command is still null). Security unsure: `core.fsmonitor` in a worktree config runs on `git status`; quadratic `int()` on 3.9 for a very long digit run (pre-existing, `:90`).
