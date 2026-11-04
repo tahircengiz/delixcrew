@@ -169,9 +169,10 @@ def ensure_queue():
 
 
 def load_config(strict=False):
-    """The config, or the defaults when config.json is missing or not a readable JSON object. strict (triage): None
-    instead of the defaults when config.json is there but unusable, so the caller fails closed rather than redact
-    without the user's extra_terms."""
+    """The config, or the defaults when config.json is missing or not a readable JSON object. strict (preview, send,
+    triage, enable, disable): None instead of the defaults when config.json is there but unusable, or its extra_terms
+    is there but not a list of strings, so the caller fails closed rather than redact without the user's extra_terms
+    or write over them."""
     path = os.path.join(queue_dir(), "config.json")
     c = read_json(path)
     if not isinstance(c, dict):
@@ -185,6 +186,8 @@ def load_config(strict=False):
                 return None  # cannot tell: fail closed
         return {"enabled": False, "extra_terms": []}
     terms = c.get("extra_terms")
+    if strict and "extra_terms" in c and not (isinstance(terms, list) and all(isinstance(t, str) for t in terms)):
+        return None  # a hand edit enable never writes: any of its values may be a term the user meant
     return {"enabled": c.get("enabled") is True,
             "extra_terms": [t for t in terms if isinstance(t, str)] if isinstance(terms, list) else []}
 
@@ -510,7 +513,11 @@ def tty_escape(s):
 
 
 def build(rec, records, config, bad_ids=()):
-    """Builds the issue content in memory. Returns (content dict, BLOCKED reasons, 12-hex hash)."""
+    """Builds the issue content in memory. Returns (content dict, BLOCKED reasons, 12-hex hash). config None
+    (load_config strict): no draft is built without the user's extra_terms."""
+    if config is None:
+        return ({"repo": REPO, "label": LABELS.get(rec.get("kind"), "bug"), "title": "", "body": ""},
+                ["feedback config.json unreadable; fix it so its extra_terms apply"], "")
     terms = set(config["extra_terms"]) | local_terms()
     for r in records:
         terms.update(t for t in (r.get("origin_terms") or []) if isinstance(t, str))
@@ -702,9 +709,18 @@ def cmd_add(_args):
 
 
 # --- other commands -----------------------------------------------------------
+def config_refused():
+    """enable without --terms and disable never write over a config.json that load_config(strict=True) rejects."""
+    err("error: %s is unreadable or its extra_terms is not a list of strings; fix or remove it, or give new terms with "
+        "enable --terms; nothing written" % os.path.join(queue_dir(), "config.json"))
+    return 2
+
+
 def cmd_enable(args):
     ensure_queue()
-    c = load_config()
+    c = load_config(strict=args.terms is None)  # --terms replaces the terms, so an unreadable file may be replaced
+    if c is None:
+        return config_refused()
     c["enabled"] = True
     if args.terms is not None:
         c["extra_terms"] = [t.strip() for t in args.terms.split(",") if t.strip()]
@@ -715,7 +731,9 @@ def cmd_enable(args):
 
 def cmd_disable(_args):
     ensure_queue()
-    c = load_config()
+    c = load_config(strict=True)
+    if c is None:
+        return config_refused()
     c["enabled"] = False
     write_json(os.path.join(queue_dir(), "config.json"), c)
     print("delixcrew feedback disabled")
@@ -755,7 +773,7 @@ def cmd_preview(args):
     if rec is None:
         err("error: unknown id %s" % args.id)
         return 2
-    content, reasons, h = build(rec, records, load_config(), bad)
+    content, reasons, h = build(rec, records, load_config(strict=True), bad)
     if reasons:
         # Title and body are withheld: they may contain the very value that blocked them.
         print("VERDICT: BLOCKED: " + "; ".join(reasons))
@@ -819,7 +837,7 @@ def cmd_send(args):
     if status != "draft":
         err("error: %s is %s; nothing sent" % (args.id, status if status in ("sent", "duplicate", "dropped") else "unknown"))
         return 2
-    content, reasons, h = build(rec, records, load_config(), bad)
+    content, reasons, h = build(rec, records, load_config(strict=True), bad)
     if reasons:
         print("VERDICT: BLOCKED: " + "; ".join(reasons))
         return 4

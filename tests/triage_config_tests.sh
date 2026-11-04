@@ -62,6 +62,9 @@ for _ in range(40):
     x = [x]
 open(sys.argv[1], "w").write(json.dumps({"enabled": False, "extra_terms": ["acme"], "x": x}))' "$CFG";;
     array) printf '["acme"]' > "$CFG";;
+    string) printf '{"enabled":false,"extra_terms":"acme"}' > "$CFG";;
+    mixed) printf '{"enabled":false,"extra_terms":["acme",1]}' > "$CFG";;
+    null) printf '{"enabled":false,"extra_terms":null}' > "$CFG";;
   esac
   pv=$(tg preview 17 2>&1); rc=$?
   [ $rc -eq 4 ] && [ "$(echo "$pv" | grep '^VERDICT')" = "$CFGB" ] && ! echo "$pv" | grep -qE '^(HASH:|---$)|Triage:|acme' \
@@ -75,10 +78,17 @@ badcfg "FIFO at the config path"          fifo
 badcfg "valid config padded past 1 MiB"   big
 badcfg "valid config 41 levels deep"      deep
 badcfg "valid JSON that is not an object" array
+badcfg "extra_terms a string"             string
+badcfg "extra_terms with a non-string"    mixed
+badcfg "extra_terms null"                 null
 
 rm -f "$CFG"; pv=$(tg preview 17); rc=$?
 [ $rc -eq 0 ] && echo "$pv" | grep -q "^VERDICT: CLEAN" && echo "$pv" | grep -qF "Ship it to the acme team;" \
   && ok "no config.json: preview CLEAN without extra terms (unchanged)" || bad "no config.json: preview (rc=$rc, $(echo "$pv" | grep VERDICT))"
+printf '{"enabled":false}' > "$CFG"; pv=$(tg preview 17); rc=$?
+[ $rc -eq 0 ] && echo "$pv" | grep -q "^VERDICT: CLEAN" && echo "$pv" | grep -qF "Ship it to the acme team;" \
+  && ok "config.json without extra_terms: preview CLEAN, no terms (unchanged)" || bad "config.json without extra_terms: preview (rc=$rc, $(echo "$pv" | grep VERDICT))"
+rm -f "$CFG"
 cp "$T/cfg.bak" "$CFG"; [ "$(field "$(tg preview 17)" HASH)" = "$H" ] && ok "config.json restored: preview HASH as before" \
   || bad "config.json restored: HASH changed"
 
