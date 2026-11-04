@@ -1,0 +1,246 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 4ce0812..5b9d19d 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -12,5 +12,17 @@ Update the site in the same change when:
+ - a command, hook rule, role, gate or project file is added, removed or renamed (README Flow, Roles, Files, Known limits).
+ 
+ `bash tests/site_tests.sh` fails when a page's version differs from `plugin.json`, a TR/EN twin is missing, a page or an
+-asset has a script, an event handler, a form or a third-party asset, or a local link, anchor or icon does not resolve. Every claim on the site comes from a
++asset has a script, an event handler, a form or a third-party asset (other than the one analytics tag below), or a local link, anchor or icon does not resolve. Every claim on the site comes from a
+ repo file; each section names its sources in its `Source:` / `Kaynak:` line.
++
++### Site analytics
++
++The only script allowed on the site is the maintainer's self-hosted Umami tag, byte for byte, once in each page's
++`<head>`, with the same website id on all four pages:
++`<script defer src="https://stats.delix.dev/u.js" data-website-id="<uuid>" data-domains="tahircengiz.github.io"></script>`.
++Umami runs on the maintainer's own server and is reached through Cloudflare at `stats.delix.dev`, where only the
++tracker (`/u.js`) and the event endpoint (`/u/e`) are public. The tracker sets no cookies (it reads `localStorage` only
++for the `umami.disabled` opt-out), and the visit data is not sold or shared. The site test is an allowlist and fails
++closed: another host, path, attribute or attribute order, `async`, a second tag, an inline script, a tag outside
++`<head>` or the nil-uuid placeholder fails; its cases are in `tests/site_umami_cases.txt`. The footer of every page
++says this in one "Visit statistics" / "Ziyaret istatistiği" line.
+diff --git a/site/index.html b/site/index.html
+index 0354d8a..40ad340 100644
+--- a/site/index.html
++++ b/site/index.html
+@@ -9,6 +9,7 @@
+ <link rel="stylesheet" href="assets/style.css">
+ <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+ <link rel="alternate" hreflang="tr" href="tr/index.html">
++<script defer src="https://stats.delix.dev/u.js" data-website-id="aa8134df-2194-400e-8759-4fd3e391317b" data-domains="tahircengiz.github.io"></script>
+ </head>
+ <body>
+ <a class="skip" href="#main">Skip to content</a>
+@@ -692,6 +693,8 @@
+ <footer>
+   <p><span data-version="0.6.1">delixcrew 0.6.1</span> · as of 2026-11-03. Compiled from the repository files; each section lists its sources.</p>
+   <p>Source code and issues: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="tr/index.html" hreflang="tr">Türkçe</a></p>
++  <p>Visit statistics: this site counts page views with Umami, self-hosted by the maintainer and served through Cloudflare at stats.delix.dev. It sets no cookies; no personal data is sold or shared.</p>
++  <p class="src"><b>Source:</b> CLAUDE.md (Site analytics) · tests/site_tests.sh</p>
+ </footer>
+ </main>
+ </body>
+diff --git a/site/tr/index.html b/site/tr/index.html
+index d1bbf2a..0d84cb7 100644
+--- a/site/tr/index.html
++++ b/site/tr/index.html
+@@ -9,6 +9,7 @@
+ <link rel="stylesheet" href="../assets/style.css">
+ <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+ <link rel="alternate" hreflang="en" href="../index.html">
++<script defer src="https://stats.delix.dev/u.js" data-website-id="aa8134df-2194-400e-8759-4fd3e391317b" data-domains="tahircengiz.github.io"></script>
+ </head>
+ <body>
+ <a class="skip" href="#main">İçeriğe geç</a>
+@@ -692,6 +693,8 @@
+ <footer>
+   <p><span data-version="0.6.1">delixcrew 0.6.1</span> · durum 2026-11-03. İçerik repo dosyalarından derlendi; her bölümün altında kaynağı yazar.</p>
+   <p>Kaynak kod ve issue'lar: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="../index.html" hreflang="en">English</a></p>
++  <p>Ziyaret istatistiği: bu site sayfa görüntülemelerini, bakımcının kendi sunucusunda çalışan ve Cloudflare üzerinden stats.delix.dev adresinden sunulan Umami ile sayar. Çerez kullanmaz; kişisel veri satılmaz ya da paylaşılmaz.</p>
++  <p class="src"><b>Kaynak:</b> CLAUDE.md (Site analytics) · tests/site_tests.sh</p>
+ </footer>
+ </main>
+ </body>
+diff --git a/site/tr/usage.html b/site/tr/usage.html
+index cd01993..16934ca 100644
+--- a/site/tr/usage.html
++++ b/site/tr/usage.html
+@@ -9,6 +9,7 @@
+ <link rel="stylesheet" href="../assets/style.css">
+ <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+ <link rel="alternate" hreflang="en" href="../usage.html">
++<script defer src="https://stats.delix.dev/u.js" data-website-id="aa8134df-2194-400e-8759-4fd3e391317b" data-domains="tahircengiz.github.io"></script>
+ </head>
+ <body>
+ <a class="skip" href="#main">İçeriğe geç</a>
+@@ -239,6 +240,8 @@ claude plugin update delixcrew@delixcrew</code></pre>
+ <footer>
+   <p><span data-version="0.6.1">delixcrew 0.6.1</span> · durum 2026-11-03. Bu sayfa README'den ve skill dosyalarından derlendi. MIT lisansı.</p>
+   <p>Kaynak kod ve issue'lar: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="../usage.html" hreflang="en">English</a></p>
++  <p>Ziyaret istatistiği: bu site sayfa görüntülemelerini, bakımcının kendi sunucusunda çalışan ve Cloudflare üzerinden stats.delix.dev adresinden sunulan Umami ile sayar. Çerez kullanmaz; kişisel veri satılmaz ya da paylaşılmaz.</p>
++  <p class="src"><b>Kaynak:</b> CLAUDE.md (Site analytics) · tests/site_tests.sh</p>
+ </footer>
+ </main>
+ </body>
+diff --git a/site/usage.html b/site/usage.html
+index 33a0444..72b5067 100644
+--- a/site/usage.html
++++ b/site/usage.html
+@@ -9,6 +9,7 @@
+ <link rel="stylesheet" href="assets/style.css">
+ <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+ <link rel="alternate" hreflang="tr" href="tr/usage.html">
++<script defer src="https://stats.delix.dev/u.js" data-website-id="aa8134df-2194-400e-8759-4fd3e391317b" data-domains="tahircengiz.github.io"></script>
+ </head>
+ <body>
+ <a class="skip" href="#main">Skip to content</a>
+@@ -239,6 +240,8 @@ claude plugin update delixcrew@delixcrew</code></pre>
+ <footer>
+   <p><span data-version="0.6.1">delixcrew 0.6.1</span> · as of 2026-11-03. Compiled from the README and the skill files. MIT licence.</p>
+   <p>Source code and issues: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="tr/usage.html" hreflang="tr">Türkçe</a></p>
++  <p>Visit statistics: this site counts page views with Umami, self-hosted by the maintainer and served through Cloudflare at stats.delix.dev. It sets no cookies; no personal data is sold or shared.</p>
++  <p class="src"><b>Source:</b> CLAUDE.md (Site analytics) · tests/site_tests.sh</p>
+ </footer>
+ </main>
+ </body>
+diff --git a/tests/site_tests.sh b/tests/site_tests.sh
+index 7ec705b..d22eebf 100644
+--- a/tests/site_tests.sh
++++ b/tests/site_tests.sh
+@@ -1,6 +1,7 @@
+ #!/usr/bin/env bash
+ # Deterministic checks for the GitHub Pages site (site/). Run: bash tests/site_tests.sh
+-# Every page shows the plugin.json version, has its other-language twin, loads nothing from third parties,
++# Every page shows the plugin.json version, has its other-language twin, loads nothing from third parties except the
++# one allowed self-hosted analytics tag (cases: tests/site_umami_cases.txt),
+ # and every local link, anchor and icon reference resolves. A version bump without a site update fails here.
+ set -u
+ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+@@ -30,6 +31,58 @@ else:
+ ACTIVE = re.compile(r"<(?:script|iframe|object|embed|video|audio|source|base|form)\b|@import|@font-face|javascript:"
+                     r"|url\(\s*['\"]?(?:https?:)?//|<[a-z][^>]{0,4096}?\s(?:on[a-z]+\s*=|http-equiv\s*=\s*['\"]?refresh)", re.I)
+ EXT_REF = re.compile(r"<(?!a\b)[a-z][^>]{0,4096}?\b(?:href|src|srcset|poster|data)\s*=\s*(?:['\"]\s*)?(?:https?:)?//", re.I)
++
++# The one allowed exception (allowlist, fail closed): the self-hosted Umami tag, byte for byte, exactly once per page,
++# inside <head>. Only that match is cut out before the scans above run, so any other script, inline script, host,
++# attribute order or extra attribute still fails. Fixed-width pattern: no alternation, no open-ended quantifier.
++UMAMI = re.compile(r'<script defer src="https://stats\.delix\.dev/u\.js" data-website-id="([0-9a-f]{8}-[0-9a-f]{4}-'
++                   r'[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})" data-domains="tahircengiz\.github\.io"></script>')
++NIL_ID = "00000000-0000-0000-0000-000000000000"
++def page_problems(t):
++    """Problems of one page's HTML from the analytics rule and the active-content scans; returns (problems, id)."""
++    head_start, head_end = t.find("<head>"), t.find("</head>")
++    tags = list(UMAMI.finditer(t))
++    in_head = [m for m in tags if head_start != -1 and head_start < m.start() and m.end() <= head_end]
++    probs = []
++    if len(in_head) != 1 or len(tags) != 1:
++        probs.append(f"analytics tag: need exactly one allowed Umami tag inside <head>, found {len(in_head)} in "
++                     f"<head> and {len(tags)} in the page")
++    site_id = in_head[0].group(1) if len(in_head) == 1 else None
++    if site_id == NIL_ID:
++        probs.append("analytics tag: website id is the placeholder nil uuid")
++    rest = t[:in_head[0].start()] + t[in_head[0].end():] if len(in_head) == 1 else t
++    probs += [m.group(0) for m in ACTIVE.finditer(rest)] + [m.group(0) for m in EXT_REF.finditer(rest)]
++    return probs, site_id
++
++# the rule itself: every case in tests/site_umami_cases.txt (good and bad) must come out as expected
++SAMPLE_ID = "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d"
++SAMPLE_TAG = (f'<script defer src="https://stats.delix.dev/u.js" data-website-id="{SAMPLE_ID}" '
++              'data-domains="tahircengiz.github.io"></script>')
++cases = [l.rstrip("\n").split("\t") for l in open(os.path.join(root, "tests", "site_umami_cases.txt"), encoding="utf-8")
++         if l.strip() and not l.startswith("#")]
++wrong = []
++for expect, where, name, snippet in cases:
++    snippet = snippet.replace("{TAG}", SAMPLE_TAG).replace("{ID}", SAMPLE_ID)
++    head, body = (snippet, "") if where == "head" else ("", snippet)
++    probs, _ = page_problems(f'<!doctype html>\n<html lang="en">\n<head>\n{head}\n</head>\n<body>{body}</body>\n</html>\n')
++    if (expect == "bad") != bool(probs):
++        wrong.append(f"{expect} {name}: {probs or 'passed'}")
++n_bad = sum(c[0] == "bad" for c in cases)
++if cases and n_bad and not wrong:
++    ok(f"analytics rule: {n_bad} bad cases rejected, {len(cases) - n_bad} good cases accepted")
++else:
++    bad(f"analytics rule cases did not come out as expected: {wrong or 'no cases'}")
++
++# regex timing (ReDoS) of the allowlist pattern: ~1 MB near-miss inputs must stay linear (well under 1s)
++import time
++slow = []
++for probe in ('<script defer src="https://stats.delix.dev/u.js" data-website-id="' + "a" * 1000000,
++              SAMPLE_TAG[:-9] * 8000, "<script defer " * 80000, SAMPLE_TAG.replace("4d\"", "4\"") * 8000):
++    t0 = time.perf_counter(); list(UMAMI.finditer(probe)); dt = time.perf_counter() - t0
++    if dt > 1.0:
++        slow.append(f"{len(probe)} chars: {dt:.2f}s")
++ok("analytics rule: long near-miss inputs stay under 1s") if not slow else bad(f"analytics rule is slow: {slow}")
++
+ assets = sorted(os.path.relpath(os.path.join(d, f), site) for d, _, fs in os.walk(os.path.join(site, "assets"))
+                 for f in fs if f.endswith((".css", ".svg")))
+ for a in assets:
+@@ -37,6 +90,7 @@ for a in assets:
+     hits = [m.group(0) for m in ACTIVE.finditer(s)] + [m.group(0) for m in EXT_REF.finditer(s)]
+     ok(f"{a}: no scripts or third-party assets") if not hits else bad(f"{a}: scripts or third-party assets: {hits}")
+ 
++site_ids = {}
+ for p, t in text.items():
+     marks = re.findall(r'data-version="([^"]*)"[^>]*>([^<]*)<', t)
+     if len(marks) >= 2 and all(v == version and s.strip() == f"delixcrew {version}" for v, s in marks):
+@@ -47,8 +101,9 @@ for p, t in text.items():
+     lang = re.search(r'<html lang="(en|tr)">', t)
+     want = "tr" if p.startswith("tr/") else "en"
+     ok(f"{p}: lang={want}") if lang and lang.group(1) == want else bad(f"{p}: <html lang> should be {want}")
+-    ext = [m.group(0) for m in ACTIVE.finditer(t)] + [m.group(0) for m in EXT_REF.finditer(t)]
+-    ok(f"{p}: no scripts or third-party assets") if not ext else bad(f"{p}: scripts or third-party assets: {ext}")
++    ext, site_ids[p] = page_problems(t)
++    ok(f"{p}: only the allowed analytics tag, no other scripts or third-party assets") if not ext \
++        else bad(f"{p}: scripts or third-party assets: {ext}")
+     broken = []
+     for attr, ref in re.findall(r'\b(href|src)="([^"]+)"', t):
+         if re.match(r"(?:[a-z]+:|//)", ref):
+@@ -66,5 +121,11 @@ for p, t in text.items():
+             broken.append(ref)
+     ok(f"{p}: local links, anchors and icons resolve") if not broken else bad(f"{p}: broken references {sorted(set(broken))}")
+ 
++found = set(site_ids.values())
++if len(found) == 1 and None not in found:
++    ok(f"analytics tag: all {len(site_ids)} pages use the same website id")
++else:
++    bad(f"analytics tag: pages must share one website id, found {sorted(map(str, found))}")
++
+ sys.exit(fail)
+ PY
+diff --git a/tests/site_umami_cases.txt b/tests/site_umami_cases.txt
+new file mode 100644
+index 0000000..8c83cf9
+--- /dev/null
++++ b/tests/site_umami_cases.txt
+@@ -0,0 +1,29 @@
++# Cases for the analytics tag rule in tests/site_tests.sh. One case per line, tab-separated:
++#   expect (ok|bad) <TAB> where (head|body) <TAB> name <TAB> snippet
++# The snippet is placed in <head> or <body> of a test page; {ID} becomes a sample website id, {TAG} the allowed tag.
++# A "bad" case must make the page check fail, an "ok" case must leave it clean.
++ok	head	allowed tag in head	{TAG}
++bad	head	no tag	<meta name="x" content="y">
++bad	head	other host	<script defer src="https://evil.example/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
++bad	head	look-alike host	<script defer src="https://stats.delix.dev.evil.example/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
++bad	head	other path on the host	<script defer src="https://stats.delix.dev/x.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
++bad	head	plain http	<script defer src="http://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
++bad	head	protocol-relative src	<script defer src="//stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
++bad	head	two tags	{TAG}{TAG}
++bad	head	async instead of defer	<script async src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
++bad	head	no defer	<script src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
++bad	head	inline script next to the tag	{TAG}<script>alert(1)</script>
++bad	head	second script from the host	{TAG}<script src="https://stats.delix.dev/u.js"></script>
++bad	head	extra attribute (host-url)	<script defer src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io" data-host-url="https://evil.example"></script>
++bad	head	extra attribute (onload)	<script defer src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io" onload="x()"></script>
++bad	head	other domain	<script defer src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="example.com"></script>
++bad	head	extra domain	<script defer src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io,example.com"></script>
++bad	head	no domains	<script defer src="https://stats.delix.dev/u.js" data-website-id="{ID}"></script>
++bad	head	website id not a uuid	<script defer src="https://stats.delix.dev/u.js" data-website-id="not-a-uuid" data-domains="tahircengiz.github.io"></script>
++bad	head	website id upper case	<script defer src="https://stats.delix.dev/u.js" data-website-id="0A1B2C3D-4E5F-4A6B-8C7D-9E0F1A2B3C4D" data-domains="tahircengiz.github.io"></script>
++bad	head	placeholder nil uuid	<script defer src="https://stats.delix.dev/u.js" data-website-id="00000000-0000-0000-0000-000000000000" data-domains="tahircengiz.github.io"></script>
++bad	head	upper-case tag name	<SCRIPT defer src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></SCRIPT>
++bad	head	attributes reordered	<script src="https://stats.delix.dev/u.js" defer data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
++bad	head	body between the tags	<script defer src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io">alert(1)</script>
++bad	head	third-party stylesheet next to the tag	{TAG}<link rel="stylesheet" href="https://cdn.example/x.css">
++bad	body	tag in body, not head	{TAG}
