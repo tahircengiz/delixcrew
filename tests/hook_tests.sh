@@ -66,11 +66,44 @@ deny  "security git -C diff redirect"     bash_gate.py  "{\"tool_name\":\"Bash\"
 deny  "security sed -i"                   bash_gate.py  "{\"tool_name\":\"Bash\",\"agent_type\":\"delixcrew:security\",\"cwd\":\"$T\",\"tool_input\":{\"command\":\"sed -i s/a/b/ x.py\"}}"
 deny  "qa Bash"                           bash_gate.py  "{\"tool_name\":\"Bash\",\"agent_type\":\"delixcrew:qa\",\"cwd\":\"$T\",\"tool_input\":{\"command\":\"ls\"}}"
 # Stop
-printf '{"cwd":"%s","stop_hook_active":false}' "$T" | python3 "$S/stop_gate.py" 2>/dev/null; [ $? -eq 0 ] && echo "✔ stop: tests pass, stops" || { echo "✘ stop: should stop when tests pass"; FAIL=1; }
+# T026 (K206): the Stop gate runs only an approved (git_common_dir, sha256) pair. The test record replaces
+# common.trust_file through runpy (K203); each case approves its command list first; expected results are unchanged.
+TREC="$T/trusthome/.claude/delixcrew/trust.json"
+cat > "$T/run.py" <<'PY'
+import runpy, sys
+scripts, record, script = sys.argv[1], sys.argv[2], sys.argv[3]
+sys.path.insert(0, scripts)
+import common
+common.trust_file = lambda: record
+sys.argv = [script] + sys.argv[4:]
+runpy.run_path(script, run_name="__main__")
+PY
+tapprove(){ python3 - "$T" "$TREC" <<'PY'
+import hashlib, json, os, subprocess, sys
+cwd, rec = sys.argv[1], sys.argv[2]
+with open(os.path.join(cwd, "docs", "delix", "delix.json"), encoding="utf-8") as f:
+    cfg = json.load(f)
+cmds = [cfg.get("test_command") or "pytest -q"] + list(cfg.get("extra_checks") or [])
+sha = hashlib.sha256(json.dumps(cmds, ensure_ascii=False, separators=(",", ":")).encode("utf-8")).hexdigest()
+out = subprocess.run(["git", "-C", cwd, "rev-parse", "--git-common-dir"], capture_output=True, text=True).stdout.rstrip("\n")
+os.makedirs(os.path.dirname(rec), exist_ok=True); os.chmod(os.path.dirname(rec), 0o700)
+data = {"version": 1, "entries": []}
+if os.path.exists(rec):
+    with open(rec, encoding="utf-8") as f:
+        data = json.load(f)
+data["entries"].append({"git_common_dir": os.path.realpath(os.path.join(cwd, out)), "sha256": sha, "approved_at": "2026-11-04T00:00:00+00:00"})
+with open(rec, "w", encoding="utf-8") as f:
+    json.dump(data, f)
+os.chmod(rec, 0o600)
+PY
+}
+tstop(){ printf '{"cwd":"%s","stop_hook_active":false}' "$T" | python3 "$T/run.py" "$S" "$TREC" "$S/stop_gate.py" 2>/dev/null; }
+tapprove; tstop; [ $? -eq 0 ] && echo "✔ stop: tests pass, stops" || { echo "✘ stop: should stop when tests pass"; FAIL=1; }
 python3 - "$T/docs/delix/delix.json" <<'PY'
 import json,sys; p=sys.argv[1]; d=json.load(open(p)); d["test_command"]="false"; json.dump(d,open(p,"w"))
 PY
-printf '{"cwd":"%s","stop_hook_active":false}' "$T" | python3 "$S/stop_gate.py" 2>/dev/null; [ $? -eq 2 ] && echo "✔ stop: tests broken, blocks (exit 2)" || { echo "✘ stop: expected exit 2 on broken tests"; FAIL=1; }
+tapprove; tstop; [ $? -eq 2 ] && echo "✔ stop: tests broken, blocks (exit 2)" || { echo "✘ stop: expected exit 2 on broken tests"; FAIL=1; }
+grep -qF '[exit 1]' "$T/.delix/test-result.txt" && ! grep -qF '[not run:' "$T/.delix/test-result.txt" && echo "✔ stop: broken test ran ([exit 1], no [not run:)" || { echo "✘ stop: broken test did not run: $(cat "$T/.delix/test-result.txt")"; FAIL=1; }
 printf '{"cwd":"%s","stop_hook_active":true}' "$T" | python3 "$S/stop_gate.py" 2>/dev/null; [ $? -eq 0 ] && echo "✔ stop: stop_hook_active → stops" || { echo "✘ stop_hook_active"; FAIL=1; }
 echo "NEEDS_CONTEXT: card unclear" > "$T/.delix/report.md"
 printf '{"cwd":"%s","stop_hook_active":false}' "$T" | python3 "$S/stop_gate.py" 2>/dev/null; [ $? -eq 0 ] && echo "✔ stop: NEEDS_CONTEXT report → stops" || { echo "✘ NEEDS_CONTEXT"; FAIL=1; }
