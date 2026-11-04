@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-04 · **Faz:** 9 kapandı: feedback temizliği T016–T019 merge edildi (§9); sürüm etiketi kararı kullanıcıda. §8: 0.6.0 triage arşivi `docs/delix/archive/0.6.0-triage/`; W0 ve uçtan uca test açık
+**Son güncelleme:** 2026-11-04 · **Faz:** 10 kapandı: feedback süzgeci kalan açıklar T020–T021 merge edildi (§10); sürüm etiketi kararı kullanıcıda. §9: feedback temizliği arşivi `docs/delix/archive/0.6.x-feedback-cleanup/`.
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -444,7 +444,7 @@ yazma kapısı feedback kuyruğunu harf büyüklüğüne duyarlı karşılaştı
 | 9.6 | Dalga 2: T019 PR #37 (`3ab269a`, CI tüm `tests/*_tests.sh`), T018 PR #38 (`1dc3992`, README + CHANGELOG `## Unreleased`); kapanış | ✔ 2026-11-04 |
 | 9.7 | Takip: kalan düz metin sezgi sınırları (SPEC §6) ve takip kartı adayları | ◻ kullanıcı kararı |
 
-**Açık iş (kapanış drift kontrolü, 2026-11-04; tek takip spec'i adayı):**
+**Açık iş (kapanış drift kontrolü, 2026-11-04; §10'da ele alındı, K151 ve K153 hariç):**
 - README/CHANGELOG Feedback metni koddan dar: http/https-only şema, kuyrukta noktalı parça kuralı, `.` parçası, MAC,
   URL'nin tamamında terim, kanonik IPv4 (`http://127.1/` silinir), dosya uzantılı son etiketin host sayılmaması anlatılmıyor.
 - Test boşlukları: REQ-2 `a//b` ve `>/Users/alice/x`; REQ-4 önizleme taslağında REQ-2/REQ-3 girdileri; kuyruk IPv4
@@ -456,6 +456,34 @@ Kararlar: `docs/delix/archive/0.6.x-feedback-cleanup/SPEC.md` §9. Öne çıkanl
 `anthropics/*` yolu · **K146** izinli URL'nin kuyruğu da karakter izin listesinden geçer, `%` reddedilir · **K147**
 `*.test`/`*.invalid`/`*.localhost` artık izinli değil · **K140** sürüm artmaz, CHANGELOG `## Unreleased` · **K143** #12
 (`purge`) kapsam dışı (triage kaydı `accepted` değil).
+
+## 10. Feedback süzgeci kalan açıklar (2026-11-04, SPEC `docs/delix/SPEC.md`, kartlar T020–T021; kapandı, main `d05abf4`)
+
+Kaynak: §9 "Açık iş". Bu spec, T020 ile süzgeç kodunu (`scripts/feedback.py`, `scripts/triage.py` taşıma) ve T021 ile
+README EN/TR Feedback bölümünü ve CHANGELOG `## Unreleased` maddesini kapsar.
+
+| # | Adım | Durum |
+|---|---|---|
+| 10.1 | Arşiv `0.6.x-feedback-cleanup`; `/delixcrew:start` (M · Tier 3), grill (3 soru), spec; architect FIX, security FIX işlendi | ✔ K159–K172 |
+| 10.2 | Kapı 1; dispatch T020 🔐 (dalga 1), T021 (dalga 2); T020 Approved satırı | ✔ 2026-11-04, sohbette açık onay |
+| 10.3 | T020 PR #39 (`7b51b48`), 3 düzeltme turu: CI büyüme testi (K163 yanlış, K173), security 1 Medium + 7 Low düzeltildi, son geçişte 1 Low §6 | ✔ kapı 2 kullanıcıda, merge edildi |
+| 10.4 | T021 PR #43 (`d05abf4`), 0 tur, 1 P2 | ✔ merge edildi |
+| 10.5 | Kapanış: metrikler, drift kontrolü (architect: DRIFT, yalnız P2) | ✔ 2026-11-04 |
+
+**Açık iş (kapanış drift kontrolü, 2026-11-04; hepsi P2, takip kartı adayı):**
+- README `README.md:160` (TR eşi) "host/IP/e-posta/MAC'ten sonraki yol ya da port silinir" der; Markdown vurgusu ya da tırnak
+  arasındaysa kalır (`**ci.acme-corp.net**:8080/api/secret`). SPEC §6 ve K176'da kayıtlı; README'de yok.
+- README "birleşik işaretli metin BLOCKED" der; NFKC'nin birleştirdiği dizi (`e` + U+0301 → `é`) geçer. Yayına giden metin
+  de NFKC'li, sızıntı yok; metin daraltılmalı ya da K kararı yazılmalı.
+- `scripts/feedback.py` docstring'i ve bölüm yorumları arşivdeki spec'in REQ numaralarını yeni spec'inkilerle karıştırıyor
+  (`:2`, `:47`, `:67`, `:75`, `:91`); yalnız yorum.
+- `claude plugin validate .` README'deki `http://127.1/` örneği yüzünden LISTING_URL_SCHEME uyarısı verir; doğrulama geçer.
+- SPEC §6 kalan riskleri: K151, K153, REQ-1b kapanış koşusu (K176).
+
+Kararlar: `docs/delix/SPEC.md` §9. Öne çıkanlar: **K159** (kullanıcı) host'tan sonraki yol yapısal kural · **K160**
+U+2028/U+2029/surrogate BLOCKED · **K170** triage K133 izin listesi feedback'te (tab ek) · **K173** `_url_pass` liste
+birleştirme, 50K/400K büyüme testi ×12 (K163'ün yerine; ölçüm: main 200K→800K 0,533→5,514 sn) · **K176** son incelemenin
+Low bulgusu §6'da, 4. tur yok.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

@@ -98,3 +98,24 @@ Subagents (18: scout, architect, qa, security): output 821K, cache read 13.9M, c
 - Interventions outside gates: 3 ("İkisini başlat", "Evet, T019 ekle", "Başlat"), plus the grill answer, which makes 4 → 1.0 per card (target ≤ 5).
 
 **No single-session baseline** exists for this feature.
+
+## Feedback süzgeci kalan açıklar (closed 2026-11-04; SPEC `docs/delix/SPEC.md`, cards T020–T021)
+
+Source: `STATE.json`, `gh pr view` (createdAt → mergedAt), the session transcripts (`message.usage`, summed per
+assistant message, not deduplicated). Session cost in USD: not measured.
+
+| card | tier | PR | review rounds | PR open → merge | implementer tokens (out / cache read / cache write) | note |
+|---|---|---|---|---|---|---|
+| T020 feedback.py filter gaps | 3 | #39 | 3 (4 review passes) | 129 min | 237K / 30.0M / 505K | round 1 deterministic (CI growth test red, K163 wrong, K173); round 2 security 1 Medium + 3 Low; round 3 4 Low; final pass 1 Low on both trees (§6, K176) |
+| T021 README + CHANGELOG | 1 | #43 | 0 | 10 min | 32K / 6.1M / 245K | 1 P2 (validate LISTING_URL_SCHEME warning) |
+
+Lead session (start, spec, dispatch, reviews, close; two context windows): output 406K, cache read 69.9M, cache write
+1.05M. Subagents (11: scout, architect, qa, security): output 576K, cache read 10.7M, cache write 2.03M.
+
+**Gates and interventions** (counted from the lead transcript and this conversation, not estimated):
+- `AskUserQuestion` calls: 6 (grill 3, gate 1, 🔐 T020 with push, round-3 decision).
+- Gates: gate 1, 🔐 T020, round-3 decision (cap), 2 merges (run in the user's own terminal).
+- Interventions outside gates: grill answers 3, push approvals 3, "merge komutunu ver" 1, implementer card starts 2
+  → 9, 4.5 per card (target ≤ 5). The start request came from the parent session and is not counted.
+
+**No single-session baseline** exists for this feature.

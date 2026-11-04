@@ -34,11 +34,11 @@
       "file": "docs/delix/tasks/T021-feedback-docs-sync.md",
       "role": "docs",
       "tier": 1,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 43,
       "rounds": 0,
       "cost_usd": null,
-      "sha": "8a858da"
+      "sha": "d05abf4"
     }
   },
   "status_values": [
