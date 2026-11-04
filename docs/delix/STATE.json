@@ -1,72 +1,10 @@
 {
-  "spec": "docs/delix/SPEC.md",
-  "size": "M",
-  "updated": "2026-11-03T23:40:00Z",
+  "spec": null,
+  "size": null,
+  "updated": "2026-11-04T12:00:00Z",
   "env_owner": null,
-  "waves": [
-    {
-      "wave": 1,
-      "cards": [
-        "T016",
-        "T017"
-      ],
-      "note": "SPEC feedback redaction (gate 1 2026-11-03, K134-K148). Parallel, no shared files, either merge order; rebase on main before merge. Both 🔐: Approved line before dispatch."
-    },
-    {
-      "wave": 2,
-      "cards": [
-        "T018",
-        "T019"
-      ],
-      "note": "after T016 AND T017 merged (CHANGELOG bullet describes REQ-6, README the merged T016 behaviour). Tier 1 docs. T019 (K149, CI loop, 🔐) parallel with T018, no shared files; T019 may start as soon as approved (no dependency on T016)."
-    }
-  ],
-  "cards": {
-    "T016": {
-      "file": "docs/delix/tasks/T016-feedback-url-allowlist.md",
-      "role": "backend",
-      "tier": 3,
-      "status": "accepted",
-      "pr": 33,
-      "rounds": 3,
-      "cost_usd": null,
-      "sha": "1d82c9d",
-      "merged": "eb500ea"
-    },
-    "T017": {
-      "file": "docs/delix/tasks/T017-write-gate-queue-casefold.md",
-      "role": "backend",
-      "tier": 3,
-      "status": "accepted",
-      "pr": 32,
-      "rounds": 0,
-      "cost_usd": null,
-      "sha": "dd0f1e5",
-      "merged": "bdfc2f6"
-    },
-    "T018": {
-      "file": "docs/delix/tasks/T018-feedback-docs-url-rule.md",
-      "role": "docs",
-      "tier": 1,
-      "status": "accepted",
-      "pr": 38,
-      "rounds": 0,
-      "cost_usd": null,
-      "sha": "a3a4e63",
-      "merged": "1dc3992"
-    },
-    "T019": {
-      "file": "docs/delix/tasks/T019-ci-run-all-tests.md",
-      "role": "devops",
-      "tier": 3,
-      "status": "accepted",
-      "pr": 37,
-      "rounds": 0,
-      "cost_usd": null,
-      "sha": "8da9dc2",
-      "merged": "3ab269a"
-    }
-  },
+  "waves": [],
+  "cards": {},
   "status_values": [
     "open",
     "in_progress",
@@ -137,6 +75,7 @@
   ],
   "archive": [
     "docs/delix/archive/0.5.0-self-feeding/STATE.json",
-    "docs/delix/archive/0.6.0-triage/STATE.json"
+    "docs/delix/archive/0.6.0-triage/STATE.json",
+    "docs/delix/archive/0.6.x-feedback-cleanup/STATE.json"
   ]
 }

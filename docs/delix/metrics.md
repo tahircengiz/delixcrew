@@ -77,7 +77,7 @@ Orchestrator session (spec, dispatch, reviews, close): output 244K, cache read 5
 
 **No single-session baseline** exists for this feature.
 
-## Feedback temizliği (closed 2026-11-04; SPEC `docs/delix/SPEC.md`, cards T016–T019)
+## Feedback temizliği (closed 2026-11-04; SPEC `docs/delix/archive/0.6.x-feedback-cleanup/SPEC.md`, cards T016–T019)
 
 Source: `STATE.json`, `gh pr view` (createdAt → mergedAt), the session transcripts (`message.usage`, summed per
 assistant message, not deduplicated). Session cost in USD: not measured.

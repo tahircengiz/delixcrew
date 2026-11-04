@@ -428,7 +428,7 @@ Kararlar: `docs/delix/archive/0.6.0-triage/SPEC.md` §9 (kullanıcı K106–K110
 - Yan bulgu: Desktop bu worktree dizinini (T005'ten) yeniden kullandı; kalan `.delix/card` yazma kapısını uygulayıcı
   kipine soktu. Dosya silinmeden kenara alındı. close'un worktree temizliği `.delix/`'i silmiyor olabilir; takip işi.
 
-## 9. Feedback temizliği (2026-11-03 → 2026-11-04, SPEC `docs/delix/SPEC.md`, kartlar `docs/delix/tasks/T016–T019`; kapandı)
+## 9. Feedback temizliği (2026-11-03 → 2026-11-04, arşiv `docs/delix/archive/0.6.x-feedback-cleanup/`: SPEC, kartlar T016–T019, STATE; kapandı, main `928d9b9`)
 
 `feedback.sanitize()` (public issue ve triage yorumu süzgeci) main `79ef030`'da yönlendirme sonrası yolu, JSON kaçışlı yolu,
 tek etiketli/şemalı host'lu URL'yi, sayısal ve Unicode host'u değiştirmeden geçiriyordu (K104, K115 kapsamı; ölçüldü);
@@ -452,7 +452,7 @@ yazma kapısı feedback kuyruğunu harf büyüklüğüne duyarlı karşılaştı
 - Kod: `_` ile biten IPv4/IPv6, `:` sonrası host'un yolu, `_url_pass` birleştirmesi O(n²), `preview`/`send` U+2028 ham,
   `cmd_add` yinelenen dalda `ID_RE` yok. SPEC §6 kalan riskleri (K151, K153).
 
-Kararlar: SPEC §9. Öne çıkanlar: **K134** (kullanıcı) URL'de izin listesi, github.com'da yalnız `tahircengiz/delixcrew` ve
+Kararlar: `docs/delix/archive/0.6.x-feedback-cleanup/SPEC.md` §9. Öne çıkanlar: **K134** (kullanıcı) URL'de izin listesi, github.com'da yalnız `tahircengiz/delixcrew` ve
 `anthropics/*` yolu · **K146** izinli URL'nin kuyruğu da karakter izin listesinden geçer, `%` reddedilir · **K147**
 `*.test`/`*.invalid`/`*.localhost` artık izinli değil · **K140** sürüm artmaz, CHANGELOG `## Unreleased` · **K143** #12
 (`purge`) kapsam dışı (triage kaydı `accepted` değil).

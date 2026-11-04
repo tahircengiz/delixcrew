@@ -1,0 +1,142 @@
+{
+  "spec": "docs/delix/SPEC.md",
+  "size": "M",
+  "updated": "2026-11-03T23:40:00Z",
+  "env_owner": null,
+  "waves": [
+    {
+      "wave": 1,
+      "cards": [
+        "T016",
+        "T017"
+      ],
+      "note": "SPEC feedback redaction (gate 1 2026-11-03, K134-K148). Parallel, no shared files, either merge order; rebase on main before merge. Both 🔐: Approved line before dispatch."
+    },
+    {
+      "wave": 2,
+      "cards": [
+        "T018",
+        "T019"
+      ],
+      "note": "after T016 AND T017 merged (CHANGELOG bullet describes REQ-6, README the merged T016 behaviour). Tier 1 docs. T019 (K149, CI loop, 🔐) parallel with T018, no shared files; T019 may start as soon as approved (no dependency on T016)."
+    }
+  ],
+  "cards": {
+    "T016": {
+      "file": "docs/delix/tasks/T016-feedback-url-allowlist.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "accepted",
+      "pr": 33,
+      "rounds": 3,
+      "cost_usd": null,
+      "sha": "1d82c9d",
+      "merged": "eb500ea"
+    },
+    "T017": {
+      "file": "docs/delix/tasks/T017-write-gate-queue-casefold.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "accepted",
+      "pr": 32,
+      "rounds": 0,
+      "cost_usd": null,
+      "sha": "dd0f1e5",
+      "merged": "bdfc2f6"
+    },
+    "T018": {
+      "file": "docs/delix/tasks/T018-feedback-docs-url-rule.md",
+      "role": "docs",
+      "tier": 1,
+      "status": "accepted",
+      "pr": 38,
+      "rounds": 0,
+      "cost_usd": null,
+      "sha": "a3a4e63",
+      "merged": "1dc3992"
+    },
+    "T019": {
+      "file": "docs/delix/tasks/T019-ci-run-all-tests.md",
+      "role": "devops",
+      "tier": 3,
+      "status": "accepted",
+      "pr": 37,
+      "rounds": 0,
+      "cost_usd": null,
+      "sha": "8da9dc2",
+      "merged": "3ab269a"
+    }
+  },
+  "status_values": [
+    "open",
+    "in_progress",
+    "in_review",
+    "fixing",
+    "accepted",
+    "rejected",
+    "escalated"
+  ],
+  "verifications": [
+    {
+      "name": "github-pages",
+      "date": "2026-11-03",
+      "sha": "68664cef944d3b7ff3b57b73c308e3ce7e87b481",
+      "base": "375623f1e36bc6405477045186608c3fffbb2e24",
+      "input": "claude/github-pages",
+      "tier": "3 🔐",
+      "verdict": "ACCEPT 🔐",
+      "report": "docs/delix/verifications/2026-11-03-github-pages.md",
+      "gates": {
+        "gitleaks": "PASS (archive: pre-existing finding, also on base)",
+        "local": "PASS",
+        "remote_unit": "not run: no delix.json.verify",
+        "full": "not run: no --full"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "🔐 HUMAN_APPROVAL",
+      "cost_usd": null
+    },
+    {
+      "name": "github-pages",
+      "date": "2026-11-03",
+      "input": "claude/github-pages",
+      "tier": "3 🔐",
+      "verdict": "ACCEPT 🔐",
+      "report": "docs/delix/verifications/2026-11-03-github-pages.md",
+      "gates": {
+        "gitleaks": "PASS (archive: pre-existing finding, also on base)",
+        "local": "PASS",
+        "remote_unit": "not run: no delix.json.verify",
+        "full": "not run: no --full"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "🔐 HUMAN_APPROVAL",
+      "cost_usd": null,
+      "sha": "effc814e24f979d03de8b01831426fbf8531f43c",
+      "base": "9dfc83d42ebd22e3f89112ee061cabe311a55783"
+    },
+    {
+      "name": "github-pages",
+      "date": "2026-11-03",
+      "input": "claude/github-pages",
+      "tier": "3 🔐",
+      "verdict": "ACCEPT 🔐",
+      "report": "docs/delix/verifications/2026-11-03-github-pages.md",
+      "gates": {
+        "gitleaks": "PASS (archive: pre-existing finding, also on base)",
+        "local": "PASS",
+        "remote_unit": "not run: no delix.json.verify",
+        "full": "not run: no --full"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "🔐 HUMAN_APPROVAL",
+      "cost_usd": null,
+      "sha": "f6c2d0adae2ff3fbb5085a396629a7137532eebe",
+      "base": "9dfc83d42ebd22e3f89112ee061cabe311a55783"
+    }
+  ],
+  "archive": [
+    "docs/delix/archive/0.5.0-self-feeding/STATE.json",
+    "docs/delix/archive/0.6.0-triage/STATE.json"
+  ]
+}

@@ -1,9 +1,9 @@
 # SPEC — Feedback temizliği: URL izin listesi, yol bağlamları, kuyruk kapısında harf büyüklüğü
 
-> Size: **M** · Tier: 3 · Date: 2026-11-03 · Status: **approved (gate 1, 2026-11-03)** (architect FIX + security FIX işlendi) · **closed 2026-11-04** (T016–T019 merged, main `1dc3992`; inceleme turlarıyla gelen kurallar K150–K158'de)
+> Size: **M** · Tier: 3 · Date: 2026-11-03 · Status: **closed 2026-11-04 (T016–T019 merged, main `1dc3992`; arşiv)** · approved (gate 1, 2026-11-03) (architect FIX + security FIX işlendi; inceleme turlarıyla gelen kurallar K150–K158'de)
 > Source: grill kararı K134 (kullanıcı), K135–K149 (lead, geri alınır). STATUS.md K numaralarının devamıdır.
-> Önceki spec'ler (kapalı): [`archive/0.6.0-triage/SPEC.md`](archive/0.6.0-triage/SPEC.md),
-> [`archive/0.5.0-self-feeding/SPEC.md`](archive/0.5.0-self-feeding/SPEC.md) (REQ-3, REQ-12, K94, K101, K104).
+> Önceki spec'ler (kapalı): [`archive/0.6.0-triage/SPEC.md`](../0.6.0-triage/SPEC.md),
+> [`archive/0.5.0-self-feeding/SPEC.md`](../0.5.0-self-feeding/SPEC.md) (REQ-3, REQ-12, K94, K101, K104).
 
 ## 1. Goal
 `feedback.py preview/send` public bir issue'ya giden metni temizler; `triage.py` aynı `sanitize()`'ı yorumlar için
