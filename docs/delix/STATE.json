@@ -61,12 +61,12 @@
       "file": "docs/delix/tasks/T025-dependabot-main-rulesets.md",
       "role": "devops",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 50,
       "rounds": 0,
       "cost_usd": null,
       "issue": 9,
-      "sha": "81b6853"
+      "sha": "7e66cc2"
     }
   },
   "status_values": [
