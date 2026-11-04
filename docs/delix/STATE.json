@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-04T13:30:00Z",
+  "updated": "2026-11-04T14:00:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -10,6 +10,14 @@
         "T022"
       ],
       "note": "issue #10 (accepted), size S, gate 1 = card approval. Docs only; no site change, no version bump."
+    },
+    {
+      "wave": 1,
+      "cards": [
+        "T023",
+        "T024"
+      ],
+      "note": "SPEC #34-#36 (gate 1 2026-11-04, K178-K192). Parallel, no shared files (K185). Both 🔐 (K186): Approved line per card before dispatch; interactive sessions. CHANGELOG at close (lead)."
     }
   ],
   "cards": {
@@ -23,6 +31,24 @@
       "cost_usd": null,
       "issue": 10,
       "sha": "e10c23f"
+    },
+    "T023": {
+      "file": "docs/delix/tasks/T023-confirm-prompt-recorded-accept.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T024": {
+      "file": "docs/delix/tasks/T024-bash-gate-cross-capture.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
     }
   },
   "status_values": [

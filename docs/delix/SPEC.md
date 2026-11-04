@@ -67,7 +67,7 @@ Kural sırası, kalıpların geri kalanı, `gh` kuralları, deny metinleri ve ko
 - WHEN feedback add heredoc gövdesi `triage.py apply 12 --confirm abc` ya da `triage.py … under script` içerir; triage
   record heredoc gövdesi `feedback.py send F001 --confirm abc` ya da `feedback.py … under script` içerir
 - THEN dördü de allow
-#### Scenario: seçenek biçimli yol deny (bugün üçü allow, lead main'de ölçtü)
+#### Scenario: seçenek biçimli yol deny (bugün dördü allow, lead main'de ölçtü)
 - WHEN `python3 -ic/x/feedback.py add <<'EOF'` ve `python3 "-ic/x/feedback.py" add <<'EOF'`, aynısı `triage.py record 12`
   için; gövde aynı ya da öbür script'in `send`/`apply`'ını `pty.spawn` ile sürer
 - THEN her biri deny
