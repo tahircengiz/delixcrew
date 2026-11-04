@@ -1,0 +1,140 @@
+diff --git a/scripts/feedback.py b/scripts/feedback.py
+index 450dd13..dfb582d 100644
+--- a/scripts/feedback.py
++++ b/scripts/feedback.py
+@@ -108,12 +108,44 @@ def now():
+     return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+ 
+ 
++JSON_MAX, JSON_DEPTH = 1 << 20, 32  # bytes, nesting levels; the files read here are a few KB and 3 levels deep
++
++
++def _shallow(x):
++    """True if no dict or list in `x` sits deeper than JSON_DEPTH. An explicit stack, so the walk never recurses."""
++    stack = [(x, 1)]
++    while stack:
++        v, depth = stack.pop()
++        if isinstance(v, (dict, list)):
++            if depth > JSON_DEPTH:
++                return False
++            stack.extend((c, depth + 1) for c in (v.values() if isinstance(v, dict) else v))
++    return True
++
++
+ def read_json(path):
++    """Parsed JSON of a regular file of at most JSON_MAX bytes and JSON_DEPTH levels, else None. O_NONBLOCK: a FIFO at
++    `path` opens at once instead of waiting for a writer, then fails the regular-file check like a device or a
++    directory. Malformed, oversized or deeper JSON is unreadable too; the parser's own depth limit depends on the Python
++    version (3.12+ parses far deeper than json.dump can write back): never a traceback, never a hang."""
+     try:
+-        with open(path, encoding="utf-8") as f:
+-            return json.load(f)
++        fd = os.open(path, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
+     except (OSError, ValueError):
+         return None
++    try:
++        st = os.fstat(fd)
++        if st.st_mode & 0o170000 != 0o100000 or st.st_size > JSON_MAX:  # stat.S_ISREG, without a new import
++            return None
++        with os.fdopen(fd, encoding="utf-8", closefd=False) as f:
++            data = f.read(JSON_MAX + 1)
++        if len(data) > JSON_MAX:
++            return None
++        obj = json.loads(data)
++        return obj if _shallow(obj) else None
++    except (OSError, ValueError, RecursionError, MemoryError):
++        return None
++    finally:
++        os.close(fd)
+ 
+ 
+ def write_json(path, data):
+diff --git a/tests/feedback_tests.sh b/tests/feedback_tests.sh
+index 1349cfd..67588dd 100644
+--- a/tests/feedback_tests.sh
++++ b/tests/feedback_tests.sh
+@@ -319,5 +319,46 @@ fb enable --terms acme >/dev/null
+ out=$(add3 'd["title"]="Residual"; d["actual"]="see x.ioacme.md"'); id=${out%% *}
+ pv=$(fb preview "$id" 2>&1); rc=$?
+ [ $rc -eq 4 ] && echo "$pv" | grep -q "^VERDICT: BLOCKED: .*residual match after sanitizing" && ok "REQ-4 residual match: BLOCKED" || bad "REQ-4 residual (rc=$rc, $(echo "$pv" | head -1))"
++# --- read_json (PR #49 security review, Low): a deeply nested, oversized or non-regular queue file is unreadable -----
++# guard kills the command after 5 s (rc 124): a FIFO that blocks open() fails the test instead of hanging the suite.
++guard(){ python3 -c 'import subprocess, sys
++try:
++    sys.exit(subprocess.run(sys.argv[1:], timeout=5).returncode)
++except subprocess.TimeoutExpired:
++    sys.exit(124)' "$@"; }
++out=$(add3 'd["title"]="Odd queue files"'); id=${out%% *}
++pv=$(fb preview "$id" 2>&1); rc=$?
++[ $rc -eq 0 ] && echo "$pv" | grep -qx "VERDICT: CLEAN" && ok "read_json control: $id previews CLEAN" || bad "read_json control (rc=$rc, $(echo "$pv" | head -1))"
++oddq(){ # name, kind (deep / fifo / big): F900.json is made that way, list and preview run, then it is removed
++  case "$2" in
++    deep) python3 -c 'import sys; open(sys.argv[1], "w").write("[" * 200000)' "$Q/F900.json";;
++    fifo) mkfifo "$Q/F900.json";;
++    big) python3 -c 'import sys; open(sys.argv[1], "w").write(open(sys.argv[2]).read() + " " * (1 << 20))' "$Q/F900.json" "$Q/$id.json";;
++  esac
++  guard python3 "$S/feedback.py" list >/dev/null 2>"$T/err"; rc=$?
++  [ $rc -eq 0 ] && grep -qx "warning: unreadable record F900" "$T/err" && ok "read_json $1: list exit 0, F900 unreadable" \
++    || bad "read_json $1: list (rc=$rc, $(head -c 300 "$T/err"))"
++  pv=$(guard python3 "$S/feedback.py" preview "$id" 2>&1); rc=$?
++  [ $rc -eq 4 ] && echo "$pv" | grep -q "^VERDICT: BLOCKED: .*unreadable queue record F900" && ! echo "$pv" | grep -q "^HASH:" \
++    && ok "read_json $1: preview of the other draft BLOCKED, exit 4" || bad "read_json $1: preview (rc=$rc, $(echo "$pv" | head -1))"
++  rm -f "$Q/F900.json"; }
++oddq "deeply nested JSON queue file" deep
++oddq "FIFO in the queue"             fifo
++oddq "valid record padded past 1 MiB" big
++cp "$Q/config.json" "$T/config.bak"; rm -f "$Q/config.json"; mkfifo "$Q/config.json"
++out=$(guard python3 "$S/feedback.py" status 2>&1); rc=$?
++[ $rc -eq 0 ] && echo "$out" | grep -qx "enabled: no" && ok "read_json FIFO config.json: status exit 0, enabled: no" || bad "read_json FIFO config (rc=$rc, $out)"
++rm -f "$Q/config.json"; cp "$T/config.bak" "$Q/config.json"
++# A valid record nested 500 levels parses on every Python (3.13 parses about 10,000 levels), but writing it back
++# recurses (RecursionError on 3.12+): past JSON_DEPTH it is an unreadable record, and drop says "unknown id" (exit 2).
++python3 -c 'import sys; open(sys.argv[1], "w").write(sys.argv[2] + "[" * 500 + "]" * 500 + "}")' "$Q/F900.json" '{"id": "F900", "status": "draft", "title": '
++cp "$Q/F900.json" "$T/F900.bak"
++guard python3 "$S/feedback.py" list >/dev/null 2>"$T/err"; rc=$?
++[ $rc -eq 0 ] && grep -qx "warning: unreadable record F900" "$T/err" && ok "read_json record nested 500 levels: list exit 0, F900 unreadable" \
++  || bad "read_json nested 500: list (rc=$rc, $(head -c 300 "$T/err"))"
++out=$(guard python3 "$S/feedback.py" drop F900 2>&1); rc=$?
++[ $rc -eq 2 ] && echo "$out" | grep -qx "error: unknown id F900" && cmp -s "$Q/F900.json" "$T/F900.bak" \
++  && ok "read_json record nested 500 levels: drop exit 2, unknown id, file unchanged" || bad "read_json nested 500: drop (rc=$rc, $(echo "$out" | tail -1))"
++rm -f "$Q/F900.json"
+ 
+ rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
+diff --git a/tests/triage_tests.sh b/tests/triage_tests.sh
+index 721f50d..355d213 100644
+--- a/tests/triage_tests.sh
++++ b/tests/triage_tests.sh
+@@ -467,5 +467,33 @@ st 's["issues"]["30"]["labels"]=["accepted"]; s["issues"]["30"]["comments"].appe
+ req2 "changed since accepted, recorded again, not applied" "$NEW30"
+ rec30 "changed since accepted, applied record" 'd["status"]="applied"'          "$CHG30"
+ rec30 "changed since accepted, old-sha record" 'd["issue_sha"]="0123456789ab"'  "$CHG30"
++# --- read_json (PR #49 security review, Low): a deeply nested, oversized or non-regular record is an invalid record --
++# guard kills the command after 5 s (rc 124): a FIFO that blocks open() fails the test instead of hanging the suite.
++guard(){ python3 -c 'import subprocess, sys
++try:
++    sys.exit(subprocess.run(sys.argv[1:], timeout=5).returncode)
++except subprocess.TimeoutExpired:
++    sys.exit(124)' "$@"; }
++odd30(){ # name, kind (deep / fifo / big), expected stderr of show; 30.json is made that way, then restored
++  cp "$D2/30.json" "$T/30.bak"; rm -f "$D2/30.json"
++  case "$2" in
++    deep) python3 -c 'import sys; open(sys.argv[1], "w").write("[" * 200000)' "$D2/30.json";;
++    fifo) mkfifo "$D2/30.json";;
++    big) python3 -c 'import sys; open(sys.argv[1], "w").write(open(sys.argv[2]).read() + " " * (1 << 20))' "$D2/30.json" "$T/30.bak";;
++  esac
++  out=$(DELIXCREW_TRIAGE_DIR="$D2" guard python3 "$S/triage.py" show 30 --require accepted 2>"$T/err"); rc=$?
++  [ $rc -eq 8 ] && [ -z "$out" ] && [ "$(cat "$T/err")" = "$3" ] && ok "read_json $1: show exit 8, stdout empty, exact line" \
++    || bad "read_json $1: show (rc=$rc, $out, $(head -c 300 "$T/err"))"
++  pv=$(DELIXCREW_TRIAGE_DIR="$D2" guard python3 "$S/triage.py" preview 30 2>&1); rc=$?
++  [ $rc -eq 4 ] && echo "$pv" | grep -qx "VERDICT: BLOCKED: invalid record" && ! echo "$pv" | grep -q "^HASH:" \
++    && ok "read_json $1: preview BLOCKED: invalid record, exit 4" || bad "read_json $1: preview (rc=$rc, $(echo "$pv" | tail -1))"
++  rm -f "$D2/30.json"; cp "$T/30.bak" "$D2/30.json"; }
++odd30 "deeply nested JSON record, changed since accepted"      deep "$CHG30"
++odd30 "FIFO at the record path, changed since accepted"        fifo "$CHG30"
++odd30 "valid record padded past 1 MiB, changed since accepted" big  "$CHG30"
++st 's["issues"]["30"]["labels"]=[]'
++odd30 "deeply nested JSON record, not triaged" deep "$NOT30"
++odd30 "FIFO at the record path, not triaged"   fifo "$NOT30"
++req2 "valid record after the odd ones, not triaged" "$NEW30"
+ 
+ rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
