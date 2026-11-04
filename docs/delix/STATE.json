@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-04T17:07:00Z",
+  "updated": "2026-11-04T21:30:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -17,6 +17,21 @@
         "T025"
       ],
       "note": "issue #9 (accepted), size S, gate 1 = card approval. 🔐 .github/**; rulesets applied by the user from their own terminal (owner bypass, K-T025-1)."
+    },
+    {
+      "wave": 5,
+      "cards": [
+        "T026",
+        "T027"
+      ],
+      "note": "SPEC B #17 (gate 1 2026-11-04, K199-K214). Parallel, disjoint files (K207). Both 🔐: Approved line per card before dispatch; interactive sessions."
+    },
+    {
+      "wave": 6,
+      "cards": [
+        "T028"
+      ],
+      "note": "Docs/site (REQ-7) after T026 and T027 merge. After T026 merges, the user runs trust.py allow in the main checkout from their own terminal before opening dogfooding sessions."
     }
   ],
   "cards": {
@@ -41,6 +56,39 @@
       "cost_usd": null,
       "issue": 9,
       "sha": "7e66cc2"
+    },
+    "T026": {
+      "file": "docs/delix/tasks/T026-stop-gate-trust-anchor.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "issue": 17,
+      "sha": null
+    },
+    "T027": {
+      "file": "docs/delix/tasks/T027-bash-gate-cat-heredoc-trust-rules.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "issue": 17,
+      "sha": null
+    },
+    "T028": {
+      "file": "docs/delix/tasks/T028-docs-site-trust-anchor.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "issue": 17,
+      "sha": null
     }
   },
   "status_values": [
