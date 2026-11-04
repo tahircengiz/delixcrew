@@ -117,7 +117,7 @@
       "file": "docs/delix/tasks/T029-board-derive-git-actions.md",
       "role": "backend",
       "tier": 2,
-      "status": "fixing",
+      "status": "in_review",
       "pr": 60,
       "rounds": 1,
       "cost_usd": null,
@@ -158,6 +158,22 @@
           "at": "2026-11-04T21:23:03Z",
           "branch": "claude/xenodochial-goldwasser-185cc2",
           "session": "t029-board-py-ajanlar-ku"
+        },
+        {
+          "role": "qa",
+          "by": "claude/spec-c-board",
+          "round": 2,
+          "sha": "43736e40eb32c6aca6e16711e35175ab679847ae",
+          "verdict": "ACCEPT",
+          "at": "2026-11-04T21:44:00Z"
+        },
+        {
+          "role": "security",
+          "by": "claude/spec-c-board",
+          "round": 2,
+          "sha": "43736e40eb32c6aca6e16711e35175ab679847ae",
+          "verdict": "FIX",
+          "at": "2026-11-04T21:44:00Z"
         }
       ]
     },
