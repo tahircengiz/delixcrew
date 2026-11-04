@@ -177,6 +177,18 @@ vendor/github.com/acme/x,	vendor/github.com<redacted:path>,
 fd00::/64	<redacted:ip><redacted:path>
 10.1.2.3:8080	<redacted:ip><redacted:path>
 fd12:3456:789a:1:2:3:4:5/64	<redacted:ip><redacted:path>
+see github.com:acme/private	see github.com<redacted:path>
+vendor/github.com:443/acme/private	vendor/github.com<redacted:path>
+see github.com:443	see github.com<redacted:path>
+see ci.acme-corp.net.:8080/api/secret	see <redacted:host>.<redacted:path>
+see ci.acme-corp.net\share\secret	see <redacted:host><redacted:path>
+ci.acme-corp.net?token=x	<redacted:host><redacted:path>
+see ci.acme-corp.net. Next	see <redacted:host>. Next
+mail a@acme-corp.net?	mail <redacted:email>?
+10.1.2.3/x::	<redacted:ip><redacted:path>:
+vendor/github.com/acme/x::	vendor/github.com<redacted:path>:
+vendor/github.com/tahircengiz/delixcrew/../../acme/private	vendor/github.com<redacted:path>
+vendor/github.com/anthropics/../acme/private	vendor/github.com<redacted:path>
 EOF
 cat > "$T/t020_req1_kept.txt" <<'EOF'
 see github.com/tahircengiz/delixcrew/issues/1.
@@ -185,6 +197,9 @@ github.com/
 a/b
 w/o
 a:b:8080/x
+github.com: ok
+github.com:
+github.com:tahircengiz/delixcrew
 EOF
 cat > "$T/t020_req2_exact.txt" <<'EOF'
 10.20.30.40_	<redacted:ip>_
@@ -344,6 +359,8 @@ t020 = [("a-space-slashes", ("a //b " * 8334)[:N]),
         ("ph-host-colon", "<redacted:host>:" * 3125), ("colon", ":" * N), ("backslash", "\\" * N),
         ("underscore-a-colon", ("_a:" * 16667)[:N]), ("github-slash", ("github.com/" * 4546)[:N]),
         ("zero-octet", "010." * 12500)]
+t020 += [("ph-host-dot-q", ("<redacted:host>.?" * 5000)[:N]), ("github-colon", ("github.com:" * 5000)[:N]),
+         ("github-colon-1", ("github.com:1" * 5000)[:N])]  # round 2 (F2, F3)
 for name, x in t020:
     dt_ = best(x)
     res(dt_ < 0.5, "REQ-5 t020-%s %.3f s" % (name, dt_))
