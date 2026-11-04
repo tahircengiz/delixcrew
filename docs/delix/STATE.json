@@ -45,9 +45,16 @@
     {
       "wave": 8,
       "cards": [
+        "T033"
+      ],
+      "note": "0.6.3 release (handed over by Spec B's lead, 2026-11-04). Size S, 🔐 Tier 3 (.claude-plugin/plugin.json), approved by the user in this lead's chat 2026-11-04. Runs in parallel with T029 and T030 (user's order); T031 starts when T033 finishes (max_parallel 3). Tag v0.6.3, GHSA publish and trust.py allow stay with the user after the merge."
+    },
+    {
+      "wave": 9,
+      "cards": [
         "T032"
       ],
-      "note": "Docs/site after T029, T030 and T031 merge (T028 already merged). delix-board 0.1.4 -> 0.1.5; root version unchanged. Refresh line anchors at dispatch."
+      "note": "Docs/site after T029, T030 and T031 merge and after T033 (0.6.3 release) merges: T033 edits site/usage.html and site/tr/usage.html first. delix-board 0.1.4 -> 0.1.5; root version unchanged. Refresh line anchors at dispatch."
     }
   ],
   "cards": {
@@ -145,6 +152,16 @@
       "rounds": 0,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md"
+    },
+    "T033": {
+      "file": "docs/delix/tasks/T033-release-0-6-3.md",
+      "role": "docs",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": null
     }
   },
   "status_values": [

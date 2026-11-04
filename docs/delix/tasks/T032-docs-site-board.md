@@ -2,7 +2,7 @@
 
 | id | size | tier | role | wave | status |
 |---|---|---|---|---|---|
-| T032 | S | 2 | docs | 8 | open |
+| T032 | S | 2 | docs | 9 | open |
 
 > Tier 2: no protected path. `plugins/delix-board/.claude-plugin/plugin.json` does not match `.claude-plugin/**`, because that pattern is anchored at the repo root (`scripts/common.py:211`); the root `.claude-plugin/plugin.json` is not touched. It is Tier 2 because it makes public claims on the site.
 
@@ -20,7 +20,7 @@
 - Modify: `site/tr/usage.html` (the same elements)
 
 ## Edit anchors
-Base: main after T029, T030, T031 **and Spec B's T028** merge. T028 edits README Known limits after line 339 and `site/usage.html` lines 95, 104, 229–237. Line numbers are from ad27168; match the content. Quote section names, commands and messages from the merged code byte for byte.
+Base: main after T029, T030, T031, **Spec B's T028** (merged, 429e79b) **and T033** (0.6.3 release, wave 8) merge. T028 edits README Known limits after line 339 and `site/usage.html` lines 95, 104, 229–237; T033 changes the `data-version` marks to 0.6.3 and removes the 12 "(coming in the next release)" / "(sonraki sürümle gelecek)" labels, so the labels this card adds are the only ones on the site. Line numbers are from ad27168; the lead refreshes them at dispatch; match the content. Quote section names, commands and messages from the merged code byte for byte.
 
 1. `docs/spec/delix-board.md` (Turkish)
    - §4, after line 38, four table rows:
