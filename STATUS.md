@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-04 · **Sürüm:** 0.6.2 (2026-11-04, feedback süzgeci sertleştirmesi T016–T021 ve PR #44; `SANITIZER_VERSION` 3; K177) · **Faz:** 11 kapandı: #34–#36 triage/feedback düzeltmeleri T023–T024 merge edildi, `Unreleased` (§11). §10: feedback süzgeci kalan açıklar T020–T021. §9: feedback temizliği arşivi `docs/delix/archive/0.6.x-feedback-cleanup/`.
+**Son güncelleme:** 2026-11-04 · **Sürüm:** 0.6.2 (2026-11-04, feedback süzgeci sertleştirmesi T016–T021 ve PR #44; `SANITIZER_VERSION` 3; K177) · **Faz:** 12 kapandı: spec B #17 (Stop gate güven çapası, bash_gate düzeltmeleri) T026–T028 merge edildi, `Unreleased` (§12). §11: #34–#36 düzeltmeleri T023–T024, arşiv `docs/delix/archive/0.6.x-triage-fixes/`.
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -490,7 +490,7 @@ yalnız redaksiyon daha katı. Etiketler: v0.6.2 (merge commit'i) ile etiketsiz 
 etiketsiz kalır. Eski etiketler sürüm atlatan commit'e değil, o sürümün son commit'ine konur (sonraki spec'in ilk
 commit'inden hemen önce): v0.5.0 `806febf`, v0.6.0 `fb6939d`, v0.6.1 `ff79206`. Etiketleri kullanıcı kendi terminalinden push eder.
 
-## 11. Triage ve feedback akışında üç düzeltme, #34–#36 (2026-11-04, `docs/delix/SPEC.md` canlı, sonraki spec başında arşivlenir; kapandı, main `8d7e21f`)
+## 11. Triage ve feedback akışında üç düzeltme, #34–#36 (2026-11-04, arşiv `docs/delix/archive/0.6.x-triage-fixes/`: SPEC, kartlar T023–T024, STATE; kapandı, main `8d7e21f`)
 
 Kaynak: issue #34, #35, #36 (triage ile accepted). T023 onay istemini ve exit 8 satırını, T024 `bash_gate.py`'nin
 capture muafiyetini kapsar. Sürüm atlatılmadı (K179); CHANGELOG `## Unreleased`.
@@ -531,6 +531,43 @@ gevşedi).
 - SPEC §8'deki iki P2 açık kalır: triage kuralı (a) argv listesi biçimi; README.md:312-313 ifadesi.
 - GitHub Security Advisory GHSA-r43g-fqh7-qv2h GitHub'da gizli taslak (2026-11-04, kullanıcı açtı; severity low,
   CWE-88, etkilenen 0.5.0–0.6.2, patched version boş); yayın kullanıcıda, düzeltmeyi içeren sürüm etiketlenince (K194).
+
+## 12. Spec B: Stop gate güven çapası ve bash_gate düzeltmeleri, #17 (2026-11-04, `docs/delix/SPEC.md` canlı, sonraki spec başında arşivlenir; kapandı, main `d9ac35b`)
+
+Kaynak: issue #17 (triage ile accepted). T026 Stop gate'e depo dışında bir güven çapası ekler: `trust.py allow`,
+`~/.claude/delixcrew/trust.json`. T027 `bash_gate.py`'ye trust kurallarını, tek izinli `cat` heredoc'unu ve repo
+yazma mesajını ekler. T028 README, skill'ler, CHANGELOG ve sitede dokümanı yapar. Sürüm atlatılmadı (K209);
+CHANGELOG `## Unreleased`.
+
+| # | Adım | Durum |
+|---|---|---|
+| 12.1 | `/delixcrew:start` (M · Tier 3), grill 4 soru (K199–K202), spec; architect ve security spec incelemesi işlendi; #34–#36 spec'i arşivlendi | ✔ `bcdcff5`, K199–K214 |
+| 12.2 | Kapı 1; `scripts/trust.py` korunan yola eklendi; dispatch T026 🔐 + T027 🔐 (dalga 5, paralel), T028 (dalga 6) | ✔ `3728ea8`, `2b36d7d` |
+| 12.3 | 🔐 T026 ve T027 Approved satırları | ✔ `4b878ce`, sohbette açık onay |
+| 12.4 | T027 PR #56 (`36c819a`), 0 tur: qa ACCEPT, security Critical/High/Medium yok; ilk merge edilen (K222) | ✔ 🔐 merge onayı, merge edildi |
+| 12.5 | T026 PR #57 (`4ee0dcd`), 2 tur: 2 High lead tarafından dalda yeniden üretildi (`diff.external` onaydan önce, K217; promisor lazy fetch, K223), düzeltmeler önce karalama kopyasında denendi; son tur qa ACCEPT_WITH_NOTES, security High/Medium yok | ✔ 🔐 merge onayı, merge edildi |
+| 12.6 | T028 PR #58 (`429e79b`), 0 tur: qa ACCEPT, security CLEAN (3 Low, K229); canlı sitede 4 sayfa doğrulandı | ✔ merge edildi |
+| 12.7 | Kapanış: metrikler (`docs/delix/metrics.md`), drift kontrolü | ✔ 2026-11-04 |
+
+Kararlar: `docs/delix/SPEC.md` (K199–K225) ve oturumda:
+- **K226** HomeLab güvenlik tablosu satırlarına bugünün tarihi yazıldı.
+- **K227** `STATE.json` `updated` alanı gerçek UTC zamanına çekildi; önceki değerler ileri tarihliydi.
+- **K228** K225'in iki kod maddesi (FIFO, `st_nlink`) dokümana girmedi, takip kartına bırakıldı.
+- **K229** T028'in 3 Low notu ve security'nin `trust.py allow` worktree kapsamı notu takip kartında toplanır.
+
+**Açık iş (kapanış drift kontrolü, 2026-11-04; architect: her REQ uygulanmış; aşağıdakiler takip kartına, K229):**
+- `scripts/bash_gate.py:55` ve `:81` `git remote -v`'yi kendi `subprocess.run`'ıyla çağırıyor, `common.git` ile değil. Bu yüzden `GIT_*` env'i, `GIT_NO_LAZY_FETCH` ve `core.fsmonitor=false` yok; K212 ve REQ-3'ün "bütün git çağrıları" metnine uymuyor. Etkisi düşük, çünkü yalnız sürtünme kuralının gördüğü remote değişir (K77). Korunan yol: ya iki çağrıyı `common.git` üzerinden geçirmek ya da spec metnini daraltmak. Lead kodu okuyarak doğruladı.
+- İki test eksiği: REQ-1'de `delix.json` yoksa ya da bozuksa `["pytest -q"]` olur (`scripts/common.py:82-86`) ve REQ-4'te kayıt bozuk JSON'sa kapalı kalınır (`scripts/common.py:182-184`); ikisinin de testi yok.
+- Kodda olup SPEC'te olmayan (T026 kartında tanımlı) davranışlar:
+  - `trust.py` geçersiz kaydı değiştirirken eski girdileri düşürüyor ve bir `note:` satırı basıyor;
+  - kayıt dizinini 0700'e çekiyor; dizin kullanıcınınsa değilse exit 7 veriyor;
+  - `allow` dışındaki argümanlarda exit 7 veriyor;
+  - `load_trust` 1 MiB sınırı ve `version`/`entries` tip denetimi yapıyor;
+  - `_read_small` 4 KiB sınırı koyuyor.
+  Bir sonraki spec revizyonunda REQ-1, REQ-3 ve REQ-4'e işlenecek.
+- REQ-2 "üç satır" diyor; sembolik ya da hardlink `test-result.txt` olduğunda stderr'e 4 satır düşüyor (T026 qa P2).
+- K225: `test-result.txt` FIFO'sunda takılma ve `load_trust`'ta `st_nlink` denetimi eksik. Bunlara ek olarak T028'in 3 Low notu: README'de `cat` heredoc cümlesi, README'de K225'in etkisi, sitede K220 uyarısı.
+- T027 kartının istediği §8 canlı zsh-eval denetiminin kaydı repoda yok.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

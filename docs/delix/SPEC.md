@@ -1,6 +1,6 @@
 # SPEC — Spec B: Stop gate güven çapası, izinli `cat` heredoc'u, repo yazma mesajı
 
-> Size: **M** · Tier: 3 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 4: T026 inceleme turu 1, K223–K224)
+> Size: **M** · Tier: 3 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** · **closed 2026-11-04** (T026 #57, T027 #56, T028 #58; rev 5: kapanış; drift notları STATUS §12)
 > Source: issue [#17](https://github.com/tahircengiz/delixcrew/issues/17) (triage `accepted`; istek metni kullanıcı onaylı,
 > 2026-11-04) ve lead notları (kural (c) aşırı engellemesi, yanıltıcı deny mesajı). Grill kararları K199–K202
 > (kullanıcı), lead kararları K203–K214. STATUS.md K numaralarının devamıdır. Önceki spec (kapalı):
@@ -8,7 +8,7 @@
 
 ## 1. Goal
 Stop gate bugün `delix.json` içindeki `test_command` ve `extra_checks`'i, depoda izlenmeyen yerel bir `.delix/card`
-varsa shell'de çalıştırıyor. Kendi `.git`'iyle gelen bir arşiv bu koşulu sağlar (`scripts/common.py:45-47`,
+varsa shell'de çalıştırıyor. Kendi `.git`'iyle gelen bir arşiv bu koşulu sağlar (değişiklikten önceki satırlar: `scripts/common.py:45-47`,
 `scripts/stop_gate.py:31`). Güveni depo dışına taşıyoruz: komutlar, kullanıcının kendi terminalinde bir kez onayladığı
 (depo kimliği + komut hash'i) kaydıyla eşleşmedikçe çalışmaz. Yanında iki hook sürtünmesi giderilir:
 - **Kural (c):** yalnız dosya yazan bir `cat` heredoc'u, gövdesinde `gh issue …` ile `delixcrew` geçtiği için reddediliyor.
@@ -170,7 +170,7 @@ Kalıbın kısıtları:
   metin kontrol edilir (fail closed).
 
 Aynı kural T024'ün iki capture kalıbına da genişler: capture eşleşmesinde feedback (c) ile triage (c)/(d) de yalnız ilk
-satıra bakar (K204). Korunan yola shell yazımı kontrolü (`bash_gate.py:94`) tam metinde kalır.
+satıra bakar (K204). Korunan yola shell yazımı kontrolü (`bash_gate.py:116`) tam metinde kalır.
 #### Scenario: not dosyası
 - WHEN `cat > notes.md <<'EOF'\ngh issue close 9 --repo tahircengiz/delixcrew\nEOF`
 - THEN allow
@@ -242,12 +242,12 @@ kararlar:
 - REQ-5'in `~/.claude/delixcrew/` dışındaki yollar için açtığı yetenek, Write aracının zaten yapabildiğinden büyük değildir.
 
 ## 7. Acceptance criteria (DoD)
-- [ ] Her REQ için geçen bir test var; arşiv ve sembolik bağlantılı `.git` senaryoları önce kırmızı. Doğrulama komutu:
+- [x] Her REQ için geçen bir test var (kapanış: REQ-1 `delix.json` yok/bozuk ve REQ-4 bozuk JSON kaydı test edilmedi, takip kartı); arşiv ve sembolik bağlantılı `.git` senaryoları önce kırmızı. Doğrulama komutu:
   `for t in tests/*_tests.sh; do bash "$t" || exit 1; done` → bütün süitler geçer.
-- [ ] ReDoS denemeleri (REQ-5) ölçülür ve PR'a yazılır.
-- [ ] `claude plugin validate .` geçer.
-- [ ] Tier 3: `qa` ACCEPT, `security` CLEAN ya da yalnız 🔐 HUMAN_APPROVAL ve kullanıcı onayı.
-- [ ] PR gövdesinde "How I tested" var.
+- [x] ReDoS denemeleri (REQ-5) ölçülür ve PR'a yazılır (PR #56).
+- [x] `claude plugin validate .` geçer.
+- [x] Tier 3: `qa` ACCEPT, `security` CLEAN ya da yalnız 🔐 HUMAN_APPROVAL ve kullanıcı onayı.
+- [x] PR gövdesinde "How I tested" var (#56, #57, #58).
 
 ## 8. Open questions
 - (izleme, kapsam dışı) `DELIXCREW_FEEDBACK_DIR` / `DELIXCREW_TRIAGE_DIR` proje `env`'iyle değişebilir; bu, write_gate
@@ -268,7 +268,7 @@ kararlar:
 - **K205** (lead, geri alınır): yeni mesaj yalnız issues/labels/graphql dışındaki `gh api` yazmalarında; mevcut test
   satırları korunur.
 - **K206** (lead, 🔐): "test satırı değişmez" kuralının tek istisnası. Değişen yerler:
-  - `tests/hook_tests.sh:69-76` (Stop gate);
+  - `tests/hook_tests.sh:69-76` (Stop gate; değişiklikten sonra bölüm 68-109);
   - `tests/trust_tests.sh` vaka 4 ve 4b (4b `delix.json`'u değiştirdiği için kendi onayını alır).
 
   Değişen tek şey, komut çalışmadan önce test kaydına onay eklemektir; beklenen sonuçlar aynı kalır. Kırık test vakasına

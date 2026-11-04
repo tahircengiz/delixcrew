@@ -145,3 +145,38 @@ security-review): output 664K, cache read 22.5M, cache write 2.68M. Cards PR #47
   → 5, 2.5 per card (target ≤ 5).
 
 **No single-session baseline** exists for this feature.
+
+## Stop gate güven çapası ve bash_gate düzeltmeleri, spec B #17 (closed 2026-11-04; SPEC `docs/delix/SPEC.md`, cards T026–T028)
+
+Sources:
+- `STATE.json`;
+- `gh pr view` (createdAt → mergedAt);
+- the session transcripts (`message.usage`, summed per assistant message, not deduplicated). Desktop reuses worktree directories, so each card's transcript was picked by the card id in its dispatch text.
+
+Session cost in USD: not measured.
+
+| card | tier | PR | review rounds | PR open → merge | implementer tokens (out / cache read / cache write) | note |
+|---|---|---|---|---|---|---|
+| T026 Stop gate trust anchor | 3 | #57 | 2 | 44 min | 178K / 23.0M / 471K | 2 High findings, both reproduced by the lead on the branch before each round (`diff.external` before confirmation, K217; promisor lazy fetch through an `ext::` helper, K223); both fixes prototyped on a scratch copy first; the rounds went to the same session |
+| T027 bash_gate cat heredoc, trust rules | 3 | #56 | 0 | 27 min | 72K / 9.1M / 272K | merged first (K222) |
+| T028 docs and site | 2 | #58 | 0 | 15 min | 129K / 28.7M / 409K | 3 Low wording notes go to the follow-up card (K229) |
+
+Lead session, from the start request on (start, spec, grill, dispatch, 4 reviews, close; spans a compaction): output 388K, cache read 91.5M, cache write 1.31M. Subagents (14: architect, security, qa): output 642K, cache read 15.0M, cache write 2.82M.
+
+**Gates and interventions** (counted from the lead transcript, from the start request on):
+- `AskUserQuestion` calls: 5 (grill K199–K202, gate 1).
+- Gates, 8 in all:
+  - request approval;
+  - gate 1;
+  - 🔐 T026 + T027 cards (one message);
+  - 🔐 T027 merge and 🔐 T026 merge;
+  - 3 merges (#56, #57, #58), run in the user's terminal.
+- Interventions outside gates, 11 in all (3.7 per card; target ≤ 5):
+  - grill answers: 4;
+  - record push approvals: 3;
+  - implementer card starts: 3;
+  - "Evet, kapat": 1.
+
+Not counted: the start request ("sıradaki adıma devam et"), as in earlier closes, and the issue close for #34–#36, which belongs to the previous spec.
+
+**No single-session baseline** exists for this feature.
