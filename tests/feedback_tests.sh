@@ -360,5 +360,61 @@ out=$(guard python3 "$S/feedback.py" drop F900 2>&1); rc=$?
 [ $rc -eq 2 ] && echo "$out" | grep -qx "error: unknown id F900" && cmp -s "$Q/F900.json" "$T/F900.bak" \
   && ok "read_json record nested 500 levels: drop exit 2, unknown id, file unchanged" || bad "read_json nested 500: drop (rc=$rc, $(echo "$out" | tail -1))"
 rm -f "$Q/F900.json"
+# --- unreadable config.json (PR #53 verification, Low): preview and send stop, enable and disable leave it alone -------
+# A config.json that is there but unreadable, or whose extra_terms is not a list of strings, never yields a draft
+# without the user's terms; enable without --terms and disable refuse to write over it (exit 2, file unchanged).
+CFG="$Q/config.json"; cp "$CFG" "$T/cfg.bak"
+FCFGB="VERDICT: BLOCKED: feedback config.json unreadable; fix it so its extra_terms apply"
+FCFGW="error: $CFG is unreadable or its extra_terms is not a list of strings; fix or remove it, or give new terms with enable --terms; nothing written"
+out=$(add3 'd["title"]="Config unreadable"; d["actual"]="the acme build broke"'); id=${out%% *}
+pv=$(fb preview "$id"); rc=$?; H=$(hash_of "$pv")
+[ $rc -eq 0 ] && echo "$pv" | grep -qx "VERDICT: CLEAN" && echo "$pv" | grep -qx "the <redacted:term> build broke" \
+  && ok "config control: $id previews CLEAN, acme redacted" || bad "config control (rc=$rc, $(echo "$pv" | head -1))"
+unchanged(){ if [ "$1" = fifo ]; then [ -p "$CFG" ]; else [ -f "$CFG" ] && cmp -s "$CFG" "$T/cfg.case"; fi; }
+fcfg(){ # name, kind (broken / fifo / string / mixed / null): config.json is made that way, each command runs, then it is restored
+  rm -f "$CFG"
+  case "$2" in
+    broken) printf '{"enabled":true,"extra_terms":["acme"]' > "$CFG";;
+    fifo) mkfifo "$CFG";;
+    string) printf '{"enabled":true,"extra_terms":"acme"}' > "$CFG";;
+    mixed) printf '{"enabled":true,"extra_terms":["acme",1]}' > "$CFG";;
+    null) printf '{"enabled":true,"extra_terms":null}' > "$CFG";;
+  esac
+  [ -p "$CFG" ] || cp "$CFG" "$T/cfg.case"
+  pv=$(guard python3 "$S/feedback.py" preview "$id" 2>&1); rc=$?
+  [ $rc -eq 4 ] && [ "$(echo "$pv" | grep '^VERDICT')" = "$FCFGB" ] && ! echo "$pv" | grep -qE '^(HASH:|TITLE:|---$)|acme' \
+    && ok "config.json $1: preview BLOCKED, exit 4, no draft text" || bad "config.json $1: preview (rc=$rc, $(echo "$pv" | head -1))"
+  : > "$T/gh.log"; out=$(GH_MODE=new tty_run "SEND $H" python3 "$S/feedback.py" send "$id" --confirm "$H"); rc=$?
+  [ $rc -eq 4 ] && printf '%s\n' "$out" | tr -d '\r' | grep -qx "$FCFGB" && [ ! -s "$T/gh.log" ] && [ "$(jq_ "$Q/$id.json" "d['status']")" = draft ] \
+    && ok "config.json $1: send with the earlier HASH on a TTY stops, exit 4, gh not called" \
+    || bad "config.json $1: send (rc=$rc, $(printf '%s\n' "$out" | tr -d '\r' | grep -m1 -E 'VERDICT|status|error'))"
+  for c in enable disable; do
+    out=$(guard python3 "$S/feedback.py" "$c" 2>&1); rc=$?
+    [ $rc -eq 2 ] && [ "$out" = "$FCFGW" ] && unchanged "$2" && ok "config.json $1: $c without --terms exit 2, file unchanged" \
+      || bad "config.json $1: $c (rc=$rc, $out)"
+  done
+  out=$(guard python3 "$S/feedback.py" enable --terms acme,zz 2>&1); rc=$?
+  [ $rc -eq 0 ] && [ -f "$CFG" ] && [ "$(jq_ "$CFG" 'd=={"enabled":True,"extra_terms":["acme","zz"]}')" = True ] \
+    && ok "config.json $1: enable --terms replaces it, exit 0" || bad "config.json $1: enable --terms (rc=$rc, $out)"
+  rm -f "$CFG"; cp "$T/cfg.bak" "$CFG"; }
+fcfg "malformed JSON"                 broken
+fcfg "FIFO at the config path"        fifo
+fcfg "extra_terms a string"           string
+fcfg "extra_terms with a non-string"  mixed
+fcfg "extra_terms null"               null
+rm -f "$CFG"; pv=$(fb preview "$id"); rc=$?
+[ $rc -eq 0 ] && echo "$pv" | grep -qx "VERDICT: CLEAN" && echo "$pv" | grep -qx "the acme build broke" \
+  && ok "no config.json: preview CLEAN without extra terms (unchanged)" || bad "no config.json: preview (rc=$rc, $(echo "$pv" | head -1))"
+out=$(fb disable 2>&1); rc=$?
+[ $rc -eq 0 ] && [ "$(jq_ "$CFG" 'd=={"enabled":False,"extra_terms":[]}')" = True ] \
+  && ok "no config.json: disable writes the defaults (unchanged)" || bad "no config.json: disable (rc=$rc, $out)"
+rm -f "$CFG"; out=$(fb enable 2>&1); rc=$?
+[ $rc -eq 0 ] && [ "$(jq_ "$CFG" 'd=={"enabled":True,"extra_terms":[]}')" = True ] \
+  && ok "no config.json: enable writes the defaults (unchanged)" || bad "no config.json: enable (rc=$rc, $out)"
+printf '{"enabled":true}' > "$CFG"; pv=$(fb preview "$id"); rc=$?
+[ $rc -eq 0 ] && echo "$pv" | grep -qx "VERDICT: CLEAN" && echo "$pv" | grep -qx "the acme build broke" \
+  && ok "config.json without extra_terms: preview CLEAN, no terms (unchanged)" || bad "config.json without extra_terms: preview (rc=$rc, $(echo "$pv" | head -1))"
+rm -f "$CFG"; cp "$T/cfg.bak" "$CFG"
+[ "$(hash_of "$(fb preview "$id")")" = "$H" ] && ok "config.json restored: preview HASH as before" || bad "config.json restored: HASH changed"
 
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

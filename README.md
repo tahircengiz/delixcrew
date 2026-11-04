@@ -154,7 +154,9 @@ python3 <plugin dir>/scripts/feedback.py enable --terms acme,example-corp
 ```
 
 `--terms` adds your own words to redact (customer names, codenames). `status` shows whether it is on, the queue
-directory and the number of drafts; `disable` turns it off. While it is off nothing is written: `/delixcrew:feedback note` shows
+directory and the number of drafts; `disable` turns it off. `enable` without `--terms` and `disable` keep your terms;
+when `config.json` is there but cannot be read, or its `extra_terms` is not a list of strings, they exit 2 and leave the
+file as it is: fix or remove it, or give the terms again with `enable --terms`. While it is off nothing is written: `/delixcrew:feedback note` shows
 `delixcrew feedback is off; enable: python3 <path>/feedback.py enable` with the real path, and `/delixcrew:close` and
 `/delixcrew:review` stay silent. Drafts live in
 `~/.claude/delixcrew/feedback/` (`DELIXCREW_FEEDBACK_DIR` overrides it), never in your project repo.
@@ -218,7 +220,8 @@ selector such as U+FE0F may only follow a visible symbol such as U+2764), so tex
 not merge into one character (Devanagari, for example) is blocked too; an opaque string of 32+ characters
 (`[A-Za-z0-9+=_-]`, so a full git SHA is blocked too; use the short one); more than 15 code lines; a body over 8 KB;
 anything still matching the redaction rules after redaction; a record changed on disk since it was queued
-(`fingerprint mismatch`); an unreadable queue record.
+(`fingerprint mismatch`); an unreadable queue record; a feedback `config.json` (your `--terms`) that is there but not a
+readable JSON object, or whose `extra_terms` is not a list of strings, so a draft is never redacted without your terms.
 
 **Remaining risk.** The hooks close the *known* ways to send; they do not block everything. Claude runs with your `gh`
 login, and a disguised command (one built from base64, a wrapper written to a file, an HTTP request without `gh`) can get
@@ -289,7 +292,7 @@ work. Re-running `apply` after a failed step does only the steps still missing.
 since it was triaged; an `@` mention, HTML or a character reference in the reason or questions; invisible characters; a
 `gitleaks` finding, or `gitleaks` missing or failing; a 32+ character opaque string; a feedback `config.json` (your
 `--terms`) that is there but not a readable JSON object (malformed, over 1 MiB or 32 levels deep, not a regular file),
-so the comment is never redacted without your terms. The comment is built only from the recorded reason, questions and
+or whose `extra_terms` is not a list of strings, so the comment is never redacted without your terms. The comment is built only from the recorded reason, questions and
 duplicate number, never from the issue text.
 
 **From issue to work.** `/delixcrew:start #12` takes only an issue triaged as `accepted` whose title and body are

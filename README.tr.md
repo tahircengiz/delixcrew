@@ -155,7 +155,9 @@ python3 <plugin dizini>/scripts/feedback.py enable --terms acme,example-corp
 ```
 
 `--terms` redakte edilecek kendi kelimelerinizi ekler (müşteri adı, kod adı). `status` açık mı, kuyruk dizini ve taslak
-sayısını gösterir; `disable` kapatır. Kapalıyken hiçbir şey yazılmaz: `/delixcrew:feedback note`
+sayısını gösterir; `disable` kapatır. `--terms` olmadan `enable` ve `disable` terimlerinizi korur; `config.json` var
+ama okunamıyorsa ya da `extra_terms` bir string listesi değilse 2 ile çıkar ve dosyaya dokunmaz: dosyayı düzeltin ya da
+silin, veya terimleri `enable --terms` ile yeniden verin. Kapalıyken hiçbir şey yazılmaz: `/delixcrew:feedback note`
 `delixcrew feedback is off; enable: python3 <path>/feedback.py enable` satırını gerçek yolla gösterir;
 `/delixcrew:close` ve `/delixcrew:review` sessiz kalır. Taslaklar
 `~/.claude/delixcrew/feedback/` altında durur (`DELIXCREW_FEEDBACK_DIR` ile değişir), asla proje reposunda değil.
@@ -219,7 +221,8 @@ bir emoji seçici yalnız U+2764 gibi görünür bir sembolden sonra gelebilir),
 birleştirmediği birleşik işaretli metin de (ör. Devanagari) takılır; 32+ karakterlik opak dizi (`[A-Za-z0-9+=_-]`; tam
 git SHA'sı da takılır, kısasını kullanın); 15'ten fazla kod satırı; 8 KB'tan büyük gövde; redaksiyondan sonra hâlâ
 redaksiyon kuralına uyan bir şey; kuyruğa alındıktan sonra diskte değişmiş kayıt (`fingerprint mismatch`); okunamayan
-kuyruk kaydı.
+kuyruk kaydı; feedback `config.json`'ı (`--terms` terimleriniz) var ama okunabilir bir JSON nesnesi değilse ya da
+`extra_terms` bir string listesi değilse, çünkü taslak terimleriniz olmadan redakte edilmez.
 
 **Kalan risk.** Hook'lar göndermenin *bilinen* yollarını kapatır; her şeyi engellemez. Claude sizin `gh` oturumunuzla
 çalışır ve gizlenmiş bir komut (base64'ten kurulan komut, dosyaya yazılmış bir sarmalayıcı, `gh` dışı bir HTTP isteği)
@@ -290,7 +293,7 @@ Bir adım başarısız olduktan sonra `apply` yeniden çalıştırılırsa yaln�
 değişmişse; gerekçe ya da sorularda `@` mention, HTML ya da karakter referansı; görünmez karakterler; bir `gitleaks`
 bulgusu, ya da `gitleaks`'in olmaması veya hata vermesi; 32+ karakterlik opak dizi; feedback `config.json`'ı
 (`--terms` terimleriniz) var ama okunabilir bir JSON nesnesi değilse (bozuk, 1 MiB'tan büyük ya da 32 seviyeden derin,
-normal dosya değil), çünkü yorum terimleriniz olmadan redakte edilmez. Yorum yalnız kaydedilmiş gerekçe,
+normal dosya değil) ya da `extra_terms` bir string listesi değilse, çünkü yorum terimleriniz olmadan redakte edilmez. Yorum yalnız kaydedilmiş gerekçe,
 sorular ve kopya numarasından kurulur, asla issue metninden değil.
 
 **Issue'dan işe.** `/delixcrew:start #12` yalnız `accepted` olarak triage edilmiş ve başlığı ile gövdesi kabulden beri
