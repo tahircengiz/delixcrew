@@ -48,11 +48,12 @@
       "file": "docs/delix/tasks/T018-feedback-docs-url-rule.md",
       "role": "docs",
       "tier": 1,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 38,
       "rounds": 0,
       "cost_usd": null,
-      "sha": "a3a4e63"
+      "sha": "a3a4e63",
+      "merged": "1dc3992"
     },
     "T019": {
       "file": "docs/delix/tasks/T019-ci-run-all-tests.md",
