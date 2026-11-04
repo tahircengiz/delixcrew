@@ -128,4 +128,14 @@ md="$(cd "$G/lead" && python3 "$S/board.py")"
 echo "$md" | grep -qxF '```bash' && echo "$md" | grep -qxF "git -C $(cd "$G/impl" && pwd -P) push -u origin claude/impl" && ok "real repo: one-line bash block" || { bad "real repo: bash block"; echo "$md"; }
 rm -rf "$G"
 
+# T029 fix round 1) a control or separator character in a STATE field stays inside its line (no CR-opened fence)
+python3 - <<'PYS'
+import json; p="docs/delix/STATE.json"; d=json.load(open(p))
+f=lambda t: "x\r```bash\rtouch PWNED-%s\r```\u2028\u0085" % t
+d["spec"]=f("spec"); d["cards"]={"T009":{"role":f("role"),"tier":2,"status":f("status"),"pr":3}}
+d["verifications"]=[{"name":f("vname"),"date":"2026-11-02","verdict":f("vverdict")}]
+json.dump(d,open(p,"w"))
+PYS
+python3 "$S/board.py" | python3 -c 'import sys,unicodedata as u; t=sys.stdin.buffer.read().decode(); bad=[hex(ord(c)) for c in t if c!="\n" and (u.category(c)[0]=="C" or u.category(c) in ("Zl","Zp"))]; assert not bad, bad; assert "PWNED-role" in t and any(l.startswith("\U0001F510 = Tier 3") for l in t.split("\n")) and not [l for l in t.split("\n") if l.strip().startswith("touch PWNED")], "fence"' && ok "control characters stay inside one line" || bad "control characters in board output"
+
 cd /; rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

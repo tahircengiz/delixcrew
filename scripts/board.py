@@ -20,6 +20,7 @@ import re
 import subprocess
 import sys
 import time
+import unicodedata
 
 STATUS_RE = re.compile(r"\*\*Status:\*\*\s*([A-Z_]+)")
 PR_RE = re.compile(r"\*\*PR:\*\*\s*#?(\d+)")
@@ -754,6 +755,11 @@ def verifications_table(records):
     return out
 
 
+def one_line(s):
+    """One Markdown line: control (C*), line and paragraph separator characters become spaces, so no field opens a new line or block."""
+    return "".join(" " if unicodedata.category(c)[0] == "C" or unicodedata.category(c) in ("Zl", "Zp") else c for c in s)
+
+
 def table(data):
     now = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
     out = [f"# delix board — {os.path.basename(data['project'].rstrip('/'))}", "",
@@ -766,7 +772,7 @@ def table(data):
                 "Start with `/delixcrew:start <request>`, create cards with `/delixcrew:dispatch`.", ""]
         out += verifications_table(data.get("verifications"))
         out += git_sections(data)
-        return "\n".join(out)
+        return "\n".join(one_line(x) for x in out)
     count = {}
     for s in data["cards"]:
         count[s["status"]] = count.get(s["status"], 0) + 1
@@ -788,11 +794,11 @@ def table(data):
                    f"{s['status']} | {s['rounds']} | {pr} | {cost} | {report} | {gate} |")
     pending = [f"{s['id']} ({', '.join(s['gates'])})" for s in data["cards"] if s["gates"]]
     out.append("")
-    out.append("**Pending gates:** " + ("; ".join(pending) if pending else "none") +
-               "  \n🔐 = Tier 3, interactive session + security approval · merge = gate 2, PR in review, a human merges.")
+    out.append("**Pending gates:** " + ("; ".join(pending) if pending else "none") + "  ")
+    out.append("🔐 = Tier 3, interactive session + security approval · merge = gate 2, PR in review, a human merges.")
     out += verifications_table(data.get("verifications"))
     out += git_sections(data)
-    return "\n".join(out) + "\n"
+    return "\n".join(one_line(x) for x in out) + "\n"
 
 
 def main():
