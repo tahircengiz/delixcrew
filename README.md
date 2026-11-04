@@ -293,8 +293,10 @@ duplicate number, never from the issue text.
 **From issue to work.** `/delixcrew:start #12` takes only an issue triaged as `accepted` whose title and body are
 unchanged since acceptance: it reads the issue through `triage.py show 12 --require accepted`, which exits 8 when the
 `accepted` label or the maintainer's triage comment is missing, or when the text changed after acceptance. Run
-`/delixcrew:triage #12` again in that case. Issue intake works only in the delixcrew repository and is still at least
-Tier 2.
+`/delixcrew:triage #12` again in that case. If an `accept` decision for the current text is recorded locally but not
+applied yet, the exit 8 message says so instead and gives the script's full path: from your own terminal, run its
+`preview 12`, then the `apply` command with the `HASH` it prints. A local record never counts as acceptance. Issue
+intake works only in the delixcrew repository and is still at least Tier 2.
 
 **Records.** Decisions are stored in `~/.claude/delixcrew/triage/<n>.json` (`DELIXCREW_TRIAGE_DIR` overrides it), never
 in your project repo; only `triage.py` is meant to write there: the hooks deny Write/Edit into it, but a shell write

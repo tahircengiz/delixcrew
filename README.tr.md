@@ -294,7 +294,10 @@ sorular ve kopya numarasından kurulur, asla issue metninden değil.
 **Issue'dan işe.** `/delixcrew:start #12` yalnız `accepted` olarak triage edilmiş ve başlığı ile gövdesi kabulden beri
 değişmemiş issue'yu alır: issue'yu `triage.py show 12 --require accepted` ile okur; `accepted` etiketi ya da
 maintainer'ın triage yorumu yoksa veya metin kabulden sonra değiştiyse bu komut 8 ile çıkar. O durumda
-`/delixcrew:triage #12`'yi yeniden çalıştırın. Issue alımı yalnız delixcrew reposunda çalışır ve en az Tier 2'dir.
+`/delixcrew:triage #12`'yi yeniden çalıştırın. Güncel metin için bir `accept` kararı yerelde kaydedilmiş ama henüz
+uygulanmamışsa, çıkış 8 mesajı bu durumu söyler ve script'in tam yolunu verir: kendi terminalinizde o script ile
+önce `preview 12`'yi, sonra yazdırdığı `HASH` ile `apply` komutunu çalıştırın. Yerel kayıt hiçbir zaman kabul
+sayılmaz. Issue alımı yalnız delixcrew reposunda çalışır ve en az Tier 2'dir.
 
 **Kayıtlar.** Kararlar `~/.claude/delixcrew/triage/<n>.json` altında tutulur (`DELIXCREW_TRIAGE_DIR` ile değişir), asla
 proje reposunda değil; oraya yalnız `triage.py`'nin yazması beklenir: hook'lar Write/Edit'i reddeder, ama shell ile
