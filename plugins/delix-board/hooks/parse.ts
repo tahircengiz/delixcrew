@@ -276,7 +276,7 @@ export function runProgress(text: string, tailLines = 8): { suites: number; pass
     else if (FAIL_RE.test(line)) fail += 1
     else if (PASS_RE.test(line)) pass += 1
   }
-  const tail = lines.map(l => l.replace(/\s+$/, '')).filter(l => l !== '').slice(-tailLines)
+  const tail = lines.map(l => l.trimEnd()).filter(l => l !== '').slice(-tailLines)
   return { suites, pass, fail, tail }
 }
 
@@ -667,7 +667,7 @@ function deriveUnsafe(raw: Raw): Derived {
       branch: t.branch,
       main: t.main,
       source: t.path === sourcePath,
-      spec_title: heading === null ? null : heading.slice(2).replace(/\s+$/, ''),
+      spec_title: heading === null ? null : heading.slice(2).trimEnd(),
       open: Object.values(cards).filter(c => isObject(c) && typeof c.status === 'string' && OPEN_STATUSES.includes(c.status)).length,
       waiting: q.reasons.size,
       ready: q.ready.length,

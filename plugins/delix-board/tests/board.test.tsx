@@ -441,3 +441,22 @@ test('derive follows the T029 edge rules: no branch and no detached line, a null
     { kind: 'merge', target: '#8', card: 'T002', command: `gh pr merge 8 --squash --match-head-commit ${sha('5')}`, note: '' },
   ])
 })
+
+test('a long space run in the spec heading or a run line costs linear time (T030 fix round 1, security Medium)', () => {
+  const pad = ' '.repeat(100000)
+  const raw: Raw = {
+    default_branch: 'main',
+    now: 1800000000,
+    self: '/r',
+    source: '/r',
+    worktree_list: ['worktree /r', `HEAD ${'1'.repeat(40)}`, 'branch refs/heads/main', ''].join('\n'),
+    for_each_ref: '',
+    worktrees: { '/r': { status: '', files: { 'docs/delix/STATE.json': JSON.stringify({ spec: 'S.md', cards: {} }), 'S.md': `# T${pad}x \t\n` } } },
+  }
+  const t0 = Date.now()
+  expect(derive(raw).leads.map(l => l.spec_title)).toEqual([`T${pad}x`])
+  expect(Date.now() - t0).toBeLessThan(500)
+  const t1 = Date.now()
+  expect(runProgress(`ok 1${pad}x \n`).tail).toEqual([`ok 1${pad}x`])
+  expect(Date.now() - t1).toBeLessThan(500)
+})
