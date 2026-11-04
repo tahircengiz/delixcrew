@@ -35,16 +35,26 @@ def main(argv):
     common_dir, sha = key
     h = sha[:12]
     if is_trusted(cwd, commands):
-        print("delixcrew trust: already approved for %s (hash %s)" % (common_dir, h))
+        print("delixcrew trust: already approved for %s (hash %s)" % (json.dumps(common_dir), h))  # K219: escaped
         return 0
     print("Stop gate commands from docs/delix/delix.json:")
     for c in commands:
         print("  " + json.dumps(c))  # K214: escaped (\r, ‮ ...), one per line
-    r = git(cwd, "diff", "--quiet", "HEAD", "--", "docs/delix/delix.json")
-    if r is None or r.returncode != 0:
+    # K217: no `git diff` here: it can run the repo's own diff.external / textconv / clean filter before the user confirms
+    try:
+        head = git(cwd, "cat-file", "blob", "HEAD:docs/delix/delix.json")
+    except UnicodeDecodeError:  # a non-UTF-8 blob at HEAD: treat as different
+        head = None
+    try:
+        fd = os.open(os.path.join(cwd, "docs", "delix", "delix.json"), os.O_RDONLY | os.O_NOFOLLOW)
+        with os.fdopen(fd, encoding="utf-8", errors="surrogateescape") as f:
+            work = f.read()
+    except OSError:
+        work = None
+    if head is None or head.returncode != 0 or work is None or head.stdout != work:
         print("warning: docs/delix/delix.json differs from HEAD (or there is no HEAD); these are not the committed commands")
     sys.stdout.write("Type TRUST %s to approve these commands for %s (the word TRUST, a space, then the hash): "
-                     % (h, common_dir))
+                     % (h, json.dumps(common_dir)))  # K219: escaped
     sys.stdout.flush()
     if not sys.stdin.isatty():
         err("delixcrew trust: allow needs your own terminal (stdin is not a TTY); nothing approved")

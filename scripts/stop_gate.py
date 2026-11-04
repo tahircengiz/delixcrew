@@ -12,11 +12,19 @@ from common import card_path, commands_hash, is_trusted, read_input, stop_comman
 
 
 def open_result(path):
-    """K213: test-result.txt opened without following a symlink; None (one stderr line) when that fails."""
+    """K213, K218: test-result.txt opened without following a symlink and never truncated through a hardlink; None
+    (one stderr line) when that fails."""
     try:
-        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o644)
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_NOFOLLOW, 0o644)
+        try:
+            if os.fstat(fd).st_nlink != 1:  # a hardlink to a file outside the repo: do not truncate it
+                raise OSError("hardlink")
+            os.ftruncate(fd, 0)
+        except OSError:
+            os.close(fd)
+            raise
     except OSError:
-        sys.stderr.write("delixcrew Stop gate: .delix/test-result.txt is a symlink or cannot be opened; "
+        sys.stderr.write("delixcrew Stop gate: .delix/test-result.txt is a symlink, a hardlink or cannot be opened; "
                          "the output is not written there\n")
         return None
     return os.fdopen(fd, "w", encoding="utf-8")

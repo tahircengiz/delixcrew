@@ -229,5 +229,29 @@ wg Write file_path "$PWH/.claude/delixcrew/trust.json" "HOME=$T/h" | grep -qF "$
 wg Write file_path "$T/h/.claude/delixcrew/trust.json" "HOME=$T/h" | grep -qF "$TDENY" && ko "T026 write_gate: a HOME-based path counted as the record" || ok "T026 write_gate: a HOME-based lookalike is not the record"
 wg Write file_path "$PWH/.claude/delixcrew/trust.json.bak" | grep -qF "$TDENY" && ko "T026 write_gate: a sibling file denied" || ok "T026 write_gate: a sibling file is not the record"
 printf '{"tool_name":"Write","cwd":"%s","tool_input":{"file_path":"%s"}}' "$T" "$TREC" | python3 "$T/run.py" "$S" "$TREC" "$S/write_gate.py" 2>/dev/null | grep -qF "$TDENY" && ok "T026 write_gate reads common.trust_file at run time" || ko "T026 write_gate: patched trust_file not used"
+# T026 round 1 (K217): allow runs no repo-chosen diff helper before the user confirms; the HEAD warning still shows
+DX="$T/diffext"; mkrepo "$DX"; git -C "$DX" init -q && $G -C "$DX" add -A && $G -C "$DX" commit -qm x
+printf '#!/bin/sh\ntouch %s/MARK\nexit 1\n' "$DX" > "$T/diffhelper.sh"; chmod +x "$T/diffhelper.sh"
+git -C "$DX" config diff.external "$T/diffhelper.sh"; git -C "$DX" config diff.trustExitCode true
+printf '{"test_command":"true","extra_checks":[]}' > "$DX/docs/delix/delix.json"
+(cd "$DX" && python3 "$T/run.py" "$S" "$TREC" "$S/trust.py" allow </dev/null >"$T/a.out" 2>"$T/a.err"); rc=$?
+[ $rc -eq 6 ] && ! ran "$DX" && grep -qF "differs from HEAD" "$T/a.out" && ok "T026 allow with diff.external: helper not run, exit 6, HEAD warning" || ko "T026 allow with diff.external: rc $rc, MARK $(ran "$DX" && echo exists || echo absent): $(cat "$T/a.out")"
+(cd "$V" && $G diff --quiet HEAD -- docs/delix/delix.json) && (cd "$V" && python3 "$T/run.py" "$S" "$T/home4/.claude/delixcrew/trust.json" "$S/trust.py" allow </dev/null >"$T/a.out" 2>&1); \
+  ! grep -qF "differs from HEAD" "$T/a.out" && ok "T026 allow, delix.json same as HEAD: no warning" || ko "T026 allow, delix.json same as HEAD: warned: $(cat "$T/a.out")"
+# T026 round 1 (K218): a hardlinked .delix/test-result.txt is never truncated or overwritten
+HL="$T/hardlink"; mkrepo "$HL"; git -C "$HL" init -q; mkdir -p "$HL/.delix"; echo "docs/delix/tasks/T001-x.md" > "$HL/.delix/card"
+echo keep > "$T/outside2.txt"; ln "$T/outside2.txt" "$HL/.delix/test-result.txt"
+tstop "$HL"; rc=$?
+[ "$(cat "$T/outside2.txt")" = keep ] && [ $rc -eq 2 ] && grep -qF "hardlink" "$HL.err" && ok "T026 hardlinked test-result.txt, not approved: target unchanged, warning, exit 2" || ko "T026 hardlinked test-result.txt, not approved: rc $rc: $(cat "$T/outside2.txt") / $(cat "$HL.err")"
+approve "$HL"; tstop "$HL"; rc=$?
+[ "$(cat "$T/outside2.txt")" = keep ] && ran "$HL" && [ $rc -eq 0 ] && ok "T026 hardlinked test-result.txt, approved: command runs, target unchanged" || ko "T026 hardlinked test-result.txt, approved: rc $rc: $(cat "$T/outside2.txt") / $(cat "$HL.err")"
+rm -f "$HL/.delix/test-result.txt" "$HL/MARK"; echo stale > "$HL/.delix/test-result.txt"; tstop "$HL"
+! grep -qF stale "$HL/.delix/test-result.txt" && grep -qF "[exit 0]" "$HL/.delix/test-result.txt" && ok "T026 regular test-result.txt is still truncated and written" || ko "T026 regular test-result.txt: $(cat "$HL/.delix/test-result.txt")"
+# T026 round 1 (K219): git_common_dir is shown escaped (a dir name can hide \r)
+CRD="$T/cr$(printf '\r')dir"; mkrepo "$CRD"; git -C "$CRD" init -q
+(cd "$CRD" && python3 "$T/run.py" "$S" "$TREC" "$S/trust.py" allow </dev/null >"$T/a.out" 2>&1); rc=$?
+[ $rc -eq 6 ] && grep -qF 'cr\rdir/.git' "$T/a.out" && ! grep -q "$(printf '\r')" "$T/a.out" && ok "T026 allow prompt shows git_common_dir escaped" || ko "T026 allow prompt, raw git_common_dir: rc $rc"
+approve "$CRD"; (cd "$CRD" && python3 "$T/run.py" "$S" "$TREC" "$S/trust.py" allow </dev/null >"$T/a.out" 2>&1); rc=$?
+[ $rc -eq 0 ] && grep -qF "already approved" "$T/a.out" && grep -qF 'cr\rdir/.git' "$T/a.out" && ! grep -q "$(printf '\r')" "$T/a.out" && ok "T026 already approved line shows git_common_dir escaped" || ko "T026 already approved, raw git_common_dir: rc $rc"
 
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
