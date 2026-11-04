@@ -25,7 +25,8 @@ import unicodedata
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import feedback  # noqa: E402
 from feedback import (GH_SCRUB, OPAQUE_RE, REPO, SANITIZER_VERSION, bad_char, err, gh, gitleaks,  # noqa: E402
-                      load_config, local_terms, now, read_json, repo_ok, sanitize, term_regex, write_json)
+                      invisible, load_config, local_terms, now, read_json, repo_ok, sanitize, term_regex, visible,
+                      write_json)
 
 OWNER = REPO.split("/")[0]
 DECISIONS = {"accept": "accepted", "needs-info": "needs-info", "duplicate": "duplicate", "wontfix": "wontfix",
@@ -48,12 +49,6 @@ HTML_COMMENT_RE = re.compile(r"<!--.*?(?:-->|\Z)", re.S)
 HTML_RE = re.compile(r"<[A-Za-z/!]")
 MENTION_RE = re.compile(r"(?<![\w.])@[A-Za-z0-9]")
 COMMENT_MENTION_RE = re.compile(r"@[A-Za-z0-9]")
-# K133: allowlist. Every character is a newline, L*, N*, P*, S* or Zs; minus these invisible ones (Hangul fillers,
-# blank Braille, null notehead U+1D159) and the conjoining Hangul jungseong/jongseong ranges (inclusive) that NFKC
-# leaves uncomposed. One emoji selector (U+FE0E/U+FE0F) may follow a visible So symbol (emoji such as U+2764).
-INVISIBLE_IN_ALLOWED = {chr(c) for c in (0x115F, 0x1160, 0x3164, 0xFFA0, 0x2800, 0x1D159)}
-INVISIBLE_RANGES = ((0x1160, 0x11FF), (0xD7B0, 0xD7FF))
-SELECTORS = (chr(0xFE0E), chr(0xFE0F))
 CHAR_REF_RE = re.compile(r"&(#[0-9]+|#[xX][0-9A-Fa-f]+|[A-Za-z][A-Za-z0-9]*);")
 VERSION_RE = re.compile(r"\bplugin[ \t]+([^\s,]+)")
 SEMVER_RE = re.compile(r"\d+\.\d+\.\d+")
@@ -282,26 +277,6 @@ def load_record(n):
         return None, False
     rec = read_json(path)
     return (rec if validate(rec, n, stored=True) is None else None), True
-
-
-def visible(c):
-    cat = unicodedata.category(c)
-    o = ord(c)
-    return c == "\n" or cat == "Zs" or (cat[0] in "LNPS" and c not in INVISIBLE_IN_ALLOWED
-                                        and not any(lo <= o <= hi for lo, hi in INVISIBLE_RANGES))
-
-
-def invisible(text):
-    """K133: True if text has a character outside the allowlist (one emoji selector after a visible So symbol passes)."""
-    prev = None
-    for c in text:
-        if c in SELECTORS:
-            if prev is None or unicodedata.category(prev) != "So" or not visible(prev):  # else a hidden-data channel
-                return True
-        elif not visible(c):
-            return True
-        prev = c
-    return False
 
 
 def actions(decision):
