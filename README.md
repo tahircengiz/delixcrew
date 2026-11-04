@@ -159,17 +159,20 @@ scheme and the rest becomes `<redacted:url>` (`http://jenkins:8080/job/x` → `h
 
 A path or port right after a redacted host, IP, e-mail or MAC address is redacted with it (`see 10.1.2.3/api/x` →
 `see <redacted:ip><redacted:path>`, `git@github.com:acme/private` → `<redacted:email><redacted:path>`,
-`de:ad:be:ef:00:11/x` → `<redacted:mac><redacted:path>`). A `github.com/…` path in plain text, wherever it appears,
-keeps the same owner rule: `vendor/github.com/acme/private-lib/x.go` → `vendor/github.com<redacted:path>`.
+`de:ad:be:ef:00:11/x` → `<redacted:mac><redacted:path>`). Markdown emphasis, a backtick or a quote between the two stops
+this for a port: `**ci.acme-corp.net**:8080/api/x` → `**<redacted:host>**:8080/api/x`, while
+`**ci.acme-corp.net**/api/x` → `**<redacted:host>**<redacted:path>`. A `github.com/…` path in plain text, wherever it
+appears, keeps the same owner rule: `vendor/github.com/acme/private-lib/x.go` → `vendor/github.com<redacted:path>`.
 
 **What blocks a draft** (`VERDICT: BLOCKED: <reason>`, `send` exits 4; no secret value is printed): a `gitleaks` finding
 in the raw or the redacted text, or `gitleaks` missing, failing or timing out; an invisible Unicode control character
 (zero-width, bidi); any other character that is not a letter, number, punctuation mark, symbol, space, newline or tab
 (`invisible character`: for example U+2028, U+2029, a variation selector, a Hangul filler or a lone surrogate; an emoji
-selector such as U+FE0F may only follow a visible symbol such as U+2764), so text with combining marks (Devanagari, for
-example) is blocked too; an opaque string of 32+ characters (`[A-Za-z0-9+=_-]`, so a full git SHA is blocked too; use
-the short one); more than 15 code lines; a body over 8 KB; anything still matching the redaction rules after redaction;
-a record changed on disk since it was queued (`fingerprint mismatch`); an unreadable queue record.
+selector such as U+FE0F may only follow a visible symbol such as U+2764), so text with combining marks that NFKC does
+not merge into one character (Devanagari, for example) is blocked too; an opaque string of 32+ characters
+(`[A-Za-z0-9+=_-]`, so a full git SHA is blocked too; use the short one); more than 15 code lines; a body over 8 KB;
+anything still matching the redaction rules after redaction; a record changed on disk since it was queued
+(`fingerprint mismatch`); an unreadable queue record.
 
 **Remaining risk.** The hooks close the *known* ways to send; they do not block everything. Claude runs with your `gh`
 login, and a disguised command (one built from base64, a wrapper written to a file, an HTTP request without `gh`) can get
