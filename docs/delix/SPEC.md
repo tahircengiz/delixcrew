@@ -1,6 +1,6 @@
 # SPEC — Spec B: Stop gate güven çapası, izinli `cat` heredoc'u, repo yazma mesajı
 
-> Size: **M** · Tier: 3 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: T026 inceleme turu 0, K217–K222)
+> Size: **M** · Tier: 3 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 4: T026 inceleme turu 1, K223–K224)
 > Source: issue [#17](https://github.com/tahircengiz/delixcrew/issues/17) (triage `accepted`; istek metni kullanıcı onaylı,
 > 2026-11-04) ve lead notları (kural (c) aşırı engellemesi, yanıltıcı deny mesajı). Grill kararları K199–K202
 > (kullanıcı), lead kararları K203–K214. STATUS.md K numaralarının devamıdır. Önceki spec (kapalı):
@@ -104,7 +104,9 @@ Yeni `scripts/trust.py allow`, kullanıcının terminalinde, cwd'deki depo için
    gösterir. `git cat-file blob HEAD:docs/delix/delix.json` çıktısı, çalışma ağacındaki dosyanın `O_NOFOLLOW` ile
    okunan içeriğinden farklıysa (ya da biri okunamazsa) "delix.json differs from HEAD" uyarısı basar (K214). `git diff`
    kullanılmaz: deponun kendi `diff.external` / textconv / clean filter ayarı onaydan önce kod çalıştırır (K217).
-   `git_common_dir` de ekrana `json.dumps` ile basılır (K219).
+   `git_common_dir` de ekrana `json.dumps` ile basılır (K219). `cat-file` `--no-lazy-fetch` ile çalışır ve hook'ların
+   bütün git çağrılarında `GIT_NO_LAZY_FETCH=1` olur: eksik nesne, deponun promisor remote'u üzerinden program
+   çalıştırmamalı (K223). Çalışma ağacındaki dosya `O_NONBLOCK` ile açılır ve düz dosya değilse okunmaz (K224).
 4. `Type TRUST <h12> to approve these commands for <git_common_dir> (the word TRUST, a space, then the hash): `
    istemini basar (K200, SEND/APPLY kalıbı).
 5. stdin TTY değilse ya da yazılan metin tam eşleşmezse kayıt yazılmaz ve exit 6 döner; uyuşmazlıkta beklenen metin
@@ -301,3 +303,9 @@ kararlar:
   tek `str` olmayan öğe olur, onaylanamaz ve çalışmaz (REQ-1). Kart çapası 4'teki `[extra]` metni bunun yerine geçer.
 - **K222** (lead, geri alınır; T026 security unsure): merge sırası T027 → T026. T026 tek başına Bash yolunu açık bırakır;
   ajan tarafı engelleri T027'dedir.
+- **K223** (lead, geri alınır; T026 security tur 1 High, lead git 2.54'te yeniden üretti: `extensions.partialClone` +
+  `remote.origin.url=ext::<helper>` + eksik HEAD blob'u, `allow </dev/null` exit 6 ile reddedildiği halde yardımcı
+  çalıştı): `cat-file` `--no-lazy-fetch` ile; `common.git()` env'ine `GIT_NO_LAZY_FETCH=1`. Eski git'te seçenek
+  bilinmez, uyarı yoluna düşer (fail closed). Stop gate yolu aynı depoda yardımcıyı çalıştırmadı (0664b81).
+- **K224** (lead, geri alınır; T026 security tur 1 Low): `delix.json` okuması FIFO'da takılmaz (`O_NONBLOCK` + `S_ISREG`);
+  onay sonrası "approved" satırı da `json.dumps` ile.

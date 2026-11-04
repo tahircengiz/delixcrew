@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-05T00:30:00Z",
+  "updated": "2026-11-05T01:30:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -63,10 +63,10 @@
       "tier": 3,
       "status": "fixing",
       "pr": 57,
-      "rounds": 1,
+      "rounds": 2,
       "cost_usd": null,
       "issue": 17,
-      "sha": "71777fe"
+      "sha": "0664b81"
     },
     "T027": {
       "file": "docs/delix/tasks/T027-bash-gate-cat-heredoc-trust-rules.md",

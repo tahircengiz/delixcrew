@@ -628,4 +628,22 @@ Read only this card and SPEC REQ-1–REQ-4, §4–§6 and §9.
 - P2 notes, no fix: one blank line before `TRUST_DENY` in `write_gate.py`. The untested owner, relative-gitdir, `KeyError` and surrogate cases are on the Review Focus list.
 - Merge order: T027 first, then T026 (K222).
 - The lead prototyped all three fixes on a copy of 71777fe. The PoC no longer creates MARK, the warning is still printed, and the hardlink target is unchanged. `trust_tests.sh`, `hook_tests.sh` and `write_gate_case_tests.sh` pass.
+- Round 1 (0664b81): deterministic gates green.
+  - The lead re-ran all suites from `git archive 0664b81`: 9/9 pass. The merge tree with T027 passes 10/10, and also under Python 3.13.
+  - The new test files contain only insertions.
+  - The round 0 PoC no longer creates MARK.
+  - qa: ACCEPT_WITH_NOTES (0 P0, 0 P1).
+  - security: 🔐 HUMAN_APPROVAL with one new High.
+- **[High, fix] `scripts/trust.py:45`, lazy fetch from a promisor remote.** The repo's `.git/config` sets `core.repositoryformatversion=1`, `extensions.partialClone=origin`, `remote.origin.promisor=true`, `remote.origin.url=ext::<helper>` and `protocol.ext.allow=always`, and the HEAD blob of `docs/delix/delix.json` is missing. Then `cat-file` lazy-fetches and runs the helper before the confirmation.
+  - The lead reproduced this on git 2.54.0: `allow </dev/null` exited 6 and the helper still ran.
+  - The Stop gate path did not run the helper in the same repo.
+  - Fix (K223): `git(cwd, "--no-lazy-fetch", "cat-file", "blob", "HEAD:docs/delix/delix.json")`, and `env["GIT_NO_LAZY_FETCH"] = "1"` in `common.git()` after the `GIT_*` filter. Do not put `--no-lazy-fetch` in the shared helper: older git rejects it there.
+  - The lead's prototype: MARK no longer appears, the warning is still printed, and `trust_tests.sh`, `hook_tests.sh` and `write_gate_case_tests.sh` pass.
+  - Test: the setup above. After `allow </dev/null`, the result is exit 6, MARK does not exist, and the warning is printed.
+- **[Low, fix] `scripts/trust.py:49`.** A FIFO at `docs/delix/delix.json` hangs `allow`. Fix (K224): open with `O_NONBLOCK`; if `S_ISREG(os.fstat(fd).st_mode)` is false, the content counts as unreadable and takes the warning path. Test: the FIFO case returns within the test without hanging.
+- **[Low, fix] `scripts/trust.py:~95`.** The final "approved for" line prints `common_dir` raw. Fix (K224): use `json.dumps(common_dir)`.
+- P2 notes (qa), no fix:
+  - a `UnicodeDecodeError` from git output makes `allow` crash with exit 1, and nothing is approved;
+  - with an unapproved list and a symlinked or hardlinked result file, stderr has 4 lines instead of 3.
+- Unsure (security), not reproduced: a sparse index together with a promisor remote could make `ls-files` in `card_path` lazy-fetch. K223's env setting covers this on git 2.44 and later.
 
