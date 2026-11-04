@@ -319,5 +319,35 @@ fb enable --terms acme >/dev/null
 out=$(add3 'd["title"]="Residual"; d["actual"]="see x.ioacme.md"'); id=${out%% *}
 pv=$(fb preview "$id" 2>&1); rc=$?
 [ $rc -eq 4 ] && echo "$pv" | grep -q "^VERDICT: BLOCKED: .*residual match after sanitizing" && ok "REQ-4 residual match: BLOCKED" || bad "REQ-4 residual (rc=$rc, $(echo "$pv" | head -1))"
+# --- read_json (PR #49 security review, Low): a deeply nested, oversized or non-regular queue file is unreadable -----
+# guard kills the command after 5 s (rc 124): a FIFO that blocks open() fails the test instead of hanging the suite.
+guard(){ python3 -c 'import subprocess, sys
+try:
+    sys.exit(subprocess.run(sys.argv[1:], timeout=5).returncode)
+except subprocess.TimeoutExpired:
+    sys.exit(124)' "$@"; }
+out=$(add3 'd["title"]="Odd queue files"'); id=${out%% *}
+pv=$(fb preview "$id" 2>&1); rc=$?
+[ $rc -eq 0 ] && echo "$pv" | grep -qx "VERDICT: CLEAN" && ok "read_json control: $id previews CLEAN" || bad "read_json control (rc=$rc, $(echo "$pv" | head -1))"
+oddq(){ # name, kind (deep / fifo / big): F900.json is made that way, list and preview run, then it is removed
+  case "$2" in
+    deep) python3 -c 'import sys; open(sys.argv[1], "w").write("[" * 200000)' "$Q/F900.json";;
+    fifo) mkfifo "$Q/F900.json";;
+    big) python3 -c 'import sys; open(sys.argv[1], "w").write(open(sys.argv[2]).read() + " " * (1 << 20))' "$Q/F900.json" "$Q/$id.json";;
+  esac
+  guard python3 "$S/feedback.py" list >/dev/null 2>"$T/err"; rc=$?
+  [ $rc -eq 0 ] && grep -qx "warning: unreadable record F900" "$T/err" && ok "read_json $1: list exit 0, F900 unreadable" \
+    || bad "read_json $1: list (rc=$rc, $(head -c 300 "$T/err"))"
+  pv=$(guard python3 "$S/feedback.py" preview "$id" 2>&1); rc=$?
+  [ $rc -eq 4 ] && echo "$pv" | grep -q "^VERDICT: BLOCKED: .*unreadable queue record F900" && ! echo "$pv" | grep -q "^HASH:" \
+    && ok "read_json $1: preview of the other draft BLOCKED, exit 4" || bad "read_json $1: preview (rc=$rc, $(echo "$pv" | head -1))"
+  rm -f "$Q/F900.json"; }
+oddq "deeply nested JSON queue file" deep
+oddq "FIFO in the queue"             fifo
+oddq "valid record padded past 1 MiB" big
+cp "$Q/config.json" "$T/config.bak"; rm -f "$Q/config.json"; mkfifo "$Q/config.json"
+out=$(guard python3 "$S/feedback.py" status 2>&1); rc=$?
+[ $rc -eq 0 ] && echo "$out" | grep -qx "enabled: no" && ok "read_json FIFO config.json: status exit 0, enabled: no" || bad "read_json FIFO config (rc=$rc, $out)"
+rm -f "$Q/config.json"; cp "$T/config.bak" "$Q/config.json"
 
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

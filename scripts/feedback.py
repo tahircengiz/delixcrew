@@ -108,12 +108,28 @@ def now():
     return dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+JSON_MAX = 1 << 20  # bytes; the records and the config these tools write are a few KB
+
+
 def read_json(path):
+    """Parsed JSON of a regular file of at most JSON_MAX bytes, else None. O_NONBLOCK: a FIFO at `path` opens at once
+    instead of waiting for a writer, then fails the regular-file check like a device or a directory. Malformed, too
+    deeply nested (RecursionError) or oversized JSON is unreadable too: never a traceback, never a hang."""
     try:
-        with open(path, encoding="utf-8") as f:
-            return json.load(f)
-    except (OSError, ValueError):
+        fd = os.open(path, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
+    except OSError:
         return None
+    try:
+        st = os.fstat(fd)
+        if st.st_mode & 0o170000 != 0o100000 or st.st_size > JSON_MAX:  # stat.S_ISREG, without a new import
+            return None
+        with os.fdopen(fd, encoding="utf-8", closefd=False) as f:
+            data = f.read(JSON_MAX + 1)
+        return json.loads(data) if len(data) <= JSON_MAX else None
+    except (OSError, ValueError, RecursionError, MemoryError):
+        return None
+    finally:
+        os.close(fd)
 
 
 def write_json(path, data):
