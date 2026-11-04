@@ -241,3 +241,6 @@
     - The `fingerprint` surrogate case does not check the first line.
     - `x\jenkins:8080/api/secret` stays unchanged on both trees (K153 class, §6).
     - `triage.py` imports `visible` but does not use it (the card requires the import).
+- Final review (qa ACCEPT, 0 P0/P1; security 🔐 HUMAN_APPROVAL, 1 Low; PR #39 @ ae2ed0e). The cap of 3 rounds is reached, so there is no fix round.
+  - Low (both trees, reproduced by the lead on ae2ed0e and main 7d2889a, identical output): REQ-1b allows only one `.` or `]` between the placeholder and the separator, so the port and path of a host wrapped in `**…**`, backticks or `"` stays. Recorded in SPEC §6 (K176).
+  - Gates: CI `test` and `check` pass; 8/8 suites exit 0; gitleaks on scripts and the diff: no leaks; raw invisible characters 0; internal names in `+` lines 0.

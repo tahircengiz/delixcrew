@@ -24,11 +24,11 @@
       "file": "docs/delix/tasks/T020-feedback-filter-gaps.md",
       "role": "backend",
       "tier": 3,
-      "status": "fixing",
+      "status": "in_review",
       "pr": 39,
       "rounds": 3,
       "cost_usd": null,
-      "sha": "cd04ea5"
+      "sha": "ae2ed0e"
     },
     "T021": {
       "file": "docs/delix/tasks/T021-feedback-docs-sync.md",

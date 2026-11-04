@@ -167,6 +167,11 @@ Kuyruk ve kayıt biçimi değişmez, göç yok. Sürüm `"3"` kalır: hash içer
   - Girdideki düz `<redacted:x>` metni bir IP'yi ya da host'u parçalara bölebilir (`10.1<redacted:x>.2.3`).
   - REQ-1b parçası `<`'de biter (`…/api<b>internal/secret`).
   - `ID_RE` Unicode rakamı kabul eder (`F٠٠١`); kuyruk içinde kalır, zararsız.
+  - REQ-1b, yer tutucu ile ayraç arasında en fazla bir `.` ya da `]` kabul eder. Markdown vurgusu ya da tırnak arasındaki
+    host'un port ve yolu kalır: `**ci.acme-corp.net**:8080/api/secret` → `**<redacted:host>**:8080/api/secret`
+    (backtick ve `"` için de aynı; iki noktalı `host..:8080/…` da). Main'de de aynı (K176). Port yoksa
+    (`**host**/api/secret`) yol silinir.
+  - Düz metinde `github.com%2F…` ve izinli GitHub yolundaki sorgu (`…/anthropics/x?repo=…`) değişmeden kalır; main'de de aynı.
 - Aşırı silme (fail closed):
   - Var olanlar: `std::vector.size/x`, `Link:https://…`.
   - Yeni: `1.2.3.4_beta` → `<redacted:ip>_beta`; ağ önekleri (`10.1.2.0/24`, `fd00::/64` → `<redacted:ip><redacted:path>`);
@@ -234,5 +239,9 @@ Kuyruk ve kayıt biçimi değişmez, göç yok. Sürüm `"3"` kalır: hash içer
   Kullanıcı hepsinin düzeltilmesini seçti. Düzeltilenler: testlerdeki ham görünmez karakterler (bu PR'la gelmişti),
   `[IPv6]` sonrası yol, `\` ayraçlı github.com yolu ve `%` kodlu github.com yolu. `x\jenkins:8080/…` K153 sınıfındadır,
   §6'da kalır.
+- **K176** (lead, 2026-11-04; geri alınır) T020 son kapsamlı inceleme (ae2ed0e): qa ACCEPT, security 🔐 HUMAN_APPROVAL
+  (1 Low). Lead, Low'u dalda ve main 7d2889a'da üretti; çıktılar birebir aynı, regresyon değil. Tur sınırı (3) dolu;
+  4. tur açılmadı, §6 kalan riske yazıldı. Olası düzeltme (ayrı kart): `AFTER_PH_RE` grup 1'e sınırlı kapanış koşusu
+  (`[.\]*_`'")]{0,2}`), ReDoS zaman testi ve idempotens kaydıyla.
 - **K172** (geri alınır; security Low) Baştaki sıfırlı IPv4 fail closed: oktetler ≤ 255 ise `ipaddress` hatası silmeye yol
   açar. Main ölçümü: `010.001.002.003` değişmeden kalıyor.
