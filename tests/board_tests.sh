@@ -74,4 +74,58 @@ PYS
 out=$(python3 "$S/board.py")
 echo "$out" | grep -qF "| 3 | T004 | devops | 3 | open |" && echo "$out" | grep -qF "| 5 | T005 | docs | 1 | open |" && ok "object waves: wave field" || { bad "object waves"; echo "$out"; }
 
+# 5) Spec C REQ-6 (K252): derive(raw) == fixture expected; TS copy byte-equal; REQ-4 forbidden tokens
+J="$ROOT/tests/fixtures/board_parity.json"; P="$ROOT/plugins/delix-board/tests/board_parity.ts"
+python3 - "$S" "$J" <<'PYS' && ok "parity: derive(raw) == expected" || bad "parity: derive(raw) != expected"
+import json, sys
+sys.path.insert(0, sys.argv[1])
+import board
+f = json.load(open(sys.argv[2], encoding="utf-8"))
+got = board.derive(f["raw"])
+for k in ("agents", "leads", "queue", "actions", "fetched_at"):
+    assert got[k] == f["expected"][k], (k, json.dumps(got[k], ensure_ascii=False))
+PYS
+[ "$(head -c 22 "$P")" = "export const PARITY = " ] && tail -c +23 "$P" | cmp -s - "$J" && ok "parity: TS copy is byte-equal" || bad "parity: board_parity.ts is not prefix + tests/fixtures/board_parity.json"
+python3 - "$S" "$J" <<'PYS' && ok "REQ-4: no forbidden token, no main or self path" || bad "REQ-4: forbidden token in a command"
+import json, re, sys
+sys.path.insert(0, sys.argv[1])
+import board
+raw = json.load(open(sys.argv[2], encoding="utf-8"))["raw"]
+assert all(re.fullmatch(r"[0-9a-f]{40}", l.split("\t")[1]) for l in raw["for_each_ref"].splitlines()), "fixture sha"
+main = raw["worktree_list"].splitlines()[0][len("worktree "):]
+banned = {"--force", "-f", "--force-with-lease", "--mirror", "reset", "clean", main, raw["self"]}
+for a in board.derive(raw)["actions"]:
+    toks = (a["command"] or "").split()
+    assert not banned & set(toks), a
+    assert not (a["kind"] == "push" and toks[-1:] == [raw["default_branch"]]), a
+PYS
+
+# 6) Spec C on a real repository: roles, upstream, push commands; main checkout and self get none (REQ-1, REQ-4)
+G="$(mktemp -d)"; gc(){ git -c user.email=t@t -c user.name=t "$@"; }
+git init -q --bare "$G/origin.git"; git init -q -b main "$G/r"
+mkdir -p "$G/r/docs/delix"; printf '{"spec":"docs/delix/SPEC.md","cards":{}}\n' > "$G/r/docs/delix/STATE.json"
+gc -C "$G/r" add -A && gc -C "$G/r" commit -q -m init && git -C "$G/r" remote add origin "$G/origin.git" && git -C "$G/r" push -q -u origin main 2>/dev/null
+echo ".delix/" >> "$G/r/.git/info/exclude"
+git -C "$G/r" worktree add -q -b claude/impl "$G/impl" >/dev/null 2>&1; mkdir -p "$G/impl/.delix"; echo "docs/delix/tasks/T029-x.md" > "$G/impl/.delix/card"
+gc -C "$G/impl" commit -q --allow-empty -m a && git -C "$G/impl" push -q -u origin claude/impl 2>/dev/null
+gc -C "$G/impl" commit -q --allow-empty -m b && gc -C "$G/impl" commit -q --allow-empty -m c
+git -C "$G/r" worktree add -q -b claude/lead "$G/lead" >/dev/null 2>&1; printf '{"spec":"docs/delix/SPEC.md","cards":{},"updated":"x"}\n' > "$G/lead/docs/delix/STATE.json"
+git -C "$G/r" worktree add -q -b x-fix "$G/xfix" >/dev/null 2>&1
+(cd "$G/lead" && python3 "$S/board.py" --json) > "$G/out.json"
+python3 - "$G" <<'PYS' && ok "real repo: roles, 2 ahead, push commands; main and self excluded" || { bad "real repo"; cat "$G/out.json"; }
+import json, os, sys
+G = sys.argv[1]; d = json.load(open(os.path.join(G, "out.json"), encoding="utf-8"))
+real = lambda p: os.path.realpath(os.path.join(G, p))
+rows = {a["path"]: a for a in d["agents"]}
+assert rows[real("impl")]["role"] == "implementer T029" and rows[real("impl")]["upstream"] == "2 ahead", rows
+assert rows[real("lead")]["role"] == "lead" and rows[real("xfix")]["role"] == "other", rows
+cmds = [a["command"] for a in d["actions"] if a["command"]]
+assert "git -C %s push -u origin claude/impl" % real("impl") in cmds, cmds
+assert "git -C %s push -u origin x-fix" % real("xfix") in cmds, cmds
+assert not [c for c in cmds if real("r") in c.split() or real("lead") in c.split()], cmds
+PYS
+md="$(cd "$G/lead" && python3 "$S/board.py")"
+echo "$md" | grep -qxF '```bash' && echo "$md" | grep -qxF "git -C $(cd "$G/impl" && pwd -P) push -u origin claude/impl" && ok "real repo: one-line bash block" || { bad "real repo: bash block"; echo "$md"; }
+rm -rf "$G"
+
 cd /; rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

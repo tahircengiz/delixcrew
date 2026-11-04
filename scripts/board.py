@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """delix board: docs/delix/STATE.json + cards + worktree .delix/report.md → one Markdown table
-(+ a "Verifications" table when STATE.json.verifications exists: card-less /delixcrew:verify records, K43).
+(+ a "Verifications" table when STATE.json.verifications exists: card-less /delixcrew:verify records, K43)
+(+ Spec C: Leads, Agents, Waiting on you, Ready to merge and Git actions from local git facts; no network,
+the git actions are printed as commands for the user and never run).
 
 Usage (in the project root):
     python3 board.py             # prints the table to stdout (writes no file)
@@ -17,11 +19,18 @@ import os
 import re
 import subprocess
 import sys
+import time
 
 STATUS_RE = re.compile(r"\*\*Status:\*\*\s*([A-Z_]+)")
 PR_RE = re.compile(r"\*\*PR:\*\*\s*#?(\d+)")
 REPORT_STATUSES = ("DONE_WITH_CONCERNS", "DONE", "NEEDS_CONTEXT", "BLOCKED")
 OPEN_STATUSES = {"open", "in_progress", "in_review", "fixing"}
+# Spec C R10 (K248, K260): a command is printed only when every name in it passes its pattern (used with fullmatch)
+BRANCH_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*$")
+PATH_RE = re.compile(r"^/[A-Za-z0-9_./-]+$")
+SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+WEEK = 604800
+KIND_ORDER = ("push", "merge", "remove_worktree", "delete_branch")
 
 
 def read(path):
@@ -115,6 +124,513 @@ def from_card_file(text):
     return {}
 
 
+# ---- Spec C: git facts (rules G), derive (rules R), Markdown sections (format F) ----
+STATE_REL = "docs/delix/STATE.json"
+CARD_ID_RE = re.compile(r"T[0-9]{3}")
+REPORT_PR_RE = re.compile(r"\*\*PR:\*\* #([0-9]+)")
+PR_TEXT_RE = re.compile(r"^#?[0-9]+$")
+DIGITS_RE = re.compile(r"[0-9]+")
+APPROVED = "**🔐 Approved:**"
+
+
+def _git(argv, cwd, timeout=5, codes=(0,)):
+    """One git call (rules G) → (exit code, stdout); None on OSError, timeout, undecodable output or another exit."""
+    try:
+        cp = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=timeout)
+    except (OSError, subprocess.TimeoutExpired, ValueError):
+        return None
+    return (cp.returncode, cp.stdout) if cp.returncode in codes else None
+
+
+def _out(argv, cwd, timeout=5):
+    r = _git(argv, cwd, timeout)
+    return None if r is None else r[1]
+
+
+def _mtime(path):
+    try:
+        return int(os.stat(path).st_mtime)
+    except (OSError, ValueError):
+        return None
+
+
+def _add_file(w, wt, rel):
+    """files[rel] = text of <wt>/<rel>, only when it exists (rules G)."""
+    if rel in w["files"]:
+        return
+    try:
+        text = read(os.path.join(wt, rel))
+    except ValueError:  # a NUL byte in a name taken from STATE.json, or a file that is not UTF-8
+        text = None
+    if text is not None:
+        w["files"][rel] = text
+
+
+def _add_lead_files(w, wt):
+    """A Leads row's STATE.json, the spec it names and the card file of each open Tier 3 card (rules G)."""
+    _add_file(w, wt, STATE_REL)
+    s = _state(w)
+    names = [s.get("spec")] + [c.get("file") for c in _dict(s.get("cards")).values()
+                               if isinstance(c, dict) and _int(c.get("tier")) == 3 and c.get("status") == "open"]
+    for rel in names:
+        if isinstance(rel, str) and rel:
+            _add_file(w, wt, rel)
+
+
+def git_raw(root):
+    """Rules G: every local fact derive() needs, gathered once. Reads only: no network, no writes."""
+    root = os.path.realpath(root)
+    cfg = read_json(os.path.join(root, "docs", "delix", "delix.json"))
+    default = cfg.get("default_branch") if isinstance(cfg, dict) else None
+    raw = {"default_branch": default if isinstance(default, str) and default else "main",
+           "now": int(time.time()), "self": root, "source": root, "common_dir": None,
+           "fetch_head_mtimes": {}, "worktree_list": "", "for_each_ref": "", "worktrees": {}}
+    common = _out(["git", "rev-parse", "--git-common-dir"], root)
+    if common is None:
+        return raw  # outside git
+    common = os.path.realpath(os.path.join(root, common.strip()))
+    raw["common_dir"] = common
+    heads = [os.path.join(common, "FETCH_HEAD")]
+    try:
+        heads += [os.path.join(common, "worktrees", n, "FETCH_HEAD")
+                  for n in sorted(os.listdir(os.path.join(common, "worktrees")))]
+    except OSError:
+        pass
+    for p in heads:
+        t = _mtime(p)
+        if t is not None:
+            raw["fetch_head_mtimes"][p] = t
+    lines = []
+    for line in (_out(["git", "worktree", "list", "--porcelain"], root, timeout=10) or "").split("\n"):
+        if line.startswith("worktree "):
+            line = "worktree " + os.path.realpath(line[len("worktree "):])
+        lines.append(line)
+    raw["worktree_list"] = "\n".join(lines)
+    raw["for_each_ref"] = _out(["git", "for-each-ref", "refs/heads", "refs/remotes",
+                                "--format=%(refname)%09%(objectname)%09%(upstream)%09"
+                                "%(upstream:track,nobracket)%09%(committerdate:unix)"], root) or ""
+    wts = raw["worktrees"]
+    blocks = _blocks(raw["worktree_list"])
+    for b in blocks:
+        p = b["path"]
+        w = wts.setdefault(p, {"status": None, "state_diff_exit": None, "state_log_ct": None,
+                               "state_mtime": None, "files": {}})
+        w["status"] = _out(["git", "status", "--porcelain"], p)
+        _add_file(w, p, ".delix/card")
+        _add_file(w, p, ".delix/report.md")
+        if _card_id(w) is None and not _state_dirty(w["status"]):
+            r = _git(["git", "diff", "--quiet", "origin/%s...HEAD" % raw["default_branch"], "--", STATE_REL],
+                     p, codes=(0, 1))
+            w["state_diff_exit"] = None if r is None else r[0]
+    # the source STATE decides the roles (R4, R5c), so it is read even when the source is not a Leads row
+    src = wts.setdefault(root, {"status": None, "state_diff_exit": None, "state_log_ct": None,
+                                "state_mtime": None, "files": {}})
+    _add_lead_files(src, root)
+    by_values = _by_values(_state(src))
+    for i, b in enumerate(blocks):
+        p, w = b["path"], wts[b["path"]]
+        if i and _role(w, b["branch"], by_values)[0] != "lead":
+            continue
+        _add_lead_files(w, p)
+        if _state_dirty(w["status"]):
+            w["state_mtime"] = _mtime(os.path.join(p, STATE_REL))
+        else:
+            w["state_log_ct"] = _num((_out(["git", "log", "-1", "--format=%ct", "--", STATE_REL], p) or "").strip())
+    return raw
+
+
+# derive() and its helpers are pure: no subprocess, os, open or clock (Spec C REQ-6; the panel has the same rules).
+def _dict(x):
+    return x if isinstance(x, dict) else {}
+
+
+def _list(x):
+    return x if isinstance(x, list) else []
+
+
+def _str(x):
+    return x if isinstance(x, str) else ""
+
+
+def _int(x):
+    """A JSON integer (bool is not one); an integral float counts, as in JavaScript."""
+    if isinstance(x, bool):
+        return None
+    if isinstance(x, int):
+        return x
+    if isinstance(x, float) and x.is_integer():
+        return int(x)
+    return None
+
+
+def _num(s):
+    """A string of ASCII digits → int, else None."""
+    if not isinstance(s, str) or not DIGITS_RE.fullmatch(s):
+        return None
+    try:
+        return int(s)
+    except ValueError:  # more digits than int() converts
+        return None
+
+
+def _ok(rx, s):
+    return isinstance(s, str) and rx.fullmatch(s) is not None
+
+
+def _latest(*values):
+    known = [v for v in values if v is not None]
+    return max(known) if known else None
+
+
+def _blocks(text):
+    """R2: `git worktree list --porcelain` → [{path, head, branch, detached}]; the first is the main checkout."""
+    out, cur = [], {}
+    for line in _str(text).split("\n") + [""]:
+        if line == "":
+            if "path" in cur:
+                out.append({"path": cur["path"], "head": cur.get("head", ""), "branch": cur.get("branch"),
+                            "detached": cur.get("detached", False)})
+            cur = {}
+        elif line.startswith("worktree "):
+            cur["path"] = line[len("worktree "):]
+        elif line.startswith("HEAD "):
+            cur["head"] = line[len("HEAD "):]
+        elif line.startswith("branch "):
+            b = line[len("branch "):]
+            cur["branch"] = b[len("refs/heads/"):] if b.startswith("refs/heads/") else b
+        elif line == "detached":
+            cur["detached"] = True
+    return out
+
+
+def _refs(text):
+    """R2: for-each-ref lines with exactly 5 TAB fields → {refname: [refname, objectname, upstream, track, time]}."""
+    return {f[0]: f for f in (line.split("\t") for line in _str(text).split("\n")) if len(f) == 5}
+
+
+def _state(w):
+    """R2: the STATE in a worktree's files; {} when it is missing or not a JSON object."""
+    try:
+        s = json.loads(_dict(_dict(w).get("files")).get(STATE_REL))
+    except (TypeError, ValueError, RecursionError):
+        return {}
+    return s if isinstance(s, dict) else {}
+
+
+def _state_dirty(status):
+    """R5a: a status line whose text from index 3 is the STATE path."""
+    return any(line[3:] == STATE_REL for line in _str(status).split("\n"))
+
+
+def _card_id(w):
+    m = CARD_ID_RE.search(_str(_dict(_dict(w).get("files")).get(".delix/card")))
+    return m.group(0) if m else None
+
+
+def _by_values(s):
+    """R4: every `by` of every agents record."""
+    return {a["by"] for c in _dict(s.get("cards")).values() if isinstance(c, dict)
+            for a in _list(c.get("agents")) if isinstance(a, dict) and isinstance(a.get("by"), str)}
+
+
+def _role(w, branch, by_values):
+    """R5 → (role, card id or None)."""
+    cid = _card_id(w)
+    if cid:
+        return "implementer " + cid, cid
+    if _state_dirty(w.get("status")) or _int(w.get("state_diff_exit")) == 1 or branch in by_values:
+        return "lead", None
+    return "other", None
+
+
+def _upstream(b, f):
+    """R3: upstream text of a worktree block; f = its refs/heads line or None."""
+    if b["branch"] is None:
+        return "detached " + b["head"][:7] if b["detached"] else "?"
+    if not f:
+        return "?"
+    if not f[2]:
+        return "no upstream"
+    t = f[3]
+    if t in ("", "gone"):
+        return "in sync" if t == "" else "gone"
+    m = re.fullmatch(r"(ahead|behind) ([0-9]+)", t)
+    if m:
+        return "%s %s" % (m.group(2), m.group(1))
+    m = re.fullmatch(r"ahead ([0-9]+), behind ([0-9]+)", t)
+    return "%s ahead, %s behind" % m.groups() if m else "?"
+
+
+def _short(upstream):
+    return upstream[len("refs/remotes/"):] if upstream.startswith("refs/remotes/") else upstream
+
+
+def _changed_at(w):
+    """R9: state_mtime when the STATE is dirty (R5a), else state_log_ct."""
+    return _int(w.get("state_mtime")) if _state_dirty(w.get("status")) else _int(w.get("state_log_ct"))
+
+
+def _implementers(c):
+    return [a for a in _list(c.get("agents")) if isinstance(a, dict) and a.get("role") == "implementer"]
+
+
+def _review(c):
+    """R6/R8: the latest qa/security round → (R, its records in list order, last qa, last security)."""
+    recs = [a for a in _list(c.get("agents")) if isinstance(a, dict) and a.get("role") in ("qa", "security")
+            and _int(a.get("round")) is not None]
+    if not recs:
+        return None, [], None, None
+    r = max(_int(a.get("round")) for a in recs)
+    last = [a for a in recs if _int(a.get("round")) == r]
+    qa = [a for a in last if a.get("role") == "qa"]
+    sec = [a for a in last if a.get("role") == "security"]
+    return r, last, (qa[-1] if qa else None), (sec[-1] if sec else None)
+
+
+def _pr(v):
+    """R7: a positive int, or a string matching ^#?[0-9]+$ → int; else None (`merge <sha>` → None)."""
+    n = _int(v)
+    if n is not None:
+        return n if n > 0 else None
+    return _num(v.lstrip("#")) if isinstance(v, str) and PR_TEXT_RE.fullmatch(v) else None
+
+
+def _facts(cid, c, refs, card_wt):
+    """R7: card facts; card_wt = card id → (block, worktree) of the first worktree whose card it is."""
+    b, w = card_wt.get(cid, (None, {}))
+    report = _str(_dict(w.get("files")).get(".delix/report.md"))
+    pr = _pr(c.get("pr"))
+    if pr is None:
+        m = REPORT_PR_RE.search(report)
+        pr = _num(m.group(1)) if m else None
+    m = STATUS_RE.search(report)
+    impl = _implementers(c)
+    branch = impl[-1].get("branch") if impl else None
+    if not isinstance(branch, str):
+        branch = b["branch"] if b else None
+    tip = refs.get("refs/remotes/origin/%s" % branch) if branch is not None else None
+    tier = _int(c.get("tier"))
+    return {"pr": pr, "report_status": m.group(1) if m else None, "branch": branch,
+            "tip": tip[1] if tip else None, "tier": 2 if tier is None else tier}
+
+
+def _queue(s, files, refs, card_wt):
+    """R8: waiting / ready / done of one STATE s; files = the files of that STATE's worktree."""
+    waiting, ready, done = [], [], []
+    cards = _dict(s.get("cards"))
+    for cid in sorted(cards):
+        c = cards[cid]
+        if not isinstance(c, dict):
+            continue
+        f = _facts(cid, c, refs, card_wt)
+        st = _str(c.get("status"))
+        qa, sec = _review(c)[2:]
+        sha = qa.get("sha") if qa else None
+        reviewed = (st == "in_review" and f["pr"] is not None and qa is not None
+                    and qa.get("verdict") in ("ACCEPT", "ACCEPT_WITH_NOTES")
+                    and (f["tier"] < 2 or (sec is not None and sec.get("verdict") in ("CLEAN", "🔐 HUMAN_APPROVAL"))))
+        same_tip = isinstance(sha, str) and f["tip"] == sha
+        reasons = []
+        if reviewed and same_tip:
+            reasons.append("ready to merge")
+            ready.append({"card": cid, "pr": f["pr"], "sha": sha})
+        if st == "open" and f["tier"] == 3:
+            text = files.get(c.get("file")) if isinstance(c.get("file"), str) else None
+            if not isinstance(text, str) or not any(line.startswith(APPROVED) for line in text.split("\n")):
+                reasons.append("tier 3 approval")
+        if f["report_status"] in ("NEEDS_CONTEXT", "BLOCKED") and st in OPEN_STATUSES:
+            reasons.append(f["report_status"].lower())
+        if st == "escalated":
+            reasons.append("escalated")
+        if reviewed and not same_tip:
+            reasons.append("changed after review")
+        if st == "in_review" and f["pr"] is not None and not _list(c.get("agents")):
+            reasons.append("no review record")
+        waiting += [{"card": cid, "verification": None, "reason": r} for r in reasons]
+        if st == "accepted":
+            done.append({"card": cid, "pr": f["pr"]})
+    for v in _list(s.get("verifications")):
+        if isinstance(v, dict) and _str(v.get("verdict")).startswith("FIX") and not _str(v.get("resolution")):
+            waiting.append({"card": None, "verification": v.get("name"), "reason": "verification FIX"})
+    return {"waiting": waiting, "ready": ready, "done": done}
+
+
+def _action(kind, target, card, command, safe, uncommitted=0):
+    """R10: one action; a dirty worktree or a name that fails its pattern gets a note instead of a command."""
+    if uncommitted != 0:
+        command, note = None, "uncommitted %s files: commit or discard in its session" % uncommitted
+    elif not safe:
+        command, note = None, "unsafe name: run by hand"
+    else:
+        note = ""
+    return {"kind": kind, "target": target, "card": card, "command": command, "note": note}
+
+
+def derive(raw):
+    """Rules R (Spec C REQ-6): raw git facts → {agents, leads, queue, actions, fetched_at}. Pure; never raises.
+    tests/fixtures/board_parity.json pins the result for this and for the panel's copy of the rules."""
+    raw = _dict(raw)
+    default = _str(raw.get("default_branch"))
+    now = _int(raw.get("now"))
+    self_path, source = _str(raw.get("self")), _str(raw.get("source"))
+    wts = _dict(raw.get("worktrees"))
+    refs = _refs(raw.get("for_each_ref"))
+    blocks = _blocks(raw.get("worktree_list"))
+    src = _state(wts.get(source))
+    src_cards = _dict(src.get("cards"))
+    by_values = _by_values(src)
+
+    rows, card_wt = [], {}
+    for i, b in enumerate(blocks):
+        w = _dict(wts.get(b["path"]))
+        role, cid = _role(w, b["branch"], by_values)
+        if cid and cid not in card_wt:
+            card_wt[cid] = (b, w)
+        f = refs.get("refs/heads/%s" % b["branch"]) if b["branch"] is not None else None
+        status = w.get("status")
+        rows.append({"i": i, "b": b, "w": w, "role": role, "cid": cid, "ref": f, "upstream": _upstream(b, f),
+                     "uncommitted": len([x for x in status.split("\n") if x]) if isinstance(status, str) else "?",
+                     "ctime": _num(f[4]) if f else None})
+
+    agents = []
+    for r in rows:
+        b, cid, f = r["b"], r["cid"], r["ref"]
+        c = _dict(src_cards.get(cid)) if cid else {}
+        pr = _facts(cid, c, refs, card_wt)["pr"] if cid else None
+        if pr is not None:
+            lands = "PR #%d → %s" % (pr, default)
+        elif f and f[2]:
+            lands = "pushed: " + _short(f[2])
+        else:
+            lands = "local only"
+        impl = _implementers(c)
+        last_round = []
+        if cid and isinstance(src_cards.get(cid), dict):
+            n, last = _review(c)[:2]
+            last_round = ["%s r%d @%s %s · by %s" % (a["role"], n, _str(a.get("sha"))[:7] or "-",
+                                                      _str(a.get("verdict")) or "-", _str(a.get("by")) or "-")
+                          for a in last]
+        agents.append({"path": b["path"], "branch": b["branch"], "main": r["i"] == 0, "role": r["role"], "card": cid,
+                       "upstream": r["upstream"], "uncommitted": r["uncommitted"], "lands": lands,
+                       "opened_by": impl[-1]["by"] if impl and isinstance(impl[-1].get("by"), str) else None,
+                       "last_round": last_round})
+    rank = {"lead": 0, "implementer": 1}
+    agents.sort(key=lambda a: (rank.get(a["role"].split(" ")[0], 2), a["path"]))
+
+    leads = []
+    lead_rows = rows[:1] + sorted((r for r in rows[1:] if r["role"] == "lead"), key=lambda r: r["b"]["path"])
+    for r in lead_rows:
+        b, w = r["b"], r["w"]
+        s = _state(w)
+        files = _dict(w.get("files"))
+        q = _queue(s, files, refs, card_wt)
+        spec = s.get("spec")
+        text = files.get(spec) if isinstance(spec, str) else None
+        title = next((line[2:].rstrip() for line in _str(text).split("\n") if line.startswith("# ")), None)
+        changed = _changed_at(w)
+        last = _latest(r["ctime"], changed)
+        leads.append({"path": b["path"], "branch": b["branch"], "main": r["i"] == 0, "source": b["path"] == source,
+                      "spec_title": title,
+                      "open": len([c for c in _dict(s.get("cards")).values()
+                                   if isinstance(c, dict) and _str(c.get("status")) in OPEN_STATUSES]),
+                      "waiting": len({x["card"] for x in q["waiting"] if x["card"] is not None}),
+                      "ready": len(q["ready"]), "changed_at": changed,
+                      "stale": r["i"] != 0 and last is not None and now is not None and now - last > WEEK})
+
+    queue = _queue(src, _dict(_dict(wts.get(source)).get("files")), refs, card_wt)
+    actions = []
+    for r in rows:
+        b, cid, f, up, path = r["b"], r["cid"], r["ref"], r["upstream"], r["b"]["path"]
+        if r["i"] == 0 or path == self_path:
+            continue
+        br = b["branch"]
+        if br is not None and br != default and up not in ("gone", "?") and (up == "no upstream" or "ahead" in up):
+            actions.append(_action("push", path, cid, "git -C %s push -u origin %s" % (path, br),
+                                   _ok(BRANCH_RE, br) and _ok(PATH_RE, path), r["uncommitted"]))
+        c = src_cards.get(cid) if cid else None
+        merged = isinstance(c, dict) and c.get("status") == "accepted" and isinstance(c.get("merged"), dict)
+        last = _latest(r["ctime"], _changed_at(r["w"])) if r["role"] == "lead" else r["ctime"]
+        aged = (last is not None and now is not None and now - last > WEEK and bool(f and f[2])
+                and (up == "in sync" or re.fullmatch(r"[0-9]+ behind", up) is not None))
+        if merged or aged:
+            actions.append(_action("remove_worktree", path, cid, "git worktree remove %s" % path,
+                                   _ok(PATH_RE, path), r["uncommitted"]))
+    for x in queue["ready"]:
+        actions.append(_action("merge", "#%s" % x["pr"], x["card"],
+                               "gh pr merge %s --squash --match-head-commit %s" % (x["pr"], x["sha"]),
+                               x["pr"] > 0 and _ok(SHA_RE, x["sha"])))
+    checked_out = {b["branch"] for b in blocks if b["branch"] is not None}
+    for cid in sorted(src_cards):
+        c = src_cards[cid]
+        if not isinstance(c, dict) or not isinstance(c.get("merged"), dict):
+            continue
+        br = _facts(cid, c, refs, card_wt)["branch"]
+        f = refs.get("refs/heads/%s" % br) if br is not None else None
+        if f and br not in checked_out and f[1] == c["merged"].get("head"):
+            actions.append(_action("delete_branch", br, cid, "git branch -D %s" % br, _ok(BRANCH_RE, br)))
+    actions.sort(key=lambda a: (a["card"] if a["card"] is not None else a["target"], KIND_ORDER.index(a["kind"])))
+
+    mtimes = [_int(v) for v in _dict(raw.get("fetch_head_mtimes")).values() if _int(v) is not None]
+    return {"agents": agents, "leads": leads, "queue": queue, "actions": actions,
+            "fetched_at": max(mtimes) if mtimes else "never fetched"}
+
+
+def _utc(ts):
+    """Format F time: `YYYY-MM-DD HH:MM UTC`; `?` when unknown."""
+    if _int(ts) is None:
+        return "?"
+    try:
+        return dt.datetime.fromtimestamp(_int(ts), dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    except (OverflowError, OSError, ValueError):
+        return "?"
+
+
+def git_sections(data):
+    """Format F: the Spec C sections under the card table. Every command gets its own one-line bash block."""
+    def cell(x):
+        return str(x).replace("|", "/").replace("\n", " ")
+
+    def code(x):
+        return cell(x).replace("`", "")
+
+    leads = data.get("leads") or []
+    source = next((l["path"] for l in leads if l["source"]), data.get("project"))
+    fetched = data.get("fetched_at")
+    out = ["", "## Leads",
+           f"Card table and queue source: `{code(source)}` · remote data as of the last fetch: "
+           f"{fetched if isinstance(fetched, str) else _utc(fetched)}", "",
+           "| path | branch | spec | open | waiting | ready | STATE changed | stale |",
+           "|---|---|---|---|---|---|---|---|"]
+    for l in leads:
+        tags = (" (main checkout)" if l["main"] else "") + (" (source)" if l["source"] else "")
+        out.append(f"| `{code(l['path'])}`{tags} | {cell(l['branch'] or '-')} | {cell(l['spec_title'] or '-')} | "
+                   f"{l['open']} | {l['waiting']} | {l['ready']} | {_utc(l['changed_at'])} | "
+                   f"{'stale' if l['stale'] else '-'} |")
+    out += ["", "## Agents", "| role | path | branch | upstream | uncommitted | lands | opened by | last round |",
+            "|---|---|---|---|---|---|---|---|"]
+    for a in data.get("agents") or []:
+        role = a["role"] + (" (main checkout)" if a["main"] else "")
+        branch = a["branch"] if a["branch"] is not None else "detached"
+        out.append(f"| {cell(role)} | `{code(a['path'])}` | {cell(branch)} | {cell(a['upstream'])} | "
+                   f"{a['uncommitted']} | {cell(a['lands'])} | {cell(a['opened_by'] or '—')} | "
+                   f"{cell('; '.join(a['last_round']) or '—')} |")
+    queue = data.get("queue") or {}
+    out += ["", "## Waiting on you"]
+    out += [f"- {cell(x['card'])} · {x['reason']}" if x["card"] is not None
+            else f"- {cell(x['verification'])} (verification) · {x['reason']}"
+            for x in queue.get("waiting") or []] or ["none"]
+    out += ["", "## Ready to merge"]
+    out += [f"- {x['card']} · PR #{x['pr']} · reviewed {str(x['sha'])[:7]}" for x in queue.get("ready") or []] or ["none"]
+    out += ["", "## Git actions", "You run these with Desktop's Run button; the lead never runs them."]
+    actions = data.get("actions") or []
+    for a in actions:
+        head = f"**{a['kind']}** `{code(a['target'])}`"
+        out += ["", head, "```bash", a["command"], "```"] if a["command"] else ["", f"{head}: {cell(a['note'])}"]
+    if not actions:
+        out += ["", "none"]
+    return out
+
+
 def collect(root):
     delix = os.path.join(root, "docs", "delix")
     state = read_json(os.path.join(delix, "STATE.json")) or {}
@@ -136,10 +652,11 @@ def collect(root):
             if c.get("wave") is None and fallback.get("wave", "").isdigit():
                 c["wave"] = int(fallback["wave"])
     verifications = [v for v in (state.get("verifications") or []) if isinstance(v, dict)]
+    g = derive(git_raw(root))  # Spec C; the source STATE is this root's (K256)
     if not cards:
         return {"project": root, "spec": state.get("spec"), "size": state.get("size"),
                 "updated": state.get("updated"), "cards": [], "worktree_count": 0,
-                "verifications": verifications}
+                "verifications": verifications, **g}
 
     wave_no = {}
     for i, w in enumerate(state.get("waves") or [], 1):
@@ -189,6 +706,12 @@ def collect(root):
             gates.append("escalated")
         if rstatus in ("NEEDS_CONTEXT", "BLOCKED") and status in OPEN_STATUSES:
             gates.append(rstatus.lower())
+        if isinstance(c.get("agents"), list) and c["agents"]:  # a card with a ledger follows R8 (K254)
+            why = [x["reason"] for x in g["queue"]["waiting"] if x["card"] == cid]
+            gates = ((["🔐"] if "tier 3 approval" in why else []) +
+                     (["merge"] if any(x["card"] == cid for x in g["queue"]["ready"]) else []) +
+                     (["escalated"] if status == "escalated" else []) +
+                     [x for x in why if x in ("needs_context", "blocked")])
         rows.append({
             "wave": wave_no.get(cid, c.get("wave")),
             "id": cid, "role": c.get("role") or "?", "tier": tier if tier is not None else "?",
@@ -201,7 +724,7 @@ def collect(root):
     rows.sort(key=lambda s: (s["wave"] if isinstance(s["wave"], int) else 99, s["id"]))
     return {"project": root, "spec": state.get("spec"), "size": state.get("size"),
             "updated": state.get("updated"), "cards": rows, "worktree_count": len(wts),
-            "verifications": verifications}
+            "verifications": verifications, **g}
 
 
 def verifications_table(records):
@@ -242,6 +765,7 @@ def table(data):
         out += ["**No cards.** `docs/delix/STATE.json` or `docs/delix/tasks/` is missing or empty. "
                 "Start with `/delixcrew:start <request>`, create cards with `/delixcrew:dispatch`.", ""]
         out += verifications_table(data.get("verifications"))
+        out += git_sections(data)
         return "\n".join(out)
     count = {}
     for s in data["cards"]:
@@ -267,6 +791,7 @@ def table(data):
     out.append("**Pending gates:** " + ("; ".join(pending) if pending else "none") +
                "  \n🔐 = Tier 3, interactive session + security approval · merge = gate 2, PR in review, a human merges.")
     out += verifications_table(data.get("verifications"))
+    out += git_sections(data)
     return "\n".join(out) + "\n"
 
 
