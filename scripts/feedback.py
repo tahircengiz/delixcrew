@@ -31,7 +31,7 @@ from urllib.parse import urlsplit
 REPO = "tahircengiz/delixcrew"
 REPO_URL = "https://github.com/" + REPO
 GH_REPO_ARG = "github.com/" + REPO
-SANITIZER_VERSION = "2"
+SANITIZER_VERSION = "3"
 LABELS = {"bug": "bug", "feature": "enhancement"}
 GH_SCRUB = ("GH_HOST", "GH_REPO", "GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TOKEN")
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -46,7 +46,7 @@ BODY_MAX, CODE_LINES_MAX = 8192, 15
 
 # --- REQ-3 sanitizer ----------------------------------------------------------
 ALLOWED_HOSTS = {"github.com", "code.claude.com", "docs.anthropic.com", "anthropic.com", "localhost"}
-RESERVED_TLDS = {"example", "test", "invalid", "localhost"}  # RFC 2606
+RESERVED_TLDS = {"example"}  # K147
 FILE_EXTS = set("""md markdown txt rst py pyc sh bash zsh fish js mjs cjs ts tsx jsx json jsonl yml yaml toml ini cfg conf
 env lock log csv tsv xml html htm css scss sass less svg png jpg jpeg gif webp ico pdf zip tar gz tgz bz2 xz go rs rb java
 kt kts swift c h cc cpp hpp cs php pl lua sql db sqlite ipynb plist patch diff out bak tmp pem crt pub mk gradle vue svelte
@@ -57,20 +57,31 @@ PLACEHOLDER_RE = re.compile(r"(<redacted:[a-z]+>)")
 _SEG = r"[^\s/`'\"<>()\[\],;]"
 HOME_RE = re.compile(r"(?<![\w.~/:<>\]\\-])/(?:Users|home)/[^/\s,;:'\"`()<>]+(?=/|\s|$|[,;:'\"`()<>])")
 WIN_HOME_RE = re.compile(r"(?<![\w])[A-Za-z]:\\Users\\[^\\\s]+", re.IGNORECASE)
-_PATH_LB = r"(?<![\w.~/<>\]\\-])"  # K101: no ':' here, so name:/path is a path; '//' in a URL still is not
+_PATH_LB = r"(?<![\w~])(?<!(?<![\w.])\.)(?<!(?<![\w.])\.\.)"  # K135: not after \w, ~, ./ or ../; URLs are split off first
 ABS_PATH_RE = re.compile(_PATH_LB + "/" + _SEG + r"+(?:/" + _SEG + r"*)+")
 SINGLE_SEG_RE = re.compile(_PATH_LB + "/" + _SEG + r"+(?!/|" + _SEG + ")")  # REQ-12: /srv, /acme:builds
 SKILLS_DIR = os.path.join(SCRIPT_DIR, "..", "skills")
 BUILTIN_COMMANDS = set("""/agents /clear /compact /config /context /cost /doctor /exit /export /help /hooks /init /login
 /logout /mcp /memory /model /permissions /plugin /resume /review /status""".split())
 WIN_ABS_RE = re.compile(r"(?<![\w])[A-Za-z]:\\[^\s]+")
-EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")
+EMAIL_RE = re.compile(r"(?<![\w.%+-])[\w.%+-]+@[\w-]+(?:\.[\w-]+)+")  # REQ-5: one start per run; Unicode
 MAC_RE = re.compile(r"(?<![\w:-])[0-9A-Fa-f]{2}([:-])[0-9A-Fa-f]{2}(?:\1[0-9A-Fa-f]{2}){4}(?![\w:-])")
-IPV4_RE = re.compile(r"(?<![\w.])\d{1,3}(?:\.\d{1,3}){3}(?!\w|\.\d)")
+IPV4_RE = re.compile(r"(?<![^\W_])(?<!\.)\d{1,3}(?:\.\d{1,3}){3}(?!\w|\.\d)")
 IPV6_RE = re.compile(r"(?<![\w:.])[0-9A-Fa-f]*:[0-9A-Fa-f:]*:[0-9A-Fa-f]*(?![\w:])")
-TOKEN_RE = re.compile(r"(?<![\w.@-])[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+(?![\w-])")
-LAST_LABEL_RE = re.compile(r"[A-Za-z][A-Za-z0-9-]*")
+TOKEN_RE = re.compile(r"(?<![\w-])(?<![\w-]\.)[\w-]+(?:\.[\w-]+)+(?![\w-])")  # REQ-3: Unicode labels; also after ".", ".."
+LAST_LABEL_RE = re.compile(r"[^\W\d_][\w-]*")  # REQ-3: any letter first
 DOC_NETS = [ipaddress.ip_network(n) for n in ("192.0.2.0/24", "198.51.100.0/24", "203.0.113.0/24", "2001:db8::/32")]
+UNC_RE = re.compile(r"(?<![\w\\])\\\\[^\s\\]+(?:\\[^\s\\]*)*")
+# REQ-1 URLs (K134, K146): a run of scheme characters or slashes starts a URL only once, so the scan stays linear.
+URL_SCHEME_RE = re.compile(r"(?<![A-Za-z0-9+.\-/:\\])(?:[A-Za-z][A-Za-z0-9+.-]*:)?//")
+URL_NAME_RE = re.compile(r"(?<![\w.@/:\\-])([\w-]+(?:\.[\w-]+)*)(?::(\d{1,5}))?/")
+URL_HOST_OK_RE = re.compile(r"[a-z0-9.-]+|\[[0-9a-f:.]+\]")
+URL_PORT_RE = re.compile(r"(?::[0-9]{1,5})?")
+URL_TAIL_OK_RE = re.compile(r"[A-Za-z0-9._~/-]*(?:\?[A-Za-z0-9._~=&+-]*)?(?:#[A-Za-z0-9._~=&+-]*)?")
+URL_STOP = "`'\"<>()[]"
+_STOP_CLS = re.escape(URL_STOP)
+URL_AUTH_RUN_RE = re.compile(r"(?:\[[^\s/\\?#%s]*\])?[^\s/\\?#%s]*" % (_STOP_CLS, _STOP_CLS))  # [IPv6] kept whole
+URL_RUN_RE = re.compile(r"[^\s%s]*" % _STOP_CLS)
 
 # --- REQ-4 blockers -----------------------------------------------------------
 OPAQUE_RE = re.compile(r"[A-Za-z0-9+=_-]{32,}")  # K81: no '/' or '.'
@@ -165,18 +176,25 @@ def fingerprint(kind, component, title):
 # --- sanitizer ----------------------------------------------------------------
 def is_allowed_host(host):
     h = host.lower().rstrip(".")
+    if not h.isascii():
+        return False  # K137
     labels = h.split(".")
     if h in ALLOWED_HOSTS or labels[-1] in RESERVED_TLDS:
         return True
     return len(labels) >= 2 and labels[-2] == "example" and labels[-1] in ("com", "net", "org")
 
 
+def _looks_like_host(tok):
+    labels = [lab.strip("_-") for lab in tok.split(".")]  # trailing "._" (Markdown italics) is not a label
+    while len(labels) > 1 and not labels[-1]:
+        labels.pop()
+    last = labels[-1]
+    return len(labels) >= 2 and len(last) >= 2 and bool(LAST_LABEL_RE.fullmatch(last)) and last.lower() not in FILE_EXTS
+
+
 def _host_repl(m):
     tok = m.group(0)
-    last = tok.rsplit(".", 1)[-1]
-    if len(last) < 2 or not LAST_LABEL_RE.fullmatch(last) or last.lower() in FILE_EXTS or is_allowed_host(tok):
-        return tok
-    return "<redacted:host>"
+    return "<redacted:host>" if _looks_like_host(tok) and not is_allowed_host(tok) else tok
 
 
 def _ip_allowed(ip):
@@ -203,6 +221,92 @@ def _sub_outside(regex, repl, text):
     """Applies regex only outside <redacted:…> placeholders."""
     parts = PLACEHOLDER_RE.split(text)
     return "".join(p if i % 2 else regex.sub(repl, p) for i, p in enumerate(parts))
+
+
+def _url_allowed(auth, tail, url, term_re):
+    """REQ-1 allowlist; any parse doubt is a denial (fail closed)."""
+    if "@" in auth:
+        return False
+    if auth.startswith("["):
+        cut = auth.find("]") + 1
+        if not cut:
+            return False
+    else:
+        cut = auth.find(":") if ":" in auth else len(auth)
+    host = auth[:cut].lower()
+    if not URL_PORT_RE.fullmatch(auth, cut) or not URL_HOST_OK_RE.fullmatch(host):
+        return False
+    try:
+        if host.startswith("["):
+            ok = _ip_allowed(ipaddress.IPv6Address(host[1:-1]))
+        else:
+            ip = ipaddress.IPv4Address(host)
+            ok = str(ip) == host and _ip_allowed(ip)  # K136: canonical dotted form only
+    except ValueError:
+        ok = is_allowed_host(host)
+    if not ok or not URL_TAIL_OK_RE.fullmatch(tail):
+        return False
+    path = re.split(r"[?#]", tail, maxsplit=1)[0]  # starts with '/' unless empty
+    segs = [p.lower() for p in path.split("/")]
+    if "." in segs or ".." in segs:
+        return False
+    for part in re.split(r"[/?#=&+]", tail):  # K146 allowlist: a dotted part is a file name or a version
+        if any(not (lab.lower() in FILE_EXTS or lab.isdigit()) for lab in part.split(".")[1:]):
+            return False
+    if re.search(r"(?<!\d)\d{1,3}(?:\.\d{1,3}){3}(?!\d)", tail):
+        return False
+    if host.rstrip(".") == "github.com" and path not in ("", "/") and not (
+            segs[1:3] == ["tahircengiz", "delixcrew"] or segs[1] == "anthropics"):
+        return False
+    if any(_looks_like_host(t.group(0)) for t in TOKEN_RE.finditer(tail)) or IPV4_RE.search(tail) or MAC_RE.search(tail):
+        return False
+    return not (term_re and term_re.search(url))
+
+
+def _url_pass(text, term_re, scheme):
+    """One REQ-1 pass (scheme://, //… or host/…, name:port/…); merges adjacent unprotected text."""
+    out, pos, done = [], 0, 0
+    regex = URL_SCHEME_RE if scheme else URL_NAME_RE
+
+    def put(s, keep):
+        if not keep and out and not out[-1][1]:
+            out[-1] = (out[-1][0] + s, False)
+        elif s:
+            out.append((s, keep))
+    while True:
+        m = regex.search(text, pos)
+        if not m:
+            break
+        if scheme:
+            i = m.end()
+            if i == len(text) or text[i].isspace() or (text[i] in URL_STOP and text[i] != "["):
+                pos = i
+                continue
+            prefix = "" if m.group(0) == "//" else m.group(0)
+        else:
+            if not (m.group(2) or _looks_like_host(m.group(1))):
+                pos = m.end()
+                continue
+            i, prefix = m.start(), ""
+        aend = URL_AUTH_RUN_RE.match(text, i).end()
+        end = URL_RUN_RE.match(text, aend).end()
+        while end > i and text[end - 1] in ".,;:":
+            end -= 1
+        ok = ((not scheme or m.group(0)[:-2].lower() in ("", "http:", "https:"))  # only http(s) or no scheme
+              and _url_allowed(text[i:min(aend, end)], text[aend:end], text[m.start():end], term_re))
+        put(text[done:m.start()], False)
+        put(text[m.start():end] if ok else prefix + "<redacted:url>", ok)
+        done = pos = end
+    put(text[done:], False)
+    return out
+
+
+def _url_split(text, term_re):
+    """REQ-1: [(segment, True = allowed URL, untouched)]; denied URLs are already replaced in the other segments."""
+    out = []
+    for s, keep in _url_pass(text, term_re, True):
+        out += [(s, True)] if keep else _url_pass(s, term_re, False)
+    return out
 
 
 def local_terms():
@@ -247,16 +351,20 @@ def plugin_skills():
 
 
 def sanitize(text, term_re):
-    t = unicodedata.normalize("NFKC", text)
-    t = HOME_RE.sub("~", t)
-    t = WIN_HOME_RE.sub("~", t)
-    for regex, repl in ((ABS_PATH_RE, "<redacted:path>"), (SINGLE_SEG_RE, _single_seg_repl), (WIN_ABS_RE, "<redacted:path>"),
-                        (EMAIL_RE, "<redacted:email>"), (MAC_RE, "<redacted:mac>"),
-                        (IPV4_RE, _ipv4_repl), (IPV6_RE, _ipv6_repl), (TOKEN_RE, _host_repl)):
-        t = _sub_outside(regex, repl, t)
-    if term_re:
-        t = _sub_outside(term_re, "<redacted:term>", t)
-    return t
+    out = []
+    for t, keep in _url_split(unicodedata.normalize("NFKC", text), term_re):
+        if not keep:
+            t = HOME_RE.sub("~", t)
+            t = WIN_HOME_RE.sub("~", t)
+            for regex, repl in ((ABS_PATH_RE, "<redacted:path>"), (SINGLE_SEG_RE, _single_seg_repl),
+                                (WIN_ABS_RE, "<redacted:path>"), (UNC_RE, "<redacted:path>"),
+                                (EMAIL_RE, "<redacted:email>"), (MAC_RE, "<redacted:mac>"),
+                                (IPV4_RE, _ipv4_repl), (IPV6_RE, _ipv6_repl), (TOKEN_RE, _host_repl)):
+                t = _sub_outside(regex, repl, t)
+            if term_re:
+                t = _sub_outside(term_re, "<redacted:term>", t)
+        out.append(t)
+    return "".join(out)
 
 
 # --- REQ-4 checks -------------------------------------------------------------
@@ -291,6 +399,13 @@ def code_lines(body):
 def bad_char(c):
     """Cc (except newline and tab), Cf and Co can make the terminal show other text than is sent."""
     return c not in "\n\t" and unicodedata.category(c) in ("Cc", "Cf", "Co")
+
+
+def tty_escape(s):
+    """K139: every non-printable character (newline, tab, U+2028, lone surrogate…) becomes a visible escape."""
+    return "".join(c if c.isprintable() else
+                   "\\x%02x" % ord(c) if ord(c) <= 0xFF else
+                   "\\u%04x" % ord(c) if ord(c) <= 0xFFFF else "\\U%08x" % ord(c) for c in s)
 
 
 def build(rec, records, config, bad_ids=()):
@@ -456,7 +571,7 @@ def cmd_add(_args):
             r["last_seen"] = now()
             r["origin_terms"] = list(r.get("origin_terms") or []) + [t for t in terms if t not in (r.get("origin_terms") or [])]
             write_json(record_path(r["id"]), r)
-            print("%s duplicate (count %d, %s)" % (r["id"], r["count"], r.get("status")))
+            print("%s duplicate (count %d, %s)" % (tty_escape(str(r["id"])), r["count"], tty_escape(str(r.get("status")))))
             return 0
     n = max([int(RECORD_RE.match(r["id"] + ".json").group(1)) for r in records if ID_RE.match(str(r.get("id", "")))] or [0]) + 1
     ts = now()
@@ -510,8 +625,8 @@ def cmd_status(_args):
 def cmd_list(_args):
     records, bad = load_records()
     rows = [("id", "kind", "component", "count", "status", "title")]
-    rows += [(str(r.get("id", "")), str(r.get("kind", "")), str(r.get("component", "")), str(r.get("count", "")),
-              str(r.get("status", "")), str(r.get("title", ""))) for r in records]
+    rows += [tuple(tty_escape(str(r.get(k, ""))) for k in ("id", "kind", "component", "count", "status", "title"))
+             for r in records]
     w = [max(len(row[i]) for row in rows) for i in range(5)]
     for row in rows:
         print("  ".join(row[i].ljust(w[i]) for i in range(5)) + "  " + row[5])

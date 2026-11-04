@@ -18,7 +18,7 @@ writes(){ grep -cE '^ARGS: (issue (comment|edit|close)|label create)' "$T/gh.log
 last_body_is(){ python3 -c 'import json,sys; s=json.load(open(sys.argv[1])); print(s["issues"][sys.argv[2]]["comments"][-1]["body"]==sys.argv[3])' "$T/state.json" "$1" "$2"; }
 sha12(){ python3 -c 'import hashlib,sys; print(hashlib.sha256((sys.argv[1]+"\n"+sys.argv[2]).encode("utf-8")).hexdigest()[:12])' "$1" "$2"; }
 hash_(){ # comment, issue_sha, issue, decision
-  python3 -c 'import hashlib,json,sys; print(hashlib.sha256(json.dumps({"repo":"tahircengiz/delixcrew","issue":int(sys.argv[3]),"issue_sha":sys.argv[2],"decision":sys.argv[4],"comment":sys.argv[1],"sanitizer_version":"2"},sort_keys=True,ensure_ascii=False,separators=(",",":")).encode("utf-8")).hexdigest()[:12])' "$@"; }
+  python3 -c 'import hashlib,json,sys; print(hashlib.sha256(json.dumps({"repo":"tahircengiz/delixcrew","issue":int(sys.argv[3]),"issue_sha":sys.argv[2],"decision":sys.argv[4],"comment":sys.argv[1],"sanitizer_version":"3"},sort_keys=True,ensure_ascii=False,separators=(",",":")).encode("utf-8")).hexdigest()[:12])' "$@"; }
 # TTY: input arrives on a pty; stdin is held open briefly so macOS script does not send EOF first.
 tty_run(){ local input="$1"; shift
   if script --version >/dev/null 2>&1; then { printf '%s\n' "$input"; sleep 1; } | script -qec "$(printf '%q ' "$@")" /dev/null
