@@ -518,7 +518,10 @@ gevşedi).
   PR #51'de (`4165ee0`) düzeltti; lead doğrulaması ACCEPT (`docs/delix/verifications/2026-11-04-pr51.md`), kullanıcı
   merge etti (`9ad1a97`, ağacı doğrulanan birleşim ağacıyla aynı). Rapordaki Low: config.json 1 MiB'tan büyük ya da
   32 seviyeden derinse triage `preview` kullanıcının gizli terimlerini sessizce düşürür (bozuk JSON'da bu zaten böyle);
-  izleyen iş "Triage: okunamayan config'te gizli terimler için BLOCKED" oturumunda (2026-11-04 başladı).
+  PR #53 (`0a8942a`) bunu kapattı: config var ama okunamıyorsa triage `preview`/`apply` BLOCKED, exit 4; lead
+  doğrulaması ACCEPT (`docs/delix/verifications/2026-11-04-pr53.md`), merge kullanıcıda. Lead'in ölçtüğü üç eski Low
+  kalıyor (izleyen iş): `extra_terms` liste değilse `strict` bile `[]` verir; feedback `preview`/`send` strict değil;
+  `enable`/`disable` okunamayan config'in üzerine varsayılanı yazıp terimleri sessizce siler.
   `scripts/board.py` kendi `read_json`'unu kullanır, sağlamlaştırılmadı (P2).
 - `scripts/bash_gate.py:19-20` yorumu muafiyeti yalnız `feedback.py add` için anlatıyor (P2, korumalı yol; sonraki
   bash_gate kartına).

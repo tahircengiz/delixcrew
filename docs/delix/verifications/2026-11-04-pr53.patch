@@ -1,0 +1,166 @@
+diff --git a/README.md b/README.md
+index 7625ffd..1495caa 100644
+--- a/README.md
++++ b/README.md
+@@ -287,7 +287,9 @@ work. Re-running `apply` after a failed step does only the steps still missing.
+ 
+ **What blocks a comment** (`VERDICT: BLOCKED: <reason>`, `preview` exits 4, no command is given): the issue changed
+ since it was triaged; an `@` mention, HTML or a character reference in the reason or questions; invisible characters; a
+-`gitleaks` finding, or `gitleaks` missing or failing; a 32+ character opaque string. The comment is built only from the recorded reason, questions and
++`gitleaks` finding, or `gitleaks` missing or failing; a 32+ character opaque string; a feedback `config.json` (your
++`--terms`) that is there but not a readable JSON object (malformed, over 1 MiB or 32 levels deep, not a regular file),
++so the comment is never redacted without your terms. The comment is built only from the recorded reason, questions and
+ duplicate number, never from the issue text.
+ 
+ **From issue to work.** `/delixcrew:start #12` takes only an issue triaged as `accepted` whose title and body are
+diff --git a/README.tr.md b/README.tr.md
+index dd070f4..98d523c 100644
+--- a/README.tr.md
++++ b/README.tr.md
+@@ -288,7 +288,9 @@ Bir adım başarısız olduktan sonra `apply` yeniden çalıştırılırsa yaln
+ 
+ **Yorumu ne engeller** (`VERDICT: BLOCKED: <neden>`, `preview` 4 ile çıkar, komut verilmez): triage'dan sonra issue
+ değişmişse; gerekçe ya da sorularda `@` mention, HTML ya da karakter referansı; görünmez karakterler; bir `gitleaks`
+-bulgusu, ya da `gitleaks`'in olmaması veya hata vermesi; 32+ karakterlik opak dizi. Yorum yalnız kaydedilmiş gerekçe,
++bulgusu, ya da `gitleaks`'in olmaması veya hata vermesi; 32+ karakterlik opak dizi; feedback `config.json`'ı
++(`--terms` terimleriniz) var ama okunabilir bir JSON nesnesi değilse (bozuk, 1 MiB'tan büyük ya da 32 seviyeden derin,
++normal dosya değil), çünkü yorum terimleriniz olmadan redakte edilmez. Yorum yalnız kaydedilmiş gerekçe,
+ sorular ve kopya numarasından kurulur, asla issue metninden değil.
+ 
+ **Issue'dan işe.** `/delixcrew:start #12` yalnız `accepted` olarak triage edilmiş ve başlığı ile gövdesi kabulden beri
+diff --git a/scripts/feedback.py b/scripts/feedback.py
+index dfb582d..968e77d 100644
+--- a/scripts/feedback.py
++++ b/scripts/feedback.py
+@@ -168,9 +168,21 @@ def ensure_queue():
+     os.makedirs(queue_dir(), mode=0o700, exist_ok=True)
+ 
+ 
+-def load_config():
+-    c = read_json(os.path.join(queue_dir(), "config.json"))
++def load_config(strict=False):
++    """The config, or the defaults when config.json is missing or not a readable JSON object. strict (triage): None
++    instead of the defaults when config.json is there but unusable, so the caller fails closed rather than redact
++    without the user's extra_terms."""
++    path = os.path.join(queue_dir(), "config.json")
++    c = read_json(path)
+     if not isinstance(c, dict):
++        if strict:
++            try:
++                os.lstat(path)
++                return None  # there, but unusable
++            except FileNotFoundError:
++                pass  # missing: the defaults, as before
++            except OSError:
++                return None  # cannot tell: fail closed
+         return {"enabled": False, "extra_terms": []}
+     terms = c.get("extra_terms")
+     return {"enabled": c.get("enabled") is True,
+diff --git a/scripts/triage.py b/scripts/triage.py
+index bda1e68..31b1ff9 100644
+--- a/scripts/triage.py
++++ b/scripts/triage.py
+@@ -303,9 +303,10 @@ def build(n, rec, live_sha):
+     if decision == "duplicate":
+         parts += ["", "Duplicate of #%d" % rec["duplicate_of"]]
+     raw = "\n".join(parts)
+-    term_re = term_regex(set(load_config()["extra_terms"]) | local_terms())
++    config = load_config(strict=True)  # None: config.json is there but unusable; never redact without its extra_terms
++    term_re = term_regex(set(config["extra_terms"] if config else ()) | local_terms())
+     comment = sanitize(raw, term_re)
+-    reasons = []
++    reasons = [] if config else ["feedback config.json unreadable; fix it so its extra_terms apply"]
+     if live_sha != rec["issue_sha"]:
+         reasons.append("issue changed since triage; triage again")
+     for r in (gitleaks(unicodedata.normalize("NFKC", raw)), gitleaks(comment)):
+diff --git a/tests/triage_config_tests.sh b/tests/triage_config_tests.sh
+new file mode 100644
+index 0000000..2905c7d
+--- /dev/null
++++ b/tests/triage_config_tests.sh
+@@ -0,0 +1,85 @@
++#!/usr/bin/env bash
++# Unreadable feedback config.json in scripts/triage.py (PR #51 verification, Low). Run: bash tests/triage_config_tests.sh
++# preview and apply stop with a BLOCKED reason instead of building the comment without the user's extra_terms; a
++# missing config.json still means no extra terms. No network: gh (one read-only issue) and gitleaks are stubs on PATH.
++set -u
++ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"; S="$ROOT/scripts"; FAIL=0
++T="$(cd "$(mktemp -d)" && pwd -P)"
++unset DELIXCREW_FEEDBACK_DIR
++export DELIXCREW_TRIAGE_DIR="$T/tri" HOME="$T/home" USER="alice-test" TRT="$T"
++mkdir -p "$HOME/.claude/delixcrew/feedback" "$T/stub"; : > "$T/gh.log"
++ok(){ echo "✔ $1"; }; bad(){ echo "✘ $1"; FAIL=1; }
++field(){ printf '%s\n' "$1" | tr -d '\r' | sed -n "s/^$2: //p" | head -1; }
++# guard kills the command after 5 s (rc 124): a FIFO that blocks open() fails the test instead of hanging the suite.
++guard(){ python3 -c 'import subprocess, sys
++try:
++    sys.exit(subprocess.run(sys.argv[1:], timeout=5).returncode)
++except subprocess.TimeoutExpired:
++    sys.exit(124)' "$@"; }
++tg(){ guard python3 "$S/triage.py" "$@"; }
++others(){ grep -vc '^ARGS: issue view ' "$T/gh.log"; }  # gh calls other than the read
++
++cat > "$T/stub/gitleaks" <<'SH'
++#!/bin/sh
++cat >/dev/null
++exit 0
++SH
++cat > "$T/stub/gh" <<'PY'
++#!/usr/bin/env python3
++import json, os, sys
++a = sys.argv[1:]
++with open(os.path.join(os.environ["TRT"], "gh.log"), "a") as f:
++    f.write("ARGS: " + " ".join(a) + "\n")
++if a[:3] != ["issue", "view", "-R"] or a[4:5] != ["17"] or "--json" not in a:
++    sys.stderr.write("stub: unsupported " + " ".join(a) + "\n"); sys.exit(1)
++full = {"title": "Copy the marker", "body": "Body.", "state": "OPEN",
++        "url": "https://github.com/tahircengiz/delixcrew/issues/17", "author": {"login": "someone-else"},
++        "labels": [], "comments": []}
++print(json.dumps({k: full[k] for k in a[a.index("--json") + 1].split(",")}))
++PY
++chmod +x "$T/stub/"*; export PATH="$T/stub:$PATH"
++
++CFG="$HOME/.claude/delixcrew/feedback/config.json"
++printf '{"enabled":false,"extra_terms":["acme"]}' > "$CFG"; cp "$CFG" "$T/cfg.bak"
++ISHA=$(python3 -c 'import hashlib; print(hashlib.sha256(b"Copy the marker\nBody.").hexdigest()[:12])')
++J="{\"issue_sha\":\"$ISHA\",\"decision\":\"defer\",\"reason\":\"Ship it to the acme team; mail bob@example.com.\"}"
++out=$(printf '%s' "$J" | python3 "$S/triage.py" record 17 2>&1) || bad "setup: record 17 ($out)"
++CFGB="VERDICT: BLOCKED: feedback config.json unreadable; fix it so its extra_terms apply"
++
++pv=$(tg preview 17); rc=$?; H=$(field "$pv" HASH)
++[ $rc -eq 0 ] && echo "$pv" | grep -q "^VERDICT: CLEAN" && echo "$pv" | grep -qF "Ship it to the <redacted:term> team;" \
++  && ok "config.json readable: preview CLEAN, acme redacted" || bad "config.json readable: preview (rc=$rc, $(echo "$pv" | grep VERDICT))"
++
++badcfg(){ # name, kind (broken / fifo / big / deep / array); config.json is made that way, then restored
++  rm -f "$CFG"
++  case "$2" in
++    broken) printf '{"enabled":false,"extra_terms":["acme"]' > "$CFG";;
++    fifo) mkfifo "$CFG";;
++    big) python3 -c 'import sys; open(sys.argv[1], "w").write(open(sys.argv[2]).read() + " " * (1 << 20))' "$CFG" "$T/cfg.bak";;
++    deep) python3 -c 'import json, sys
++x = 1
++for _ in range(40):
++    x = [x]
++open(sys.argv[1], "w").write(json.dumps({"enabled": False, "extra_terms": ["acme"], "x": x}))' "$CFG";;
++    array) printf '["acme"]' > "$CFG";;
++  esac
++  pv=$(tg preview 17 2>&1); rc=$?
++  [ $rc -eq 4 ] && [ "$(echo "$pv" | grep '^VERDICT')" = "$CFGB" ] && ! echo "$pv" | grep -qE '^(HASH:|---$)|Triage:|acme' \
++    && ok "config.json $1: preview BLOCKED, exit 4, no comment" || bad "config.json $1: preview (rc=$rc, $(echo "$pv" | tail -1))"
++  : > "$T/gh.log"; out=$(tg apply 17 --confirm "$H" </dev/null 2>&1); rc=$?
++  [ $rc -eq 4 ] && [ "$(echo "$out" | grep '^VERDICT')" = "$CFGB" ] && ! echo "$out" | grep -q acme && [ "$(others)" = 0 ] \
++    && ok "config.json $1: apply with the earlier HASH stops, exit 4, no gh write" || bad "config.json $1: apply (rc=$rc, $(echo "$out" | tail -1))"
++  rm -f "$CFG"; cp "$T/cfg.bak" "$CFG"; }
++badcfg "malformed JSON"                   broken
++badcfg "FIFO at the config path"          fifo
++badcfg "valid config padded past 1 MiB"   big
++badcfg "valid config 41 levels deep"      deep
++badcfg "valid JSON that is not an object" array
++
++rm -f "$CFG"; pv=$(tg preview 17); rc=$?
++[ $rc -eq 0 ] && echo "$pv" | grep -q "^VERDICT: CLEAN" && echo "$pv" | grep -qF "Ship it to the acme team;" \
++  && ok "no config.json: preview CLEAN without extra terms (unchanged)" || bad "no config.json: preview (rc=$rc, $(echo "$pv" | grep VERDICT))"
++cp "$T/cfg.bak" "$CFG"; [ "$(field "$(tg preview 17)" HASH)" = "$H" ] && ok "config.json restored: preview HASH as before" \
++  || bad "config.json restored: HASH changed"
++
++rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
