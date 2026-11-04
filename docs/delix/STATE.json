@@ -1,10 +1,44 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-04T14:00:00Z",
+  "updated": "2026-11-04T15:00:00Z",
   "env_owner": null,
-  "waves": [],
-  "cards": {},
+  "waves": [
+    {
+      "wave": 1,
+      "cards": [
+        "T020"
+      ],
+      "note": "SPEC feedback filter gaps (gate 1 2026-11-04, K159-K172). 🔐: Approved line before dispatch; interactive session."
+    },
+    {
+      "wave": 2,
+      "cards": [
+        "T021"
+      ],
+      "note": "after T020 merged (claim check runs on merged main code). Tier 1 docs; fill <T020 merge sha> in T021.dispatch.md."
+    }
+  ],
+  "cards": {
+    "T020": {
+      "file": "docs/delix/tasks/T020-feedback-filter-gaps.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T021": {
+      "file": "docs/delix/tasks/T021-feedback-docs-sync.md",
+      "role": "docs",
+      "tier": 1,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    }
+  },
   "status_values": [
     "open",
     "in_progress",
