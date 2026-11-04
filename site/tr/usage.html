@@ -26,7 +26,7 @@
 </header>
 <main id="main" class="wrap">
 <header class="hero sm">
-  <div class="kicker"><span class="ver" data-version="0.6.2">delixcrew 0.6.2</span><span>Kurulum ve günlük kullanım</span></div>
+  <div class="kicker"><span class="ver" data-version="0.6.3">delixcrew 0.6.3</span><span>Kurulum ve günlük kullanım</span></div>
   <h1>Nasıl kullanılır</h1>
   <p class="lede">delixCrew bir Claude Code plugin'idir. Kurduktan sonra işi tek bir istekle başlatırsın. Ekip lideri sonraki adımı her seferinde önerir ve iki kapıda senin kararını bekler. Bu sayfa kurulumu, ilk işi, komutları, projede oluşan dosyaları ve bilinen sınırları anlatır. Sistemin nasıl çalıştığı <a href="index.html">Nedir</a> sayfasında.</p>
 </header>
@@ -92,7 +92,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
     <li><h3><code>/delixcrew:start &lt;istek&gt;</code></h3><p>Ekip lideri <code>CLAUDE.md</code>, <code>STATUS.md</code> ve <code>docs/delix/</code>'i okur. <strong>Boy</strong> (S/M/L, süreç ağırlığı) ve <strong>kademe</strong> (1/2/3, risk) önerir ve <code>docs/delix/</code> klasörünü kurar. S için tek bir kart yazılır. İyi tarif edilmiş S ya da M boyunda, en çok Tier 2 bir iş için tam akış yerine tek oturum ve <code>/delixcrew:verify</code> önerilir.</p></li>
     <li><h3><code>/delixcrew:spec</code> · boy M ve L</h3><p>Grill her seferinde tek soru sorar ve her soruya önerisini ekler. Sonuç <code>docs/delix/SPEC.md</code>'dir: gereksinimler <code>SHALL</code> ve <code>WHEN/THEN</code> biçiminde. Spec'i architect inceler, Tier 3'te security de. UI işinde spec <code>DESIGN.md</code>'ye ya da reponun token dosyasına bağlanır; ikisi de yoksa <code>DESIGN.md</code> üretilir.</p></li>
     <li class="gate"><h3>Kapı 1 · spec onayı</h3><p>Spec'i (S'de kartı) sen onaylarsın. Tier 3 kartlar için ayrıca sohbette açıkça "evet" dersin; ekip lideri kartın başına <code>**🔐 Approved:** &lt;tarih&gt; &lt;kim&gt;</code> satırını yazar ve main'e commit eder.</p></li>
-    <li><h3><code>/delixcrew:dispatch</code></h3><p>architect kartları ve wave planını yazar, Files listelerinin çakışmadığını denetler. Her kart için bir dispatch prompt'u (<code>docs/delix/tasks/T&lt;nnn&gt;.dispatch.md</code>) üretilir ve oturumun nasıl açılacağı söylenir. Aynı anda en çok 3 kart çalışır. Tier 1–2 kartlar terminalde headless <code>claude -p</code> ile, Tier 3 kartlar etkileşimli bir oturumda açılır. Her repoda bir kez, ilk oturumdan önce, Stop gate komutlarını ana checkout'ta kendi terminalinden onaylarsın: <code>python3 &lt;plugin dir&gt;/scripts/trust.py allow</code>, sonra <code>TRUST &lt;hash&gt;</code> yazarak (sonraki sürümle gelecek).</p></li>
+    <li><h3><code>/delixcrew:dispatch</code></h3><p>architect kartları ve wave planını yazar, Files listelerinin çakışmadığını denetler. Her kart için bir dispatch prompt'u (<code>docs/delix/tasks/T&lt;nnn&gt;.dispatch.md</code>) üretilir ve oturumun nasıl açılacağı söylenir. Aynı anda en çok 3 kart çalışır. Tier 1–2 kartlar terminalde headless <code>claude -p</code> ile, Tier 3 kartlar etkileşimli bir oturumda açılır. Her repoda bir kez, ilk oturumdan önce, Stop gate komutlarını ana checkout'ta kendi terminalinden onaylarsın: <code>python3 &lt;plugin dir&gt;/scripts/trust.py allow</code>, sonra <code>TRUST &lt;hash&gt;</code> yazarak.</p></li>
     <li><h3><code>/delixcrew:implement &lt;kart&gt;</code> · uygulayıcı oturumu</h3><p>Dispatch prompt'u bu skill'i çağırır; elle yazman gerekmez. Uygulayıcı önce başarısız bir test yazar, yalnız kartın Files listesine dokunur, doğrulama komutunu koşar, PR açar ve <code>.delix/report.md</code>'yi doldurur. Stop hook, testler geçmeden turu kapatmaz.</p></li>
     <li><h3><code>/delixcrew:review &lt;kart&gt;</code></h3><p>Önce deterministik kapılar: test sonucu, CI, gitleaks. Sonra sıfır bağlamla qa, Tier 2 ve üstünde security de. Yalnız ciddi bulgular (P0/P1) düzeltme turu açar; en çok 3 tur, sonra karar sende.</p></li>
     <li class="gate"><h3>Kapı 2 · merge</h3><p>PR'ı sen merge edersin; ekip lideri <code>gh pr merge</code> çalıştırmaz. Kart <code>accepted</code> olur ve sıradaki wave açılır.</p></li>
@@ -230,7 +230,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
         <li><code>delixcrew: python3 not found on PATH</code> görüyorsan Python 3'ü kur ya da plugin'i kapat: <code>claude plugin disable delixcrew@delixcrew</code>.</li>
         <li>Güncelleme gelmiyorsa: kurulu kopya yalnız sürüm değişince yenilenir. <code>marketplace update</code>, <code>plugin update</code> ve yeniden başlatma üçlüsünü yap.</li>
         <li>PR açılmıyorsa: <code>gh</code> kurulu ve giriş yapılmış mı bak. Uzak repo yoksa commit'ler kart dalında kalır.</li>
-        <li>Uygulayıcı "commands not approved" ile <code>BLOCKED</code> bildiriyorsa: raporundaki <code>trust.py allow</code> komutunu o checkout'ta kendi terminalinden çalıştır (sonraki sürümle gelecek).</li>
+        <li>Uygulayıcı "commands not approved" ile <code>BLOCKED</code> bildiriyorsa: raporundaki <code>trust.py allow</code> komutunu o checkout'ta kendi terminalinden çalıştır.</li>
         <li>Plugin'in kendisinde bir hata bulduysan <a href="#feedback">feedback</a> akışını kullan ya da GitHub'da elle bir <a href="https://github.com/tahircengiz/delixcrew/issues">issue</a> aç.</li>
       </ul>
     </div>
@@ -239,7 +239,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
 </section>
 
 <footer>
-  <p><span data-version="0.6.2">delixcrew 0.6.2</span> · durum 2026-11-04. Bu sayfa README'den ve skill dosyalarından derlendi. MIT lisansı.</p>
+  <p><span data-version="0.6.3">delixcrew 0.6.3</span> · durum 2026-11-04. Bu sayfa README'den ve skill dosyalarından derlendi. MIT lisansı.</p>
   <p>Kaynak kod ve issue'lar: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="../usage.html" hreflang="en">English</a></p>
   <p>Ziyaret istatistiği: bu site sayfa görüntülemelerini, bakımcının kendi sunucusunda çalışan ve Cloudflare üzerinden stats.delix.dev adresinden sunulan Umami ile sayar. Çerez kullanmaz; kişisel veri satılmaz ya da paylaşılmaz.</p>
   <p class="src"><b>Kaynak:</b> CLAUDE.md (Site analytics) · tests/site_tests.sh</p>

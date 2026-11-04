@@ -26,7 +26,7 @@
 </header>
 <main id="main" class="wrap">
 <header class="hero sm">
-  <div class="kicker"><span class="ver" data-version="0.6.2">delixcrew 0.6.2</span><span>Install and everyday use</span></div>
+  <div class="kicker"><span class="ver" data-version="0.6.3">delixcrew 0.6.3</span><span>Install and everyday use</span></div>
   <h1>How to use</h1>
   <p class="lede">delixCrew is a Claude Code plugin. Once it is installed, you start work with a single request. The lead proposes each next step and waits for your decision at two gates. This page covers installation, the first job, the commands, the files it creates in your project and the known limits. How the system works is on the <a href="index.html">What it is</a> page.</p>
 </header>
@@ -92,7 +92,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
     <li><h3><code>/delixcrew:start &lt;request&gt;</code></h3><p>The lead reads <code>CLAUDE.md</code>, <code>STATUS.md</code> and <code>docs/delix/</code>. It proposes a <strong>size</strong> (S/M/L, process weight) and a <strong>tier</strong> (1/2/3, risk) and sets up <code>docs/delix/</code>. For S a single card is written. For well-described work of size S or M and at most Tier 2, it proposes a single session plus <code>/delixcrew:verify</code> instead of the full flow.</p></li>
     <li><h3><code>/delixcrew:spec</code> · size M and L</h3><p>The grill asks one question at a time and adds its recommendation to each. The result is <code>docs/delix/SPEC.md</code>, with requirements in <code>SHALL</code> and <code>WHEN/THEN</code> form. The architect reviews the spec, and security too at Tier 3. For UI work the spec links <code>DESIGN.md</code> or the repo's token file, and produces <code>DESIGN.md</code> when neither exists.</p></li>
     <li class="gate"><h3>Gate 1 · spec approval</h3><p>You approve the spec (the card, for S). For Tier 3 cards you also say an explicit "yes" in chat; the lead writes the <code>**🔐 Approved:** &lt;date&gt; &lt;who&gt;</code> line into the card header and commits it to main.</p></li>
-    <li><h3><code>/delixcrew:dispatch</code></h3><p>The architect writes the cards and the wave plan and checks that Files lists do not overlap. Each card gets a dispatch prompt (<code>docs/delix/tasks/T&lt;nnn&gt;.dispatch.md</code>) and you are told how to open its session. At most 3 cards run at once. Tier 1–2 cards open headless with <code>claude -p</code> in a terminal, Tier 3 cards in an interactive session. Once per repository, before the first session, you approve the Stop gate commands in the main checkout from your own terminal: <code>python3 &lt;plugin dir&gt;/scripts/trust.py allow</code>, typing <code>TRUST &lt;hash&gt;</code> (coming in the next release).</p></li>
+    <li><h3><code>/delixcrew:dispatch</code></h3><p>The architect writes the cards and the wave plan and checks that Files lists do not overlap. Each card gets a dispatch prompt (<code>docs/delix/tasks/T&lt;nnn&gt;.dispatch.md</code>) and you are told how to open its session. At most 3 cards run at once. Tier 1–2 cards open headless with <code>claude -p</code> in a terminal, Tier 3 cards in an interactive session. Once per repository, before the first session, you approve the Stop gate commands in the main checkout from your own terminal: <code>python3 &lt;plugin dir&gt;/scripts/trust.py allow</code>, typing <code>TRUST &lt;hash&gt;</code>.</p></li>
     <li><h3><code>/delixcrew:implement &lt;card&gt;</code> · implementer session</h3><p>The dispatch prompt calls this skill; you do not type it. The implementer writes a failing test first, touches only the card's Files list, runs the verification command, opens a PR and fills in <code>.delix/report.md</code>. The Stop hook does not end the turn until the tests pass.</p></li>
     <li><h3><code>/delixcrew:review &lt;card&gt;</code></h3><p>First the deterministic gates: test result, CI, gitleaks. Then qa with zero context, plus security at Tier 2 and above. Only serious findings (P0/P1) open a fix round; at most 3 rounds, then the decision is yours.</p></li>
     <li class="gate"><h3>Gate 2 · merge</h3><p>You merge the PR; the lead never runs <code>gh pr merge</code>. The card becomes <code>accepted</code> and the next wave opens.</p></li>
@@ -230,7 +230,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
         <li>If you see <code>delixcrew: python3 not found on PATH</code>, install Python 3 or disable the plugin: <code>claude plugin disable delixcrew@delixcrew</code>.</li>
         <li>No update arriving: the installed copy refreshes only when the version changes. Run <code>marketplace update</code>, <code>plugin update</code> and restart.</li>
         <li>No PR opened: check that <code>gh</code> is installed and signed in. Without a remote the commits stay on the card branch.</li>
-        <li>The implementer reports <code>BLOCKED</code> with "commands not approved": run the <code>trust.py allow</code> command from its report in that checkout, from your own terminal (coming in the next release).</li>
+        <li>The implementer reports <code>BLOCKED</code> with "commands not approved": run the <code>trust.py allow</code> command from its report in that checkout, from your own terminal.</li>
         <li>Found a fault in the plugin itself? Use the <a href="#feedback">feedback</a> flow or open an <a href="https://github.com/tahircengiz/delixcrew/issues">issue</a> on GitHub by hand.</li>
       </ul>
     </div>
@@ -239,7 +239,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
 </section>
 
 <footer>
-  <p><span data-version="0.6.2">delixcrew 0.6.2</span> · as of 2026-11-04. Compiled from the README and the skill files. MIT licence.</p>
+  <p><span data-version="0.6.3">delixcrew 0.6.3</span> · as of 2026-11-04. Compiled from the README and the skill files. MIT licence.</p>
   <p>Source code and issues: <a href="https://github.com/tahircengiz/delixcrew">github.com/tahircengiz/delixcrew</a> · <a href="tr/usage.html" hreflang="tr">Türkçe</a></p>
   <p>Visit statistics: this site counts page views with Umami, self-hosted by the maintainer and served through Cloudflare at stats.delix.dev. It sets no cookies; no personal data is sold or shared.</p>
   <p class="src"><b>Source:</b> CLAUDE.md (Site analytics) · tests/site_tests.sh</p>
