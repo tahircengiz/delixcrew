@@ -93,6 +93,53 @@ claude plugin install delix-board@delixcrew
 üretilir, `.gitignore`'da). Uygulayıcı worktree'sinde `.delix/card` (hook'ları aktifleştirir), `.delix/report.md`,
 `.delix/test-result.txt`, `.delix/evidence/`.
 
+## Bu plugin makinende ne yapar
+
+Yerelde ne çalışır, neyi yazar, ağa ne zaman çıkar. Geri bildirim taslağının içeriği ve nereye gittiği
+[Veri ve gizlilik](#veri-ve-gizlilik) bölümünde; hook'ların nerede durduğu [Bilinen sınırlar](#bilinen-sınırlar)
+bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
+
+**Hook'lar** ([`hooks/hooks.json`](hooks/hooks.json)) plugin'in etkin olduğu her oturumda yüklenir:
+- `Write|Edit|MultiEdit|NotebookEdit` için `PreToolUse`, [`scripts/write_gate.py`](scripts/write_gate.py)'yi çalıştırır.
+  Her oturumda aşağıdaki geri bildirim ve triage dizinlerine yazmayı reddeder; inceleyici agent'lar için her yazmayı
+  reddeder. Uygulayıcı worktree'sinde ayrıca worktree dışına, karta ve `docs/delix/**`'a, onaylı kartı olmayan korumalı
+  yola ve mevcut test dosyasına yazmayı reddeder.
+- `Bash` için `PreToolUse`, [`scripts/bash_gate.py`](scripts/bash_gate.py)'yi çalıştırır. Her oturumda bilinen gönderme
+  ve uygulama yollarını reddeder (`feedback.py send`, `triage.py apply`, `script` gibi terminal sarmalayıcıları ve bu
+  repoyu hedefleyen yazan `gh issue`, `gh label` ya da `gh api` çağrıları). security inceleyicisi yalnız izinli bir
+  tarayıcı ya da okuma komutuyla başlayan ve bilinen hiçbir yazma kalıbına uymayan komutları çalıştırabilir; bu bir kalıp
+  denetimidir, sandbox değildir. Diğer inceleyicilere Bash verilmez. Uygulayıcı worktree'sinde korumalı yola kabuk
+  yazmasını reddeder ve her `git commit`'ten önce `gitleaks protect --staged` çalıştırır.
+- `Stop`, [`scripts/stop_gate.py`](scripts/stop_gate.py)'yi yalnız uygulayıcı worktree'sinde çalıştırır: projenin
+  `docs/delix/delix.json` dosyasındaki `test_command` ve `extra_checks` komutlarını kabukta çalıştırır; bunlar geçene
+  dek tur bitmez. Bu komutlar plugin'in değil, projenizin komutlarıdır.
+- Uygulayıcı worktree'si, work tree kökünde yerel ve git'in izlemediği bir `.delix/card` bulunan worktree'dir
+  ([`scripts/common.py`](scripts/common.py)). `python3` yoksa iki `PreToolUse` hook'u da engeller (bkz.
+  [Gereksinimler](#gereksinimler)).
+
+**Yazdığı dosyalar**
+- Projenizde: `docs/delix/` (spec, kartlar, `cost_usd` alanlarıyla `STATE.json`, doğrulama raporları); ekip lideri
+  skill'leri yazar ve `.gitignore`'da değildir, yani commit ettiğinizde reponuz kadar açık olur; `docs/delix/BOARD.md`
+  yalnız `board.py --write` ile (`.gitignore`'da). Uygulayıcı worktree'sinde: `.delix/report.md`,
+  `.delix/test-result.txt`, `.delix/evidence/` ve `gitleaks` yoksa `.delix/warnings.log`.
+- Ev dizininizde: geri bildirim kuyruğu `~/.claude/delixcrew/feedback/` (dizin `0700`, dosyalar `0600`) ve triage
+  kayıtları `~/.claude/delixcrew/triage/<n>.json`.
+- Geçici: `/delixcrew:verify` çalışma alanı `${TMPDIR:-/tmp}/delix-verify-<ad>/` ve `feedback.py send` ile
+  `triage.py apply`'ın `gh`'ye verdiği issue ya da yorum gövdesi; çağrıdan sonra silinir.
+
+**Ağa ne zaman çıkar.** Hook betikleri kendileri bağlantı açmaz; `git` ve `gitleaks`'i yerelde çalıştırır. Stop kapısı
+projenizin kendi komutlarını çalıştırır (yukarıda); onların ağ kullanımı kendilerinindir. Bunların dışında ağı şu
+komutlar kullanır, her biri sizin hesaplarınızla:
+- Bir skill söylediğinde Claude çalıştırır: `triage.py index|show|record|preview` bu reponun issue'larını
+  `gh issue list|view` ile okur (`/delixcrew:triage`, `/delixcrew:start #<n>`); projenizin remote'unda `gh repo view`,
+  `gh pr create` (uygulayıcı) ve `gh pr checks` (inceleme); `delix.json`'daki `verify.remote` host'una `ssh` ve `rsync`,
+  yalnız o blok varsa (`/delixcrew:verify`, `/delixcrew:review`); `claude -p` ile başsız uygulayıcı oturumları
+  (`/delixcrew:dispatch` ve `/delixcrew:review`'daki düzeltme turu). Claude `gh pr merge` çalıştırmaz.
+- Yalnız siz, kendi terminalinizde çalıştırırsınız (TTY ve elle yazılmış `SEND <hash>` ya da `APPLY <hash>` ister):
+  `feedback.py send` (`gh issue list`, `gh issue create`) ve `triage.py apply` (`gh label`,
+  `gh issue comment|edit|close`). İkisi de `github.com/tahircengiz/delixcrew`'a sabittir ve ortamdan `GH_HOST` ile
+  `GH_REPO`'yu çıkarır.
+
 ## Geri bildirim
 
 delixcrew'un kendisi sorun çıkardığında (bir hook doğru işi reddeder, bir skill adımı yazıldığı gibi uygulanamaz, bir
@@ -286,3 +333,5 @@ açılır; bu satırı yalnız ekip lideri, kullanıcının sohbetteki açık "e
 ## Lisans
 
 MIT, bkz. [LICENSE](LICENSE). Kaynak ve issue'lar: <https://github.com/tahircengiz/delixcrew>.
+Anthropic ile bağlantılı değildir ve Anthropic tarafından onaylanmamıştır. Olduğu gibi, garantisiz sunulur (bkz.
+[LICENSE](LICENSE)).

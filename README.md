@@ -93,6 +93,52 @@ claude plugin install delix-board@delixcrew
 on request, in `.gitignore`). In the implementer worktree: `.delix/card` (activates the hooks), `.delix/report.md`,
 `.delix/test-result.txt`, `.delix/evidence/`.
 
+## What this plugin does on your machine
+
+What runs locally, what it writes and when it uses the network. What a feedback draft contains and where it goes is in
+[Data & privacy](#data--privacy); where the hooks stop is in [Known limits](#known-limits). Security reports:
+[SECURITY.md](SECURITY.md).
+
+**Hooks** ([`hooks/hooks.json`](hooks/hooks.json)) load in every session where the plugin is enabled:
+- `PreToolUse` on `Write|Edit|MultiEdit|NotebookEdit` runs [`scripts/write_gate.py`](scripts/write_gate.py). In every
+  session it denies writes into the feedback and triage directories below; for the reviewer agents it denies every
+  write. In an implementer worktree it also denies writes outside the worktree, to the card and `docs/delix/**`, to a
+  protected path without an approved card, and to an existing test file.
+- `PreToolUse` on `Bash` runs [`scripts/bash_gate.py`](scripts/bash_gate.py). In every session it denies the known send
+  and apply paths (`feedback.py send`, `triage.py apply`, terminal wrappers such as `script`, and writing `gh issue`,
+  `gh label` or `gh api` calls aimed at this repository). The security reviewer may run only commands that start with an
+  allowlisted scanner or read command and match no known write pattern; this is a pattern check, not a sandbox. The
+  other reviewers get no Bash. In an implementer worktree it denies shell writes into a protected path and runs
+  `gitleaks protect --staged` before every `git commit`.
+- `Stop` runs [`scripts/stop_gate.py`](scripts/stop_gate.py), only in an implementer worktree: it runs `test_command`
+  and `extra_checks` from the project's `docs/delix/delix.json` through the shell, and the turn does not end until they
+  pass. These are your project's commands, not the plugin's.
+- An implementer worktree is one with a local, untracked `.delix/card` at the work-tree root
+  ([`scripts/common.py`](scripts/common.py)). Without `python3` both `PreToolUse` hooks block (see
+  [Requirements](#requirements)).
+
+**Files it writes**
+- In your project: `docs/delix/` (spec, cards, `STATE.json` with its `cost_usd` fields, verification reports), written
+  by the lead skills and not git-ignored, so once you commit them they are as public as your repository;
+  `docs/delix/BOARD.md` only with `board.py --write` (git-ignored). In the implementer worktree: `.delix/report.md`,
+  `.delix/test-result.txt`, `.delix/evidence/`, and `.delix/warnings.log` when `gitleaks` is missing.
+- In your home directory: the feedback queue `~/.claude/delixcrew/feedback/` (directory `0700`, files `0600`) and the
+  triage records `~/.claude/delixcrew/triage/<n>.json`.
+- Temporary: the `/delixcrew:verify` workspace `${TMPDIR:-/tmp}/delix-verify-<name>/`, and the issue or comment body
+  that `feedback.py send` and `triage.py apply` hand to `gh`, deleted after the call.
+
+**When it uses the network.** The hook scripts open no connection of their own; they run `git` and `gitleaks` locally.
+The Stop gate runs your project's own commands (above), whatever network they use. Beyond those, the network is used
+by these commands, each with your own accounts:
+- Claude runs them when a skill says so: `triage.py index|show|record|preview` read issues of this repository with
+  `gh issue list|view` (`/delixcrew:triage`, `/delixcrew:start #<n>`); `gh repo view`, `gh pr create` (implementer) and
+  `gh pr checks` (review) on your project's remote; `ssh` and `rsync` to the `verify.remote` host in `delix.json`, only
+  when that block exists (`/delixcrew:verify`, `/delixcrew:review`); headless implementer sessions with `claude -p`
+  (`/delixcrew:dispatch`, and a fix round in `/delixcrew:review`). Claude does not run `gh pr merge`.
+- Only you run them, in your own terminal (they need a TTY and a typed `SEND <hash>` or `APPLY <hash>`):
+  `feedback.py send` (`gh issue list`, `gh issue create`) and `triage.py apply` (`gh label`,
+  `gh issue comment|edit|close`). Both are fixed to `github.com/tahircengiz/delixcrew` and drop `GH_HOST` and `GH_REPO` from the environment.
+
 ## Feedback
 
 When delixcrew itself misbehaves (a hook rejects correct work, a skill step cannot be followed as written, you work
@@ -288,3 +334,4 @@ the card's header table; only the lead writes it, after the user's explicit "yes
 ## License
 
 MIT, see [LICENSE](LICENSE). Source and issues: <https://github.com/tahircengiz/delixcrew>.
+Not affiliated with or endorsed by Anthropic. Provided as is, without warranty (see [LICENSE](LICENSE)).
