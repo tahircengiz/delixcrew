@@ -515,11 +515,20 @@ gevşedi).
 - REQ-2 "exit 8 her durumda": `RecursionError` verecek kadar derin bir kayıt `show --require accepted`'ı exit 1 ve
   traceback ile bitirir (`scripts/feedback.py` `read_json` yalnız `OSError`/`ValueError` yakalar). Yerel yazma ister,
   `/start` yine durur. T023 oturumunun açtığı "Kayıt okumayı derin JSON ve FIFO'ya karşı sağlamlaştır" oturumu bunu
-  ele alıyor; PR'ı gelince ayrı incelenir.
+  PR #51'de (`4165ee0`) düzeltti; lead doğrulaması ACCEPT (`docs/delix/verifications/2026-11-04-pr51.md`), kullanıcı
+  merge etti (`9ad1a97`, ağacı doğrulanan birleşim ağacıyla aynı). Rapordaki Low: config.json 1 MiB'tan büyük ya da
+  32 seviyeden derinse triage `preview` kullanıcının gizli terimlerini sessizce düşürür (bozuk JSON'da bu zaten böyle);
+  PR #53 (`0a8942a`) bunu kapattı: config var ama okunamıyorsa triage `preview`/`apply` BLOCKED, exit 4; lead
+  doğrulaması ACCEPT (`docs/delix/verifications/2026-11-04-pr53.md`), kullanıcı merge etti (`f7969f3`, ağacı
+  doğrulanan ağaçla aynı). Lead'in ölçtüğü üç eski Low
+  kalıyor (izleyen iş): `extra_terms` liste değilse `strict` bile `[]` verir; feedback `preview`/`send` strict değil;
+  `enable`/`disable` okunamayan config'in üzerine varsayılanı yazıp terimleri sessizce siler.
+  `scripts/board.py` kendi `read_json`'unu kullanır, sağlamlaştırılmadı (P2).
 - `scripts/bash_gate.py:19-20` yorumu muafiyeti yalnız `feedback.py add` için anlatıyor (P2, korumalı yol; sonraki
   bash_gate kartına).
 - SPEC §8'deki iki P2 açık kalır: triage kuralı (a) argv listesi biçimi; README.md:312-313 ifadesi.
-- GitHub Security Advisory yayımlanmadı (taslak lead'de; yayın kullanıcıda, K194).
+- GitHub Security Advisory GHSA-r43g-fqh7-qv2h GitHub'da gizli taslak (2026-11-04, kullanıcı açtı; severity low,
+  CWE-88, etkilenen 0.5.0–0.6.2, patched version boş); yayın kullanıcıda, düzeltmeyi içeren sürüm etiketlenince (K194).
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-04T17:10:00Z",
+  "updated": "2026-11-04T16:39:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -175,6 +175,46 @@
       "qa": "ACCEPT_WITH_NOTES",
       "security": "CLEAN",
       "cost_usd": null
+    },
+    {
+      "name": "pr51",
+      "date": "2026-11-04",
+      "sha": "4165ee0",
+      "base": "e2a82db",
+      "input": "PR #51",
+      "tier": 2,
+      "verdict": "ACCEPT",
+      "report": "docs/delix/verifications/2026-11-04-pr51.md",
+      "gates": {
+        "gitleaks": "PASS (pre-existing 1 in archive)",
+        "local": "PASS 8/8",
+        "remote_unit": "not run",
+        "full": "not run"
+      },
+      "qa": "ACCEPT",
+      "security": "CLEAN",
+      "cost_usd": null,
+      "resolution": "merged 9ad1a97"
+    },
+    {
+      "name": "pr53",
+      "date": "2026-11-04",
+      "sha": "0a8942a",
+      "base": "9ad1a97",
+      "input": "PR #53",
+      "tier": 2,
+      "verdict": "ACCEPT",
+      "report": "docs/delix/verifications/2026-11-04-pr53.md",
+      "gates": {
+        "gitleaks": "PASS (pre-existing 1 in archive)",
+        "local": "PASS 9/9",
+        "remote_unit": "not run",
+        "full": "not run"
+      },
+      "qa": "ACCEPT",
+      "security": "CLEAN",
+      "cost_usd": null,
+      "resolution": "merged f7969f3"
     }
   ],
   "archive": [
