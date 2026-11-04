@@ -262,6 +262,10 @@ for c in 'python3 -ic/x/feedback.py add' 'python3 "-ic/x/feedback.py" add' 'pyth
   deny "T024 option-like path [$c], body drives feedback send" bash_gate.py "$(hd "$c <<'EOF'" "$PSF" 'EOF')"
   deny "T024 option-like path [$c], body drives triage apply"  bash_gate.py "$(hd "$c <<'EOF'" "$PST" 'EOF')"
 done
+for c in 'python3 ^x/feedback.py add' 'python3 ^x/triage.py record 12'; do # zsh extendedglob: ^x/… can expand to -ic/…
+  deny "T024 glob path [$c], body drives feedback send" bash_gate.py "$(hd "$c <<'EOF'" "$PSF" 'EOF')"
+  deny "T024 glob path [$c], body drives triage apply"  bash_gate.py "$(hd "$c <<'EOF'" "$PST" 'EOF')"
+done
 XT='python3 scripts/triage.py apply 12 --confirm abc'; XF='python3 scripts/feedback.py send F001 --confirm abc'
 xtricks(){ # label, carrier call without the heredoc operator, the other script's write call
   local w="$1" c="$2" p="$3"

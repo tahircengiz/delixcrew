@@ -21,12 +21,12 @@ FEEDBACK_DENY = "delixcrew: feedback is sent only by the user from their own ter
 # The path is literal (no `$`, nothing the shell expands); each path part is one repeated character class, so a
 # failing fullmatch cannot backtrack exponentially (ReDoS). Any other shape is checked as full text.
 _QPATH = r"\"(?!-)(?:[^\"\n$`\\]*/)?feedback\.py\""
-_PATH = r"(?!-)(?:[^\s'\"$`\\;&|<>(){}#*?\[\]~]*/)?feedback\.py"
+_PATH = r"(?!-)(?:[^\s'\"$`\\;&|<>(){}#*?\[\]~^]*/)?feedback\.py"
 ADD_HEREDOC = re.compile(r"(python3[ \t]+(?:" + _QPATH + "|" + _PATH + r")[ \t]+add[ \t]+<<(['\"])([A-Za-z_][\w.-]*)\2)"
                          r"\n(.*)\n\3", re.S)
 # The same shape for exactly one `python3 <path>/triage.py record <n> <<'DELIM'` call.
 _TQPATH = r"\"(?!-)(?:[^\"\n$`\\]*/)?triage\.py\""
-_TPATH = r"(?!-)(?:[^\s'\"$`\\;&|<>(){}#*?\[\]~]*/)?triage\.py"
+_TPATH = r"(?!-)(?:[^\s'\"$`\\;&|<>(){}#*?\[\]~^]*/)?triage\.py"
 RECORD_HEREDOC = re.compile(r"(python3[ \t]+(?:" + _TQPATH + "|" + _TPATH + r")[ \t]+record[ \t]+\d+[ \t]+<<(['\"])"
                             r"([A-Za-z_][\w.-]*)\2)\n(.*)\n\3", re.S)
 # REQ-3 (#36, K182, K187): no path starts with `-` (`python3 -ic<dir>/feedback.py` runs the body as code); one
