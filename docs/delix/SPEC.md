@@ -309,3 +309,7 @@ kararlar:
   bilinmez, uyarı yoluna düşer (fail closed). Stop gate yolu aynı depoda yardımcıyı çalıştırmadı (0664b81).
 - **K224** (lead, geri alınır; T026 security tur 1 Low): `delix.json` okuması FIFO'da takılmaz (`O_NONBLOCK` + `S_ISREG`);
   onay sonrası "approved" satırı da `json.dumps` ile.
+- **K225** (lead, geri alınır; T026 security tur 2 Low/unsure): 3 tur sınırında düzeltme turu açılmadı, iki sertleştirme
+  takip işine kaldı: `test-result.txt` FIFO'sunda Stop gate'in takılması (`O_NONBLOCK` + `S_ISREG`) ve `load_trust`'ta
+  `st_nlink != 1` reddi. Known limits'e (T028): `GIT_NO_LAZY_FETCH` git 2.44+ ister; Mac'te `/usr/bin/git` 2.54 (lead ölçtü).
+

@@ -646,4 +646,14 @@ Read only this card and SPEC REQ-1–REQ-4, §4–§6 and §9.
   - a `UnicodeDecodeError` from git output makes `allow` crash with exit 1, and nothing is approved;
   - with an unapproved list and a symlinked or hardlinked result file, stderr has 4 lines instead of 3.
 - Unsure (security), not reproduced: a sparse index together with a promisor remote could make `ls-files` in `card_path` lazy-fetch. K223's env setting covers this on git 2.44 and later.
+- Round 2 (1150a8b): deterministic gates green.
+  - The lead re-ran all suites from `git archive 1150a8b`: 9/9 pass. The merge tree with main (T027 included) passes 10/10, and also under Python 3.13.
+  - The new test lines are insertions only.
+  - All four PoCs fail closed on the merged tree. `diff.external` and promisor lazy fetch both give `allow` exit 6 with no MARK. The archive with its own `.git` and the symlinked `.git` both give Stop exit 2 with no MARK.
+  - qa: ACCEPT_WITH_NOTES (0 P0, 0 P1). Its P2s are the same as in round 1. The card's `43` count in Verification is outdated, because rounds 1 and 2 added tests.
+  - security: 🔐 HUMAN_APPROVAL, with no Critical, High or Medium finding.
+- [Low, follow-up, K225] `scripts/stop_gate.py:18`: a FIFO at `.delix/test-result.txt` hangs the gate until the hook timeout. This is not new: main's `open(..., "w")` does the same.
+- [unsure, follow-up, K225] `load_trust` has no `st_nlink` check. A hardlink to the record would need a Bash step that gets past the trust (c) substring rule.
+- [unsure, resolved here] The `GIT_NO_LAZY_FETCH` env needs git 2.44 or later. The lead measured that the hooks on this Mac use `/usr/bin/git` 2.54.0. Older git goes into Known limits (T028).
+- Gate 2: to the user.
 
