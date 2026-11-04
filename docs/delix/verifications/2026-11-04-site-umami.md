@@ -86,3 +86,5 @@ Live evidence (outside the gates, recorded by the session that did the work):
 **ACCEPT** · All gates that ran are PASS or a pre-existing finding. qa has no P0/P1 and security has nothing above Low. The
 two P2 notes and the Low (optional CSP) are for the user to decide; to re-check after a change, run
 `/delixcrew:verify <input>` again.
+
+User decision (2026-11-04, in chat): the security Low (no CSP/SRI) is accepted as is, and no CSP is added.
