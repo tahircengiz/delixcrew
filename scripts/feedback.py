@@ -66,15 +66,15 @@ BUILTIN_COMMANDS = set("""/agents /clear /compact /config /context /cost /doctor
 WIN_ABS_RE = re.compile(r"(?<![\w])[A-Za-z]:\\[^\s]+")
 EMAIL_RE = re.compile(r"(?<![\w.%+-])[\w.%+-]+@[\w-]+(?:\.[\w-]+)+")  # REQ-5: one start per run; Unicode
 MAC_RE = re.compile(r"(?<![\w:-])[0-9A-Fa-f]{2}([:-])[0-9A-Fa-f]{2}(?:\1[0-9A-Fa-f]{2}){4}(?![\w:-])")
-IPV4_RE = re.compile(r"(?<![^\W_])(?<!\.)\d{1,3}(?:\.\d{1,3}){3}(?!\w|\.\d)")
-IPV6_RE = re.compile(r"(?<![\w:.])[0-9A-Fa-f]*:[0-9A-Fa-f:]*:[0-9A-Fa-f]*(?![\w:])")
+IPV4_RE = re.compile(r"(?<![^\W_])(?<!\.)\d{1,3}(?:\.\d{1,3}){3}(?![^\W_]|\.\d)")
+IPV6_RE = re.compile(r"(?<![^\W_]|[:.])[0-9A-Fa-f]*:[0-9A-Fa-f:]*:[0-9A-Fa-f]*(?![^\W_]|:)")
 TOKEN_RE = re.compile(r"(?<![\w-])(?<![\w-]\.)[\w-]+(?:\.[\w-]+)+(?![\w-])")  # REQ-3: Unicode labels; also after ".", ".."
 LAST_LABEL_RE = re.compile(r"[^\W\d_][\w-]*")  # REQ-3: any letter first
 DOC_NETS = [ipaddress.ip_network(n) for n in ("192.0.2.0/24", "198.51.100.0/24", "203.0.113.0/24", "2001:db8::/32")]
 UNC_RE = re.compile(r"(?<![\w\\])\\\\[^\s\\]+(?:\\[^\s\\]*)*")
 # REQ-1 URLs (K134, K146): a run of scheme characters or slashes starts a URL only once, so the scan stays linear.
 URL_SCHEME_RE = re.compile(r"(?<![A-Za-z0-9+.\-/:\\])(?:[A-Za-z][A-Za-z0-9+.-]*:)?//")
-URL_NAME_RE = re.compile(r"(?<![\w.@/:\\-])([\w-]+(?:\.[\w-]+)*)(?::(\d{1,5}))?/")
+URL_NAME_RE = re.compile(r"(?<![\w.@/-])([\w-]+(?:\.[\w-]+)*)(?::(\d{1,5}))?/")
 URL_HOST_OK_RE = re.compile(r"[a-z0-9.-]+|\[[0-9a-f:.]+\]")
 URL_PORT_RE = re.compile(r"(?::[0-9]{1,5})?")
 URL_TAIL_OK_RE = re.compile(r"[A-Za-z0-9._~/-]*(?:\?[A-Za-z0-9._~=&+-]*)?(?:#[A-Za-z0-9._~=&+-]*)?")
@@ -82,6 +82,10 @@ URL_STOP = "`'\"<>()[]"
 _STOP_CLS = re.escape(URL_STOP)
 URL_AUTH_RUN_RE = re.compile(r"(?:\[[^\s/\\?#%s]*\])?[^\s/\\?#%s]*" % (_STOP_CLS, _STOP_CLS))  # [IPv6] kept whole
 URL_RUN_RE = re.compile(r"[^\s%s]*" % _STOP_CLS)
+# REQ-1b (K168, K171): ":…" or "/…" right after a placeholder is a path; it ends at whitespace or a URL stop character.
+AFTER_PH_RE = re.compile(r"(<redacted:(?:host|ip|email|mac)>)[:/][^\s%s]+" % _STOP_CLS)
+# REQ-1c: plain-text github.com/… goes through the same owner allowlist as a URL.
+GH_PLAIN_RE = re.compile(r"(?<![\w-])(github\.com)(/[^\s%s]*)" % _STOP_CLS, re.IGNORECASE)
 
 # --- REQ-4 blockers -----------------------------------------------------------
 OPAQUE_RE = re.compile(r"[A-Za-z0-9+=_-]{32,}")  # K81: no '/' or '.'
@@ -204,8 +208,8 @@ def _ip_allowed(ip):
 def _ipv4_repl(m):
     try:
         ip = ipaddress.IPv4Address(m.group(0))
-    except ValueError:
-        return m.group(0)
+    except ValueError:  # K172: leading zeros with every octet ≤ 255 fail closed
+        return "<redacted:ip>" if all(int(o) <= 255 for o in m.group(0).split(".")) else m.group(0)
     return m.group(0) if _ip_allowed(ip) else "<redacted:ip>"
 
 
@@ -284,7 +288,8 @@ def _url_pass(text, term_re, scheme):
                 continue
             prefix = "" if m.group(0) == "//" else m.group(0)
         else:
-            if not (m.group(2) or _looks_like_host(m.group(1))):
+            after_sep = m.start() > 0 and text[m.start() - 1] in ":\\"  # REQ-1a (K169): there only a dotted host
+            if not (_looks_like_host(m.group(1)) if after_sep else (m.group(2) or _looks_like_host(m.group(1)))):
                 pos = m.end()
                 continue
             i, prefix = m.start(), ""
@@ -342,6 +347,19 @@ def _single_seg_repl(m):
     return "<redacted:path>" + tok[len(core):]
 
 
+def _trail(s):
+    """The trailing .,;: of s, which a redaction keeps."""
+    return s[len(s.rstrip(".,;:")):]
+
+
+def _gh_plain_repl(m):
+    """REQ-1c: only tahircengiz/delixcrew, anthropics/… and a bare github.com/ stay."""
+    segs = m.group(2).rstrip(".,;:").lower().split("/")
+    if segs[1:3] == ["tahircengiz", "delixcrew"] or segs[1] == "anthropics" or m.group(2) == "/":
+        return m.group(0)
+    return m.group(1) + "<redacted:path>" + _trail(m.group(2))
+
+
 def plugin_skills():
     """Directory names under the plugin's skills/, read at run time; empty if unreadable (fail-closed)."""
     try:
@@ -361,6 +379,8 @@ def sanitize(text, term_re):
                                 (EMAIL_RE, "<redacted:email>"), (MAC_RE, "<redacted:mac>"),
                                 (IPV4_RE, _ipv4_repl), (IPV6_RE, _ipv6_repl), (TOKEN_RE, _host_repl)):
                 t = _sub_outside(regex, repl, t)
+            t = _sub_outside(GH_PLAIN_RE, _gh_plain_repl, t)
+            t = AFTER_PH_RE.sub(lambda m: m.group(1) + "<redacted:path>" + _trail(m.group(0)), t)  # on the placeholders
             if term_re:
                 t = _sub_outside(term_re, "<redacted:term>", t)
         out.append(t)
@@ -401,6 +421,34 @@ def bad_char(c):
     return c not in "\n\t" and unicodedata.category(c) in ("Cc", "Cf", "Co")
 
 
+# K133: allowlist. Every character is a newline, L*, N*, P*, S* or Zs; minus these invisible ones (Hangul fillers,
+# blank Braille, null notehead U+1D159) and the conjoining Hangul jungseong/jongseong ranges (inclusive) that NFKC
+# leaves uncomposed. One emoji selector (U+FE0E/U+FE0F) may follow a visible So symbol (emoji such as U+2764).
+INVISIBLE_IN_ALLOWED = {chr(c) for c in (0x115F, 0x1160, 0x3164, 0xFFA0, 0x2800, 0x1D159)}
+INVISIBLE_RANGES = ((0x1160, 0x11FF), (0xD7B0, 0xD7FF))
+SELECTORS = (chr(0xFE0E), chr(0xFE0F))
+
+
+def visible(c):
+    cat = unicodedata.category(c)
+    o = ord(c)
+    return c == "\n" or cat == "Zs" or (cat[0] in "LNPS" and c not in INVISIBLE_IN_ALLOWED
+                                        and not any(lo <= o <= hi for lo, hi in INVISIBLE_RANGES))
+
+
+def invisible(text, extra=""):
+    """K133: True if text has a character outside the allowlist (one emoji selector after a visible So symbol passes)."""
+    prev = None
+    for c in text:
+        if c in SELECTORS:
+            if prev is None or unicodedata.category(prev) != "So" or not visible(prev):  # else a hidden-data channel
+                return True
+        elif c not in extra and not visible(c):
+            return True
+        prev = c
+    return False
+
+
 def tty_escape(s):
     """K139: every non-printable character (newline, tab, U+2028, lone surrogate…) becomes a visible escape."""
     return "".join(c if c.isprintable() else
@@ -433,6 +481,9 @@ def build(rec, records, config, bad_ids=()):
     ])
     body = main + "\n\ndelixcrew-fp: " + rec.get("fingerprint", "")
     content = {"repo": REPO, "label": LABELS.get(rec.get("kind"), "bug"), "title": title, "body": body}
+    lone = raw_vals + [str(rec.get("kind", "")), str(rec.get("fingerprint", ""))]
+    if any(unicodedata.category(c) == "Cs" for x in lone for c in x):  # REQ-3: no gitleaks, no hash
+        return content, ["invisible character"], ""
 
     raw = unicodedata.normalize("NFKC", "\n".join(raw_vals))
     clean = title + "\n" + main
@@ -442,6 +493,8 @@ def build(rec, records, config, bad_ids=()):
             reasons.append(r)
     if any(bad_char(c) for c in "\n".join(raw_vals) + clean):
         reasons.append("unicode control character (Cc/Cf/Co)")
+    if invisible(raw, "\t") or invisible(clean, "\t"):  # REQ-3 (K170): tab is allowed in feedback only
+        reasons.append("invisible character")
     try:
         fp_ok = rec.get("fingerprint") == fingerprint(rec.get("kind"), rec.get("component"), rec.get("title"))
     except (TypeError, AttributeError):
@@ -482,6 +535,8 @@ def validate(d):
         return "repro: must be a list of strings"
     for k in ("component", "title", "actual", "expected", "context", "repro"):
         vals = d.get(k) if k == "repro" else [d.get(k) or ""]
+        if any(unicodedata.category(c) == "Cs" for x in vals for c in x):
+            return "%s: lone surrogate" % k
         if any(unicodedata.category(c) == "Cc" and c not in "\n\t" for x in vals for c in x):
             return "%s: control character (only newline and tab allowed)" % k
     for k in ("component", "title"):
@@ -566,14 +621,14 @@ def cmd_add(_args):
     terms = origin_terms(os.getcwd())
     records, _ = load_records()
     for r in records:
-        if r.get("fingerprint") == fp:
+        if r.get("fingerprint") == fp and isinstance(r.get("id"), str) and ID_RE.fullmatch(r["id"]):
             r["count"] = int(r.get("count", 1)) + 1
             r["last_seen"] = now()
             r["origin_terms"] = list(r.get("origin_terms") or []) + [t for t in terms if t not in (r.get("origin_terms") or [])]
             write_json(record_path(r["id"]), r)
             print("%s duplicate (count %d, %s)" % (tty_escape(str(r["id"])), r["count"], tty_escape(str(r.get("status")))))
             return 0
-    n = max([int(RECORD_RE.match(r["id"] + ".json").group(1)) for r in records if ID_RE.match(str(r.get("id", "")))] or [0]) + 1
+    n = max([int(RECORD_RE.match(r["id"] + ".json").group(1)) for r in records if ID_RE.fullmatch(str(r.get("id", "")))] or [0]) + 1
     ts = now()
     meta = plugin_meta()
     while True:
@@ -636,7 +691,7 @@ def cmd_list(_args):
 
 
 def get_record(rid, records):
-    if not ID_RE.match(rid):
+    if not ID_RE.fullmatch(rid):
         return None
     return next((r for r in records if r.get("id") == rid), None)
 

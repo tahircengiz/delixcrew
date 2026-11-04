@@ -155,6 +155,50 @@ cat > "$T/r3_absent.txt" <<'EOF'
 _The build runs on jenkins.acme-corp.internal._
 on jenkins.acme-corp.internal.__
 EOF
+# T020 (SPEC REQ-1, REQ-2, REQ-6): path after a host, IP edge forms, pinned path cases.
+cat > "$T/t020_req1_exact.txt" <<'EOF'
+key:ci.acme-corp.net/api/x	key:<redacted:url>
+ref:github.com/acme/private	ref:<redacted:url>
+x\ci.acme-corp.net/api/x	x\<redacted:url>
+user@ci.acme-corp.net/api/x	<redacted:email><redacted:path>
+see 10.1.2.3/api/x	see <redacted:ip><redacted:path>
+a/ci.acme-corp.net:8080/api/x	a/<redacted:host><redacted:path>
+ci.acme-corp.net:acme/private	<redacted:host><redacted:path>
+git@github.com:acme/private	<redacted:email><redacted:path>
+vendor/github.com/acme/private-lib/x.go	vendor/github.com<redacted:path>
+~/src/github.com/acme/private	~/src/github.com<redacted:path>
+(@github.com/acme/private)	(@github.com<redacted:path>)
+see x.acme-corp.net: ok	see <redacted:host>: ok
+nas:/volume1/x	nas:<redacted:path>
+de:ad:be:ef:00:11/x	<redacted:mac><redacted:path>
+see 10.1.2.3/api/x.	see <redacted:ip><redacted:path>.
+vendor/github.com/acme/x,	vendor/github.com<redacted:path>,
+10.1.2.0/24	<redacted:ip><redacted:path>
+fd00::/64	<redacted:ip><redacted:path>
+10.1.2.3:8080	<redacted:ip><redacted:path>
+fd12:3456:789a:1:2:3:4:5/64	<redacted:ip><redacted:path>
+EOF
+cat > "$T/t020_req1_kept.txt" <<'EOF'
+see github.com/tahircengiz/delixcrew/issues/1.
+go github.com/anthropics/x
+github.com/
+a/b
+w/o
+a:b:8080/x
+EOF
+cat > "$T/t020_req2_exact.txt" <<'EOF'
+10.20.30.40_	<redacted:ip>_
+fd00:1:2::3_	<redacted:ip>_
+_fd00:1:2::3	_<redacted:ip>
+host 010.001.002.003	host <redacted:ip>
+v1.2.3.4	v1.2.3.4
+1.2.3.4a	1.2.3.4a
+999.1.1.1	999.1.1.1
+EOF
+cat > "$T/t020_req6_exact.txt" <<'EOF'
+a//b	a/<redacted:path>
+>/Users/alice/x	><redacted:path>
+EOF
 
 cat > "$T/cases.py" <<'PY'
 import os, sys, time
@@ -236,6 +280,33 @@ for x, want in pairs("r3_exact.txt"):
 for x in lines("r3_absent.txt"):
     got = s(x)
     res("jenkins" not in got and "acme" not in got, "round 3 %s → %s" % (x, got))
+for x, want in pairs("t020_req1_exact.txt"):
+    got = s(x)
+    res(got == want, "T020 REQ-1 %s → %s%s" % (x, want, "" if got == want else " (got %s)" % got))
+for x in lines("t020_req1_kept.txt"):
+    got = s(x)
+    res(got == x, "T020 REQ-1 unchanged %s%s" % (x, "" if got == x else " (got %s)" % got))
+for x, want in pairs("t020_req2_exact.txt"):
+    got = s(x)
+    res(got == want, "T020 REQ-2 %s → %s%s" % (x, want, "" if got == want else " (got %s)" % got))
+for x, want in pairs("t020_req6_exact.txt"):
+    got = s(x)
+    res(got == want, "REQ-6 %s → %s%s" % (x, want, "" if got == want else " (got %s)" % got))
+inv = getattr(f, "invisible", None)
+for want, args in ((True, ("ok" + "︀" * 8,)), (True, ("aㅤb",)), (True, ("a b",)), (True, ("a b",)),
+                   (False, ("I ❤️ it", "\t")), (False, ("a\tb\nc", "\t")), (True, ("a\tb",))):
+    try:
+        got = inv(*args)
+    except Exception as e:  # red stage: feedback.invisible does not exist yet
+        got = type(e).__name__
+    res(got is want, "T020 REQ-3 invisible(%s) is %s%s" % (", ".join(ascii(a) for a in args), want,
+                                                          "" if got is want else " (got %s)" % got))
+try:
+    import triage
+    same = triage.invisible is f.invisible and triage.visible is f.visible
+except Exception as e:
+    same = False
+res(same, "T020 REQ-3 triage.invisible/visible are feedback.invisible/visible")
 res(f.SANITIZER_VERSION == "3", "REQ-4 SANITIZER_VERSION is 3")
 
 once = [(x, r, f.sanitize(x, r)) for x, r in seen]
@@ -254,6 +325,30 @@ for name, x in redos:
     f.sanitize(x, None)
     dt_ = time.perf_counter() - t0
     res(dt_ < 0.5, "REQ-5 %s %.3f s" % (name, dt_))
+
+
+def best(x):
+    """K163: the smallest of 3 runs."""
+    runs = []
+    for _ in range(3):
+        t0 = time.perf_counter()
+        f.sanitize(x, None)
+        runs.append(time.perf_counter() - t0)
+    return min(runs)
+
+
+N = 50000
+t020 = [("a-space-slashes", ("a //b " * 8334)[:N]),
+        ("github-allowed-1dot", ("http://github.com/tahircengiz/delixcrew/" + "1." * 25000)[:N]),
+        ("key-host-slash", ("key:a.bc/" * 5556)[:N]), ("ph-host-slash", "<redacted:host>/" * 3125),
+        ("ph-host-colon", "<redacted:host>:" * 3125), ("colon", ":" * N), ("backslash", "\\" * N),
+        ("underscore-a-colon", ("_a:" * 16667)[:N]), ("github-slash", ("github.com/" * 4546)[:N]),
+        ("zero-octet", "010." * 12500)]
+for name, x in t020:
+    dt_ = best(x)
+    res(dt_ < 0.5, "REQ-5 t020-%s %.3f s" % (name, dt_))
+b50, b200 = best(("a //b " * 8334)[:N]), best(("a //b " * 33334)[:200000])
+res(b200 <= 6 * b50, "REQ-5 t020-growth a //b 50K %.3f s, 200K %.3f s, ratio %.2f (≤ 6)" % (b50, b200, b200 / b50))
 sys.exit(FAIL)
 PY
 python3 "$T/cases.py" || FAIL=1
@@ -274,6 +369,26 @@ out=$(cd "$T/proj" && echo "$J" | fb add); id=${out%% *}
 pv=$(fb preview "$id" 2>&1); v=$(printf '%s\n' "$pv" | head -1)
 [ "$out" = "$id new" ] && printf '%s' "$v" | grep -q '^VERDICT:' && ! printf '%s' "$v" | grep -q 'residual match' \
   && ok "REQ-4 preview of the REQ-1 inputs: no residual match ($v)" || bad "REQ-4 preview residual ($out; $v)"
+
+# --- T020 REQ-6: a second draft from the path and IP inputs is not BLOCKED for residual matches
+J6=$(python3 - "$T" <<'PY'
+import json, os, sys
+T = sys.argv[1]
+xs = []
+for n in ("req2_redirect.txt", "req2_kept.txt", "req3.txt", "t020_req1_exact.txt", "t020_req1_kept.txt",
+          "t020_req2_exact.txt"):
+    xs += [l.rstrip("\n").split("\t")[0] for l in open(os.path.join(T, n), encoding="utf-8") if l.strip()]
+actual, context = [], []
+for x in xs:  # TEXT_MAX is 2000 per field: the rest goes to context
+    (actual if len("\n".join(actual + [x])) <= 2000 else context).append(x)
+print(json.dumps({"kind": "bug", "component": "feedback", "title": "Path and IP inputs", "actual": "\n".join(actual),
+                  "context": "\n".join(context), "expected": "clean", "repro": ["preview"]}))
+PY
+)
+out6=$(cd "$T/proj" && echo "$J6" | fb add); id6=${out6%% *}
+pv6=$(fb preview "$id6" 2>&1); v6=$(printf '%s\n' "$pv6" | head -1)
+[ "$out6" = "$id6 new" ] && printf '%s' "$v6" | grep -q '^VERDICT:' && ! printf '%s' "$v6" | grep -q 'residual match' \
+  && ok "REQ-6 preview of the path and IP inputs: no residual match ($v6)" || bad "REQ-6 preview residual ($out6; $v6)"
 
 # --- REQ-7: list and duplicate add escape values read from disk -----------------
 export DELIXCREW_FEEDBACK_DIR="$T/q7"; Q="$DELIXCREW_FEEDBACK_DIR"; fb enable >/dev/null
@@ -305,6 +420,94 @@ add = subprocess.run([sys.executable, fb, "add"], input=d1.encode(), capture_out
 res(add.returncode == 0 and clean(add.stdout) and b"duplicate (count 2, draft\\x1b[2J)" in add.stdout,
     "REQ-7 duplicate add: exit %d, %r" % (add.returncode, add.stdout))
 res(json.load(open(p1, encoding="utf-8"))["status"] == "draft\u001b[2J", "REQ-7 status on disk still raw")
+sys.exit(FAIL)
+PY
+
+# --- T020 REQ-3 / REQ-4 through the CLI: invisible characters, lone surrogates, broken record ids
+python3 - "$S/feedback.py" "$T" <<'PY' || FAIL=1
+import json, os, subprocess, sys
+fb, T = sys.argv[1:]
+FAIL = 0
+QN = [0]
+def res(ok, msg):
+    global FAIL
+    print(("✔ " if ok else "✘ ") + msg)
+    FAIL |= not ok
+def run(q, *args, inp=None):
+    return subprocess.run([sys.executable, fb, *args], input=inp, capture_output=True, cwd=os.path.join(T, "proj"),
+                          env=dict(os.environ, DELIXCREW_FEEDBACK_DIR=q))
+def queue():
+    q = os.path.join(T, "q3b%d" % QN[0])
+    QN[0] += 1
+    run(q, "enable")
+    return q
+def draft(**kw):
+    d = {"kind": "bug", "component": "feedback", "title": "Invisible check", "actual": "a", "expected": "b",
+         "repro": ["c"]}
+    d.update(kw)
+    return d
+def add(q, d):
+    return run(q, "add", inp=json.dumps(d).encode())  # ensure_ascii: a lone surrogate travels as \ud800
+def rid(a):
+    return (a.stdout.decode("utf-8", "replace").split() or ["F001"])[0]
+def edit(q, r, **kw):
+    p = os.path.join(q, r + ".json")
+    with open(p, encoding="utf-8") as fh:
+        d = json.load(fh)
+    d.update(kw)
+    with open(p, "w") as fh:
+        json.dump(d, fh)  # default ensure_ascii, as a hand edit would
+def first(p):
+    return p.stdout.split(b"\n")[0].decode("utf-8", "replace")
+
+for name, kw in (("title U+FE00 x8", {"title": "ok" + "︀" * 8}), ("title U+3164", {"title": "aㅤb"}),
+                 ("actual U+2028", {"actual": "x y"}), ("actual U+2029", {"actual": "x y"})):
+    q = queue()
+    a = add(q, draft(**kw))
+    p = run(q, "preview", rid(a))
+    v = first(p)
+    res(a.returncode == 0 and p.returncode == 4 and v.startswith("VERDICT: BLOCKED: ") and "invisible character" in v
+        and " ".encode() not in p.stdout and " ".encode() not in p.stdout,
+        "REQ-3 %s: add exit %d, preview exit %d, %s" % (name, a.returncode, p.returncode, ascii(v)))
+q = queue()
+a = add(q, draft(title="I ❤️ it", actual="a\tb\nc"))
+p = run(q, "preview", rid(a))
+res(a.returncode == 0 and b"invisible character" not in p.stdout,
+    "REQ-3 emoji, tab and newline are allowed: add exit %d, %s" % (a.returncode, ascii(first(p))))
+
+for field in ("title", "fingerprint"):
+    q = queue()
+    a = add(q, draft(title="Surrogate on disk"))
+    edit(q, rid(a), **{field: "x\ud800" if field == "title" else "\ud800"})
+    p = run(q, "preview", rid(a))
+    ok_first = first(p) == "VERDICT: BLOCKED: invisible character" if field == "title" else True
+    res(p.returncode == 4 and ok_first and b"Traceback" not in p.stderr,
+        "REQ-3 %s with a lone surrogate on disk: preview exit %d, %s, Traceback %s"
+        % (field, p.returncode, ascii(first(p)), b"Traceback" in p.stderr))
+    if field == "title":
+        lst = run(q, "list")
+        res(lst.returncode == 0 and b"Traceback" not in lst.stderr,
+            "REQ-3 list with a lone surrogate on disk: exit %d, Traceback %s" % (lst.returncode, b"Traceback" in lst.stderr))
+q = queue()
+before = sorted(os.listdir(q))
+a = add(q, draft(title="x\ud800"))
+res(a.returncode == 2 and b"title: lone surrogate" in a.stderr and b"Traceback" not in a.stderr
+    and sorted(os.listdir(q)) == before,
+    "REQ-3 add with a lone surrogate: exit %d, %s, queue unchanged %s"
+    % (a.returncode, ascii(a.stderr.decode("utf-8", "replace").strip()[-80:]), sorted(os.listdir(q)) == before))
+
+for badid in ("../x", "F001\n"):
+    q = queue()
+    a = add(q, draft(title="Duplicate check"))
+    edit(q, "F001", id=badid)
+    before, parent = sorted(os.listdir(q)), sorted(os.listdir(T))
+    b = add(q, draft(title="Duplicate check"))
+    res(a.stdout == b"F001 new\n" and b.returncode == 0 and b.stdout == b"F002 new\n"
+        and sorted(os.listdir(q)) == sorted(before + ["F002.json"]) and sorted(os.listdir(T)) == parent,
+        "REQ-4 id %s: second add exit %d, %s, queue %s" % (ascii(badid), b.returncode, ascii(b.stdout), sorted(os.listdir(q))))
+    if badid == "F001\n":
+        p = run(q, "preview", "F001\n")
+        res(p.returncode == 2, "REQ-4 preview %s: exit %d" % (ascii(badid), p.returncode))
 sys.exit(FAIL)
 PY
 
