@@ -84,9 +84,9 @@ URL_AUTH_RUN_RE = re.compile(r"(?:\[[^\s/\\?#%s]*\])?[^\s/\\?#%s]*" % (_STOP_CLS
 URL_RUN_RE = re.compile(r"[^\s%s]*" % _STOP_CLS)
 # REQ-1b (K168, K171): ":…", "/…", "\…", "?…" or "#…" right after a placeholder (and an optional host dot) is a path;
 # it ends at whitespace or a URL stop character.
-AFTER_PH_RE = re.compile(r"(<redacted:(?:host|ip|email|mac)>\.?)[:/\\?#][^\s%s]+" % _STOP_CLS)
-# REQ-1c: plain-text github.com/… and github.com:… go through the same owner allowlist as a URL.
-GH_PLAIN_RE = re.compile(r"(?<![\w-])(github\.com)([:/][^\s%s]*)" % _STOP_CLS, re.IGNORECASE)
+AFTER_PH_RE = re.compile(r"(<redacted:(?:host|ip|email|mac)>[.\]]?)[:/\\?#][^\s%s]+" % _STOP_CLS)
+# REQ-1c: plain-text github.com/…, github.com:… and github.com\… go through the same owner allowlist as a URL.
+GH_PLAIN_RE = re.compile(r"(?<![\w-])(github\.com)([:/\\][^\s%s]*)" % _STOP_CLS, re.IGNORECASE)
 
 # --- REQ-4 blockers -----------------------------------------------------------
 OPAQUE_RE = re.compile(r"[A-Za-z0-9+=_-]{32,}")  # K81: no '/' or '.'
@@ -355,13 +355,13 @@ def _trail(s):
 
 def _gh_plain_repl(m):
     """REQ-1c: only tahircengiz/delixcrew, anthropics/… (no . or .. segment) and a bare github.com/ stay."""
-    tail = m.group(2).rstrip(".,;:")
+    tail = m.group(2).rstrip(".,;:").replace("\\", "/")
     if tail[:1] == ":":  # github.com:443/owner/… or scp-style github.com:owner/…
         rest = tail[1:]
         port = len(rest) - len(rest.lstrip("0123456789"))
         tail = rest[port:] if port and rest[port:port + 1] == "/" else "/" + rest
     segs = tail.lower().split("/")
-    if tail in ("", "/") or ("." not in segs and ".." not in segs and (
+    if tail in ("", "/") or (URL_TAIL_OK_RE.fullmatch(tail) and "." not in segs and ".." not in segs and (
             segs[1:3] == ["tahircengiz", "delixcrew"] or segs[1] == "anthropics")):
         return m.group(0)
     return m.group(1) + "<redacted:path>" + _trail(m.group(2))

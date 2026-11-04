@@ -189,6 +189,10 @@ mail a@acme-corp.net?	mail <redacted:email>?
 vendor/github.com/acme/x::	vendor/github.com<redacted:path>:
 vendor/github.com/tahircengiz/delixcrew/../../acme/private	vendor/github.com<redacted:path>
 vendor/github.com/anthropics/../acme/private	vendor/github.com<redacted:path>
+see [fd00::1]:8080/api/secret	see [<redacted:ip>]<redacted:path>
+see [fd00::1]. ok	see [<redacted:ip>]. ok
+see vendor\github.com\acme\private	see vendor\github.com<redacted:path>
+vendor/github.com/tahircengiz/delixcrew/%2e%2e/%2e%2e/acme/private	vendor/github.com<redacted:path>
 EOF
 cat > "$T/t020_req1_kept.txt" <<'EOF'
 see github.com/tahircengiz/delixcrew/issues/1.
@@ -308,8 +312,8 @@ for x, want in pairs("t020_req6_exact.txt"):
     got = s(x)
     res(got == want, "REQ-6 %s → %s%s" % (x, want, "" if got == want else " (got %s)" % got))
 inv = getattr(f, "invisible", None)
-for want, args in ((True, ("ok" + "︀" * 8,)), (True, ("aㅤb",)), (True, ("a b",)), (True, ("a b",)),
-                   (False, ("I ❤️ it", "\t")), (False, ("a\tb\nc", "\t")), (True, ("a\tb",))):
+for want, args in ((True, ("ok" + "\ufe00" * 8,)), (True, ("a\u3164b",)), (True, ("a\u2028b",)), (True, ("a\u2029b",)),
+                   (False, ("I \u2764\ufe0f it", "\t")), (False, ("a\tb\nc", "\t")), (True, ("a\tb",))):
     try:
         got = inv(*args)
     except Exception as e:  # red stage: feedback.invisible does not exist yet
@@ -361,6 +365,8 @@ t020 = [("a-space-slashes", ("a //b " * 8334)[:N]),
         ("zero-octet", "010." * 12500)]
 t020 += [("ph-host-dot-q", ("<redacted:host>.?" * 5000)[:N]), ("github-colon", ("github.com:" * 5000)[:N]),
          ("github-colon-1", ("github.com:1" * 5000)[:N])]  # round 2 (F2, F3)
+t020 += [("ph-ip-bracket-colon", "<redacted:ip>]:" * 3125),
+         ("github-backslash", ("github.com\\" * 5000)[:N])]  # round 3 (G2, G3)
 for name, x in t020:
     dt_ = best(x)
     res(dt_ < 0.5, "REQ-5 t020-%s %.3f s" % (name, dt_))
@@ -477,17 +483,17 @@ def edit(q, r, **kw):
 def first(p):
     return p.stdout.split(b"\n")[0].decode("utf-8", "replace")
 
-for name, kw in (("title U+FE00 x8", {"title": "ok" + "︀" * 8}), ("title U+3164", {"title": "aㅤb"}),
-                 ("actual U+2028", {"actual": "x y"}), ("actual U+2029", {"actual": "x y"})):
+for name, kw in (("title U+FE00 x8", {"title": "ok" + "\ufe00" * 8}), ("title U+3164", {"title": "a\u3164b"}),
+                 ("actual U+2028", {"actual": "x\u2028y"}), ("actual U+2029", {"actual": "x\u2029y"})):
     q = queue()
     a = add(q, draft(**kw))
     p = run(q, "preview", rid(a))
     v = first(p)
     res(a.returncode == 0 and p.returncode == 4 and v.startswith("VERDICT: BLOCKED: ") and "invisible character" in v
-        and " ".encode() not in p.stdout and " ".encode() not in p.stdout,
+        and "\u2028".encode() not in p.stdout and "\u2029".encode() not in p.stdout,
         "REQ-3 %s: add exit %d, preview exit %d, %s" % (name, a.returncode, p.returncode, ascii(v)))
 q = queue()
-a = add(q, draft(title="I ❤️ it", actual="a\tb\nc"))
+a = add(q, draft(title="I \u2764\ufe0f it", actual="a\tb\nc"))
 p = run(q, "preview", rid(a))
 res(a.returncode == 0 and b"invisible character" not in p.stdout,
     "REQ-3 emoji, tab and newline are allowed: add exit %d, %s" % (a.returncode, ascii(first(p))))
