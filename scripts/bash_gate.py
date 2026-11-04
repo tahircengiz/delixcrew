@@ -29,16 +29,27 @@ _TQPATH = r"\"(?!-)(?:[^\"\n$`\\]*/)?triage\.py\""
 _TPATH = r"(?!-)(?:[^\s'\"$`\\;&|<>(){}#*?\[\]~^]*/)?triage\.py"
 RECORD_HEREDOC = re.compile(r"(python3[ \t]+(?:" + _TQPATH + "|" + _TPATH + r")[ \t]+record[ \t]+\d+[ \t]+<<(['\"])"
                             r"([A-Za-z_][\w.-]*)\2)\n(.*)\n\3", re.S)
-# REQ-3 (#36, K182, K187): no path starts with `-` (`python3 -ic<dir>/feedback.py` runs the body as code); one
-# capture match of either script limits the feedback and the triage (a)/(b) rules to its first line (order unchanged).
-m = ADD_HEREDOC.fullmatch(cmd.strip()) or RECORD_HEREDOC.fullmatch(cmd.strip())
+# REQ-5 (K202, K211b): exactly one `cat >|>> <path> <<'DELIM'` call. The path is one repeated class (the _PATH
+# exclusions, no optional directory group: ReDoS); `<<-` and an unquoted delimiter do not match. Group numbers match
+# ADD_HEREDOC (1 header, 2 quote, 3 delimiter, 4 body). Matched against the raw command with only trailing newlines
+# removed, so a delimiter line ending in `\r` or a space never matches (fail closed).
+_CPATH = r"(?!-)[^\s'\"$`\\;&|<>(){}#*?\[\]~^]+"
+CAT_HEREDOC = re.compile(r"(cat[ \t]+>>?[ \t]*" + _CPATH + r"[ \t]+<<(['\"])([A-Za-z_][\w.-]*)\2)\n(.*)\n\3", re.S)
+# REQ-3 (#36, K182, K187): no path starts with `-` (`python3 -ic<dir>/feedback.py` runs the body as code).
+# REQ-5 (K202, K204): one match of ADD_HEREDOC, RECORD_HEREDOC or CAT_HEREDOC without an early delimiter limits
+# every rule below to its first line, except trust (c) and the protected-path redirect check (full text).
+_raw = (g.get("tool_input") or {}).get("command") or ""
+cm = CAT_HEREDOC.fullmatch(_raw.rstrip("\n"))
+if cm and ".claude/delixcrew/" in cm.group(1).casefold():
+    cm = None  # REQ-5: a path into the plugin's own record dirs gets no exemption (the delimiter cannot hold `/`)
+m = ADD_HEREDOC.fullmatch(cmd.strip()) or RECORD_HEREDOC.fullmatch(cmd.strip()) or cm
 checked = m.group(1) if m and m.group(3) not in m.group(4).split("\n") else cmd
 if re.search(r"\bfeedback\.py['\"]?(?:\s*,\s*|\s+)(?:-\S+\s+)*['\"]?send\b", checked) or (
         re.search(r"\bfeedback\.py\b", checked) and re.search(r"\b(script|expect|unbuffer)\b|\bpty\.spawn\b", checked)):
     deny(FEEDBACK_DENY)
-if re.search(r"\bgh\s+issue\s+(create|new|comment|edit)\b", cmd) or (re.search(r"\bgh\s+api\b", cmd)
-                                                                 and re.search(r"\bissues\b", cmd)):
-    if "delixcrew" in cmd.lower():
+if re.search(r"\bgh\s+issue\s+(create|new|comment|edit)\b", checked) or (re.search(r"\bgh\s+api\b", checked)
+                                                                 and re.search(r"\bissues\b", checked)):
+    if "delixcrew" in checked.lower():
         deny(FEEDBACK_DENY)
     try:
         remotes = subprocess.run(["git", "-C", cwd, "remote", "-v"], capture_output=True, text=True, timeout=5).stdout
@@ -49,8 +60,9 @@ if re.search(r"\bgh\s+issue\s+(create|new|comment|edit)\b", cmd) or (re.search(r
 
 # REQ-7 (0.6.0): known triage write paths, in every session; (a)/(b) unconditional, (c)/(d) only for delixcrew (K125)
 TRIAGE_DENY = "delixcrew: triage decisions are applied only by the user from their own terminal"
-# (a) and (b) see `checked` from the feedback block: the first line of one capture call (ADD_HEREDOC or
-# RECORD_HEREDOC, defined above), otherwise the full text. (c) and (d) see the full text.
+REPO_DENY = "delixcrew: writes to the delixcrew GitHub repository (settings, rulesets, security) run only from the user's own terminal"
+# (a)-(d) see `checked` from the feedback block: the first line of one allowed heredoc call (ADD_HEREDOC,
+# RECORD_HEREDOC or CAT_HEREDOC, K204), otherwise the full text.
 tchecked = checked
 if re.search(r"\btriage\.py['\"]?\s+(?:-\S+\s+)*['\"]?apply\b", tchecked) or (
         re.search(r"\btriage\.py\b", tchecked) and re.search(r"\b(script|expect|unbuffer)\b|\bpty\.spawn\b", tchecked)):
@@ -58,17 +70,27 @@ if re.search(r"\btriage\.py['\"]?\s+(?:-\S+\s+)*['\"]?apply\b", tchecked) or (
 # (d) write flags: -f/-F (also attached, `-fq=x`), --field, --raw-field, --input, -X/--method other than GET
 GH_API_WRITE = re.compile(r"\bgraphql\b|(?:^|\s)['\"]?(?:-i*[fF]|--(?:field|raw-field|input)\b)")
 GH_API_METHOD = re.compile(r"(?:^|\s)['\"]?(?:-i*X|--method\b)[\s=]*['\"]?([A-Za-z]*)")
-if re.search(r"\bgh\s+issue\s+(close|reopen|lock|unlock|delete|transfer|pin|unpin|develop)\b|\bgh\s+label\b", cmd) or (
-        re.search(r"\bgh\s+api\b", cmd) and (GH_API_WRITE.search(cmd)
-                                            or any(v.upper() != "GET" for v in GH_API_METHOD.findall(cmd)))):
-    if "delixcrew" in cmd.lower():
-        deny(TRIAGE_DENY)
+gh_c = re.search(r"\bgh\s+issue\s+(close|reopen|lock|unlock|delete|transfer|pin|unpin|develop)\b|\bgh\s+label\b", checked)
+if gh_c or (re.search(r"\bgh\s+api\b", checked) and (GH_API_WRITE.search(checked)
+                                                  or any(v.upper() != "GET" for v in GH_API_METHOD.findall(checked)))):
+    # REQ-6 (K205): same deny condition; a gh api write naming none of issues/labels/graphql is a repo settings write
+    msg = TRIAGE_DENY if gh_c or re.search(r"\b(?:issues|labels|graphql)\b", checked) else REPO_DENY
+    if "delixcrew" in checked.lower():
+        deny(msg)
     try:
         remotes = subprocess.run(["git", "-C", cwd, "remote", "-v"], capture_output=True, text=True, timeout=5).stdout
     except (OSError, subprocess.SubprocessError):
         remotes = ""
     if re.search(r"[/:]tahircengiz/delixcrew(\.git)?/?\s", remotes, re.I):
-        deny(TRIAGE_DENY)
+        deny(msg)
+
+# REQ-4 (K200, K210): the Stop gate approval, in every session, unconditional (like feedback (a)/(b)).
+# (a) and (b) see `checked`; (c) sees the full text, so no heredoc exemption reaches it.
+TRUST_DENY = "delixcrew: Stop gate commands are approved only by the user from their own terminal"
+if (re.search(r"\btrust\.py\b", checked) and (re.search(r"\ballow\b", checked) or re.search(
+        r"\b(?:script|expect|unbuffer|openpty|tmux|screen|socat|zpty)\b|\bpty\.(?:spawn|fork)\b", checked))) \
+        or "delixcrew/trust.json" in cmd.casefold():
+    deny(TRUST_DENY)
 
 GIT = r"git\s+(?:-C\s+(?:\"[^\"]*\"|'[^']*'|\S+)\s+)?"  # `git -C <worktree>`: the reviewer reads another checkout
 WRITING = re.compile(r"(^|[\s;&|(])(rm|mv|cp|tee|sed\s+-i|chmod|chown|truncate|mkdir|touch|dd|" + GIT + r"(add|commit|push|"
