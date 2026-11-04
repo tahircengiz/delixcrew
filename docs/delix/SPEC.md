@@ -1,6 +1,6 @@
 # SPEC — Spec B: Stop gate güven çapası, izinli `cat` heredoc'u, repo yazma mesajı
 
-> Size: **M** · Tier: 3 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 2: architect FIX + security FIX işlendi)
+> Size: **M** · Tier: 3 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: T026 inceleme turu 0, K217–K222)
 > Source: issue [#17](https://github.com/tahircengiz/delixcrew/issues/17) (triage `accepted`; istek metni kullanıcı onaylı,
 > 2026-11-04) ve lead notları (kural (c) aşırı engellemesi, yanıltıcı deny mesajı). Grill kararları K199–K202
 > (kullanıcı), lead kararları K203–K214. STATUS.md K numaralarının devamıdır. Önceki spec (kapalı):
@@ -82,7 +82,8 @@ Onay yoksa Stop gate (K201):
 `stop_hook_active` ya da raporda `BLOCKED`/`NEEDS_CONTEXT` varken bugünkü exit 0 yolu değişmez.
 
 `.delix/test-result.txt` her yolda sembolik bağlantı izlenmeden yazılır: `O_NOFOLLOW`, ya da `.delix` içinde geçici
-dosya + `os.replace` (K213). Hedef sembolik bağlantıysa dosyaya yazılmaz ve stderr'de bir satır uyarı çıkar. Bugün bu
+dosya + `os.replace` (K213). Dosya `O_TRUNC` olmadan açılır; `fstat` ile `st_nlink != 1` (hardlink) ise kesilmeden
+kapatılır, değilse `ftruncate` edilir (K218). Hedef sembolik bağlantı ya da hardlink ise dosyaya yazılmaz ve stderr'de bir satır uyarı çıkar. Bugün bu
 yol bağlantının gösterdiği dosyayı eziyor; lead bunu main'de yeniden üretti.
 #### Scenario: onaysız, ilk durma
 - WHEN kart yerel, kayıt boş, rapor yok
@@ -100,8 +101,10 @@ Yeni `scripts/trust.py allow`, kullanıcının terminalinde, cwd'deki depo için
    öğe varsa exit 7 ve tek satırlık stderr.
 2. Çift zaten kayıttaysa "already approved" yazar ve exit 0. Bu adım TTY istemez.
 3. Kaynak dosyanın yolunu (`docs/delix/delix.json`) ve her komutu ayrı satırda `json.dumps` ile kaçışlanmış olarak
-   gösterir. `git diff --quiet HEAD -- docs/delix/delix.json` sıfır dönmezse "delix.json differs from HEAD" uyarısı
-   basar (K214).
+   gösterir. `git cat-file blob HEAD:docs/delix/delix.json` çıktısı, çalışma ağacındaki dosyanın `O_NOFOLLOW` ile
+   okunan içeriğinden farklıysa (ya da biri okunamazsa) "delix.json differs from HEAD" uyarısı basar (K214). `git diff`
+   kullanılmaz: deponun kendi `diff.external` / textconv / clean filter ayarı onaydan önce kod çalıştırır (K217).
+   `git_common_dir` de ekrana `json.dumps` ile basılır (K219).
 4. `Type TRUST <h12> to approve these commands for <git_common_dir> (the word TRUST, a space, then the hash): `
    istemini basar (K200, SEND/APPLY kalıbı).
 5. stdin TTY değilse ya da yazılan metin tam eşleşmezse kayıt yazılmaz ve exit 6 döner; uyuşmazlıkta beklenen metin
@@ -231,7 +234,8 @@ kararlar:
 - Onaylı bir depoda komut dizesi aynı kalıp `tests/` değişirse Stop gate çalışır; bu, kullanıcının o dalda testi
   çalıştırmasıyla eşdeğerdir.
 - Silinen bir deponun ya da `prune` edilmemiş bir worktree'nin yoluna açılan yeni bir dizin eski onayı devralabilir.
-- Bash denylist'i yalnız sürtünmedir: tırnak bölme, değişken ya da glob ile yazılmış komutlar geçer. Sınır, Claude
+- Bash denylist'i yalnız sürtünmedir: tırnak bölme, değişken, glob, `cd` sonrası göreli yol, `//`, `/./` ya da
+  sembolik bağlantılı dizinle yazılmış komutlar geçer (K220). Sınır, Claude
   Code'un Bash izin istemidir (K77).
 - REQ-5'in `~/.claude/delixcrew/` dışındaki yollar için açtığı yetenek, Write aracının zaten yapabildiğinden büyük değildir.
 
@@ -287,3 +291,13 @@ kararlar:
 - **K213** (lead, geri alınır; security Medium, main'de yeniden üretildi): `test-result.txt` sembolik bağlantı izlenmeden yazılır.
 - **K214** (lead, geri alınır; security Medium): onay ekranı komutları `json.dumps` ile gösterir, `str` olmayan öğe
   exit 7 döner, `delix.json` HEAD'den farklıysa uyarı basar.
+- **K217** (lead, geri alınır; T026 security High, lead dalda yeniden üretti: `diff.external` + `trustExitCode` ile
+  onay reddedildiği halde yardımcı çalıştı): `trust.py` onaydan önce `git diff` çalıştırmaz; HEAD karşılaştırması
+  `git cat-file blob` + Python'da bayt karşılaştırması.
+- **K218** (lead, geri alınır; T026 security Low): `test-result.txt` hardlink ise kesilmez ve yazılmaz.
+- **K219** (lead, geri alınır; T026 security Low): `git_common_dir` ekranda kaçışlı.
+- **K220** (lead, geri alınır; T027 security Low): trust (c) alt dize kuralının atlanma biçimleri Known limits'e (T028).
+- **K221** (lead, geri alınır; T026 qa P2, implementer sapması): liste olmayan `extra_checks` `[[extra]]` olarak sarılır;
+  tek `str` olmayan öğe olur, onaylanamaz ve çalışmaz (REQ-1). Kart çapası 4'teki `[extra]` metni bunun yerine geçer.
+- **K222** (lead, geri alınır; T026 security unsure): merge sırası T027 → T026. T026 tek başına Bash yolunu açık bırakır;
+  ajan tarafı engelleri T027'dedir.

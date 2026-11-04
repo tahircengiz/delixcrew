@@ -284,4 +284,15 @@ rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
 Read only this card and SPEC REQ-4–REQ-6, §4, §6, §8 and §9.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 0 (d81c27a, PR #56): deterministic gates green.
+  - CI `test` and `check` pass.
+  - The lead re-ran all suites from `git archive d81c27a`: 10/10 pass. The merge tree with T026 passes 10/10, and also under Python 3.13.
+  - The internal-host scan finds 0.
+  - qa: ACCEPT (0 P0, 0 P1).
+  - security: 🔐 HUMAN_APPROVAL, with no Critical, High or Medium finding. gitleaks reports none.
+- [Low, docs, T028] Trust (c) is a substring rule. These forms of the path get past it: `cd` and then a relative path, `//`, `/./`, and a symlinked directory. They go to Known limits (K220). No code change.
+- The lead probed the "unsure" cases on d81c27a:
+  - a CRLF delimiter is denied (fail closed);
+  - a NUL in the path or the body is allowed, but the body is a quoted heredoc fed to `cat`, so it is data only.
+- Merge order: T027 first, then T026 (K222).
+

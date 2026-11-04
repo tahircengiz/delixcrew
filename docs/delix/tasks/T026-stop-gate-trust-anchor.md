@@ -610,4 +610,22 @@ printf '{"tool_name":"Write","cwd":"%s","tool_input":{"file_path":"%s"}}' "$T" "
 Read only this card and SPEC REQ-1–REQ-4, §4–§6 and §9.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 0 (71777fe, PR #57): deterministic gates green.
+  - CI `test` and `check` pass.
+  - The lead re-ran all suites from `git archive 71777fe`: 9/9 pass. The merge tree with T027 (d81c27a) passes 10/10, and also under Python 3.13.
+  - Only the four K206 test lines changed. The internal-host scan finds 0.
+  - qa: ACCEPT_WITH_NOTES (0 P0, 0 P1).
+  - security: 🔐 HUMAN_APPROVAL with one High, which needs a fix.
+- **[High, fix] `scripts/trust.py:43`.** `git diff --quiet HEAD -- docs/delix/delix.json` runs before the user types the confirmation. A repo's own `.git/config` with `diff.external=<helper>` and `diff.trustExitCode=true` runs the helper.
+  - The lead reproduced this on 71777fe: `allow` with stdin `/dev/null` exited 6 and the helper still ran.
+  - Fix (K217): replace the call with `git cat-file blob HEAD:docs/delix/delix.json` and compare its stdout with the worktree file, read with `O_NOFOLLOW` in Python. No HEAD, a read error or a mismatch gives the same warning.
+  - Test: a repo with that config and a changed `delix.json`. After `allow </dev/null` (exit 6), MARK does not exist and the warning is still printed.
+- **[Low, fix] `scripts/stop_gate.py:17`.** A hardlinked `.delix/test-result.txt` is truncated and overwritten.
+  - Fix (K218): open without `O_TRUNC`. If `os.fstat(fd).st_nlink != 1`, close it and take the existing warning path, with the message reading "is a symlink, a hardlink or cannot be opened". Otherwise call `os.ftruncate(fd, 0)`.
+  - Test: `.delix/test-result.txt` hardlinked to an outside file. That file keeps its content.
+- **[Low, fix] `scripts/trust.py:38,46`.** `git_common_dir` is printed raw. Fix (K219): print it with `json.dumps` in the prompt and in the "already approved" line.
+- Accepted, no fix: the `[[extra]]` deviation from anchor 4 (K221, matches REQ-1).
+- P2 notes, no fix: one blank line before `TRUST_DENY` in `write_gate.py`. The untested owner, relative-gitdir, `KeyError` and surrogate cases are on the Review Focus list.
+- Merge order: T027 first, then T026 (K222).
+- The lead prototyped all three fixes on a copy of 71777fe. The PoC no longer creates MARK, the warning is still printed, and the hardlink target is unchanged. `trust_tests.sh`, `hook_tests.sh` and `write_gate_case_tests.sh` pass.
+

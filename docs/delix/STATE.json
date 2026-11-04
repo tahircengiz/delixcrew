@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-04T21:30:00Z",
+  "updated": "2026-11-05T00:30:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -61,23 +61,23 @@
       "file": "docs/delix/tasks/T026-stop-gate-trust-anchor.md",
       "role": "backend",
       "tier": 3,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
+      "status": "fixing",
+      "pr": 57,
+      "rounds": 1,
       "cost_usd": null,
       "issue": 17,
-      "sha": null
+      "sha": "71777fe"
     },
     "T027": {
       "file": "docs/delix/tasks/T027-bash-gate-cat-heredoc-trust-rules.md",
       "role": "backend",
       "tier": 3,
-      "status": "open",
-      "pr": null,
+      "status": "in_review",
+      "pr": 56,
       "rounds": 0,
       "cost_usd": null,
       "issue": 17,
-      "sha": null
+      "sha": "d81c27a"
     },
     "T028": {
       "file": "docs/delix/tasks/T028-docs-site-trust-anchor.md",
