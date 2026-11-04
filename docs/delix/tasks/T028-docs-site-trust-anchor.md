@@ -136,4 +136,10 @@ Quote every message, path and command from the merged `scripts/trust.py`, `scrip
 Read only this card, SPEC REQ-7, §5 and §6, and the merged scripts named above.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 0 (e9e788e, PR #58): deterministic gates green, run by the lead from `git archive e9e788e`. Site tests had 0 failures, all 10 suites passed, and `claude plugin validate .` passed. CI `test` and `check` passed. Every grep count in the Verification list matched. The diff touches exactly the 9 Files. The internal-host and invisible-character scans found 0. qa: ACCEPT (0 P0, 0 P1). security: CLEAN (no Critical, High or Medium; gitleaks found no leaks). Notes, no fix round; the wording goes into the K225 follow-up card (K229):
+  - [Low, security] `README.md:375-376` (TR twin): "The one allowed `cat` heredoc writes nothing the Write tool could not already write" is not literal in an implementer worktree. write_gate denies writes outside the worktree, to `docs/delix/**` and to existing tests. `cat > ../x <<'EOF'` passes bash_gate, because only the protected-path redirect check sees the full text. The lead confirmed this by reading `bash_gate.py:40-47,116`. The exemption itself adds nothing; the gap is the existing "Bash writes bypass write_gate" limit. Better wording: the exemption only skips the send, apply and `trust.py allow` patterns for the body.
+  - [Low, security] `README.md:376-377` (TR twin): the K225 sentence leaves out the impact. A lazy fetch can run a program named in that repository's git config.
+  - [Low, security] `site/index.html:473` (TR twin): "any command naming `delixcrew/trust.json`" carries no K220 substring caveat on the site. The card asked for one bullet only, so this conforms to the card.
+  - [P2, qa] `README.md:70-75` (TR twin): the printed command is shown with placeholders; the real line has `shlex.quote`d absolute paths.
+  - [unsure, security] `skills/dispatch/SKILL.md`: an approval made from a worktree is keyed by `git_common_dir`, so a list changed on a branch becomes approved for every worktree of the repo. `trust.py` shows the commands, but the skill does not ask the user to check that the change is intended. This goes to the follow-up card.
+- Gate 2: to the user.
