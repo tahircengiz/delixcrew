@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-04T11:52:58Z",
+  "updated": "2026-11-04T12:10:27Z",
   "env_owner": null,
   "waves": [
     {
@@ -51,11 +51,12 @@
       "file": "docs/delix/tasks/T022-security-policy-machine-section.md",
       "role": "docs",
       "tier": 2,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
+      "status": "in_review",
+      "pr": 46,
+      "rounds": 2,
       "cost_usd": null,
-      "issue": 10
+      "issue": 10,
+      "sha": "e10c23f"
     }
   },
   "status_values": [

@@ -141,4 +141,11 @@ the PR number.
 SECURITY.md is a repo file, not a `docs/delix` project file.
 
 ## Review findings (filled by the lead)
-- Round 1: …
+- Round 0 (e18870c): qa ACCEPT (0 findings). security CLEAN with one Low note, reproduced by the lead on the branch
+  and on main (ad3a3e6): with `agent_type` `delixcrew:security`, `bash_gate.py` allows `find . -name x -delete`,
+  `rg --pre sh foo .` and `git grep -O foo` (first-word allowlist + write-pattern denylist; pre-existing, not from this
+  diff). Fix in this card: the README sentence no longer overclaims ("a pattern check, not a sandbox"). The code gap
+  goes to a separate Tier 3 card (bash_gate.py is protected; candidate for spec B).
+- Round 1 (b6a04c7): qa ACCEPT. security FIX, 1 Low: "the network is used only by these commands" left out the
+  project's Stop commands and `claude -p` sessions (dispatch/SKILL.md:43, :48; review/SKILL.md:49). Fixed in round 2.
+- Round 2 (e10c23f): qa ACCEPT (P0 0, P1 0); security CLEAN. CI green (test, check). Gate 2: user.
