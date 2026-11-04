@@ -106,4 +106,6 @@ PYS
 Read only this card and spec REQ-2, §4.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 1 (PR #59 @ 3812e01, 2026-11-04): deterministic gates green at the PR commit (clean `git archive` copy: `ledger_tests.sh` 7/7, full suite 905 ✔ / 0 ✘, `claude plugin validate .` passes; CI `check` and `test` SUCCESS; only the 6 Files). `qa` ACCEPT (0 P0, 0 P1). `security` CLEAN with one Low, no fix asked (review §3):
+  - Low: `skills/review/SKILL.md:46` says "`sha` is the full `git rev-parse <branch>` you reviewed"; read after the reviewer returns, a moving ref can record a tip nobody reviewed. Wording to use: the step-1 SHA the reviewers' diff was made from. Follow-up card (K262 batch).
+  - Notes (security, unsure): `skills/close/SKILL.md:11–13` backfills `merged` without checking the PR state is `MERGED`; `skills/dispatch/SKILL.md:70` takes `branch` from the implementer's report rather than `gh pr view <n> --json headRefName`. Both go to the same follow-up card. T029 must keep collapsing newlines in every free-text cell (its card line 122 does), so no field can open a bash fence.
