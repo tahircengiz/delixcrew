@@ -384,3 +384,60 @@ test('the board shows the five sections and the card ledger', async ($, on) => {
     await ui.unmount()
   }
 })
+
+test('derive follows the T029 edge rules: no branch and no detached line, a null remote tip or qa sha', () => {
+  const sha = (c: string) => c.repeat(40)
+  const tree = (path: string, head: string, ...rest: string[]) => [`worktree ${path}`, `HEAD ${head}`, ...rest, ''].join('\n')
+  const state = {
+    cards: {
+      T001: { status: 'in_review', pr: 7, tier: 1, agents: [{ role: 'implementer', by: 'claude/x', branch: 't001' }, { role: 'qa', round: 1, verdict: 'ACCEPT' }] },
+      T002: { status: 'in_review', pr: 8, tier: 1, agents: [{ role: 'implementer', branch: 't002' }, { role: 'qa', round: 1, verdict: 'ACCEPT', sha: sha('5') }] },
+    },
+  }
+  const raw: Raw = {
+    default_branch: 'main',
+    now: 1800000000,
+    self: '/r',
+    source: '/r',
+    worktree_list: [
+      tree('/r', sha('1'), 'branch refs/heads/main'),
+      tree('/r/bare', sha('2'), 'bare'),
+      tree('/r/both', sha('3'), 'branch refs/heads/feat', 'detached'),
+      tree('/r/impl', sha('4'), 'branch refs/heads/t001'),
+    ].join('\n'),
+    for_each_ref: [
+      ['refs/heads/main', sha('1'), 'refs/remotes/origin/main', '', '1799999000'],
+      ['refs/heads/feat', sha('3'), 'refs/remotes/origin/feat', 'ahead 2', '1799999000'],
+      ['refs/heads/t001', sha('4'), '', '', '1799999000'],
+      ['refs/remotes/origin/t002', sha('5'), '', '', '1799999000'],
+    ]
+      .map(f => f.join('\t'))
+      .join('\n'),
+    worktrees: {
+      '/r': { status: '', files: { 'docs/delix/STATE.json': JSON.stringify(state) } },
+      '/r/bare': { status: '' },
+      '/r/both': { status: '' },
+      '/r/impl': { status: '', files: { '.delix/card': 'docs/delix/tasks/T001-x.md' } },
+    },
+  }
+  const d = derive(raw)
+  expect(d.agents.map(a => [a.path, a.branch, a.upstream])).toEqual([
+    ['/r/impl', 't001', 'no upstream'],
+    ['/r', 'main', 'in sync'],
+    ['/r/bare', null, '?'],
+    ['/r/both', 'feat', '2 ahead'],
+  ])
+  expect(d.queue).toEqual({
+    waiting: [
+      { card: 'T001', verification: null, reason: 'changed after review' },
+      { card: 'T002', verification: null, reason: 'ready to merge' },
+    ],
+    ready: [{ card: 'T002', pr: 8, sha: sha('5') }],
+    done: [],
+  })
+  expect(d.actions).toEqual([
+    { kind: 'push', target: '/r/both', card: null, command: 'git -C /r/both push -u origin feat', note: '' },
+    { kind: 'push', target: '/r/impl', card: 'T001', command: 'git -C /r/impl push -u origin t001', note: '' },
+    { kind: 'merge', target: '#8', card: 'T002', command: `gh pr merge 8 --squash --match-head-commit ${sha('5')}`, note: '' },
+  ])
+})

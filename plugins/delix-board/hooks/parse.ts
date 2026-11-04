@@ -412,18 +412,18 @@ const filled = (v: unknown): string | null => (typeof v === 'string' && v !== ''
 const byCode = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 const emptyDerived = (): Derived => ({ agents: [], leads: [], queue: { waiting: [], ready: [], done: [] }, actions: [], fetched_at: 'never fetched' })
 
-type Tree = { path: string; head: string; branch: string | null; main: boolean }
+type Tree = { path: string; head: string; branch: string | null; detached: boolean; main: boolean }
 type Ref = { object: string; upstream: string; track: string; time: number | null }
 type Queue = Derived['queue'] & { reasons: Map<string, string[]> }
 
 /** R2: `git worktree list --porcelain`, blocks split by an empty line; the first block is the main checkout. */
 function rawTrees(text: string): Tree[] {
   const out: Tree[] = []
-  let block: { path: string | null; head: string; branch: string | null } = { path: null, head: '', branch: null }
+  let block: { path: string | null; head: string; branch: string | null; detached: boolean } = { path: null, head: '', branch: null, detached: false }
   for (const line of [...text.split('\n'), '']) {
     if (line === '') {
-      if (block.path !== null) out.push({ path: block.path, head: block.head, branch: block.branch, main: out.length === 0 })
-      block = { path: null, head: '', branch: null }
+      if (block.path !== null) out.push({ path: block.path, head: block.head, branch: block.branch, detached: block.detached, main: out.length === 0 })
+      block = { path: null, head: '', branch: null, detached: false }
     } else if (line.startsWith('worktree ')) {
       block.path = line.slice('worktree '.length)
     } else if (line.startsWith('HEAD ')) {
@@ -432,7 +432,7 @@ function rawTrees(text: string): Tree[] {
       const b = line.slice('branch '.length)
       block.branch = b.startsWith('refs/heads/') ? b.slice('refs/heads/'.length) : b
     } else if (line === 'detached') {
-      block.branch = null
+      block.detached = true
     }
   }
   return out
@@ -499,7 +499,7 @@ function deriveUnsafe(raw: Raw): Derived {
   const refOf = (branch: string) => refs.get(`refs/heads/${branch}`)
   const hasUpstream = (t: Tree) => t.branch !== null && (refOf(t.branch)?.upstream ?? '') !== ''
   const upstreamText = (t: Tree): string => {
-    if (t.branch === null) return `detached ${t.head.slice(0, 7)}`
+    if (t.branch === null) return t.detached ? `detached ${t.head.slice(0, 7)}` : '?'
     const ref = refOf(t.branch)
     if (ref === undefined) return '?'
     if (ref.upstream === '') return 'no upstream'
@@ -584,7 +584,7 @@ function deriveUnsafe(raw: Raw): Derived {
         qa !== null &&
         (qa.verdict === 'ACCEPT' || qa.verdict === 'ACCEPT_WITH_NOTES') &&
         (tier < 2 || (sec !== null && (sec.verdict === 'CLEAN' || sec.verdict === `${LOCK} HUMAN_APPROVAL`)))
-      const isReady = isReviewed && tip === qaSha
+      const isReady = isReviewed && qaSha !== null && tip === qaSha
       const reasons: string[] = []
       if (isReady) reasons.push('ready to merge')
       if (status === 'open' && tier === 3) {
