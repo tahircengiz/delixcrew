@@ -193,3 +193,30 @@
     2. The growth check added in this PR measures 50K against 400K (`("a //b " * 66667)[:400000]`) with limit ≤ 12× (best of 3), and prints both times and the ratio.
   - Measured ratios: quadratic 17.1, linear 8.0.
   - Global Constraint "K163: do not touch `_url_pass` merging" no longer applies: only this list change is allowed, nothing else in `_url_pass`.
+- Round 2 (qa ACCEPT, 0 P0/P1; security FIX; PR #39 @ fb57fc4). The lead reproduced every finding on fb57fc4 and on main 7d2889a.
+  - **F2 [Medium]** REQ-1c covers only `github.com/`. These leak on both trees:
+    - `see github.com:acme/private` stays unchanged (scp form without `git@`).
+    - `vendor/github.com:443/acme/private` stays unchanged.
+    - Fix: `GH_PLAIN_RE` second group `[:/][^\s<stop>]*`. In `_gh_plain_repl`, a leading `:` is followed by an optional port; if `/` follows the port, the path starts there, otherwise the text after `:` is the path (scp). The path then goes through the same owner allowlist.
+    - Keep unchanged: `github.com: ok`, `github.com:`, `github.com/`, `github.com:tahircengiz/delixcrew`.
+    - `see github.com:443` → `see github.com<redacted:path>` (fail closed).
+  - **F3 [Low]** REQ-1b misses a host with a trailing dot and the separators `\ ? #`. These leak on both trees:
+    - `see ci.acme-corp.net.:8080/api/secret` → `see <redacted:host>.:8080/api/secret`
+    - `see ci.acme-corp.net\share\secret` → `see <redacted:host>\share\secret`
+    - `ci.acme-corp.net?token=x` → `<redacted:host>?token=x`
+    - Fix: `AFTER_PH_RE` = `(<redacted:(?:host|ip|email|mac)>\.?)[:/\\?#][^\s<stop>]+`. The dot stays with the placeholder.
+    - Expected outputs: `see <redacted:host>.<redacted:path>`, `see <redacted:host><redacted:path>`, `<redacted:host><redacted:path>`.
+    - Unchanged: `see ci.acme-corp.net. Next` → `see <redacted:host>. Next`; `mail a@acme-corp.net?` → `mail <redacted:email>?`.
+  - **F4 [Low]** Idempotency: a kept `::` after `<redacted:path>` becomes `<redacted:ip>` on the next pass, so the draft is BLOCKED by a residual match.
+    - `vendor/github.com/acme/x::` is new in this PR. `10.1.2.3/x::` already breaks on main.
+    - Fix: `_trail` keeps at most one trailing `.,;:` character; the rest goes into the redacted part.
+    - Expected: `<redacted:ip><redacted:path>:`, `vendor/github.com<redacted:path>:`. Add both inputs to `seen`.
+  - **F5 [Low]** REQ-1c accepts `.`/`..` segments. These stay unchanged on both trees:
+    - `vendor/github.com/tahircengiz/delixcrew/../../acme/private`
+    - `vendor/github.com/anthropics/../acme/private`
+    - Fix: redact when `"." in segs or ".." in segs`, as `_url_allowed` does. Expected: `vendor/github.com<redacted:path>` for both.
+  - Tests (insert only, in the blocks this PR added):
+    - every input above with its exact output, in the T020 case files;
+    - REQ-5 timings for `("<redacted:host>.?" * 5000)[:50000]`, `("github.com:" * 5000)[:50000]` and `("github.com:1" * 5000)[:50000]`, each < 0.5 s.
+  - Lead prototype on fb57fc4: all of the above pass, all 8 suites pass, the new timings are ≤ 0.021 s.
+  - P2, no fix: a non-string `fingerprint`/`title` in a hand-edited record raises TypeError in `build()`; main does the same. U+1680 passes K133 by design.

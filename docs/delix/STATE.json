@@ -26,9 +26,9 @@
       "tier": 3,
       "status": "fixing",
       "pr": 39,
-      "rounds": 1,
+      "rounds": 2,
       "cost_usd": null,
-      "sha": "907012c"
+      "sha": "fb57fc4"
     },
     "T021": {
       "file": "docs/delix/tasks/T021-feedback-docs-sync.md",
