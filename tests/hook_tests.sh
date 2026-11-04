@@ -249,4 +249,51 @@ rtime "ReDoS: 5k delimiter lines"        "$T/probe-delim.json"
 trdeny "triage dir, upper-cased ~ path"   write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/home/.CLAUDE/delixcrew/TRIAGE/12.json\"}}" "HOME=$T/home"
 trdeny "triage dir, upper-cased env dir"  write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"$T/TQ/12.json\"}}" "DELIXCREW_TRIAGE_DIR=$T/tq"
 DELIXCREW_TRIAGE_DIR="$T/tq" allow "triage lookalike dir still free (case fix)" write_gate.py "{\"tool_name\":\"Write\",\"cwd\":\"$N\",\"tool_input\":{\"file_path\":\"${T}/TQX/12.json\"}}"
+# T024 REQ-3 (#36, K182, K187, K188): one capture call of either script exempts its body from both scripts' (a)/(b);
+# a path starting with `-` is never a capture call; deny cases use the generic deny helper (rule order unchanged)
+FAH="python3 \"/x/scripts/feedback.py\" add <<'EOF'"; TRH="python3 \"/x/scripts/triage.py\" record 12 <<'EOF'"
+allow "T024 cross: add body names triage.py apply"        bash_gate.py "$(hd "$FAH" '{"title": "triage.py apply 12 --confirm abc fails"}' 'EOF')"
+allow "T024 cross: add body, triage.py under script"      bash_gate.py "$(hd "$FAH" '{"title": "triage.py record hangs under script"}' 'EOF')"
+allow "T024 cross: record body names feedback.py send"    bash_gate.py "$(hd "$TRH" '{"reason": "feedback.py send F001 --confirm abc is refused"}' 'EOF')"
+allow "T024 cross: record body, feedback.py under script" bash_gate.py "$(hd "$TRH" '{"reason": "feedback.py add hangs under script"}' 'EOF')"
+PSF='import pty; pty.spawn(["python3","/x/feedback.py","send","F001","--confirm","abc"])'
+PST='import pty; pty.spawn(["python3","/x/triage.py","apply","12","--confirm","abc"])'
+for c in 'python3 -ic/x/feedback.py add' 'python3 "-ic/x/feedback.py" add' 'python3 -ic/x/triage.py record 12' 'python3 "-ic/x/triage.py" record 12'; do
+  deny "T024 option-like path [$c], body drives feedback send" bash_gate.py "$(hd "$c <<'EOF'" "$PSF" 'EOF')"
+  deny "T024 option-like path [$c], body drives triage apply"  bash_gate.py "$(hd "$c <<'EOF'" "$PST" 'EOF')"
+done
+XT='python3 scripts/triage.py apply 12 --confirm abc'; XF='python3 scripts/feedback.py send F001 --confirm abc'
+xtricks(){ # label, carrier call without the heredoc operator, the other script's write call
+  local w="$1" c="$2" p="$3"
+  deny "T024 $w: unquoted <<EOF with \$(…)"              bash_gate.py "$(hd "$c <<EOF" "\$($p)" 'EOF')"
+  deny "T024 $w: unquoted <<EOF with backticks"           bash_gate.py "$(hd "$c <<EOF" "\`$p\`" 'EOF')"
+  deny "T024 $w: command on the delimiter line"           bash_gate.py "$(hd "$c <<'EOF'" '{"t":"x"}' "EOF; $p")"
+  deny "T024 $w: line after the delimiter"                bash_gate.py "$(hd "$c <<'EOF'" '{"t":"x"}' 'EOF' "$p")"
+  deny "T024 $w: early delimiter inside the body"         bash_gate.py "$(hd "$c <<'EOF'" '{"t":"x"}' 'EOF' "$p" 'EOF')"
+  deny "T024 $w: <<- and a tab-indented early delimiter"  bash_gate.py "$(hd "$c <<-'EOF'" '{"t":"x"}' "$(printf '\tEOF')" "$p" 'EOF')"
+  deny "T024 $w: header suffix | bash"                    bash_gate.py "$(hd "$c <<'EOF' | bash" "$p" 'EOF')"
+  deny "T024 $w: header suffix && x"                      bash_gate.py "$(hd "$c <<'EOF' && x" "$p" 'EOF')"
+  deny "T024 $w: # <<EOF comment trick"                   bash_gate.py "$(hd "$c # <<EOF" "$p" 'EOF')"
+  deny "T024 $w: \\<<EOF escape trick"                    bash_gate.py "$(hd "$c \\<<EOF" "$p" 'EOF')"
+  deny "T024 $w: \"<<EOF quote trick"                     bash_gate.py "$(hd "$c \"<<EOF" "\"; $p" 'EOF')"
+  deny "T024 $w: cd x && <capture>"                       bash_gate.py "$(hd "cd x && $c <<'EOF'" "$p" 'EOF')"
+  deny "T024 $w: <capture>; echo x"                       bash_gate.py "$(hd "$c <<'EOF'; echo x" "$p" 'EOF')"
+}
+xtricks "add carrier"    'python3 "/x/scripts/feedback.py" add'     "$XT"
+xtricks "record carrier" 'python3 "/x/scripts/triage.py" record 12' "$XF"
+deny "T024 add carrier: \${VAR} path"    bash_gate.py "$(hd "python3 \"\${CLAUDE_PLUGIN_ROOT}/scripts/feedback.py\" add <<'EOF'" '{"title": "triage.py apply 12 --confirm abc"}' 'EOF')"
+deny "T024 record carrier: \${VAR} path" bash_gate.py "$(hd "python3 \"\${CLAUDE_PLUGIN_ROOT}/scripts/triage.py\" record 12 <<'EOF'" '{"reason": "feedback.py send F001 --confirm abc"}' 'EOF')"
+python3 - "$T" "$N" <<'PYX'
+import json, sys
+t, n = sys.argv[1], sys.argv[2]
+probes = {
+    "xadd": "python3 \"/x/scripts/feedback.py\" add <<'EOF'\n" + ("triage.py -a apply script " * 25 + "\n") * 100 + "EOF",
+    "xrec": "python3 \"/x/scripts/triage.py\" record 12 <<'EOF'\n" + ("feedback.py -a send script " * 25 + "\n") * 100 + "EOF",
+}
+for k, c in probes.items():
+    with open(f"{t}/probe-{k}.json", "w") as f:
+        json.dump({"tool_name": "Bash", "cwd": n, "tool_input": {"command": c}}, f)
+PYX
+rtime "ReDoS: 65 KB cross body in add heredoc"    "$T/probe-xadd.json"
+rtime "ReDoS: 67 KB cross body in record heredoc" "$T/probe-xrec.json"
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

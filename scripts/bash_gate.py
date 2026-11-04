@@ -20,11 +20,18 @@ FEEDBACK_DENY = "delixcrew: feedback is sent only by the user from their own ter
 # `python3 <path>/feedback.py add <<'DELIM'` (quoted delimiter: no expansion), body, `DELIM` as the last line.
 # The path is literal (no `$`, nothing the shell expands); each path part is one repeated character class, so a
 # failing fullmatch cannot backtrack exponentially (ReDoS). Any other shape is checked as full text.
-_QPATH = r"\"(?:[^\"\n$`\\]*/)?feedback\.py\""
-_PATH = r"(?:[^\s'\"$`\\;&|<>(){}#*?\[\]~]*/)?feedback\.py"
+_QPATH = r"\"(?!-)(?:[^\"\n$`\\]*/)?feedback\.py\""
+_PATH = r"(?!-)(?:[^\s'\"$`\\;&|<>(){}#*?\[\]~]*/)?feedback\.py"
 ADD_HEREDOC = re.compile(r"(python3[ \t]+(?:" + _QPATH + "|" + _PATH + r")[ \t]+add[ \t]+<<(['\"])([A-Za-z_][\w.-]*)\2)"
                          r"\n(.*)\n\3", re.S)
-m = ADD_HEREDOC.fullmatch(cmd.strip())
+# The same shape for exactly one `python3 <path>/triage.py record <n> <<'DELIM'` call.
+_TQPATH = r"\"(?!-)(?:[^\"\n$`\\]*/)?triage\.py\""
+_TPATH = r"(?!-)(?:[^\s'\"$`\\;&|<>(){}#*?\[\]~]*/)?triage\.py"
+RECORD_HEREDOC = re.compile(r"(python3[ \t]+(?:" + _TQPATH + "|" + _TPATH + r")[ \t]+record[ \t]+\d+[ \t]+<<(['\"])"
+                            r"([A-Za-z_][\w.-]*)\2)\n(.*)\n\3", re.S)
+# REQ-3 (#36, K182, K187): no path starts with `-` (`python3 -ic<dir>/feedback.py` runs the body as code); one
+# capture match of either script limits the feedback and the triage (a)/(b) rules to its first line (order unchanged).
+m = ADD_HEREDOC.fullmatch(cmd.strip()) or RECORD_HEREDOC.fullmatch(cmd.strip())
 checked = m.group(1) if m and m.group(3) not in m.group(4).split("\n") else cmd
 if re.search(r"\bfeedback\.py['\"]?(?:\s*,\s*|\s+)(?:-\S+\s+)*['\"]?send\b", checked) or (
         re.search(r"\bfeedback\.py\b", checked) and re.search(r"\b(script|expect|unbuffer)\b|\bpty\.spawn\b", checked)):
@@ -42,14 +49,9 @@ if re.search(r"\bgh\s+issue\s+(create|new|comment|edit)\b", cmd) or (re.search(r
 
 # REQ-7 (0.6.0): known triage write paths, in every session; (a)/(b) unconditional, (c)/(d) only for delixcrew (K125)
 TRIAGE_DENY = "delixcrew: triage decisions are applied only by the user from their own terminal"
-# (a) and (b) skip a heredoc body only for exactly one `python3 <path>/triage.py record <n> <<'DELIM'` call, the
-# ADD_HEREDOC shape above (literal path, no `$`, non-overlapping classes: no ReDoS). (c) and (d) see the full text.
-_TQPATH = r"\"(?:[^\"\n$`\\]*/)?triage\.py\""
-_TPATH = r"(?:[^\s'\"$`\\;&|<>(){}#*?\[\]~]*/)?triage\.py"
-RECORD_HEREDOC = re.compile(r"(python3[ \t]+(?:" + _TQPATH + "|" + _TPATH + r")[ \t]+record[ \t]+\d+[ \t]+<<(['\"])"
-                            r"([A-Za-z_][\w.-]*)\2)\n(.*)\n\3", re.S)
-tm = RECORD_HEREDOC.fullmatch(cmd.strip())
-tchecked = tm.group(1) if tm and tm.group(3) not in tm.group(4).split("\n") else cmd
+# (a) and (b) see `checked` from the feedback block: the first line of one capture call (ADD_HEREDOC or
+# RECORD_HEREDOC, defined above), otherwise the full text. (c) and (d) see the full text.
+tchecked = checked
 if re.search(r"\btriage\.py['\"]?\s+(?:-\S+\s+)*['\"]?apply\b", tchecked) or (
         re.search(r"\btriage\.py\b", tchecked) and re.search(r"\b(script|expect|unbuffer)\b|\bpty\.spawn\b", tchecked)):
     deny(TRIAGE_DENY)
