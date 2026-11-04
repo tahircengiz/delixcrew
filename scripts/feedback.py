@@ -789,10 +789,10 @@ def cmd_send(args):
         return 6
     print("QUEUE: %s\nREPO: %s\nLABEL: %s\nTITLE: %s\n---\n%s\n---"
           % (queue_dir(), content["repo"], content["label"], content["title"], content["body"]))
-    sys.stdout.write("Type SEND %s to send it: " % h)
+    sys.stdout.write("Type SEND %s to send it (the word SEND, a space, then the hash): " % h)
     sys.stdout.flush()
     if sys.stdin.readline().strip() != "SEND " + h:
-        err("not confirmed; nothing sent")
+        err("not confirmed: type exactly SEND %s (the word SEND, a space, then the hash); nothing sent" % h)
         return 6
     env = {k: v for k, v in os.environ.items() if k not in GH_SCRUB}
     fp_line = "delixcrew-fp: " + rec.get("fingerprint", "")

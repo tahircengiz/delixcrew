@@ -169,6 +169,12 @@ out=$(tty_run "SEND 0123abcd0123" python3 "$S/feedback.py" send F002 --confirm "
 [ $rc -eq 6 ] && ! grep -q "issue" "$T/gh.log" && ok "REQ-6 wrong confirmation on TTY: exit 6, gh not called" || bad "REQ-6 wrong text (rc=$rc, $out)"
 echo "$out" | grep -qF "$Q" && echo "$out" | grep -q "tahircengiz/delixcrew" && echo "$out" | grep -q "### What happened" \
   && ok "REQ-6 send prints queue dir, repo and body itself" || bad "REQ-6 send display ($out)"
+# T023 REQ-1 (#34): the word alone is refused with the expected text (the pty merges stdout and stderr, \r\n)
+out=$(tty_run "SEND" python3 "$S/feedback.py" send F002 --confirm "$H"); rc=$?
+[ $rc -eq 6 ] && ! grep -q "issue" "$T/gh.log" \
+  && printf '%s\n' "$out" | tr -d '\r' | grep -qF "Type SEND $H to send it (the word SEND, a space, then the hash): " \
+  && printf '%s\n' "$out" | tr -d '\r' | grep -qF "not confirmed: type exactly SEND $H (the word SEND, a space, then the hash); nothing sent" \
+  && ok "T023 REQ-1 SEND alone on a TTY: exit 6, gh not called, exact prompt and refusal" || bad "T023 REQ-1 SEND alone (rc=$rc, $out)"
 
 # --- REQ-8 send and remote duplicate -----------------------------------------
 mkdir -p "$T/fake/scripts" "$T/fake/.claude-plugin"; cp "$S/feedback.py" "$T/fake/scripts/"

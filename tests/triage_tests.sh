@@ -195,6 +195,10 @@ out=$(printf '%s' "$R12" | tr_ record 12); rc=$?
   && ok "REQ-5 record: '#12 recorded accept', record fields" || bad "REQ-5 record (rc=$rc, $out)"
 [ "$(python3 -c 'import os,sys; print(oct(os.stat(sys.argv[1]).st_mode & 0o777), oct(os.stat(sys.argv[2]).st_mode & 0o777))' "$D" "$D/12.json")" = "0o700 0o600" ] \
   && ok "REQ-5 record dir 0700, file 0600" || bad "REQ-5 modes"
+# T023 REQ-2 (#35): accept recorded for the live text, not applied: the recorded-locally line, still exit 8
+out=$(tr_ show 12 --require accepted 2>"$T/err"); rc=$?
+[ $rc -eq 8 ] && [ -z "$out" ] && [ "$(cat "$T/err")" = "issue #12 is recorded locally as accept but not applied; from your own terminal run python3 \"$S/triage.py\" preview 12, then the apply command with the HASH it prints" ] \
+  && ok "T023 REQ-2 accept recorded, not applied (#12): exit 8, stdout empty, exact line" || bad "T023 REQ-2 #12 (rc=$rc, $out, $(cat "$T/err"))"
 ISHA13=$(field "$(tr_ show 13)" issue-sha)
 J13="{\"issue_sha\":\"$ISHA13\",\"decision\":\"defer\",\"reason\":\"Later.\"}"
 schema(){ # name, python mutation, text expected in stderr
@@ -379,6 +383,12 @@ out=$(tty_run "APPLY 0123abcd0123" python3 "$S/triage.py" apply 12 --confirm "$H
 [ $rc -eq 6 ] && [ "$(writes)" = 0 ] && ok "REQ-6 wrong confirmation on TTY: exit 6, no gh write call" || bad "REQ-6 wrong text (rc=$rc, $out)"
 echo "$out" | tr -d '\r' | grep -qx "REPO: tahircengiz/delixcrew" && echo "$out" | grep -qF "**Triage: accept**" && echo "$out" | grep -q "^ACTIONS: ensure-label accepted" \
   && echo "$out" | grep -qF "delixcrew-triage: accept $H12 $ISHA12" && ok "REQ-6 apply prints repo, issue, actions and the comment itself" || bad "REQ-6 display ($out)"
+# T023 REQ-1 (#34): the word alone is refused with the expected text (the pty merges stdout and stderr, \r\n)
+out=$(tty_run "APPLY" python3 "$S/triage.py" apply 12 --confirm "$H12"); rc=$?
+[ $rc -eq 6 ] && [ "$(writes)" = 0 ] \
+  && printf '%s\n' "$out" | tr -d '\r' | grep -qF "Type APPLY $H12 to apply it (the word APPLY, a space, then the hash): " \
+  && printf '%s\n' "$out" | tr -d '\r' | grep -qF "not confirmed: type exactly APPLY $H12 (the word APPLY, a space, then the hash); nothing applied" \
+  && ok "T023 REQ-1 APPLY alone on a TTY: exit 6, no gh write call, exact prompt and refusal" || bad "T023 REQ-1 APPLY alone (rc=$rc, $out)"
 out=$(GH_FAIL=all tr_ apply 12 --confirm "$H12" </dev/null 2>&1); [ $? -eq 7 ] && ok "REQ-6 gh fails: exit 7" || bad "REQ-6 gh fail ($out)"
 : > "$T/gh.log"; out=$(tty_run "APPLY $H12" python3 "$S/triage.py" apply 12 --confirm "$H12"); rc=$?
 [ $rc -eq 0 ] && [ "$(sq 's["labels"]["accepted"]')" = "{'color': '0e8a16', 'description': 'Triaged: accepted'}" ] \
@@ -429,5 +439,33 @@ st 's["issues"]["15"]["comments"].append({"login":"mallory","assoc":"NONE","body
   && grep -q "^ARGS: issue comment" "$T/gh.log" && grep -qF -- "label create -R github.com/tahircengiz/delixcrew deferred --color c5def5 --description Triaged: deferred" "$T/gh.log" \
   && ok "REQ-6 NONE account's marker copy is not counted; triage comment written" || bad "REQ-6 copied marker (rc=$rc, $(grep ARGS "$T/gh.log"))"
 out=$(tr_ apply 99 --confirm 000000000000 </dev/null 2>&1); [ $? -eq 2 ] && ok "apply without record: exit 2" || bad "apply no record ($out)"
+# --- T023 REQ-2 (#35, K181, K190): exit 8 and a local accept record ---------------
+D2="$T/tri2"
+st 's["issues"]["30"]={"title":"Recorded but not applied","body":"Body.","author":"tahircengiz","state":"OPEN","labels":[],"comments":[]}'
+ISHA30=$(field "$(tr_ show 30)" issue-sha)
+NOT30="issue #30 is not triaged as accepted; run /delixcrew:triage #30"
+CHG30="issue #30 changed since it was accepted; run /delixcrew:triage #30"
+NEW30="issue #30 is recorded locally as accept but not applied; from your own terminal run python3 \"$S/triage.py\" preview 30, then the apply command with the HASH it prints"
+req2(){ # name, expected stderr (whole, exact)
+  out=$(DELIXCREW_TRIAGE_DIR="$D2" tr_ show 30 --require accepted 2>"$T/err"); rc=$?
+  [ $rc -eq 8 ] && [ -z "$out" ] && [ "$(cat "$T/err")" = "$2" ] && ok "T023 REQ-2 $1: exit 8, stdout empty, exact line" \
+    || bad "T023 REQ-2 $1 (rc=$rc, $out, $(cat "$T/err"))"; }
+rec30(){ # name, python mutation of the stored record, expected stderr; the record is restored afterwards
+  cp "$D2/30.json" "$T/30.bak"
+  python3 -c 'import json,sys; p=sys.argv[1]; d=json.load(open(p)); exec(sys.argv[2]); json.dump(d,open(p,"w"))' "$D2/30.json" "$2"
+  req2 "$1" "$3"; cp "$T/30.bak" "$D2/30.json"; }
+req2 "no record" "$NOT30"
+printf '{"issue_sha":"%s","decision":"accept","reason":"Yes."}' "$ISHA30" | DELIXCREW_TRIAGE_DIR="$D2" tr_ record 30 >/dev/null
+req2 "accept recorded for the live text, not applied" "$NEW30"
+rec30 "record with an old sha"             'd["issue_sha"]="0123456789ab"'                                  "$NOT30"
+rec30 "defer record"                       'd["decision"]="defer"'                                          "$NOT30"
+rec30 "applied record, label missing"      'd["status"]="applied"; d["applied_at"]="2026-11-04T00:00:00Z"' "$NOT30"
+rec30 "record for another issue (invalid)" 'd["issue"]=31'                                                 "$NOT30"
+cp "$D2/30.json" "$T/30.bak"; echo '{broken' > "$D2/30.json"; req2 "record not JSON" "$NOT30"; cp "$T/30.bak" "$D2/30.json"
+# K190: second exit 8 branch (label + maintainer marker for an older text), recorded again for the live text
+st 's["issues"]["30"]["labels"]=["accepted"]; s["issues"]["30"]["comments"].append({"login":"tahircengiz","assoc":"OWNER","body":"ok\n\ndelixcrew-triage: accept 0123456789ab 0123456789ab"})'
+req2 "changed since accepted, recorded again, not applied" "$NEW30"
+rec30 "changed since accepted, applied record" 'd["status"]="applied"'          "$CHG30"
+rec30 "changed since accepted, old-sha record" 'd["issue_sha"]="0123456789ab"'  "$CHG30"
 
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

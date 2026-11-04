@@ -135,6 +135,17 @@ def gh_failed(e):
     return 7
 
 
+def not_accepted(n, sha, line):
+    """REQ-8 exit 8 with `line` on stderr. REQ-2 (#35, K181, K189, K190): a valid local record that is an accept, not
+    applied yet and made for the live text says where to go next instead; it never counts as acceptance."""
+    rec, _ = load_record(n)
+    if rec is not None and rec["decision"] == "accept" and rec["status"] == "recorded" and rec["issue_sha"] == sha:
+        line = ('issue #%d is recorded locally as accept but not applied; from your own terminal run python3 "%s" '
+                "preview %d, then the apply command with the HASH it prints" % (n, os.path.abspath(__file__), n))
+    err(line)
+    return 8
+
+
 # --- show / index ---------------------------------------------------------------
 def cmd_show(args):
     n = args.n
@@ -152,11 +163,9 @@ def cmd_show(args):
     ti, m = triage_comment(comments)
     if args.require == "accepted":
         if "accepted" not in raw_labels or m is None or m.group(1) != "accept":
-            err("issue #%d is not triaged as accepted; run /delixcrew:triage #%d" % (n, n))
-            return 8
+            return not_accepted(n, sha, "issue #%d is not triaged as accepted; run /delixcrew:triage #%d" % (n, n))
         if m.group(3) != sha:
-            err("issue #%d changed since it was accepted; run /delixcrew:triage #%d" % (n, n))
-            return 8
+            return not_accepted(n, sha, "issue #%d changed since it was accepted; run /delixcrew:triage #%d" % (n, n))
     v = VERSION_RE.search(body)
     version = v.group(1) if v and SEMVER_RE.fullmatch(v.group(1)) else "unknown"
     lines = ["url: " + url, "state: " + state, "author: " + author,
@@ -382,10 +391,10 @@ def cmd_apply(args):
     label = DECISIONS[decision]
     published = comment + "\n\n" + marker
     print("REPO: %s\nISSUE: #%d %s\nACTIONS: %s\n---\n%s\n---" % (REPO, n, url, actions(decision), published))
-    sys.stdout.write("Type APPLY %s to apply it: " % h)
+    sys.stdout.write("Type APPLY %s to apply it (the word APPLY, a space, then the hash): " % h)
     sys.stdout.flush()
     if sys.stdin.readline().strip() != "APPLY " + h:
-        err("not confirmed; nothing applied")
+        err("not confirmed: type exactly APPLY %s (the word APPLY, a space, then the hash); nothing applied" % h)
         return 6
     # 5. one read, then each step writes only if needed (K112)
     env = gh_env()
