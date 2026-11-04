@@ -3,7 +3,7 @@
 > Size: **M** · Tier: 3 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 2: architect FIX + security FIX işlendi)
 > Source: issue'lar [#34](https://github.com/tahircengiz/delixcrew/issues/34), [#35](https://github.com/tahircengiz/delixcrew/issues/35),
 > [#36](https://github.com/tahircengiz/delixcrew/issues/36) (üçü de triage'da `accepted`, 2026-11-04; istek metni kullanıcı onaylı).
-> Kararlar K178–K192 (lead, geri alınır). STATUS.md K numaralarının devamıdır. Önceki spec (kapalı):
+> Kararlar K178–K192 (lead, geri alınır) ve kapanışta K197. STATUS.md K numaralarının devamıdır. Önceki spec (kapalı):
 > [`archive/0.6.2-feedback-filter-gaps/SPEC.md`](archive/0.6.2-feedback-filter-gaps/SPEC.md) (K159–K176).
 
 ## 1. Goal
@@ -59,7 +59,9 @@ README.tr.md karşılığı bu durumu anlatır.
 ### Requirement: REQ-3 Capture heredoc'u yalnız veri gövdesinde ve iki script için muaf (#36, K182, K187, K188)
 The system SHALL `scripts/bash_gate.py`'de:
 - **(a)** dört yol kalıbında (`_QPATH`, `_PATH`, `_TQPATH`, `_TPATH`) yolun `-` ile başlamasını reddetmeli
-  (`(?!-)`, tırnaklı biçimde tırnaktan hemen sonra); böyle bir komut kalıba uymaz ve tam metinle denetlenir;
+  (`(?!-)`, tırnaklı biçimde tırnaktan hemen sonra); böyle bir komut kalıba uymaz ve tam metinle denetlenir. Tırnaksız
+  `_PATH`/`_TPATH` sınıfları ayrıca `^`'yi dışlar (K197, inceleme turu 1: zsh `extendedglob` ile `^x/…` `-ic/…`'ye
+  açılabilir);
 - **(b)** komutun tamamı `ADD_HEREDOC` ya da `RECORD_HEREDOC`'a fullmatch oluyor ve ayraç gövdede erken geçmiyorsa
   feedback (a)/(b) ve triage (a)/(b) kurallarının **ikisini de** yalnız başlık satırına (group 1) uygulamalı.
 Kural sırası, kalıpların geri kalanı, `gh` kuralları, deny metinleri ve korumalı yol yönlendirme denetimi değişmez.
@@ -70,6 +72,10 @@ Kural sırası, kalıpların geri kalanı, `gh` kuralları, deny metinleri ve ko
 #### Scenario: seçenek biçimli yol deny (bugün dördü allow, lead main'de ölçtü)
 - WHEN `python3 -ic/x/feedback.py add <<'EOF'` ve `python3 "-ic/x/feedback.py" add <<'EOF'`, aynısı `triage.py record 12`
   için; gövde aynı ya da öbür script'in `send`/`apply`'ını `pty.spawn` ile sürer
+- THEN her biri deny
+#### Scenario: glob yolu deny (K197; c90163a'da üçü allow, main'de ikisi, lead ölçtü)
+- WHEN `python3 ^x/feedback.py add <<'EOF'` ve `python3 ^x/triage.py record 12 <<'EOF'`; gövde iki script'ten birinin
+  `send`/`apply`'ını `pty.spawn` ile sürer
 - THEN her biri deny
 #### Scenario: çapraz biçimde hileler deny
 - WHEN çapraz allow gövdeleri şu biçimlerle gelir: tırnaksız `<<EOF` + `$(…)` ya da backtick; ayraç satırında komut;
@@ -98,7 +104,9 @@ Kayıt ve kuyruk biçimi değişmez; göç yok.
 - **Mevcut açık (main `1b3cf9e`, lead ölçtü, K187):** yol kalıbı `-` ile başlayan token'ı kabul ediyor. `python3
   -ic/<dizin>/feedback.py add <<'EOF'` ve triage record karşılığı fullmatch oluyor; Python `-i -c` ile gövdeyi stdin'den
   kod olarak çalıştırıyor (`BODY RAN` gözlendi) ve gövdenin `pty.spawn` ile kendi `send`/`apply`'ını sürmesi hook'tan
-  geçiyor. REQ-3 (a) bunu kapatır; (b) tek başına uygulansaydı çapraz yönü de açardı.
+  geçiyor. REQ-3 (a) bunu kapatır; (b) tek başına uygulansaydı çapraz yönü de açardı. İnceleme turu 1'de aynı biçimin
+  çalışma anındaki hâli bulundu: zsh `extendedglob` açıkken tırnaksız `^x/…` yolu `-ic/…`'ye açılabiliyor; K197 `^`'yi
+  dışlar. Bundan sonra "her `<dizin>/…`" ifadesi `^` içermeyen tırnaksız dizinler içindir.
 - Kalan risk (REQ-3): yol sabit değildir; her `<dizin>/feedback.py` ya da `<dizin>/triage.py` kalıba uyar. Muafiyet
   gövdeyi o dosyaya stdin olarak verir; aynı adlı başka bir dosya gövdeyi okuyabilir. Bu, README.md:311-314'deki "desen
   tabanlı, gizlenmiş komut yakalanmaz" kalan riskiyle aynı sınıftır; yeni yetenek değildir. `apply`/`send` ayrıca TTY,
@@ -130,8 +138,8 @@ Gate 1'i bekletmeyen, bu spec dışı takip adayları (P2, önceden var olan):
   birebir karşılaştırma reddeder. Yazılan metin yankılanmaz (K139 terminal güvenliği).
 - **K181** (geri alınır) Yeni mesaj yalnız `decision accept` + `status recorded` + canlı sha'da; `applied` kaydı varken
   etiketin eksik olması (biri kaldırmış) bugünkü mesajı alır, çünkü yeniden triage doğru adımdır.
-- **K182** (geri alınır) Çapraz muafiyet iki kalıbın zaten hesaplanan eşleşmesini paylaşır; yeni regex yok (ReDoS yüzeyi
-  büyümez). Gerekçe: en küçük değişiklik, iki capture biçimi simetrik olur.
+- **K182** (geri alınır) Çapraz muafiyet iki kalıbın zaten hesaplanan eşleşmesini paylaşır; `(?!-)` ve `^` (K197)
+  dışında yeni regex öğesi yok (ReDoS yüzeyi büyümez). Gerekçe: en küçük değişiklik, iki capture biçimi simetrik olur.
 - **K183** (geri alınır) Not dosyası biçimi ve `cd`/`echo` sarmalı kapsam dışı: muafiyet tek çağrı + tırnaklı ayraçla
   sınırlı kalır (fail closed); bedel, bu biçimlerde Write aracı ya da çağrıyı tek başına çalıştırmak.
 - **K184** (geri alınır) Site değişmez: `site/index.html:553` "exit 8 when the acceptance check fails" doğru kalır; komut,
@@ -154,3 +162,7 @@ Gate 1'i bekletmeyen, bu spec dışı takip adayları (P2, önceden var olan):
   var olan iki P2 §8'de.
 - **K192** (geri alınır) Kart numaraları T023/T024: T022, paralel oturumda #10 kartına verildi (PR #46,
   `4b52a3b`). Taban `4b52a3b`; #46 README'leri değiştirdiği için README satır referansları o ağaca göre.
+- **K197** (geri alınır; kullanıcı, inceleme turu 1, 2026-11-04) `^`, tırnaksız `_PATH`/`_TPATH` sınıflarının dışlanan
+  karakterlerine eklendi: security'nin "emin değilim" notunu lead ölçtü (zsh `extendedglob` ile `^q/x.py` → `-ic/x.py`;
+  varsayılan zsh ve bash açmaz). T024'te fix turu 1 (PR #48, `e58d867`), 4 glob yolu deny testi. Kapanış drift
+  kontrolünde SPEC metni koda uyduruldu.

@@ -2,6 +2,25 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## Unreleased
+
+- **Security fix in the Bash hook** (`scripts/bash_gate.py`, #36): a capture call whose path started with `-`
+  (`python3 -ic<dir>/feedback.py add <<'EOF'`, and the same `triage.py record` shape) passed the capture exemption, and
+  Python ran the heredoc body as code under `-i -c`; such a body could start `send` or `apply` on a pseudo-terminal
+  without the user typing the confirmation. The four capture path patterns now reject a path that starts with `-`, and
+  the unquoted ones also reject `^` (with zsh `extendedglob`, `^x/…` can expand to `-ic/…`). Update the plugin.
+- **One capture call exempts both rule sets** (#36): the body of exactly one `feedback.py add` heredoc is no longer
+  checked against the triage rules, and the body of exactly one `triage.py record` heredoc no longer against the
+  feedback rules. Every other shape (a `cd …&&` or `; echo` wrapper, a `${…}` path, an early delimiter) is still checked
+  as full text.
+- **The confirmation prompt says what to type** (#34): `triage.py apply` asks
+  `Type APPLY <h> to apply it (the word APPLY, a space, then the hash): ` and `feedback.py send` the same with `SEND`;
+  a mismatch repeats the full expected text. The exact comparison, the TTY check and exit 6 are unchanged.
+- **Exit 8 names a recorded but unapplied accept** (#35): when `triage.py show <n> --require accepted` refuses and a
+  valid local `accept` record for the live issue text exists, stderr says the issue is recorded locally but not
+  applied and gives the `preview` command to run from your own terminal. A local record never counts as acceptance;
+  `/delixcrew:start` shows the line as it is.
+
 ## 0.6.2 — 2026-11-04
 
 - **Feedback redaction is stricter** (`SANITIZER_VERSION` 3; take a new `preview` before `send`): a URL keeps only an

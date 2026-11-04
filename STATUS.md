@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-04 · **Sürüm:** 0.6.2 (2026-11-04, feedback süzgeci sertleştirmesi T016–T021 ve PR #44; `SANITIZER_VERSION` 3; K177) · **Faz:** 10 kapandı: feedback süzgeci kalan açıklar T020–T021 merge edildi (§10). §9: feedback temizliği arşivi `docs/delix/archive/0.6.x-feedback-cleanup/`.
+**Son güncelleme:** 2026-11-04 · **Sürüm:** 0.6.2 (2026-11-04, feedback süzgeci sertleştirmesi T016–T021 ve PR #44; `SANITIZER_VERSION` 3; K177) · **Faz:** 11 kapandı: #34–#36 triage/feedback düzeltmeleri T023–T024 merge edildi, `Unreleased` (§11). §10: feedback süzgeci kalan açıklar T020–T021. §9: feedback temizliği arşivi `docs/delix/archive/0.6.x-feedback-cleanup/`.
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -489,6 +489,37 @@ Low bulgusu §6'da, 4. tur yok.
 yalnız redaksiyon daha katı. Etiketler: v0.6.2 (merge commit'i) ile etiketsiz kalan v0.5.0, v0.6.0, v0.6.1; 0.2.x ve 0.3.0
 etiketsiz kalır. Eski etiketler sürüm atlatan commit'e değil, o sürümün son commit'ine konur (sonraki spec'in ilk
 commit'inden hemen önce): v0.5.0 `806febf`, v0.6.0 `fb6939d`, v0.6.1 `ff79206`. Etiketleri kullanıcı kendi terminalinden push eder.
+
+## 11. Triage ve feedback akışında üç düzeltme, #34–#36 (2026-11-04, `docs/delix/SPEC.md` canlı, sonraki spec başında arşivlenir; kapandı, main `8d7e21f`)
+
+Kaynak: issue #34, #35, #36 (triage ile accepted). T023 onay istemini ve exit 8 satırını, T024 `bash_gate.py`'nin
+capture muafiyetini kapsar. Sürüm atlatılmadı (K179); CHANGELOG `## Unreleased`.
+
+| # | Adım | Durum |
+|---|---|---|
+| 11.1 | Triage #34–#36 accept (kullanıcı, sohbette); arşiv `0.6.2-feedback-filter-gaps` (K178); `/delixcrew:start` (M · Tier 3), spec rev 2; architect 3 P1 + 4 P2, security 1 Medium + 3 Low işlendi | ✔ K178–K192 |
+| 11.2 | Kapı 1; main'de var olan `-ic` bypass'ı ölçüldü (4 biçim allow, gövde `-i -c` ile kod olarak çalışıyor), K187 | ✔ 2026-11-04 |
+| 11.3 | Dispatch T023 🔐 + T024 🔐 (dalga 1, paralel); Approved satırları; açığın tarifi fix'ten önce public (kullanıcı kararı, K194); PR #47 | ✔ `9f6f8e7` |
+| 11.4 | T023 PR #49 (`e2a82db`), 0 tur: qa ACCEPT, security 0 bulgu, 1 P2 (RecursionError) | ✔ merge edildi |
+| 11.5 | T024 PR #48 (`8d7e21f`), 1 tur: security "emin değilim" notu lead'de ölçüldü, zsh `extendedglob` ile `^x/…` → `-ic/…` (Low); kullanıcı kararıyla fix, K197; tur 1 qa ACCEPT_WITH_NOTES, security 0 bulgu | ✔ merge edildi; ana checkout ff, canlı hook düzeltilmiş |
+| 11.6 | Kapanış: metrikler, drift kontrolü, CHANGELOG, Security Advisory taslağı (yayın kullanıcıda) | ✔ 2026-11-04 |
+
+Kararlar: `docs/delix/SPEC.md` §9 (K178–K192) ve oturumda: **K193** dalı main ile merge (rebase değil) · **K194**
+(kullanıcı) PR #47 açığın tarifiyle push edildi, kapanışta CHANGELOG + GitHub Security Advisory · **K195** Tier 3
+oturumları kart olarak önerildi, kullanıcı başlattı · **K196**/**K198** STATE ve inceleme kaydı tek commit'te, push
+öncesi onay · **K197** (kullanıcı) `^`, `_PATH`/`_TPATH` dışlanan karakterlerine eklendi (K182 bu karakter için
+gevşedi).
+
+**Açık iş (kapanış drift kontrolü, 2026-11-04; architect: her REQ uygulanmış ve test edilmiş):**
+- K197 SPEC metnine işlendi (REQ-3 (a), glob yolu senaryosu, §6, K182). Kod değişmedi.
+- REQ-2 "exit 8 her durumda": `RecursionError` verecek kadar derin bir kayıt `show --require accepted`'ı exit 1 ve
+  traceback ile bitirir (`scripts/feedback.py` `read_json` yalnız `OSError`/`ValueError` yakalar). Yerel yazma ister,
+  `/start` yine durur. T023 oturumunun açtığı "Kayıt okumayı derin JSON ve FIFO'ya karşı sağlamlaştır" oturumu bunu
+  ele alıyor; PR'ı gelince ayrı incelenir.
+- `scripts/bash_gate.py:19-20` yorumu muafiyeti yalnız `feedback.py add` için anlatıyor (P2, korumalı yol; sonraki
+  bash_gate kartına).
+- SPEC §8'deki iki P2 açık kalır: triage kuralı (a) argv listesi biçimi; README.md:312-313 ifadesi.
+- GitHub Security Advisory yayımlanmadı (taslak lead'de; yayın kullanıcıda, K194).
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

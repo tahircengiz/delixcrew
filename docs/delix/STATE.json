@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-04T17:00:00Z",
+  "updated": "2026-11-04T17:10:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -53,11 +53,11 @@
       "file": "docs/delix/tasks/T024-bash-gate-cross-capture.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 48,
       "rounds": 1,
       "cost_usd": null,
-      "sha": "e58d867"
+      "sha": "8d7e21f"
     },
     "T025": {
       "file": "docs/delix/tasks/T025-dependabot-main-rulesets.md",

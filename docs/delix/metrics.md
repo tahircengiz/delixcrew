@@ -119,3 +119,29 @@ Lead session (start, spec, dispatch, reviews, close; two context windows): outpu
   → 9, 4.5 per card (target ≤ 5). The start request came from the parent session and is not counted.
 
 **No single-session baseline** exists for this feature.
+
+## Triage ve feedback akışında üç düzeltme, #34–#36 (closed 2026-11-04; SPEC `docs/delix/SPEC.md`, cards T023–T024)
+
+Source: `STATE.json`, `gh pr view` (createdAt → mergedAt), the session transcripts (`message.usage`, summed per
+assistant message, not deduplicated; only the transcript file each implementer session started, because Desktop
+reuses worktree directories). Session cost in USD: not measured.
+
+| card | tier | PR | review rounds | PR open → merge | implementer tokens (out / cache read / cache write) | note |
+|---|---|---|---|---|---|---|
+| T023 confirm prompt + exit 8 line | 3 | #49 | 0 | 21 min | 176K / 31.6M / 486K (+ 2 subagents 47K / 1.7M / 242K) | the session also ran its own qa/security pass after the PR and opened a side session for the P2 (RecursionError); both are in these numbers |
+| T024 bash_gate cross capture | 3 | #48 | 1 | 60 min | 70K / 11.8M / 320K | round 1: security "unsure" note reproduced by the lead (`^` with zsh `extendedglob`, Low); the fix was prototyped before the round and matched byte for byte |
+
+Lead session (status, project status, triage of #34–#36, start, spec, dispatch, reviews, close; one context window
+plus a compaction): output 611K, cache read 100.4M, cache write 1.45M. Subagents (14: scout, architect, qa, security,
+security-review): output 664K, cache read 22.5M, cache write 2.68M. Cards PR #47 open → merge: 2 min.
+
+**Gates and interventions** (counted from the lead transcript, from the start request on; the triage consents
+`accept #34`–`#36` belong to triage and are not counted):
+- `AskUserQuestion` calls: 5 (gate 1, PR shape, 🔐 T023 + T024 in one call, publishing the hole before the fix, the
+  `^` fix decision).
+- Gates: request approval, gate 1, 🔐 T023, 🔐 T024, the `^` review decision, 3 merges (#47, #49, #48, run in the
+  user's terminal) → 8.
+- Interventions outside gates: "Evet, tek spec", PR shape, publishing decision, "merge komutunu ver", "İkisini başlat"
+  → 5, 2.5 per card (target ≤ 5).
+
+**No single-session baseline** exists for this feature.
