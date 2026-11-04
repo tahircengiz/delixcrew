@@ -347,8 +347,8 @@ t020 = [("a-space-slashes", ("a //b " * 8334)[:N]),
 for name, x in t020:
     dt_ = best(x)
     res(dt_ < 0.5, "REQ-5 t020-%s %.3f s" % (name, dt_))
-b50, b200 = best(("a //b " * 8334)[:N]), best(("a //b " * 33334)[:200000])
-res(b200 <= 6 * b50, "REQ-5 t020-growth a //b 50K %.3f s, 200K %.3f s, ratio %.2f (≤ 6)" % (b50, b200, b200 / b50))
+b50, b400 = best(("a //b " * 8334)[:N]), best(("a //b " * 66667)[:400000])
+res(b400 <= 12 * b50, "REQ-5 t020-growth a //b 50K %.3f s, 400K %.3f s, ratio %.2f (≤ 12)" % (b50, b400, b400 / b50))
 sys.exit(FAIL)
 PY
 python3 "$T/cases.py" || FAIL=1

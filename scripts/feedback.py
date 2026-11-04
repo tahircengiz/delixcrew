@@ -272,11 +272,11 @@ def _url_pass(text, term_re, scheme):
     out, pos, done = [], 0, 0
     regex = URL_SCHEME_RE if scheme else URL_NAME_RE
 
-    def put(s, keep):
+    def put(s, keep):  # K173: an unprotected segment collects its parts in a list (linear), joined at the end
         if not keep and out and not out[-1][1]:
-            out[-1] = (out[-1][0] + s, False)
+            out[-1][0].append(s)
         elif s:
-            out.append((s, keep))
+            out.append(([s], keep))
     while True:
         m = regex.search(text, pos)
         if not m:
@@ -303,7 +303,7 @@ def _url_pass(text, term_re, scheme):
         put(text[m.start():end] if ok else prefix + "<redacted:url>", ok)
         done = pos = end
     put(text[done:], False)
-    return out
+    return [("".join(parts), keep) for parts, keep in out]
 
 
 def _url_split(text, term_re):
