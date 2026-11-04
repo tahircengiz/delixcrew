@@ -1,0 +1,29 @@
+# Cases for the analytics tag rule in tests/site_tests.sh. One case per line, tab-separated:
+#   expect (ok|bad) <TAB> where (head|body) <TAB> name <TAB> snippet
+# The snippet is placed in <head> or <body> of a test page; {ID} becomes a sample website id, {TAG} the allowed tag.
+# A "bad" case must make the page check fail, an "ok" case must leave it clean.
+ok	head	allowed tag in head	{TAG}
+bad	head	no tag	<meta name="x" content="y">
+bad	head	other host	<script defer src="https://evil.example/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
+bad	head	look-alike host	<script defer src="https://stats.delix.dev.evil.example/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
+bad	head	other path on the host	<script defer src="https://stats.delix.dev/x.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
+bad	head	plain http	<script defer src="http://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
+bad	head	protocol-relative src	<script defer src="//stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
+bad	head	two tags	{TAG}{TAG}
+bad	head	async instead of defer	<script async src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
+bad	head	no defer	<script src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
+bad	head	inline script next to the tag	{TAG}<script>alert(1)</script>
+bad	head	second script from the host	{TAG}<script src="https://stats.delix.dev/u.js"></script>
+bad	head	extra attribute (host-url)	<script defer src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io" data-host-url="https://evil.example"></script>
+bad	head	extra attribute (onload)	<script defer src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io" onload="x()"></script>
+bad	head	other domain	<script defer src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="example.com"></script>
+bad	head	extra domain	<script defer src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io,example.com"></script>
+bad	head	no domains	<script defer src="https://stats.delix.dev/u.js" data-website-id="{ID}"></script>
+bad	head	website id not a uuid	<script defer src="https://stats.delix.dev/u.js" data-website-id="not-a-uuid" data-domains="tahircengiz.github.io"></script>
+bad	head	website id upper case	<script defer src="https://stats.delix.dev/u.js" data-website-id="0A1B2C3D-4E5F-4A6B-8C7D-9E0F1A2B3C4D" data-domains="tahircengiz.github.io"></script>
+bad	head	placeholder nil uuid	<script defer src="https://stats.delix.dev/u.js" data-website-id="00000000-0000-0000-0000-000000000000" data-domains="tahircengiz.github.io"></script>
+bad	head	upper-case tag name	<SCRIPT defer src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io"></SCRIPT>
+bad	head	attributes reordered	<script src="https://stats.delix.dev/u.js" defer data-website-id="{ID}" data-domains="tahircengiz.github.io"></script>
+bad	head	body between the tags	<script defer src="https://stats.delix.dev/u.js" data-website-id="{ID}" data-domains="tahircengiz.github.io">alert(1)</script>
+bad	head	third-party stylesheet next to the tag	{TAG}<link rel="stylesheet" href="https://cdn.example/x.css">
+bad	body	tag in body, not head	{TAG}
