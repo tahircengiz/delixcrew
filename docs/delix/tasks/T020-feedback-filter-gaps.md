@@ -220,3 +220,24 @@
     - REQ-5 timings for `("<redacted:host>.?" * 5000)[:50000]`, `("github.com:" * 5000)[:50000]` and `("github.com:1" * 5000)[:50000]`, each < 0.5 s.
   - Lead prototype on fb57fc4: all of the above pass, all 8 suites pass, the new timings are ≤ 0.021 s.
   - P2, no fix: a non-string `fingerprint`/`title` in a hand-edited record raises TypeError in `build()`; main does the same. U+1680 passes K133 by design.
+- Round 3 (qa ACCEPT_WITH_NOTES, 1 P2; security 🔐 HUMAN_APPROVAL, 4 Low; PR #39 @ cd04ea5). The lead reproduced every finding on cd04ea5 and on main 7d2889a. The user chose to fix all four in round 3 (2026-11-04). This is the last round: the cap is 3.
+  - **G1 [Low, new in this PR]** `tests/sanitize_tests.sh` lines 311, 480, 481 and 487 hold raw U+FE00, U+3164, U+2028 and U+2029, which breaks a Global Constraint. Write them as `\ufe00`, `\u3164`, `\u2028`, `\u2029`. Only lines that this PR added change.
+  - **G2 [Low, both trees]** `see [fd00::1]:8080/api/secret` → `see [<redacted:ip>]:8080/api/secret`.
+    - Fix: change `AFTER_PH_RE` group 1 to `(<redacted:(?:host|ip|email|mac)>[.\]]?)`.
+    - Expected: `see [<redacted:ip>]<redacted:path>`.
+    - Unchanged: `see [<redacted:ip>]. ok`.
+  - **G3 [Low, both trees]** `see vendor\github.com\acme\private` stays unchanged.
+    - Fix: change `GH_PLAIN_RE` group 2 to `[:/\\]`, and add `.replace("\\", "/")` to `tail` in `_gh_plain_repl`.
+    - Expected: `see vendor\github.com<redacted:path>`.
+  - **G4 [Low, both trees]** `vendor/github.com/tahircengiz/delixcrew/%2e%2e/%2e%2e/acme/private` stays unchanged.
+    - Fix: `_gh_plain_repl` keeps the match only if `URL_TAIL_OK_RE.fullmatch(tail)` also holds.
+    - Expected: `vendor/github.com<redacted:path>`.
+    - Still kept: `see github.com/tahircengiz/delixcrew/issues/1.`, `go github.com/anthropics/x`, `github.com:tahircengiz/delixcrew`.
+  - Tests:
+    - Add each input above with its exact output to the T020 case files.
+    - Add REQ-5 timings for `"<redacted:ip>]:" * 3125` and `("github.com\\" * 5000)[:50000]`.
+  - Lead prototype on cd04ea5: all pass, all 8 suites pass, raw invisible characters 0, new timings ≤ 0.02 s.
+  - P2, no fix:
+    - The `fingerprint` surrogate case does not check the first line.
+    - `x\jenkins:8080/api/secret` stays unchanged on both trees (K153 class, §6).
+    - `triage.py` imports `visible` but does not use it (the card requires the import).

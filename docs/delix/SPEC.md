@@ -31,12 +31,13 @@ The system SHALL URL dışı metinde host'u izleyen yolu da gizlemeli:
   Noktalı host, son etiketi `_looks_like_host` ölçütünü geçen addır. Bu bağlamda `ad:port/…` URL adayı değildir; `:`
   ile ayrılmış MAC ve IPv6 grupları bugünkü kurallarında kalır. Diğer sol bağlamlar (`\w . @ / -`) bugünkü gibi muaftır.
 - **(b)** Düz metinde `<redacted:host>`, `<redacted:ip>`, `<redacted:email>` ya da `<redacted:mac>` yer tutucusunun
-  hemen ardından (araya en fazla bir `.` girebilir) `:`, `/`, `\`, `?` ya da `#` ve en az bir karakter geliyorsa, o parça
+  hemen ardından (araya en fazla bir `.` ya da `]` girebilir) `:`, `/`, `\`, `?` ya da `#` ve en az bir karakter geliyorsa, o parça
   `<redacted:path>` olur. Parça boşlukta ya da `` `'"<>()[] `` karakterlerinden birinde biter. Sondaki `.,;:`'den en fazla
   bir karakter korunur (K174).
-- **(c)** Düz metinde `github.com/…`, `github.com:port/…` ve scp biçimi `github.com:sahip/…` her sol bağlamda (`\w` ve
-  `-` hariç) aynı sahip izin listesinden geçer. `tahircengiz/delixcrew` ve `anthropics/…` yolları kalır; `.` ya da `..`
-  parçası olan yol ve başka her yol `github.com<redacted:path>` olur.
+- **(c)** Düz metinde `github.com/…`, `github.com\…`, `github.com:port/…` ve scp biçimi `github.com:sahip/…` her sol
+  bağlamda (`\w` ve `-` hariç) aynı sahip izin listesinden geçer. Yol ayrıca URL kuyruk karakter listesine
+  (`URL_TAIL_OK_RE`) uymalıdır. `tahircengiz/delixcrew` ve `anthropics/…` yolları kalır; `.` ya da `..` parçası olan,
+  `%` içeren ve başka her yol `github.com<redacted:path>` olur.
 #### Scenario: sızan yollar
 - WHEN girdi şunlardan biri olur: `key:ci.acme-corp.net/api/x`, `ref:github.com/acme/private`,
   `x\ci.acme-corp.net/api/x`, `user@ci.acme-corp.net/api/x`, `see 10.1.2.3/api/x`, `a/ci.acme-corp.net:8080/api/x`,
@@ -229,5 +230,9 @@ Kuyruk ve kayıt biçimi değişmez, göç yok. Sürüm `"3"` kalır: hash içer
   REQ-1c'ye `:port` ve scp biçimi, ayrıca `.` ve `..` parçası eklendi. REQ-1b'ye host'un sonundaki nokta ve `\ ? #`
   ayraçları eklendi. Sondaki `.,;:`'den en fazla bir karakter korunur; `::` korunsaydı ikinci geçişte IPv6 sayılır ve
   idempotens bozulurdu.
+- **K175** (kullanıcı, 2026-11-04; geri alınır) T020 tur 3, son tur. Lead 4 Low'un hepsini dalda ve main'de üretti.
+  Kullanıcı hepsinin düzeltilmesini seçti. Düzeltilenler: testlerdeki ham görünmez karakterler (bu PR'la gelmişti),
+  `[IPv6]` sonrası yol, `\` ayraçlı github.com yolu ve `%` kodlu github.com yolu. `x\jenkins:8080/…` K153 sınıfındadır,
+  §6'da kalır.
 - **K172** (geri alınır; security Low) Baştaki sıfırlı IPv4 fail closed: oktetler ≤ 255 ise `ipaddress` hatası silmeye yol
   açar. Main ölçümü: `010.001.002.003` değişmeden kalıyor.
