@@ -288,7 +288,9 @@ Bir adım başarısız olduktan sonra `apply` yeniden çalıştırılırsa yaln�
 
 **Yorumu ne engeller** (`VERDICT: BLOCKED: <neden>`, `preview` 4 ile çıkar, komut verilmez): triage'dan sonra issue
 değişmişse; gerekçe ya da sorularda `@` mention, HTML ya da karakter referansı; görünmez karakterler; bir `gitleaks`
-bulgusu, ya da `gitleaks`'in olmaması veya hata vermesi; 32+ karakterlik opak dizi. Yorum yalnız kaydedilmiş gerekçe,
+bulgusu, ya da `gitleaks`'in olmaması veya hata vermesi; 32+ karakterlik opak dizi; feedback `config.json`'ı
+(`--terms` terimleriniz) var ama okunabilir bir JSON nesnesi değilse (bozuk, 1 MiB'tan büyük ya da 32 seviyeden derin,
+normal dosya değil), çünkü yorum terimleriniz olmadan redakte edilmez. Yorum yalnız kaydedilmiş gerekçe,
 sorular ve kopya numarasından kurulur, asla issue metninden değil.
 
 **Issue'dan işe.** `/delixcrew:start #12` yalnız `accepted` olarak triage edilmiş ve başlığı ile gövdesi kabulden beri
