@@ -6,6 +6,8 @@
 
 > 🔐 Tier 3: `scripts/common.py`, `scripts/stop_gate.py`, `scripts/write_gate.py` and the new `scripts/trust.py` are protected paths (SPEC §6), and this card decides when the Stop gate runs shell commands. The lead adds the Approved line after the user's explicit yes in chat and commits it to main before dispatch.
 
+**🔐 Approved:** 2026-11-04 tahircengiz
+
 **Goal (1 sentence):** The Stop gate runs the `delix.json` command list only when the pair `(git_common_dir, sha256)` is in a private record under the passwd home. The repo identity is checked on the file system with `lstat`, and git runs without `GIT_*`. `trust.py allow` is the only writer, and it needs a TTY and a typed `TRUST <h12>`. Unapproved means nothing runs, the gate exits 2 once and prints three stderr lines. `test-result.txt` is never written through a symlink, and write_gate denies the record. · **Spec:** `docs/delix/SPEC.md#REQ-1`, `#REQ-2`, `#REQ-3`, `#REQ-4` (record and write_gate part); §4, §5, §6; K199–K203, K206, K210–K214
 
 **Docs/site:** none in this card. T028 updates README, skills, CHANGELOG and site (REQ-7).

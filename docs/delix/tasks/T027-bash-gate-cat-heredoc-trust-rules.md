@@ -6,6 +6,8 @@
 
 > 🔐 Tier 3: `scripts/bash_gate.py` is a protected path. REQ-5 changes which heredoc bodies the gh and publish rules skip, and REQ-4 adds the agent-side guard for the Stop gate approval (SPEC §6). The lead adds the Approved line after the user's explicit yes in chat and commits it to main before dispatch.
 
+**🔐 Approved:** 2026-11-04 tahircengiz
+
 **Goal (1 sentence):** bash_gate gets three changes:
 - In every session it denies `trust.py` + `allow`, `trust.py` under a terminal wrapper, and any command naming `delixcrew/trust.json` (full text).
 - Exactly one `cat >|>> <path> <<'DELIM'` call, like one T024 capture call, limits every other path rule to its first line (feedback (c) and triage (c)/(d) included, K204).
