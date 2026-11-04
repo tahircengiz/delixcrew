@@ -81,4 +81,7 @@ Read (the outputs go into the issue #9 comment that the user publishes):
 **Docs/site:** no change (K-T025-4). No command, hook rule, role, gate or project-side file (README "Files on the project side") is added, and nothing shipped in the plugin changes, so there is no `plugin.json` bump and the CLAUDE.md site triggers do not fire.
 
 ## Review findings (filled by the lead)
-- Round 1: …
+- Round 0 (81b6853, PR #50): deterministic gates green: CI `test` and `check` pass; 8 suites pass; the lead re-ran the JSON and Ruby YAML parse checks on the branch SHA; internal-host scan of the diff and the current PR body is 0. qa: ACCEPT (0 P0, 0 P1). security: 🔐 HUMAN_APPROVAL. Its one finding is Low and outside the repo: the first PR #50 body quoted the push-time scan regex, which names the tailnet. The body was replaced within about a minute, but the old text stays in the description's edit history; the user deletes that revision. Notes, no fix:
+  - With admin bypass, any process holding the owner's token, agents included, can push to main and skip the PR and check rules. No hook denies an agent `git push` to main. Only force push and deletion stay blocked. This is accepted under K-T025-1.
+  - Dependabot PRs touch `.github/workflows/**`, so each one is Tier 3 and needs a human review.
+  - A `cooldown` key for brand-new action releases could come in a follow-up.
