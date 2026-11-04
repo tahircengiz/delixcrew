@@ -10,7 +10,13 @@ Earlier versions: git history and the [v0.2.0 release](https://github.com/tahirc
   longer allowed; absolute paths after `>`, `|`, `-` or `\/` and Windows UNC paths are redacted, as are Unicode host
   names; triage comments use the same redaction. `feedback.py list` and `add` print control characters from the queue as
   visible escapes, and the hook that guards the feedback and triage directories ignores letter case and Unicode
-  normalization.
+  normalization. A dotted `host/…` right after `:` or `\` is checked as a URL; a path or port right after a redacted
+  host, IP, e-mail or MAC address is redacted with it (`see 10.1.2.3/api/x` → `see <redacted:ip><redacted:path>`); a
+  `github.com/…` path in plain text keeps the owner rule (`vendor/github.com/acme/x` →
+  `vendor/github.com<redacted:path>`); an IP with a leading zero or a `_` next to it is redacted. A draft with a
+  character that is not a letter, number, punctuation mark, symbol, space, newline or tab (U+2028, a variation selector,
+  a Hangul filler, a lone surrogate) is `BLOCKED` with `invisible character`; `add` refuses a lone surrogate, and a
+  queue record whose `id` is not `F` and digits is never updated as a duplicate.
 
 ## 0.6.1 — 2026-11-03
 
