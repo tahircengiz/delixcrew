@@ -141,19 +141,35 @@ adı, ör. `build.example-corp.dev` → `<redacted:host>`; belge aralıkları ve
 (`10.1.2.3` → `<redacted:ip>`); MAC ve e-posta adresleri; ev dizini yollarının kullanıcı kısmı (`/Users/<siz>/x` →
 `~/x`) ve diğer her mutlak yol, tek parçalı olanlar ve `ad:/yol` dahil (`/srv/app`, `/srv`, `nas:/volume1/x` →
 `<redacted:path>`; yalnız `/delixcrew:<skill>` ve `/compact` gibi Claude Code yerleşik komutları kalır); kullanıcı adınız ve makine adınız; taslakların geldiği
-projelerin adları (klasör adı, git remote sahibi ve repo) ve `--terms` kelimeleriniz. URL'ler önce denetlenir
-(`şema://…`, `//…`, `host/…`, `ad:port/…`): bir URL yalnız host'u yukarıdaki izinli listedeyse ya da loopback veya belge
-aralığında bir IP ise, kullanıcı kısmı (`user@`) yoksa ve yolu ile sorgusu yalnız harf, rakam ve `._~-/` (`?` ya da `#`
-sonrası `=&+`) taşıyorsa (`..` parçası, host adı, IP ya da terim yok) kalır; `github.com`'da yalnız
-`tahircengiz/delixcrew` ve `anthropics/…` yolları kalır. Diğer her URL'nin şeması kalır, gerisi `<redacted:url>` olur
-(`http://jenkins:8080/job/x` → `http://<redacted:url>`; şemasızsa URL'nin tamamı, `//fileserver/share` →
-`<redacted:url>`); bu yüzden `%` içeren bağlantı da (`?q=is%3Aopen`) silinir.
+projelerin adları (klasör adı, git remote sahibi ve repo) ve `--terms` kelimeleriniz. Son etiketi dosya uzantısı olan ad
+host sayılmaz; `notes.md` ve `ci.acme-corp.conf` kalır. IP adresi baştaki sıfırla (`010.001.002.003`) ya da hemen
+yanında `_` ile (`10.1.2.3_`) yazılsa da redakte edilir.
+
+URL'ler önce denetlenir (`şema://…`, `//…`, `host/…`, `ad:port/…` ve `:` ya da `\`'dan hemen sonra gelen noktalı
+`host/…`). Bir URL yalnız şunların hepsi tutarsa kalır: şeması yok, `http` ya da `https`; host'u yukarıdaki izinli
+listede ya da loopback veya belge aralığında bir IP (IPv4 yalnız kanonik noktalı biçimiyle; `http://127.1/` silinir);
+kullanıcı kısmı (`user@`) yok; yolu ile sorgusu yalnız harf, rakam ve `._~-/` (`?` ya da `#` sonrası `=&+`) taşıyor;
+hiçbir yol parçası `.` ya da `..` değil; yolun ya da sorgunun noktalı her parçasında ilk etiketten sonraki her etiket
+dosya uzantısı ya da sayı (`a.tar.gz`, `v0.6.1`); yolda host adı, IP ya da MAC adresi yok; URL'nin hiçbir yerinde, şema
+ve host dahil, terim geçmiyor; `github.com`'da yalnız `tahircengiz/delixcrew` ve `anthropics/…` yolları kalır. Diğer her
+URL'nin şeması kalır, gerisi `<redacted:url>` olur (`http://jenkins:8080/job/x` → `http://<redacted:url>`,
+`key:ci.acme-corp.net/api/x` → `key:<redacted:url>`; şemasızsa URL'nin tamamı, `//fileserver/share` → `<redacted:url>`);
+bu yüzden `%` içeren bağlantı da (`?q=is%3Aopen`) silinir.
+
+Redakte edilen host, IP, e-posta ya da MAC adresinin hemen ardından gelen yol ya da port da onunla birlikte redakte
+edilir (`see 10.1.2.3/api/x` → `see <redacted:ip><redacted:path>`, `git@github.com:acme/private` →
+`<redacted:email><redacted:path>`, `de:ad:be:ef:00:11/x` → `<redacted:mac><redacted:path>`). Düz metindeki
+`github.com/…` yolu nerede geçerse geçsin aynı sahip kuralından geçer: `vendor/github.com/acme/private-lib/x.go` →
+`vendor/github.com<redacted:path>`.
 
 **Taslağı ne engeller** (`VERDICT: BLOCKED: <neden>`, `send` 4 ile çıkar; sır değeri basılmaz): ham ya da redakte
 metinde `gitleaks` bulgusu, ya da `gitleaks`'in olmaması, hata vermesi, zaman aşımı; görünmez Unicode kontrol karakteri
-(zero-width, bidi); 32+ karakterlik opak dizi (`[A-Za-z0-9+=_-]`; tam git SHA'sı da takılır, kısasını kullanın);
-15'ten fazla kod satırı; 8 KB'tan büyük gövde; redaksiyondan sonra hâlâ redaksiyon kuralına uyan bir şey; kuyruğa
-alındıktan sonra diskte değişmiş kayıt (`fingerprint mismatch`); okunamayan kuyruk kaydı.
+(zero-width, bidi); harf, sayı, noktalama işareti, sembol, boşluk, yeni satır ya da sekme olmayan başka her karakter
+(`invisible character`: ör. U+2028, U+2029, variation selector, Hangul filler ya da tek başına surrogate; U+FE0F gibi
+bir emoji seçici yalnız U+2764 gibi görünür bir sembolden sonra gelebilir), bu yüzden birleşik işaretli metin de (ör.
+Devanagari) takılır; 32+ karakterlik opak dizi (`[A-Za-z0-9+=_-]`; tam git SHA'sı da takılır, kısasını kullanın); 15'ten
+fazla kod satırı; 8 KB'tan büyük gövde; redaksiyondan sonra hâlâ redaksiyon kuralına uyan bir şey; kuyruğa alındıktan
+sonra diskte değişmiş kayıt (`fingerprint mismatch`); okunamayan kuyruk kaydı.
 
 **Kalan risk.** Hook'lar göndermenin *bilinen* yollarını kapatır; her şeyi engellemez. Claude sizin `gh` oturumunuzla
 çalışır ve gizlenmiş bir komut (base64'ten kurulan komut, dosyaya yazılmış bir sarmalayıcı, `gh` dışı bir HTTP isteği)
