@@ -25,12 +25,12 @@
       "file": "docs/delix/tasks/T022-security-policy-machine-section.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 46,
       "rounds": 2,
       "cost_usd": null,
       "issue": 10,
-      "sha": "e10c23f"
+      "sha": "4b52a3b"
     },
     "T023": {
       "file": "docs/delix/tasks/T023-confirm-prompt-recorded-accept.md",
