@@ -444,6 +444,14 @@ yazma kapısı feedback kuyruğunu harf büyüklüğüne duyarlı karşılaştı
 | 9.6 | Dalga 2: T019 PR #37 (`3ab269a`, CI tüm `tests/*_tests.sh`), T018 PR #38 (`1dc3992`, README + CHANGELOG `## Unreleased`); kapanış | ✔ 2026-11-04 |
 | 9.7 | Takip: kalan düz metin sezgi sınırları (SPEC §6) ve takip kartı adayları | ◻ kullanıcı kararı |
 
+**Açık iş (kapanış drift kontrolü, 2026-11-04; tek takip spec'i adayı):**
+- README/CHANGELOG Feedback metni koddan dar: http/https-only şema, kuyrukta noktalı parça kuralı, `.` parçası, MAC,
+  URL'nin tamamında terim, kanonik IPv4 (`http://127.1/` silinir), dosya uzantılı son etiketin host sayılmaması anlatılmıyor.
+- Test boşlukları: REQ-2 `a//b` ve `>/Users/alice/x`; REQ-4 önizleme taslağında REQ-2/REQ-3 girdileri; kuyruk IPv4
+  regex'i için ≈50 000 karakterlik REQ-5 süre vakası.
+- Kod: `_` ile biten IPv4/IPv6, `:` sonrası host'un yolu, `_url_pass` birleştirmesi O(n²), `preview`/`send` U+2028 ham,
+  `cmd_add` yinelenen dalda `ID_RE` yok. SPEC §6 kalan riskleri (K151, K153).
+
 Kararlar: SPEC §9. Öne çıkanlar: **K134** (kullanıcı) URL'de izin listesi, github.com'da yalnız `tahircengiz/delixcrew` ve
 `anthropics/*` yolu · **K146** izinli URL'nin kuyruğu da karakter izin listesinden geçer, `%` reddedilir · **K147**
 `*.test`/`*.invalid`/`*.localhost` artık izinli değil · **K140** sürüm artmaz, CHANGELOG `## Unreleased` · **K143** #12

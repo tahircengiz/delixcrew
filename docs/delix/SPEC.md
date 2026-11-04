@@ -1,6 +1,6 @@
 # SPEC — Feedback temizliği: URL izin listesi, yol bağlamları, kuyruk kapısında harf büyüklüğü
 
-> Size: **M** · Tier: 3 · Date: 2026-11-03 · Status: **approved (gate 1, 2026-11-03)** (architect FIX + security FIX işlendi)
+> Size: **M** · Tier: 3 · Date: 2026-11-03 · Status: **approved (gate 1, 2026-11-03)** (architect FIX + security FIX işlendi) · **closed 2026-11-04** (T016–T019 merged, main `1dc3992`; inceleme turlarıyla gelen kurallar K150–K158'de)
 > Source: grill kararı K134 (kullanıcı), K135–K149 (lead, geri alınır). STATUS.md K numaralarının devamıdır.
 > Önceki spec'ler (kapalı): [`archive/0.6.0-triage/SPEC.md`](archive/0.6.0-triage/SPEC.md),
 > [`archive/0.5.0-self-feeding/SPEC.md`](archive/0.5.0-self-feeding/SPEC.md) (REQ-3, REQ-12, K94, K101, K104).
@@ -34,6 +34,8 @@ izinli olanı değiştirmeden bırakmalı.
   `host/…`; `<ad>:<1–5 rakam>/…` (`jenkins:8080/job/x`). `://` ya da `//`'dan hemen sonra boşluk, satır sonu, metin sonu,
   bitiş karakteri ya da `<redacted:` geliyorsa URL yoktur ve metin değişmez. Bitiş: boşluk ya da `` ` ' " < > ( ) [ ] ``
   (IPv6 köşeli parantezi host'un parçası); sondaki `.,;:)` URL'ye dahil değildir ve çıktıda kalır.
+- **Şema (K157):** izinli URL'nin şeması yok, `http` ya da `https`'tir (ASCII, harf büyüklüğüne duyarsız); başka şemalı URL
+  izinsizdir ve şema metni sonraki adımlardan geçer.
 - **Authority:** `//`'dan (ya da şemasız biçimin başından) sonraki ilk `/`, `\`, `?` ya da `#`'e kadardır. Port atılır,
   küçük harfe çevrilir. Authority'de `@` varsa URL izinsizdir (userinfo hiçbir host'ta kalmaz). Host yalnız
   `[a-z0-9.-]+` ya da zone id'siz köşeli IPv6 olabilir; boş host, başka karakter (Unicode dahil) ya da ayrıştırma hatası
@@ -43,8 +45,11 @@ izinli olanı değiştirmeden bırakmalı.
   ya da ilk parça `anthropics` ise (harf büyüklüğüne duyarsız, tam parça); kanonik noktalı IPv4 ya da köşeli IPv6 ve
   loopback/RFC 5737/`2001:db8::/32` (K136).
 - **İzinli kuyruk (K146):** authority'den sonraki kısım (yol + sorgu + parça) yalnız şu karakterlerden oluşur: yol
-  `[A-Za-z0-9._~/-]`, `?` ve `#` sonrası `[A-Za-z0-9._~=&+-]`; `.` ya da `..` yol parçası yoktur; içinde REQ-3 host, IP ya
-  da terim (`--terms`, `origin_terms`, kullanıcı ve makine adı) eşleşmesi yoktur. Aksi halde URL izinsizdir.
+  `[A-Za-z0-9._~/-]`, `?` ve `#` sonrası `[A-Za-z0-9._~=&+-]`; `.` ya da `..` yol parçası yoktur; içinde REQ-3 host, IP,
+  MAC ya da rakamla çevrili olmayan dört noktalı sayı grubu (`x.10.20.30.40`) yoktur; terim (`--terms`, `origin_terms`,
+  kullanıcı ve makine adı) URL'nin tamamında aranır. Kuyruk `[/?#=&+]` ile bölünür; noktalı her parçada ilk `.`'dan sonraki
+  her etiket bilinen dosya uzantısı ya da yalnız rakamdır (`README.md`, `v0.6.1`, `a.tar.gz`; K150). Aksi halde URL
+  izinsizdir.
 İzinli URL olduğu gibi kalır ve sonraki adımlar ona dokunmaz. İzinsiz URL'de `://`'dan sonrası `<redacted:url>` olur
 (şema ve `://` kalır); şemasız biçim (`//x`, `host/x`, `ad:port/x`) tümüyle `<redacted:url>` olur.
 #### Scenario: izinsiz URL'ler
@@ -99,7 +104,11 @@ listesi (`/delixcrew:<skill>`, yerleşik komutlar) aynen kalır.
 
 ### Requirement: REQ-3 Unicode host (K137)
 The system SHALL URL dışındaki noktalı host adını Unicode harfleriyle de tanımalı (NFKC sonrası) ve ASCII olmayan host'u
-izinli saymamalı; son etiketi bilinen dosya uzantısı olan ad bugünkü gibi host değildir.
+izinli saymamalı; son etiketi bilinen dosya uzantısı olan ad bugünkü gibi host değildir. Ayrıntı (K158): etiketlerin
+baştaki/sondaki `_` ve `-` karakterleri atılır, boş son etiket (`._`, `.__`) yok sayılır, son etiket herhangi bir Unicode
+harfiyle başlar; host `@`'ten ya da bir kelimeye bitişik olmayan `.`'dan hemen sonra da başlar (`@jenkins.x.internal`,
+`see .jenkins.x.internal`). E-posta adresi (yerel kısım ve alan Unicode olabilir) bütünüyle `<redacted:email>` olur.
+Düz metinde IPv4 önünde `_` olsa da tanınır; harf, rakam ya da `.` sonrası tanınmaz (`v1.2.3.4` kalır).
 #### Scenario: IDN
 - WHEN metinde `bücher.example-corp.de`, `xn--bcher-kva.example-corp.de` ve `notlar.md` vardır
 - THEN ilk ikisi `<redacted:host>`, `notlar.md` değişmez
@@ -179,6 +188,10 @@ yeniden `preview` alır. Göç yok.
   sağ çıkan ayraç benzerleri (`。` U+3002, `∕` U+2215, `⁄` U+2044; kasıtlı gizleme); Bash ile kuyruk dizinine yazım
   (`bash_gate.py` yalnız `send`'i kapatır; `build()` parmak izi kontrolü ve `send`'in TTY onayı sınırlar, spec B). Temizlik
   desen tabanlı, kullanıcı önizlemeyi okur (README).
+- Kalan risk, kapanışta ölçüldü (K151, K153; düz metin sezgi sınırları, T016 tur 1–3): birleşik işaretli etiket (`corp.भारत`),
+  sayıyla biten host (`x.internal.1`), dosya uzantılı son etiket (`x.internal.conf`, `intranet.firma.pl`), `_` ile biten IP
+  (`10.20.30.40_`, `fd00:1:2::3_`), `/` olmadan `ad:port` (`jenkins:8080`), `:` sonrası host'un yolu
+  (`key:<redacted:host>/api/x`). Aşırı silme (fail closed): `Link:https://…`, `.env.local`, `os.path`, `self.term_re`.
 - Mevcut test dosyalarında yalnız sürüm (`"2"` → `"3"`) satırları değişir; beklenti gevşetilmez (K138).
 
 ## 7. Acceptance criteria (DoD)
@@ -219,5 +232,14 @@ yeniden `preview` alır. Göç yok.
   `<ad>:/yol` (K101) ve `http:\\nas` bugünkü yol kuralında kalır, URL biçimine alınmadı (mevcut test birebir bekliyor).
 - **K149** (geri alınır; T017 round 0 P2, kullanıcı onayı 2026-11-03) CI `tests` işi `delix.json` `test_command` döngüsünün
   aynısını çalıştırır (T019, 🔐); yeni test dosyaları otomatik kapsanır. Kullanıcıya görünmez, CHANGELOG'a girmez.
+- **K150** (geri alınır; T016 tur 1 G1) URL kuyruğunda noktalı parça izin listesi: ilk etiketten sonrası dosya uzantısı ya
+  da rakam. Tek tek host biçimi yakalamak yerine yapısal kural (izin listesi önce).
+- **K151** (geri alınır) Birleşik işaretli (Mn/Mc) Unicode adlar bu spec'te düzeltilmez; §6 kalan risk.
+- **K153** (geri alınır) `x.internal.1` ve `/` olmadan `ad:port` düzeltilmez (sondaki rakam etiketini host saymak sürüm
+  numaralarını siler); §6 kalan risk.
+- **K154** (geri alınır) 3 tur sınırında 4. tur açılmadı; kalan düz metin sınırları §6'da, takip kartı adayı.
+- **K157** (geri alınır; T016 tur 0 F1) İzinli URL yalnız şemasız, `http` ya da `https` şemalıdır.
+- **K158** (geri alınır; T016 tur 0–3 F2–F4, G2, H1, H2) REQ-3 host, e-posta ve düz metin IPv4 tanıma ayrıntıları (REQ-3
+  metni).
 - **K145** (geri alınır) Önceki triage spec'i ve T010–T015 `archive/0.6.0-triage/`'a taşındı (`ff79206`); STATE boş,
   github-pages doğrulama kaydı yerinde.
