@@ -31,6 +31,7 @@ def git(cwd, *args):
     """CompletedProcess of `git -c core.fsmonitor=false -C <cwd> <args>`, or None (no git, timeout). stdin DEVNULL,
     5 s, and every GIT_* variable removed from env (K212: a GIT_DIR in the hook env must not choose the repo)."""
     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    env["GIT_NO_LAZY_FETCH"] = "1"  # git >= 2.44: a promisor remote in the repo config must not run a program
     try:
         return subprocess.run(["git", "-c", "core.fsmonitor=false", "-C", cwd, *args], stdin=subprocess.DEVNULL,
                               capture_output=True, text=True, timeout=5, env=env)

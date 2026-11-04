@@ -42,11 +42,16 @@ def main(argv):
         print("  " + json.dumps(c))  # K214: escaped (\r, ‮ ...), one per line
     # K217: no `git diff` here: it can run the repo's own diff.external / textconv / clean filter before the user confirms
     try:
-        head = git(cwd, "cat-file", "blob", "HEAD:docs/delix/delix.json")
+        # K223: --no-lazy-fetch here only; an older git rejects it, which takes the warning path (fail closed)
+        head = git(cwd, "--no-lazy-fetch", "cat-file", "blob", "HEAD:docs/delix/delix.json")
     except UnicodeDecodeError:  # a non-UTF-8 blob at HEAD: treat as different
         head = None
     try:
-        fd = os.open(os.path.join(cwd, "docs", "delix", "delix.json"), os.O_RDONLY | os.O_NOFOLLOW)
+        fd = os.open(os.path.join(cwd, "docs", "delix", "delix.json"),
+                     os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0))
+        if not stat.S_ISREG(os.fstat(fd).st_mode):  # K224: a FIFO or device is unreadable here, not a hang
+            os.close(fd)
+            raise OSError("not a regular file")
         with os.fdopen(fd, encoding="utf-8", errors="surrogateescape") as f:
             work = f.read()
     except OSError:
@@ -92,7 +97,7 @@ def main(argv):
     except (KeyError, OSError) as e:
         err("delixcrew trust: cannot write the record (%s); nothing approved" % e)
         return 7
-    print("delixcrew trust: approved for %s (hash %s); record %s" % (common_dir, h, path))
+    print("delixcrew trust: approved for %s (hash %s); record %s" % (json.dumps(common_dir), h, path))  # K224: escaped
     return 0
 
 

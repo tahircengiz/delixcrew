@@ -253,5 +253,26 @@ CRD="$T/cr$(printf '\r')dir"; mkrepo "$CRD"; git -C "$CRD" init -q
 [ $rc -eq 6 ] && grep -qF 'cr\rdir/.git' "$T/a.out" && ! grep -q "$(printf '\r')" "$T/a.out" && ok "T026 allow prompt shows git_common_dir escaped" || ko "T026 allow prompt, raw git_common_dir: rc $rc"
 approve "$CRD"; (cd "$CRD" && python3 "$T/run.py" "$S" "$TREC" "$S/trust.py" allow </dev/null >"$T/a.out" 2>&1); rc=$?
 [ $rc -eq 0 ] && grep -qF "already approved" "$T/a.out" && grep -qF 'cr\rdir/.git' "$T/a.out" && ! grep -q "$(printf '\r')" "$T/a.out" && ok "T026 already approved line shows git_common_dir escaped" || ko "T026 already approved, raw git_common_dir: rc $rc"
+# T026 round 2 (K223): a promisor remote in the repo config is never lazy-fetched before the user confirms
+PC="$T/promisor"; mkrepo "$PC"; git -C "$PC" init -q && $G -C "$PC" add -A && $G -C "$PC" commit -qm x
+BLOB=$(git -C "$PC" rev-parse HEAD:docs/delix/delix.json)
+printf '{"test_command":"true","extra_checks":[]}' > "$PC/docs/delix/delix.json"
+mv "$PC/.git/objects/$(echo "$BLOB" | cut -c1-2)/$(echo "$BLOB" | cut -c3-)" "$T/promisor-blob"
+printf '#!/bin/sh\ntouch %s/MARK\nexit 1\n' "$PC" > "$T/promhelper.sh"; chmod +x "$T/promhelper.sh"
+git -C "$PC" config core.repositoryformatversion 1; git -C "$PC" config extensions.partialClone origin
+git -C "$PC" config remote.origin.promisor true; git -C "$PC" config remote.origin.url "ext::$T/promhelper.sh"
+git -C "$PC" config protocol.ext.allow always
+(cd "$PC" && python3 "$T/run.py" "$S" "$TREC" "$S/trust.py" allow </dev/null >"$T/a.out" 2>"$T/a.err"); rc=$?
+[ $rc -eq 6 ] && ! ran "$PC" && grep -qF "differs from HEAD" "$T/a.out" && ok "T026 allow with a promisor remote: no lazy fetch, exit 6, HEAD warning" || ko "T026 allow with a promisor remote: rc $rc, MARK $(ran "$PC" && echo exists || echo absent): $(cat "$T/a.out" "$T/a.err")"
+# T026 round 2 (K224): a FIFO at docs/delix/delix.json does not hang allow
+FF="$T/fifo"; mkrepo "$FF"; git -C "$FF" init -q && $G -C "$FF" add -A && $G -C "$FF" commit -qm x
+rm "$FF/docs/delix/delix.json"; mkfifo "$FF/docs/delix/delix.json"
+cd "$FF"; python3 "$T/run.py" "$S" "$TREC" "$S/trust.py" allow </dev/null >"$T/a.out" 2>&1 & pid=$!; cd - >/dev/null
+( sleep 10; kill -9 $pid 2>/dev/null ) & killer=$!
+wait $pid; rc=$?; kill $killer 2>/dev/null; wait $killer 2>/dev/null
+{ [ $rc -eq 6 ] || [ $rc -eq 7 ]; } && ok "T026 allow with a FIFO delix.json: returns (exit $rc), no hang" || ko "T026 allow with a FIFO delix.json: rc $rc (137 = killed after 10 s)"
+# T026 round 2 (K224): the final "approved for" line shows git_common_dir escaped
+out=$(python3 "$T/pty.py" "$CRD" "TRUST $(h12 "$CRD")" "$T/run.py" "$S" "$T/home5/.claude/delixcrew/trust.json" "$S/trust.py" allow); rc=$?
+[ $rc -eq 0 ] && echo "$out" | grep -F "delixcrew trust: approved for" | grep -qF 'cr\rdir/.git" (hash' && ok "T026 approved line shows git_common_dir escaped" || ko "T026 approved line, raw git_common_dir: rc $rc"
 
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
