@@ -128,11 +128,13 @@ What runs locally, what it writes and when it uses the network. What a feedback 
   that `feedback.py send` and `triage.py apply` hand to `gh`, deleted after the call.
 
 **When it uses the network.** The hook scripts open no connection of their own; they run `git` and `gitleaks` locally.
-The network is used only by these commands, each with your own accounts:
+The Stop gate runs your project's own commands (above), whatever network they use. Beyond those, the network is used
+by these commands, each with your own accounts:
 - Claude runs them when a skill says so: `triage.py index|show|record|preview` read issues of this repository with
   `gh issue list|view` (`/delixcrew:triage`, `/delixcrew:start #<n>`); `gh repo view`, `gh pr create` (implementer) and
   `gh pr checks` (review) on your project's remote; `ssh` and `rsync` to the `verify.remote` host in `delix.json`, only
-  when that block exists (`/delixcrew:verify`, `/delixcrew:review`). Claude does not run `gh pr merge`.
+  when that block exists (`/delixcrew:verify`, `/delixcrew:review`); headless implementer sessions with `claude -p`
+  (`/delixcrew:dispatch`, and a fix round in `/delixcrew:review`). Claude does not run `gh pr merge`.
 - Only you run them, in your own terminal (they need a TTY and a typed `SEND <hash>` or `APPLY <hash>`):
   `feedback.py send` (`gh issue list`, `gh issue create`) and `triage.py apply` (`gh label`,
   `gh issue comment|edit|close`). Both are fixed to `github.com/tahircengiz/delixcrew` and drop `GH_HOST` and `GH_REPO` from the environment.

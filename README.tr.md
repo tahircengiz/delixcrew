@@ -127,12 +127,14 @@ bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
 - Geçici: `/delixcrew:verify` çalışma alanı `${TMPDIR:-/tmp}/delix-verify-<ad>/` ve `feedback.py send` ile
   `triage.py apply`'ın `gh`'ye verdiği issue ya da yorum gövdesi; çağrıdan sonra silinir.
 
-**Ağa ne zaman çıkar.** Hook betikleri kendileri bağlantı açmaz; `git` ve `gitleaks`'i yerelde çalıştırır. Ağı yalnız
-şu komutlar kullanır, her biri sizin hesaplarınızla:
+**Ağa ne zaman çıkar.** Hook betikleri kendileri bağlantı açmaz; `git` ve `gitleaks`'i yerelde çalıştırır. Stop kapısı
+projenizin kendi komutlarını çalıştırır (yukarıda); onların ağ kullanımı kendilerinindir. Bunların dışında ağı şu
+komutlar kullanır, her biri sizin hesaplarınızla:
 - Bir skill söylediğinde Claude çalıştırır: `triage.py index|show|record|preview` bu reponun issue'larını
   `gh issue list|view` ile okur (`/delixcrew:triage`, `/delixcrew:start #<n>`); projenizin remote'unda `gh repo view`,
   `gh pr create` (uygulayıcı) ve `gh pr checks` (inceleme); `delix.json`'daki `verify.remote` host'una `ssh` ve `rsync`,
-  yalnız o blok varsa (`/delixcrew:verify`, `/delixcrew:review`). Claude `gh pr merge` çalıştırmaz.
+  yalnız o blok varsa (`/delixcrew:verify`, `/delixcrew:review`); `claude -p` ile başsız uygulayıcı oturumları
+  (`/delixcrew:dispatch` ve `/delixcrew:review`'daki düzeltme turu). Claude `gh pr merge` çalıştırmaz.
 - Yalnız siz, kendi terminalinizde çalıştırırsınız (TTY ve elle yazılmış `SEND <hash>` ya da `APPLY <hash>` ister):
   `feedback.py send` (`gh issue list`, `gh issue create`) ve `triage.py apply` (`gh label`,
   `gh issue comment|edit|close`). İkisi de `github.com/tahircengiz/delixcrew`'a sabittir ve ortamdan `GH_HOST` ile
