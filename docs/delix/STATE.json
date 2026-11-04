@@ -126,6 +126,25 @@
       "qa": "ACCEPT_WITH_NOTES",
       "security": "CLEAN",
       "cost_usd": null
+    },
+    {
+      "name": "site-umami",
+      "date": "2026-11-04",
+      "sha": "e120c5a",
+      "base": "d5d77da",
+      "input": "PR #40 merge",
+      "tier": 2,
+      "verdict": "ACCEPT",
+      "report": "docs/delix/verifications/2026-11-04-site-umami.md",
+      "gates": {
+        "gitleaks": "PASS (pre-existing 1 in archive)",
+        "local": "PASS 8/8",
+        "remote_unit": "not run",
+        "full": "not run"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "CLEAN",
+      "cost_usd": null
     }
   ],
   "archive": [
