@@ -37,6 +37,9 @@ role tag.
   Playwright evidence is mandatory (`.delix/evidence/`).
 - The Stop hook does not close the turn until the tests pass; if they do not pass in 3 attempts, report `BLOCKED`, no
   tricks.
+- If the Stop hook says the commands are not approved (`[not run: commands not approved, hash …]` in
+  `.delix/test-result.txt`), do not try to approve or bypass it: write `BLOCKED` in `.delix/report.md` naming the
+  `trust.py allow` command from the hook message, then stop.
 - Do **not** touch the shared remote test environment (rsync, image build, compose); that run belongs to the lead
   (K23). If the card explicitly allows it, `STATE.json.env_owner` must be your card first; otherwise write "remote run
   belongs to the lead" in the report. Operational evidence a role note asks for (a container healthy, a probe)

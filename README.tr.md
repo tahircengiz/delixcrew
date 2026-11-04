@@ -66,7 +66,7 @@ claude plugin install delix-board@delixcrew
 |---|---|---|
 | 1 | `/delixcrew:start <istek>` | Bağlam okunur; **size** (S/M/L: süreç ağırlığı) ve **tier** (1/2/3: kapılar) önerilir; `docs/delix/` kurulur. S ise tek kart. |
 | 2 | `/delixcrew:spec` | Grill (tek soru, önerili) → `docs/delix/SPEC.md` (SHALL + WHEN/THEN); `architect` (+ Tier 3'te `security`) inceler; L'de EGM. Yalnız UI işinde bir design system adımı: spec `DESIGN.md`'ye (ya da repodaki token dosyasına) bağlanır, ikisi de yoksa `DESIGN.md` üretilir. **Kapı 1.** |
-| 3 | `/delixcrew:dispatch` | `architect` kartları ve wave planını yazar; çakışma kontrolü; dispatch prompt'ları; uygulayıcı oturumları (en çok 3 paralel). |
+| 3 | `/delixcrew:dispatch` | `architect` kartları ve wave planını yazar; çakışma kontrolü; dispatch prompt'ları; uygulayıcı oturumları (en çok 3 paralel). Her repoda bir kez, ilk oturumdan önce, Stop gate komutlarını ana checkout'ta kendi terminalinizden onaylarsınız: `python3 <plugin dir>/scripts/trust.py allow`, sonra `TRUST <hash>` yazarak (bkz. [Bu plugin makinende ne yapar](#bu-plugin-makinende-ne-yapar)). |
 | 4 | `/delixcrew:implement <kart>` | Uygulayıcı oturumda: test-first, yalnız kartın dosyaları, PR, `.delix/report.md`. |
 | 5 | `/delixcrew:review <kart>` | Deterministik kapılar → `qa` (+ `security`) sıfır bağlamla → ≤ 3 düzeltme turu → **Kapı 2 (merge, insan).** |
 | 6 | `/delixcrew:close` | STATUS/CHANGELOG, ölçüm (maliyet, tur), drift kontrolü, onaylı bellek yazımı, worktree temizliği. |
@@ -101,18 +101,42 @@ bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
 
 **Hook'lar** ([`hooks/hooks.json`](hooks/hooks.json)) plugin'in etkin olduğu her oturumda yüklenir:
 - `Write|Edit|MultiEdit|NotebookEdit` için `PreToolUse`, [`scripts/write_gate.py`](scripts/write_gate.py)'yi çalıştırır.
-  Her oturumda aşağıdaki geri bildirim ve triage dizinlerine yazmayı reddeder; inceleyici agent'lar için her yazmayı
+  Her oturumda aşağıdaki geri bildirim ve triage dizinlerine ve Stop gate kaydı `~/.claude/delixcrew/trust.json`'a
+  yazmayı reddeder; inceleyici agent'lar için her yazmayı
   reddeder. Uygulayıcı worktree'sinde ayrıca worktree dışına, karta ve `docs/delix/**`'a, onaylı kartı olmayan korumalı
   yola ve mevcut test dosyasına yazmayı reddeder.
 - `Bash` için `PreToolUse`, [`scripts/bash_gate.py`](scripts/bash_gate.py)'yi çalıştırır. Her oturumda bilinen gönderme
   ve uygulama yollarını reddeder (`feedback.py send`, `triage.py apply`, `script` gibi terminal sarmalayıcıları ve bu
-  repoyu hedefleyen yazan `gh issue`, `gh label` ya da `gh api` çağrıları). security inceleyicisi yalnız izinli bir
+  repoyu hedefleyen yazan `gh issue`, `gh label` ya da `gh api` çağrıları). Bu reponun ayarlarına, ruleset'lerine ya
+  da güvenlik ayarlarına yazan bir `gh api` çağrısı kendi mesajını alır:
+  `delixcrew: writes to the delixcrew GitHub repository (settings, rulesets, security) run only from the user's own terminal`.
+  Her oturumda ayrıca `trust.py allow`'u, bir terminal sarmalayıcısı altında `trust.py`'yi (`script`, `expect`, `unbuffer`, `openpty`,
+  `pty.spawn`, `pty.fork`, `tmux`, `screen`, `socat`, `zpty`) ve `delixcrew/trust.json` adını geçiren her komutu
+  `delixcrew: Stop gate commands are approved only by the user from their own terminal` mesajıyla reddeder. Tam olarak
+  bir `cat > <path> <<'EOF'` heredoc'u (`>>` de; tırnaklı sınırlayıcı, kapanış satırından sonra hiçbir şey,
+  `~/.claude/delixcrew/` dışında bir yol) tek bir `feedback.py add` ya da `triage.py record` heredoc'u gibi yalnız ilk
+  satırından denetlenir; kaydı adlandıran komut kuralı ve korunan yola yönlendirme denetimi yine tam metni görür.
+  security inceleyicisi yalnız izinli bir
   tarayıcı ya da okuma komutuyla başlayan ve bilinen hiçbir yazma kalıbına uymayan komutları çalıştırabilir; bu bir kalıp
   denetimidir, sandbox değildir. Diğer inceleyicilere Bash verilmez. Uygulayıcı worktree'sinde korumalı yola kabuk
   yazmasını reddeder ve her `git commit`'ten önce `gitleaks protect --staged` çalıştırır.
 - `Stop`, [`scripts/stop_gate.py`](scripts/stop_gate.py)'yi yalnız uygulayıcı worktree'sinde çalıştırır: projenin
   `docs/delix/delix.json` dosyasındaki `test_command` ve `extra_checks` komutlarını kabukta çalıştırır; bunlar geçene
-  dek tur bitmez. Bu komutlar plugin'in değil, projenizin komutlarıdır.
+  dek tur bitmez. Bu komutlar plugin'in değil, projenizin komutlarıdır. Onları yalnız o listeyi bu repo için (repo
+  `git_common_dir`'i ve listenin SHA-256'sı) kendi terminalinizden `trust.py allow` ile onayladıysanız çalıştırır.
+  Onaylı bir checkout'un worktree'leri onayı devralır; değişen liste yeni onay ister. Onay yoksa hiçbir şey
+  çalıştırmaz, `.delix/test-result.txt`'ye `[not run: commands not approved, hash <h12>]` yazar, size komutu verir
+  (`The user runs, in their own terminal: cd <worktree> && python3 <plugin dir>/scripts/trust.py allow`) ve turu bir
+  kez durdurur (exit 2); uygulayıcı bunun üzerine `BLOCKED` yazar. Repo dosya sisteminde tanınır (gerçek bir `.git`
+  dizini ya da worktree kaydı geri gösteren bir `.git` dosyası), hiçbir zaman sembolik bağlantı üzerinden değil; git
+  `GIT_*` değişkenleri olmadan çalışır. Önceki bir sürümden güncellemeden sonra her repodaki ilk Stop gate, ana
+  checkout'ta bir kez `trust.py allow` çalıştırana dek böyle durur.
+- `trust.py allow` ([`scripts/trust.py`](scripts/trust.py)) komutları satır satır gösterir, `docs/delix/delix.json`
+  `HEAD`'den farklıysa uyarır ve şunu sorar:
+  `Type TRUST <hash> to approve these commands for "<git_common_dir>" (the word TRUST, a space, then the hash): `.
+  Onaylandığında ya da zaten onaylıysa 0, onaylanmadığında (terminal yok, yanlış metin) 6, ön koşul tutmadığında
+  (git checkout'u ya da worktree kökünde değil, `.git` sembolik bağlantı, metin olmayan bir komut, kayıt yazılamıyor)
+  7 ile çıkar. 6 ve 7'de hiçbir şey onaylanmaz.
 - Uygulayıcı worktree'si, work tree kökünde yerel ve git'in izlemediği bir `.delix/card` bulunan worktree'dir
   ([`scripts/common.py`](scripts/common.py)). `python3` yoksa iki `PreToolUse` hook'u da engeller (bkz.
   [Gereksinimler](#gereksinimler)).
@@ -123,7 +147,11 @@ bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
   yalnız `board.py --write` ile (`.gitignore`'da). Uygulayıcı worktree'sinde: `.delix/report.md`,
   `.delix/test-result.txt`, `.delix/evidence/` ve `gitleaks` yoksa `.delix/warnings.log`.
 - Ev dizininizde: geri bildirim kuyruğu `~/.claude/delixcrew/feedback/` (dizin `0700`, dosyalar `0600`) ve triage
-  kayıtları `~/.claude/delixcrew/triage/<n>.json`.
+  kayıtları `~/.claude/delixcrew/triage/<n>.json`; Stop gate onayları `~/.claude/delixcrew/trust.json` (dizin `0700`,
+  dosya `0600`; `{"version": 1, "entries": [...]}`, her kayıt bir `git_common_dir`, bir `sha256` ve bir `approved_at`
+  zamanı). Bu dosyayı yalnız `trust.py allow` yazar; sembolik bağlantıysa, sizin değilse ya da başkaları okuyabiliyorsa
+  yok sayılır. Bir onayı geri almak için nesnesini `entries`'ten ya da dosyayı silin; geri alma ya da listeleme komutu
+  yoktur.
 - Geçici: `/delixcrew:verify` çalışma alanı `${TMPDIR:-/tmp}/delix-verify-<ad>/` ve `feedback.py send` ile
   `triage.py apply`'ın `gh`'ye verdiği issue ya da yorum gövdesi; çağrıdan sonra silinir.
 
@@ -337,6 +365,17 @@ yollarını keser; bkz. [Geri bildirim](#geri-bildirim) ve [Triage](#triage)). W
 göredir. Bu yüzden kart dosyası, `docs/delix/**` ya da kartta onaysız korunan yol değişikliği `delixcrew:qa` incelemesinde
 diff'ten bulgu sayılır. Tier 3 izni kartın başlık tablosundan sonraki `**🔐 Approved:** <YYYY-MM-DD> <kim>` satırıyla
 açılır; bu satırı yalnız ekip lideri, kullanıcının sohbetteki açık "evet"inden sonra yazar ve main'e commit eder.
+
+Stop gate onayının (`trust.py allow`) sınırları şunlardır. Onay dosyaları değil komut metnini kapsar: onaylı bir
+repoda listeyi koruyup `tests/`'i değiştiren bir dal onları çalıştırır; bu, testleri o dalda sizin çalıştırmanızla
+aynıdır. Silinmiş bir reponun ya da henüz prune edilmemiş (`git worktree prune`) bir worktree'nin yolunda açılan yeni
+bir dizin onun onayını devralabilir. Projenin kendi `.claude/settings.json` hook'ları ve `PATH` klasör güven
+penceresini kabul ettiğinizde yine kod çalıştırabilir; onay yalnız `delix.json` kanalını kapatır. Bash hook'unun
+denylist'i bir sınır değil, sürtünmedir: bölünmüş tırnak, değişken ya da glob ile kurulan komutlar ondan geçer;
+`cd` sonrası göreli yol, `//`, `/./` ya da sembolik bağlantılı bir dizinle yazılan kayıt yolu da geçer, çünkü o kural
+bir alt dize eşleşmesidir (K220); sınır Claude Code'un Bash izin istemidir (K77). İzin verilen tek `cat` heredoc'u,
+Write aracının zaten yazamayacağı hiçbir şeyi yazmaz. 2.44'ten eski git ile promisor (kısmi klon) bir repoda eksik bir
+nesne, hook'lar index'i okurken uzak depodan yine çekilebilir (K225).
 
 ## Lisans
 

@@ -66,7 +66,7 @@ claude plugin install delix-board@delixcrew
 |---|---|---|
 | 1 | `/delixcrew:start <request>` | Context is read; **size** (S/M/L: process weight) and **tier** (1/2/3: gates) are proposed; `docs/delix/` is set up. For S, a single card. |
 | 2 | `/delixcrew:spec` | Grill (one question at a time, with a pick) → `docs/delix/SPEC.md` (SHALL + WHEN/THEN); `architect` (+ `security` at Tier 3) reviews; EGM at size L. For UI work only, a design-system step: the spec links `DESIGN.md` (or the repo's token file), and produces `DESIGN.md` when neither exists. **Gate 1.** |
-| 3 | `/delixcrew:dispatch` | `architect` writes the cards and the wave plan; conflict check; dispatch prompts; implementer sessions (at most 3 in parallel). |
+| 3 | `/delixcrew:dispatch` | `architect` writes the cards and the wave plan; conflict check; dispatch prompts; implementer sessions (at most 3 in parallel). Once per repository, before the first session, you approve the Stop gate commands in the main checkout from your own terminal: `python3 <plugin dir>/scripts/trust.py allow`, typing `TRUST <hash>` (see [What this plugin does on your machine](#what-this-plugin-does-on-your-machine)). |
 | 4 | `/delixcrew:implement <card>` | In the implementer session: test-first, only the card's files, a PR, `.delix/report.md`. |
 | 5 | `/delixcrew:review <card>` | Deterministic gates → `qa` (+ `security`) with zero context → ≤ 3 fix rounds → **Gate 2 (merge, human).** |
 | 6 | `/delixcrew:close` | STATUS/CHANGELOG, metrics (cost, rounds), drift check, approved memory writes, worktree cleanup. |
@@ -101,18 +101,42 @@ What runs locally, what it writes and when it uses the network. What a feedback 
 
 **Hooks** ([`hooks/hooks.json`](hooks/hooks.json)) load in every session where the plugin is enabled:
 - `PreToolUse` on `Write|Edit|MultiEdit|NotebookEdit` runs [`scripts/write_gate.py`](scripts/write_gate.py). In every
-  session it denies writes into the feedback and triage directories below; for the reviewer agents it denies every
-  write. In an implementer worktree it also denies writes outside the worktree, to the card and `docs/delix/**`, to a
+  session it denies writes into the feedback and triage directories below and to the Stop gate record
+  `~/.claude/delixcrew/trust.json`; for the reviewer agents it denies every write. In an implementer worktree it also denies writes outside the worktree, to the card and `docs/delix/**`, to a
   protected path without an approved card, and to an existing test file.
 - `PreToolUse` on `Bash` runs [`scripts/bash_gate.py`](scripts/bash_gate.py). In every session it denies the known send
   and apply paths (`feedback.py send`, `triage.py apply`, terminal wrappers such as `script`, and writing `gh issue`,
-  `gh label` or `gh api` calls aimed at this repository). The security reviewer may run only commands that start with an
+  `gh label` or `gh api` calls aimed at this repository). A `gh api` write to this repository's settings, rulesets or
+  security gets its own message:
+  `delixcrew: writes to the delixcrew GitHub repository (settings, rulesets, security) run only from the user's own terminal`.
+  In every session it also denies `trust.py allow`, `trust.py` under a terminal wrapper (`script`, `expect`,
+  `unbuffer`, `openpty`, `pty.spawn`, `pty.fork`, `tmux`, `screen`, `socat`, `zpty`) and any command naming
+  `delixcrew/trust.json`, with
+  `delixcrew: Stop gate commands are approved only by the user from their own terminal`.
+  Exactly one `cat > <path> <<'EOF'` heredoc (`>>` too; a quoted delimiter, nothing after the closing line, a path
+  outside `~/.claude/delixcrew/`) is checked on its first line only, like one `feedback.py add` or `triage.py record`
+  heredoc; the rule for a command naming the record and the protected-path redirect check still see the full text.
+  The security reviewer may run only commands that start with an
   allowlisted scanner or read command and match no known write pattern; this is a pattern check, not a sandbox. The
   other reviewers get no Bash. In an implementer worktree it denies shell writes into a protected path and runs
   `gitleaks protect --staged` before every `git commit`.
 - `Stop` runs [`scripts/stop_gate.py`](scripts/stop_gate.py), only in an implementer worktree: it runs `test_command`
   and `extra_checks` from the project's `docs/delix/delix.json` through the shell, and the turn does not end until they
-  pass. These are your project's commands, not the plugin's.
+  pass. These are your project's commands, not the plugin's. It runs them only when you approved that exact list for
+  this repository (its `git_common_dir` and a SHA-256 of the list) with `trust.py allow` from your own terminal.
+  Worktrees of an approved checkout inherit the approval; a changed list needs a new one. Without approval it runs
+  nothing, writes `[not run: commands not approved, hash <h12>]` to `.delix/test-result.txt`, prints the command for
+  you (`The user runs, in their own terminal: cd <worktree> && python3 <plugin dir>/scripts/trust.py allow`) and stops
+  the turn once (exit 2); the implementer then writes `BLOCKED`. The repository is identified on the file system (a
+  real `.git` directory, or a `.git` file whose worktree entry points back), never through a symlink, and git runs
+  without `GIT_*` variables. After an update from an earlier version, the first Stop gate in each repository stops
+  this way until you run `trust.py allow` once in its main checkout.
+- `trust.py allow` ([`scripts/trust.py`](scripts/trust.py)) shows the commands one per line, warns when
+  `docs/delix/delix.json` differs from `HEAD`, and asks
+  `Type TRUST <hash> to approve these commands for "<git_common_dir>" (the word TRUST, a space, then the hash): `.
+  It exits 0 when approved or already approved, 6 when not confirmed (no terminal, wrong text) and 7 on a precondition
+  (not at the root of a git checkout or worktree, `.git` a symlink, a command that is not a string, the record not
+  writable). Nothing is approved on 6 or 7.
 - An implementer worktree is one with a local, untracked `.delix/card` at the work-tree root
   ([`scripts/common.py`](scripts/common.py)). Without `python3` both `PreToolUse` hooks block (see
   [Requirements](#requirements)).
@@ -123,7 +147,10 @@ What runs locally, what it writes and when it uses the network. What a feedback 
   `docs/delix/BOARD.md` only with `board.py --write` (git-ignored). In the implementer worktree: `.delix/report.md`,
   `.delix/test-result.txt`, `.delix/evidence/`, and `.delix/warnings.log` when `gitleaks` is missing.
 - In your home directory: the feedback queue `~/.claude/delixcrew/feedback/` (directory `0700`, files `0600`) and the
-  triage records `~/.claude/delixcrew/triage/<n>.json`.
+  triage records `~/.claude/delixcrew/triage/<n>.json`; the Stop gate approvals `~/.claude/delixcrew/trust.json`
+  (directory `0700`, file `0600`; `{"version": 1, "entries": [...]}`, each entry a `git_common_dir`, a `sha256` and an
+  `approved_at` time). It is written only by `trust.py allow` and ignored when it is a symlink, not yours or readable by
+  others. To withdraw an approval, delete its object from `entries`, or the file; there is no revoke or list command.
 - Temporary: the `/delixcrew:verify` workspace `${TMPDIR:-/tmp}/delix-verify-<name>/`, and the issue or comment body
   that `feedback.py send` and `triage.py apply` hand to `gh`, deleted after the call.
 
@@ -337,6 +364,17 @@ paths; see [Feedback](#feedback) and [Triage](#triage)). A path escaping the wor
 that reason a change to the card file, `docs/delix/**` or an unapproved protected path in the card counts as a finding in
 the `delixcrew:qa` review of the diff. Tier 3 permission is opened by the `**🔐 Approved:** <YYYY-MM-DD> <who>` line after
 the card's header table; only the lead writes it, after the user's explicit "yes" in chat, and commits it to main.
+
+The Stop gate approval (`trust.py allow`) has these limits. It covers the command text, not the files it runs: on an
+approved repository, a branch that changes `tests/` but keeps the list runs them, as if you ran the tests on that
+branch. A new directory at the path of a deleted repository, or of a worktree not yet pruned (`git worktree prune`), can
+inherit its approval. The project's own `.claude/settings.json` hooks and `PATH` can still run code once you accept the
+folder trust dialog; the approval closes only the `delix.json` channel. The Bash hook's denylist is friction, not a
+boundary: commands built from split quotes, variables or globs get past it, and so does a path to the trust record
+written as a relative path after `cd`, with `//` or `/./`, or through a symlinked directory, because that rule is a
+substring match (K220); the boundary is Claude Code's Bash permission prompt (K77). The one allowed `cat` heredoc
+writes nothing the Write tool could not already write. With git older than 2.44, a missing object in a promisor
+(partial clone) repository can still be fetched from its remote while the hooks read the index (K225).
 
 ## License
 

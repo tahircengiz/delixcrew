@@ -446,7 +446,7 @@
           <li>write_gate Bash ile yazılanı görmez (<code>echo &gt;</code>, <code>sed -i</code>, <code>tee</code>). bash_gate yalnız korumalı yola giden yönlendirmeyi, <code>cp</code>, <code>mv</code> ve <code>tee</code>'yi yakalar. Bu açığa karşı qa ajanı, diff'te kart ya da <code>docs/delix/**</code> değişikliği görürse bunu bulgu sayar.</li>
           <li>Hook'lar gönderimin bilinen yollarını kapatır, her yolu kapatmaz. base64 ile kurulmuş bir komut, dosyaya yazılmış bir wrapper ya da gh kullanmayan bir HTTP isteği desen eşleşmesinden geçebilir. README, kullanıcının kendi <code>settings.json</code>'una <code>permissions.deny</code> eklemesini önerir.</li>
           <li>Claude Code, plugin ajan tanımlarındaki <code>permissionMode</code>, <code>hooks</code> ve <code>mcpServers</code> alanlarını yok sayar. Bu yüzden kısıtlar <code>tools</code> listesinde ve <code>hooks.json</code> dosyasında durur.</li>
-          <li>Kendi <code>.git</code>'ini içeren bir arşivden gelen kartlarla ilgili durum açıktır ve issue #17'de izleniyor. T007, git'in izlediği ve symlink'li kartları kapattı.</li>
+          <li>Stop gate, <code>delix.json</code> komutlarını ancak sen onları kendi terminalinden onayladıktan sonra çalıştırır (<code>trust.py allow</code>); onay komut metnini kapsar, test dosyalarını ve projenin kendi <code>.claude/settings.json</code> hook'larını kapsamaz (sonraki sürümle gelecek).</li>
         </ul>
       </div>
       <div class="note">
@@ -461,7 +461,7 @@
       <h3>write_gate.py</h3>
       <p class="when">PreToolUse · Write | Edit | MultiEdit | NotebookEdit · timeout 10 sn</p>
       <dl>
-        <div><dt>Her oturum</dt><dd>Feedback kuyruğuna ve triage kayıt dizinine doğrudan yazım reddedilir.</dd></div>
+        <div><dt>Her oturum</dt><dd>Feedback kuyruğuna ve triage kayıt dizinine doğrudan yazım reddedilir. Stop gate kaydına (<code>~/.claude/delixcrew/trust.json</code>) yazım da reddedilir (sonraki sürümle gelecek).</dd></div>
         <div><dt>Reviewer</dt><dd>Hiçbir dosyaya yazamaz.</dd></div>
         <div><dt>Uygulayıcı</dt><dd>Worktree dışı, kart ve <code>docs/delix/**</code> kapalı. Korumalı yola yazmak için yolun Files listesinde olması ve kartta güvenlik onayı satırı gerekir. Var olan test dosyası yalnız Files'taysa açılır.</dd></div>
       </dl>
@@ -470,7 +470,7 @@
       <h3>bash_gate.py</h3>
       <p class="when">PreToolUse · Bash · timeout 60 sn</p>
       <dl>
-        <div><dt>Her oturum</dt><dd><code>feedback.py send</code> reddedilir; <code>script</code>, <code>expect</code>, <code>unbuffer</code> ve <code>pty.spawn</code> sarmalayıcıları da reddedilir. delixcrew'u hedefleyen <code>gh issue create|comment|edit</code> ve <code>gh api … issues</code> çağrıları da reddedilir. Triage yazma yolları da kapalıdır (yukarıdaki not).</dd></div>
+        <div><dt>Her oturum</dt><dd><code>feedback.py send</code> reddedilir; <code>script</code>, <code>expect</code>, <code>unbuffer</code> ve <code>pty.spawn</code> sarmalayıcıları da reddedilir. delixcrew'u hedefleyen <code>gh issue create|comment|edit</code> ve <code>gh api … issues</code> çağrıları da reddedilir. Triage yazma yolları da kapalıdır (yukarıdaki not). <code>trust.py allow</code>, bir terminal sarmalayıcısı altında <code>trust.py</code> ve <code>delixcrew/trust.json</code> adını geçiren her komut reddedilir; tam olarak bir <code>cat &gt; &lt;path&gt; &lt;&lt;'EOF'</code> heredoc'u, tek bir <code>feedback.py add</code> heredoc'u gibi yalnız ilk satırından denetlenir (sonraki sürümle gelecek).</dd></div>
         <div><dt>Reviewer</dt><dd>security yalnız tarayıcı (gitleaks, semgrep, pip-audit, trivy, …) ve git okuma komutu çalıştırır; diğer reviewer'lar Bash kullanamaz.</dd></div>
         <div><dt>Uygulayıcı</dt><dd>Korumalı yola shell ile yazma reddedilir. <code>git commit</code> öncesinde staged değişikliklerde <code>gitleaks protect</code> koşar; bulgu varsa commit durur. gitleaks yoksa <code>.delix/warnings.log</code>'a not düşülür.</dd></div>
       </dl>
@@ -480,12 +480,13 @@
       <p class="when">Stop · komut başına 540 sn</p>
       <dl>
         <div><dt>Yalnız uygulayıcı</dt><dd><code>test_command</code> ve <code>extra_checks</code> koşar, çıktı <code>.delix/test-result.txt</code>'ye yazılır. Biri başarısızsa çıkış kodu 2 olur ve uygulayıcı işi bitiremez.</dd></div>
+        <div><dt>Onay</dt><dd>Komutlar yalnız o listeyi bu repo için kendi terminalinden <code>python3 &lt;plugin dir&gt;/scripts/trust.py allow</code> ile, <code>TRUST &lt;hash&gt;</code> yazarak onayladıysan koşar; worktree'ler onayı devralır. Onay yoksa hiçbir şey koşmaz, <code>.delix/test-result.txt</code>'ye <code>[not run: commands not approved, hash &lt;h12&gt;]</code> yazılır, çıkış kodu bir kez 2 olur ve uygulayıcı <code>BLOCKED</code> bildirir (sonraki sürümle gelecek).</dd></div>
         <div><dt>Çıkış yolu</dt><dd>Rapor <code>NEEDS_CONTEXT</code> ya da <code>BLOCKED</code> diyorsa uygulayıcı durabilir. <code>stop_hook_active</code> sonsuz döngüyü önler.</dd></div>
         <div><dt>Sınır</dt><dd>Yalnız bu yerel komutlar koşar. Kartın doğrulama komutunu ve tam suite'i review'da ekip lideri çalıştırır.</dd></div>
       </dl>
     </article>
   </div>
-  <p class="src"><b>Kaynak:</b> hooks/hooks.json · scripts/write_gate.py · scripts/bash_gate.py · scripts/stop_gate.py · scripts/common.py (card_path) · README.md (Known limits, Remaining risk) · CHANGELOG 0.5.0 (T007) · README.md (Triage) · CHANGELOG 0.6.0</p>
+  <p class="src"><b>Kaynak:</b> hooks/hooks.json · scripts/write_gate.py · scripts/bash_gate.py · scripts/stop_gate.py · scripts/common.py (card_path) · README.md (Known limits, Remaining risk) · CHANGELOG 0.5.0 (T007) · README.md (Triage) · CHANGELOG 0.6.0 · scripts/trust.py · CHANGELOG (Unreleased)</p>
 </section>
 
 <section id="oz-besleme">

@@ -446,7 +446,7 @@
           <li>write_gate does not see what is written through Bash (<code>echo &gt;</code>, <code>sed -i</code>, <code>tee</code>). bash_gate catches only redirects, <code>cp</code>, <code>mv</code> and <code>tee</code> into a protected path. To cover this gap, the qa agent counts a change to the card or to <code>docs/delix/**</code> in the diff as a finding.</li>
           <li>The hooks close the known send paths, not every path. A command built from base64, a wrapper written to a file or an HTTP request without gh can get past pattern matching. The README suggests adding <code>permissions.deny</code> to your own <code>settings.json</code>.</li>
           <li>Claude Code ignores the <code>permissionMode</code>, <code>hooks</code> and <code>mcpServers</code> fields in plugin agent definitions. That is why the constraints live in the <code>tools</code> list and in <code>hooks.json</code>.</li>
-          <li>Cards that arrive in an archive carrying its own <code>.git</code> are an open case, tracked in issue #17. T007 closed tracked and symlinked cards.</li>
+          <li>The Stop gate runs <code>delix.json</code> commands only after you approve them from your own terminal (<code>trust.py allow</code>); the approval covers the command text, not the test files, and not the project's own <code>.claude/settings.json</code> hooks (coming in the next release).</li>
         </ul>
       </div>
       <div class="note">
@@ -461,7 +461,7 @@
       <h3>write_gate.py</h3>
       <p class="when">PreToolUse · Write | Edit | MultiEdit | NotebookEdit · timeout 10 s</p>
       <dl>
-        <div><dt>Every session</dt><dd>Direct writes into the feedback queue and the triage record directory are denied.</dd></div>
+        <div><dt>Every session</dt><dd>Direct writes into the feedback queue and the triage record directory are denied. Writes to the Stop gate record <code>~/.claude/delixcrew/trust.json</code> are denied too (coming in the next release).</dd></div>
         <div><dt>Reviewer</dt><dd>Cannot write any file.</dd></div>
         <div><dt>Implementer</dt><dd>Outside the worktree, the card and <code>docs/delix/**</code> are closed. Writing a protected path needs the path in the Files list and a security approval line in the card. An existing test file opens only if it is in Files.</dd></div>
       </dl>
@@ -470,7 +470,7 @@
       <h3>bash_gate.py</h3>
       <p class="when">PreToolUse · Bash · timeout 60 s</p>
       <dl>
-        <div><dt>Every session</dt><dd><code>feedback.py send</code> is denied, and so are the <code>script</code>, <code>expect</code>, <code>unbuffer</code> and <code>pty.spawn</code> wrappers. <code>gh issue create|comment|edit</code> and <code>gh api … issues</code> calls aimed at delixcrew are denied too. The triage write paths are closed as well (see the note above).</dd></div>
+        <div><dt>Every session</dt><dd><code>feedback.py send</code> is denied, and so are the <code>script</code>, <code>expect</code>, <code>unbuffer</code> and <code>pty.spawn</code> wrappers. <code>gh issue create|comment|edit</code> and <code>gh api … issues</code> calls aimed at delixcrew are denied too. The triage write paths are closed as well (see the note above). <code>trust.py allow</code>, <code>trust.py</code> under a terminal wrapper and any command naming <code>delixcrew/trust.json</code> are denied; exactly one <code>cat &gt; &lt;path&gt; &lt;&lt;'EOF'</code> heredoc is checked on its first line only, like one <code>feedback.py add</code> heredoc (coming in the next release).</dd></div>
         <div><dt>Reviewer</dt><dd>security runs only scanners (gitleaks, semgrep, pip-audit, trivy, …) and git read commands; the other reviewers cannot use Bash.</dd></div>
         <div><dt>Implementer</dt><dd>Shell writes into a protected path are denied. Before <code>git commit</code>, <code>gitleaks protect</code> runs on the staged changes; a finding stops the commit. Without gitleaks a note goes to <code>.delix/warnings.log</code>.</dd></div>
       </dl>
@@ -480,12 +480,13 @@
       <p class="when">Stop · 540 s per command</p>
       <dl>
         <div><dt>Implementer only</dt><dd>Runs <code>test_command</code> and <code>extra_checks</code> and writes the output to <code>.delix/test-result.txt</code>. If one fails, the exit code is 2 and the implementer cannot finish.</dd></div>
+        <div><dt>Approval</dt><dd>The commands run only when you approved that exact list for this repository from your own terminal with <code>python3 &lt;plugin dir&gt;/scripts/trust.py allow</code>, typing <code>TRUST &lt;hash&gt;</code>; worktrees inherit the approval. Without it nothing runs, <code>.delix/test-result.txt</code> gets <code>[not run: commands not approved, hash &lt;h12&gt;]</code>, the exit code is 2 once and the implementer reports <code>BLOCKED</code> (coming in the next release).</dd></div>
         <div><dt>Way out</dt><dd>If the report says <code>NEEDS_CONTEXT</code> or <code>BLOCKED</code>, the implementer can stop. <code>stop_hook_active</code> prevents an endless loop.</dd></div>
         <div><dt>Limit</dt><dd>Only these local commands run. The lead runs the card's verification command and the full suite during review.</dd></div>
       </dl>
     </article>
   </div>
-  <p class="src"><b>Source:</b> hooks/hooks.json · scripts/write_gate.py · scripts/bash_gate.py · scripts/stop_gate.py · scripts/common.py (card_path) · README.md (Known limits, Remaining risk) · CHANGELOG 0.5.0 (T007) · README.md (Triage) · CHANGELOG 0.6.0</p>
+  <p class="src"><b>Source:</b> hooks/hooks.json · scripts/write_gate.py · scripts/bash_gate.py · scripts/stop_gate.py · scripts/common.py (card_path) · README.md (Known limits, Remaining risk) · CHANGELOG 0.5.0 (T007) · README.md (Triage) · CHANGELOG 0.6.0 · scripts/trust.py · CHANGELOG (Unreleased)</p>
 </section>
 
 <section id="self-feeding">
