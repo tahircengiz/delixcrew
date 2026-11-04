@@ -14,7 +14,7 @@ import { band, pane, PANE, VIEWS, type Ctx } from './views'
 import { expected, finishRun, onAppended, patchRun, pollRuns, startRun } from './wait'
 
 // The board's values; the same atoms in each file that reads them, as the module scan requires.
-const snapshotAtom = atom({ plugin: 'delix-board', key: 'snapshot' } as const, null, { shape: 'snapshot-3' })
+const snapshotAtom = atom({ plugin: 'delix-board', key: 'snapshot' } as const, null, { shape: 'snapshot-4' })
 const runsAtom = atom({ plugin: 'delix-board', key: 'runs' } as const, [], { shape: 'runs-1' })
 const viewAtom = atom({ plugin: 'delix-board', key: 'view' } as const, 'pano')
 const selectedAtom = atom({ plugin: 'delix-board', key: 'selected' } as const, null)

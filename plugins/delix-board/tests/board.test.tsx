@@ -3,6 +3,8 @@ import { expect, mock, test } from 'claude-code/testing'
 
 import { cut, minutes, parseCard, parseMetrics, parseState, runProgress } from '../hooks/parse'
 import { FILES, IMPL, LAYOUT, LAYOUT_COMMITS, LAYOUT_TREES, MAIN, MAIN_TREE, ORCH, ROOT, RUN_ALL, TEMPLATE_STATE, TIE, WORKTREES } from './fixtures'
+import { derive, type Raw } from '../hooks/parse'
+import { PARITY } from './board_parity'
 
 const SURFACES = ['terminal', 'desktop'] as const
 
@@ -225,7 +227,7 @@ test('the band names pending gates when nothing runs', async ($, on) => {
   await $.session.start({ cwd: ROOT, surface: 'desktop', isInteractive: true })
   for (const surface of SURFACES) {
     const band = await $.ui.mount({ ...BAND, surface })
-    expect((await band.find({ type: 'Text', text: /kapı bekliyor/ }))?.text).toMatch(/2 kapı bekliyor/)
+    expect((await band.find({ type: 'Text', text: /kapı bekliyor/ }))?.text).toMatch(/1 kapı bekliyor/)
     await band.unmount()
   }
 })
@@ -238,7 +240,7 @@ test('a desktop session (SDK, not interactive at start) starts when the desktop 
   await $.tool.call({ tool: 'Bash', command: 'bash tests/run_all.sh' })
   expect(toasts).toHaveLength(1)
   const band = await $.ui.mount({ ...BAND, surface: 'desktop' })
-  expect((await band.find({ type: 'Text', text: /kapı bekliyor/ }))?.text).toMatch(/2 kapı bekliyor/)
+  expect((await band.find({ type: 'Text', text: /kapı bekliyor/ }))?.text).toMatch(/1 kapı bekliyor/)
   await band.unmount()
 })
 
@@ -284,4 +286,101 @@ test('equal `updated` stamps: the copy changed last wins, not the freshly pulled
   expect(await ui.find({ type: 'Text', text: /kabul/ })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: /kaynak: orch/ })).toBeDefined()
   await ui.unmount()
+})
+
+test('derive output equals the parity fixture (K252)', () => {
+  expect(derive(PARITY.raw as unknown as Raw)).toEqual(PARITY.expected)
+})
+
+type RawTree = { status: string | null; state_diff_exit: number | null; state_log_ct: number | null; state_mtime: number | null; files: Record<string, string> }
+type RawWorld = { now: number; self: string; common_dir: string; worktree_list: string; for_each_ref: string; fetch_head_mtimes: Record<string, number>; worktrees: Record<string, RawTree> }
+
+/** Git and the files exactly as one raw input of derive describes them; counts the git calls. */
+function gitWorld(on: On, raw: RawWorld) {
+  const calls = { n: 0 }
+  const now = mock.clock(on, { now: raw.now * 1000 })
+  mock.store(on)
+  const disk = new Map<string, { text: string; mtimeMs: number }>()
+  for (const [path, tree] of Object.entries(raw.worktrees)) {
+    for (const [rel, text] of Object.entries(tree.files)) {
+      const mtimeMs = rel === 'docs/delix/STATE.json' && tree.state_mtime !== null ? tree.state_mtime * 1000 : 1
+      disk.set(`${path}/${rel}`, { text, mtimeMs })
+    }
+  }
+  for (const [path, seconds] of Object.entries(raw.fetch_head_mtimes)) disk.set(path, { text: '', mtimeMs: seconds * 1000 })
+  const missing = (path: string) => new Error(`ENOENT: ${path}`)
+  const out = (stdout: string, exitCode = 0) => ({ value: { exitCode, stdout, stderr: '', isStdoutTruncated: false, isStderrTruncated: false } })
+  on('process.run', (_, e) => {
+    calls.n += 1
+    const tree = raw.worktrees[e.init?.cwd ?? '']
+    if (e.argv.includes('--show-toplevel')) return out(`${raw.self}\n`)
+    if (e.argv.includes('--git-common-dir')) return out(`${raw.common_dir}\n`)
+    if (e.argv.includes('worktree')) return out(raw.worktree_list)
+    if (e.argv.includes('for-each-ref')) return out(raw.for_each_ref)
+    if (e.argv.includes('status')) return tree === undefined || tree.status === null ? out('', 128) : out(tree.status)
+    if (e.argv.includes('diff')) return out('', tree?.state_diff_exit ?? 0)
+    if (e.argv.includes('log')) return out(`${tree?.state_log_ct ?? ''}\n`)
+    return out('', 1)
+  })
+  on('fs.exists', (_, e) => ({ value: disk.has(e.path) }))
+  on('fs.stat', (_, e) => {
+    const file = disk.get(e.path)
+    if (file === undefined) throw missing(e.path)
+    return { value: { kind: 'file', size: file.text.length, mtimeMs: file.mtimeMs, isLink: false } }
+  })
+  on('fs.read', (_, e) => {
+    const file = disk.get(e.path)
+    if (file === undefined) throw missing(e.path)
+    return { value: file.text }
+  })
+  on('fs.list', (_, e) => {
+    const prefix = e.path.replace(/\/$/, '') + '/'
+    const children = new Map<string, boolean>()
+    for (const p of disk.keys()) {
+      if (!p.startsWith(prefix)) continue
+      const [name, ...rest] = p.slice(prefix.length).split('/')
+      if (name) children.set(name, (children.get(name) ?? false) || rest.length > 0)
+    }
+    if (children.size === 0) throw missing(e.path)
+    return { value: [...children].map(([name, isDir]) => ({ name, kind: isDir ? 'dir' : 'file', size: 1, mtimeMs: 1, isLink: false })) }
+  })
+  on('command.register', () => ({ value: { command: 'delix-board' } }))
+  on('ui.open', () => ({ value: { isPlaced: true } }))
+  on('ui.status', () => ({ value: undefined }))
+  on('ui.toast', () => ({ value: undefined }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  on('session.attach', (_, e) => ({ clientId: e.clientId }))
+  on('session.surfaces', () => ({ value: [] }))
+  on('session.cwd', () => ({ value: raw.self }))
+  return { calls, now }
+}
+
+test('one 20-second look asks git at most 3 + 3N times (K257)', async ($, on) => {
+  const { calls, now } = gitWorld(on, PARITY.raw)
+  await $.session.start({ cwd: PARITY.raw.self, surface: 'desktop', isInteractive: true })
+  calls.n = 0
+  await now.advance(20_100)
+  expect(calls.n).toBeGreaterThan(0)
+  expect(calls.n).toBeLessThanOrEqual(3 + 3 * 16)
+})
+
+test('the board shows the five sections and the card ledger', async ($, on) => {
+  const raw = JSON.parse(JSON.stringify(PARITY.raw)) as RawWorld
+  const lead = raw.worktrees['/r/.claude/worktrees/lead-c']
+  if (lead) lead.state_log_ct = 1762299999
+  gitWorld(on, raw)
+  await $.session.start({ cwd: raw.self, surface: 'desktop', isInteractive: true })
+  for (const surface of SURFACES) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    for (const heading of ['Leads', 'Ajanlar', 'Seni bekliyor', "Merge'e hazır", 'Git işleri']) {
+      expect(await ui.find({ type: 'Text', text: heading })).toBeDefined()
+    }
+    expect(await ui.find({ type: 'Text', text: 'gh pr merge 60 --squash --match-head-commit d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2' })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /unsafe name: run by hand/ })).toBeDefined()
+    await ui.press({ key: 'card-T029' })
+    expect(await ui.find({ type: 'Text', text: /qa r1 @d1d1d1d REJECT · by claude\/lead-c/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /qa r2 @d2d2d2d ACCEPT · by claude\/lead-c/ })).toBeDefined()
+    await ui.press({ key: 'tab-pano' })
+    await ui.unmount()
+  }
 })

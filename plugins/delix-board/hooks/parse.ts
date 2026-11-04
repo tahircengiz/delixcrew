@@ -1,7 +1,22 @@
 // Pure parsers for delix's files: no I/O, so the tests reach them directly.
 // Rules follow delix's scripts/board.py where it has one.
 
-import type { CardFile, CardReport, Finding, ReviewRound, TestResult, Verification, Wave } from '../types'
+import type {
+  Action,
+  AgentRecord,
+  AgentRow,
+  CardFile,
+  CardReport,
+  DoneEntry,
+  Finding,
+  LeadRow,
+  ReadyEntry,
+  ReviewRound,
+  TestResult,
+  Verification,
+  WaitEntry,
+  Wave,
+} from '../types'
 
 export const OPEN_STATUSES = ['open', 'in_progress', 'in_review', 'fixing']
 const REPORT_STATUSES = ['DONE_WITH_CONCERNS', 'DONE', 'NEEDS_CONTEXT', 'BLOCKED']
@@ -50,6 +65,9 @@ export type StateCard = {
   qa: string | null
   security: string | null
   approved: string | null
+  /** The `agents` ledger (Spec C §4), object records only. */
+  agents: AgentRecord[]
+  merged: { sha: string; head: string; at: string } | null
 }
 
 export type ParsedState = {
@@ -109,6 +127,17 @@ export function parseState(text: string): ParsedState | null {
         qa: str(c.qa),
         security: str(c.security),
         approved: str(c.approved),
+        agents: (Array.isArray(c.agents) ? c.agents : []).filter(isObject).map(a => ({
+          role: str(a.role) ?? '?',
+          by: str(a.by),
+          round: num(a.round),
+          sha: str(a.sha),
+          verdict: str(a.verdict),
+          at: str(a.at),
+          branch: str(a.branch),
+          session: str(a.session),
+        })),
+        merged: isObject(c.merged) ? { sha: str(c.merged.sha) ?? '', head: str(c.merged.head) ?? '', at: str(c.merged.at) ?? '' } : null,
       }
     }
   }
@@ -315,12 +344,19 @@ export function parseWorktrees(text: string): { path: string; branch: string }[]
   return out
 }
 
-/** The pending gates of a card, board.py's rules; a PR recorded as `merge <sha>` is merged already. */
-export function gatesOf(card: { tier: number | null; status: string; pr: string | null; isMerged: boolean }, reportStatus: string | null): string[] {
+/** K254/K255: a card with an `agents` ledger follows Spec C REQ-3 (its R8 reasons); one without follows board.py's rule. */
+export function gatesOf(card: { tier: number | null; status: string; pr: string | null; isMerged: boolean; reasons: string[] | null }, reportStatus: string | null): string[] {
   const gates: string[] = []
   const isOpen = OPEN_STATUSES.includes(card.status)
+  if (card.reasons !== null) {
+    if (card.reasons.includes('tier 3 approval')) gates.push('lock')
+    if (card.reasons.includes('ready to merge')) gates.push('merge')
+    if (card.status === 'escalated') gates.push('escalated')
+    for (const r of ['needs_context', 'blocked']) if (card.reasons.includes(r)) gates.push(r)
+    return gates
+  }
   if (card.tier === 3 && isOpen) gates.push('lock')
-  if (card.status === 'accepted' && card.pr !== null && !card.isMerged) gates.push('merge')
+  if (card.status === 'in_review' && card.pr !== null && !card.isMerged) gates.push('merge')
   if (card.status === 'escalated') gates.push('escalated')
   if ((reportStatus === 'NEEDS_CONTEXT' || reportStatus === 'BLOCKED') && isOpen) gates.push(reportStatus.toLowerCase())
   return gates
@@ -328,6 +364,365 @@ export function gatesOf(card: { tier: number | null; status: string; pr: string 
 
 /** The decision points a card passes through (derived): card approval, 🔐 at Tier 3, merge. */
 export const gateCount = (tier: number | null) => 1 + (tier === 3 ? 1 : 0) + 1
+
+/** What git and the files say about one worktree (Spec C §4); a missing key counts as null or empty. */
+export type RawWorktree = {
+  status?: string | null
+  state_diff_exit?: number | null
+  state_log_ct?: number | null
+  state_mtime?: number | null
+  files?: Record<string, string> | null
+}
+
+/** derive's input, rule R1: the §4 git outputs and the files, the same for board.py and the panel. */
+export type Raw = {
+  default_branch?: string | null
+  now?: number | null
+  self?: string | null
+  source?: string | null
+  common_dir?: string | null
+  fetch_head_mtimes?: Record<string, number> | null
+  worktree_list?: string | null
+  for_each_ref?: string | null
+  worktrees?: Record<string, RawWorktree> | null
+}
+
+export type Derived = {
+  agents: AgentRow[]
+  leads: LeadRow[]
+  queue: { waiting: WaitEntry[]; ready: ReadyEntry[]; done: DoneEntry[] }
+  actions: Action[]
+  fetched_at: number | 'never fetched'
+}
+
+const STATE_PATH = 'docs/delix/STATE.json'
+const WEEK = 604800
+const LOCK = '\u{1F510}'
+const BRANCH_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*(\/[A-Za-z0-9][A-Za-z0-9._-]*)*$/
+const PATH_RE = /^\/[A-Za-z0-9_./-]+$/
+const SHA_RE = /^[0-9a-f]{40}$/
+const ROLE_ORDER = ['lead', 'implementer', 'other']
+const KIND_ORDER = ['push', 'merge', 'remove_worktree', 'delete_branch']
+const UNSAFE = 'unsafe name: run by hand'
+
+const isInt = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v)
+const textOf = (v: unknown): string | null => (typeof v === 'string' ? v : null)
+const filled = (v: unknown): string | null => (typeof v === 'string' && v !== '' ? v : null)
+/** Plain code-point order, as Python sorts strings (never localeCompare). */
+const byCode = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
+const emptyDerived = (): Derived => ({ agents: [], leads: [], queue: { waiting: [], ready: [], done: [] }, actions: [], fetched_at: 'never fetched' })
+
+type Tree = { path: string; head: string; branch: string | null; main: boolean }
+type Ref = { object: string; upstream: string; track: string; time: number | null }
+type Queue = Derived['queue'] & { reasons: Map<string, string[]> }
+
+/** R2: `git worktree list --porcelain`, blocks split by an empty line; the first block is the main checkout. */
+function rawTrees(text: string): Tree[] {
+  const out: Tree[] = []
+  let block: { path: string | null; head: string; branch: string | null } = { path: null, head: '', branch: null }
+  for (const line of [...text.split('\n'), '']) {
+    if (line === '') {
+      if (block.path !== null) out.push({ path: block.path, head: block.head, branch: block.branch, main: out.length === 0 })
+      block = { path: null, head: '', branch: null }
+    } else if (line.startsWith('worktree ')) {
+      block.path = line.slice('worktree '.length)
+    } else if (line.startsWith('HEAD ')) {
+      block.head = line.slice('HEAD '.length)
+    } else if (line.startsWith('branch ')) {
+      const b = line.slice('branch '.length)
+      block.branch = b.startsWith('refs/heads/') ? b.slice('refs/heads/'.length) : b
+    } else if (line === 'detached') {
+      block.branch = null
+    }
+  }
+  return out
+}
+
+/** R2: `git for-each-ref` lines with exactly five TAB fields. */
+function rawRefs(text: string): Map<string, Ref> {
+  const refs = new Map<string, Ref>()
+  for (const line of text.split('\n')) {
+    const f = line.split('\t')
+    if (f.length !== 5) continue
+    const [name, object, upstream, track, time] = f as [string, string, string, string, string]
+    refs.set(name, { object, upstream, track, time: /^\d+$/.test(time) ? Number(time) : null })
+  }
+  return refs
+}
+
+/** Spec C derive(raw), rules R1–R12: pure, reads no `$`, never throws. The same rules as board.py's derive (K252). */
+export function derive(raw: Raw): Derived {
+  try {
+    return deriveUnsafe(raw)
+  } catch {
+    return emptyDerived()
+  }
+}
+
+function deriveUnsafe(raw: Raw): Derived {
+  const def = textOf(raw.default_branch) ?? ''
+  const now = isInt(raw.now) ? raw.now : null
+  const self = textOf(raw.self)
+  const sourcePath = textOf(raw.source)
+  const facts = isObject(raw.worktrees) ? (raw.worktrees as Record<string, unknown>) : {}
+  const trees = rawTrees(textOf(raw.worktree_list) ?? '')
+  const refs = rawRefs(textOf(raw.for_each_ref) ?? '')
+
+  const factsOf = (path: string): Json => {
+    const f = facts[path]
+    return isObject(f) ? f : {}
+  }
+  const filesOf = (path: string): Json => {
+    const f = factsOf(path).files
+    return isObject(f) ? f : {}
+  }
+  const fileOf = (path: string, rel: string): string | null => textOf(filesOf(path)[rel])
+  const statusLines = (path: string): string[] | null => {
+    const s = textOf(factsOf(path).status)
+    return s === null ? null : s.split('\n').filter(l => l !== '')
+  }
+  const stateDirty = (path: string) => (statusLines(path) ?? []).some(l => l.slice(3) === STATE_PATH)
+  const stateOf = (path: string | null): Json | null => {
+    const text = path === null ? null : fileOf(path, STATE_PATH)
+    if (text === null) return null
+    try {
+      const parsed: unknown = JSON.parse(text)
+      return isObject(parsed) ? parsed : null
+    } catch {
+      return null
+    }
+  }
+  const cardsOf = (state: Json | null): Json => (state !== null && isObject(state.cards) ? state.cards : {})
+  const records = (card: Json): Json[] => (Array.isArray(card.agents) ? card.agents.filter(isObject) : [])
+
+  // R3
+  const refOf = (branch: string) => refs.get(`refs/heads/${branch}`)
+  const hasUpstream = (t: Tree) => t.branch !== null && (refOf(t.branch)?.upstream ?? '') !== ''
+  const upstreamText = (t: Tree): string => {
+    if (t.branch === null) return `detached ${t.head.slice(0, 7)}`
+    const ref = refOf(t.branch)
+    if (ref === undefined) return '?'
+    if (ref.upstream === '') return 'no upstream'
+    if (ref.track === '') return 'in sync'
+    if (ref.track === 'gone') return 'gone'
+    const both = /^ahead (\d+), behind (\d+)$/.exec(ref.track)
+    if (both) return `${both[1]} ahead, ${both[2]} behind`
+    const one = /^(ahead|behind) (\d+)$/.exec(ref.track)
+    if (one) return `${one[2]} ${one[1]}`
+    return '?'
+  }
+  const shortUpstream = (t: Tree) => (refOf(t.branch ?? '')?.upstream ?? '').replace(/^refs\/remotes\//, '')
+  const branchTime = (t: Tree) => (t.branch === null ? null : (refOf(t.branch)?.time ?? null))
+
+  // R4, R5
+  const sourceState = stateOf(sourcePath)
+  const sourceCards = cardsOf(sourceState)
+  const byValues = new Set<string>()
+  for (const c of Object.values(sourceCards)) if (isObject(c)) for (const r of records(c)) if (typeof r.by === 'string') byValues.add(r.by)
+  const cardOf = (path: string) => {
+    const m = /T\d{3}/.exec(fileOf(path, '.delix/card') ?? '')
+    return m ? m[0] : null
+  }
+  const roleOf = (t: Tree): string => {
+    const card = cardOf(t.path)
+    if (card !== null) return `implementer ${card}`
+    const f = factsOf(t.path)
+    if (stateDirty(t.path) || f.state_diff_exit === 1 || (t.branch !== null && byValues.has(t.branch))) return 'lead'
+    return 'other'
+  }
+  const cardTree = new Map<string, Tree>()
+  for (const t of trees) {
+    const card = cardOf(t.path)
+    if (card !== null && !cardTree.has(card)) cardTree.set(card, t)
+  }
+
+  // R7
+  const prOf = (id: string, card: Json): number | null => {
+    const v = card.pr
+    if (isInt(v) && v > 0) return v
+    if (typeof v === 'string' && /^#?[0-9]+$/.test(v)) return Number(v.replace('#', ''))
+    const t = cardTree.get(id)
+    const m = t ? /\*\*PR:\*\* #(\d+)/.exec(fileOf(t.path, '.delix/report.md') ?? '') : null
+    return m ? Number(m[1]) : null
+  }
+  const reportStatus = (id: string) => {
+    const t = cardTree.get(id)
+    return t ? (/\*\*Status:\*\*\s*([A-Z_]+)/.exec(fileOf(t.path, '.delix/report.md') ?? '')?.[1] ?? null) : null
+  }
+  const lastOf = (list: Json[], role: string) => list.filter(r => r.role === role).at(-1) ?? null
+  const branchOf = (id: string, card: Json): string | null => {
+    const b = lastOf(records(card), 'implementer')?.branch
+    if (typeof b === 'string') return b
+    return cardTree.get(id)?.branch ?? null
+  }
+  const tierOf = (card: Json) => (isInt(card.tier) ? card.tier : 2)
+  const lastRound = (card: Json) => {
+    const rounds = records(card).filter(r => (r.role === 'qa' || r.role === 'security') && isInt(r.round)).map(r => r.round as number)
+    return rounds.length === 0 ? null : Math.max(...rounds)
+  }
+
+  // R8
+  const queueOf = (state: Json | null, statePath: string | null): Queue => {
+    const cards = cardsOf(state)
+    const q: Queue = { waiting: [], ready: [], done: [], reasons: new Map() }
+    for (const id of Object.keys(cards).sort(byCode)) {
+      const card = cards[id]
+      if (!isObject(card)) continue
+      const status = textOf(card.status)
+      const pr = prOf(id, card)
+      const tier = tierOf(card)
+      const list = records(card)
+      const r = lastRound(card)
+      const qa = r === null ? null : (list.filter(x => x.role === 'qa' && x.round === r).at(-1) ?? null)
+      const sec = r === null ? null : (list.filter(x => x.role === 'security' && x.round === r).at(-1) ?? null)
+      const branch = branchOf(id, card)
+      const tip = branch === null ? null : (refs.get(`refs/remotes/origin/${branch}`)?.object ?? null)
+      const qaSha = qa === null ? null : textOf(qa.sha)
+      const isReviewed =
+        status === 'in_review' &&
+        pr !== null &&
+        qa !== null &&
+        (qa.verdict === 'ACCEPT' || qa.verdict === 'ACCEPT_WITH_NOTES') &&
+        (tier < 2 || (sec !== null && (sec.verdict === 'CLEAN' || sec.verdict === `${LOCK} HUMAN_APPROVAL`)))
+      const isReady = isReviewed && tip === qaSha
+      const reasons: string[] = []
+      if (isReady) reasons.push('ready to merge')
+      if (status === 'open' && tier === 3) {
+        const file = textOf(card.file)
+        const text = file === null || statePath === null ? null : fileOf(statePath, file)
+        if (text === null || !text.split('\n').some(l => l.startsWith(`**${LOCK} Approved:**`))) reasons.push('tier 3 approval')
+      }
+      const report = reportStatus(id)
+      if ((report === 'NEEDS_CONTEXT' || report === 'BLOCKED') && status !== null && OPEN_STATUSES.includes(status)) reasons.push(report.toLowerCase())
+      if (status === 'escalated') reasons.push('escalated')
+      if (isReviewed && !isReady) reasons.push('changed after review')
+      if (status === 'in_review' && pr !== null && (!Array.isArray(card.agents) || card.agents.length === 0)) reasons.push('no review record')
+      for (const reason of reasons) q.waiting.push({ card: id, verification: null, reason })
+      if (reasons.length > 0) q.reasons.set(id, reasons)
+      if (isReady && pr !== null) q.ready.push({ card: id, pr, sha: qaSha })
+      if (status === 'accepted') q.done.push({ card: id, pr })
+    }
+    const verifications = state !== null && Array.isArray(state.verifications) ? state.verifications.filter(isObject) : []
+    for (const v of verifications) {
+      if (typeof v.verdict === 'string' && v.verdict.startsWith('FIX') && filled(v.resolution) === null) {
+        q.waiting.push({ card: null, verification: textOf(v.name), reason: 'verification FIX' })
+      }
+    }
+    return q
+  }
+
+  // R6
+  const roundLine = (r: Json) =>
+    `${textOf(r.role) ?? '-'} r${String(r.round)} @${filled(r.sha)?.slice(0, 7) ?? '-'} ${filled(r.verdict) ?? '-'} · by ${filled(r.by) ?? '-'}`
+  const agents: AgentRow[] = trees.map(t => {
+    const role = roleOf(t)
+    const card = cardOf(t.path)
+    const lines = statusLines(t.path)
+    const source = card === null ? null : sourceCards[card]
+    const sourceCard = isObject(source) ? source : null
+    const pr = card === null ? null : prOf(card, sourceCard ?? {})
+    const r = sourceCard === null ? null : lastRound(sourceCard)
+    return {
+      path: t.path,
+      branch: t.branch,
+      main: t.main,
+      role,
+      card,
+      upstream: upstreamText(t),
+      uncommitted: lines === null ? '?' : lines.length,
+      lands: pr !== null ? `PR #${pr} → ${def}` : hasUpstream(t) ? `pushed: ${shortUpstream(t)}` : 'local only',
+      opened_by: sourceCard === null ? null : textOf(lastOf(records(sourceCard), 'implementer')?.by),
+      last_round:
+        sourceCard === null || r === null
+          ? []
+          : records(sourceCard)
+              .filter(x => (x.role === 'qa' || x.role === 'security') && x.round === r)
+              .map(roundLine),
+    }
+  })
+  const rank = (role: string) => ROLE_ORDER.indexOf(role.split(' ')[0] ?? '')
+  agents.sort((a, b) => rank(a.role) - rank(b.role) || byCode(a.path, b.path))
+
+  // R9
+  const changedAt = (path: string): number | null => {
+    const f = factsOf(path)
+    const v = stateDirty(path) ? f.state_mtime : f.state_log_ct
+    return isInt(v) ? v : null
+  }
+  const lastActivity = (t: Tree, isLead: boolean): number | null => {
+    const known = [branchTime(t), isLead ? changedAt(t.path) : null].filter((v): v is number => v !== null)
+    return known.length === 0 ? null : Math.max(...known)
+  }
+  const isOld = (last: number | null) => last !== null && now !== null && now - last > WEEK
+  const leadTrees = [...trees.filter(t => t.main), ...trees.filter(t => !t.main && roleOf(t) === 'lead').sort((a, b) => byCode(a.path, b.path))]
+  const leads: LeadRow[] = leadTrees.map(t => {
+    const state = stateOf(t.path)
+    const q = queueOf(state, t.path)
+    const cards = cardsOf(state)
+    const spec = state === null ? null : textOf(state.spec)
+    const specText = spec === null ? null : fileOf(t.path, spec)
+    const heading = specText?.split('\n').find(l => l.startsWith('# ')) ?? null
+    return {
+      path: t.path,
+      branch: t.branch,
+      main: t.main,
+      source: t.path === sourcePath,
+      spec_title: heading === null ? null : heading.slice(2).replace(/\s+$/, ''),
+      open: Object.values(cards).filter(c => isObject(c) && typeof c.status === 'string' && OPEN_STATUSES.includes(c.status)).length,
+      waiting: q.reasons.size,
+      ready: q.ready.length,
+      changed_at: changedAt(t.path),
+      stale: !t.main && isOld(lastActivity(t, true)),
+    }
+  })
+
+  // R10
+  const queue = queueOf(sourceState, sourcePath)
+  const actions: Action[] = []
+  const guarded = (kind: Action['kind'], target: string, card: string | null, isSafe: boolean, command: string, uncommitted: number | '?' = 0) => {
+    if (uncommitted !== 0) actions.push({ kind, target, card, command: null, note: `uncommitted ${uncommitted} files: commit or discard in its session` })
+    else if (!isSafe) actions.push({ kind, target, card, command: null, note: UNSAFE })
+    else actions.push({ kind, target, card, command, note: '' })
+  }
+  for (const t of trees) {
+    if (t.main || t.path === self) continue
+    const row = agents.find(a => a.path === t.path)
+    const uncommitted = row?.uncommitted ?? '?'
+    const card = cardOf(t.path)
+    const up = upstreamText(t)
+    if (t.branch !== null && t.branch !== def && up !== 'gone' && up !== '?' && (up === 'no upstream' || up.includes('ahead'))) {
+      guarded('push', t.path, card, PATH_RE.test(t.path) && BRANCH_RE.test(t.branch), `git -C ${t.path} push -u origin ${t.branch}`, uncommitted)
+    }
+    const source = card === null ? null : sourceCards[card]
+    const isMergedCard = isObject(source) && source.status === 'accepted' && isObject(source.merged)
+    const isIdle = isOld(lastActivity(t, row?.role === 'lead')) && hasUpstream(t) && (up === 'in sync' || /^\d+ behind$/.test(up))
+    if (isMergedCard || isIdle) guarded('remove_worktree', t.path, card, PATH_RE.test(t.path), `git worktree remove ${t.path}`, uncommitted)
+  }
+  for (const r of queue.ready) {
+    guarded('merge', `#${r.pr}`, r.card, r.pr > 0 && SHA_RE.test(r.sha ?? ''), `gh pr merge ${r.pr} --squash --match-head-commit ${r.sha}`)
+  }
+  const checkedOut = new Set(trees.map(t => t.branch).filter((b): b is string => b !== null))
+  for (const id of Object.keys(sourceCards).sort(byCode)) {
+    const card = sourceCards[id]
+    if (!isObject(card) || !isObject(card.merged)) continue
+    const branch = branchOf(id, card)
+    if (branch === null || checkedOut.has(branch)) continue
+    const ref = refOf(branch)
+    if (ref === undefined || ref.object !== card.merged.head) continue
+    guarded('delete_branch', branch, id, BRANCH_RE.test(branch), `git branch -D ${branch}`)
+  }
+  actions.sort((a, b) => byCode(a.card ?? a.target, b.card ?? b.target) || KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind))
+
+  // R11, R12
+  const fetched = Object.values(isObject(raw.fetch_head_mtimes) ? raw.fetch_head_mtimes : {}).filter(isInt)
+  return {
+    agents,
+    leads,
+    queue: { waiting: queue.waiting, ready: queue.ready, done: queue.done },
+    actions,
+    fetched_at: fetched.length === 0 ? 'never fetched' : Math.max(...fetched),
+  }
+}
 
 /** The path a background Bash call writes its output to, from the text the model read. */
 export function backgroundOutputPath(text: string): string | null {

@@ -6,6 +6,7 @@ import type { EngineInterface } from 'claude-code'
 
 import type { Card, CardReport, Snapshot, TestResult } from '../types'
 import {
+  derive,
   gateCount,
   gatesOf,
   parseCard,
@@ -17,16 +18,26 @@ import {
   type MetricRow,
   type ParsedCard,
   type ParsedState,
+  type Raw,
+  type RawWorktree,
 } from './parse'
 
 type Cached<T> = { mtimeMs: number; value: T }
 
+/** What one 20-second look learns from git: derive's input without `now` and the files. */
+type GitLook = Omit<Raw, 'now' | 'worktrees'> & { worktrees: Record<string, Omit<RawWorktree, 'files'>> }
+
 export type Cache = {
   files: Map<string, Cached<unknown>>
-  worktrees: { at: number; list: { path: string; branch: string }[]; root: string | null }
+  /** File texts for derive, kept apart from `files`, where the same path (STATE, a report, a card) is cached parsed. */
+  texts: Map<string, Cached<unknown>>
+  worktrees: { at: number; list: { path: string; branch: string }[]; root: string | null; git: GitLook }
 }
 
-export const newCache = (): Cache => ({ files: new Map(), worktrees: { at: 0, list: [], root: null } })
+export const newCache = (): Cache => ({ files: new Map(), texts: new Map(), worktrees: { at: 0, list: [], root: null, git: { worktrees: {} } } })
+
+const STATE = 'docs/delix/STATE.json'
+const REFS_FORMAT = '--format=%(refname)%09%(objectname)%09%(upstream)%09%(upstream:track,nobracket)%09%(committerdate:unix)'
 
 const join = (...parts: string[]) => parts.join('/').replace(/\/+/g, '/')
 const basename = (p: string) => p.replace(/\/+$/, '').split('/').pop() ?? p
@@ -60,16 +71,12 @@ async function readIfChanged<T>($: EngineInterface, cache: Cache, path: string, 
 /**
  * When a worktree's STATE.json last really changed: its mtime while it has uncommitted changes, else the time of
  * the commit that last touched it. A checkout or pull gives an old copy a fresh mtime, and the lead does
- * not always move `updated`, so neither is trusted alone.
+ * not always move `updated`, so neither is trusted alone. From the look's results; no call of its own.
  */
-async function changedAt($: EngineInterface, dir: string, mtimeMs: number): Promise<number> {
-  const git = (args: string[]) => $.process.run(['git', ...args], { cwd: dir, timeoutMs: 5000 }).catch(() => undefined)
-  const status = await git(['status', '--porcelain', '--', 'docs/delix/STATE.json'])
-  if (status?.exitCode === 0 && status.stdout.trim() !== '') return mtimeMs
-  const log = await git(['log', '-1', '--format=%ct', '--', 'docs/delix/STATE.json'])
-  const seconds = log?.exitCode === 0 ? Number(log.stdout.trim()) : NaN
-  return Number.isFinite(seconds) ? seconds * 1000 : 0
-}
+const changedAt = (tree: Seen): number => (tree.isDirty ? tree.mtimeMs : (tree.logCt ?? 0) * 1000)
+
+/** One worktree as the look saw it: STATE there and uncommitted, `.delix/card` there, STATE's mtime and last commit time (s). */
+type Seen = { path: string; hasState: boolean; hasCard: boolean; isDirty: boolean; mtimeMs: number; logCt: number | null }
 
 /**
  * The checkout whose STATE.json is live. The lead may write it in its own worktree (the desktop app opens
@@ -77,24 +84,119 @@ async function changedAt($: EngineInterface, dir: string, mtimeMs: number): Prom
  * dispatch. Among the worktrees holding one, implementer worktrees (`.delix/card`) left out: the copy changed last;
  * on a tie the session's own checkout, then the main checkout (listed first).
  */
-async function chooseRoot($: EngineInterface, top: string, trees: { path: string }[]): Promise<string> {
+function chooseRoot(top: string, trees: Seen[]): string {
   const found: { path: string; changedAt: number; rank: number }[] = []
   for (const [i, tree] of trees.entries()) {
-    const stat = await $.fs.stat(join(tree.path, 'docs/delix/STATE.json')).catch(() => undefined)
-    if (!stat || stat.kind !== 'file') continue
-    if (await $.fs.exists(join(tree.path, '.delix/card')).catch(() => false)) continue
-    found.push({ path: tree.path, changedAt: await changedAt($, tree.path, stat.mtimeMs), rank: tree.path === top ? 0 : i === 0 ? 1 : 2 })
+    if (!tree.hasState || tree.hasCard) continue
+    found.push({ path: tree.path, changedAt: changedAt(tree), rank: tree.path === top ? 0 : i === 0 ? 1 : 2 })
   }
   found.sort((a, b) => b.changedAt - a.changedAt || a.rank - b.rank)
   return found[0]?.path ?? top
 }
 
+/** The branch `origin/<default>...HEAD` compares with: delix.json's `default_branch` when it is a plain name, else `main`. */
+async function defaultBranch($: EngineInterface, cache: Cache, top: string): Promise<string> {
+  const value = await readIfChanged($, cache, join(top, 'docs/delix/delix.json'), null, text => {
+    try {
+      const json: unknown = JSON.parse(text)
+      return typeof json === 'object' && json !== null && 'default_branch' in json ? json.default_branch : null
+    } catch {
+      return null
+    }
+  })
+  return typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(value) ? value : 'main'
+}
+
+/**
+ * The 20-second look (Spec C §4, K257): at most 3 + 3N git calls for N worktrees, each in its worktree as `cwd`.
+ * Three for the repository (common dir, worktree list, refs), then per worktree `status`, and for a card-less one
+ * whose STATE is not uncommitted the three-dot `diff` and, if it holds a STATE, its last commit time.
+ */
 async function worktrees($: EngineInterface, cache: Cache, top: string, now: number) {
   if (now - cache.worktrees.at < 20_000 && cache.worktrees.at !== 0) return cache.worktrees
-  const run = await $.process.run(['git', 'worktree', 'list', '--porcelain'], { cwd: top, timeoutMs: 5000 }).catch(() => undefined)
-  const list = run?.exitCode === 0 ? parseWorktrees(run.stdout) : []
-  cache.worktrees = { at: now, list, root: await chooseRoot($, top, list) }
+  const git = (cwd: string, args: string[]) => $.process.run(['git', ...args], { cwd, timeoutMs: 5000 }).catch(() => undefined)
+  const stdout = (run: Awaited<ReturnType<typeof git>>) => (run?.exitCode === 0 ? run.stdout : null)
+  const commonLine = stdout(await git(top, ['rev-parse', '--git-common-dir']))?.split('\n')[0]?.trim() ?? ''
+  const common = commonLine === '' ? null : commonLine.startsWith('/') ? commonLine : join(top, commonLine)
+  const listText = stdout(await git(top, ['worktree', 'list', '--porcelain']))
+  const list = listText === null ? [] : parseWorktrees(listText)
+  const refs = stdout(await git(top, ['for-each-ref', 'refs/heads', 'refs/remotes', REFS_FORMAT])) ?? ''
+  const def = await defaultBranch($, cache, top)
+  const facts: GitLook['worktrees'] = {}
+  const seen: Seen[] = []
+  for (const tree of list) {
+    const hasCard = await $.fs.exists(join(tree.path, '.delix/card')).catch(() => false)
+    const stat = await $.fs.stat(join(tree.path, STATE)).catch(() => undefined)
+    const hasState = stat?.kind === 'file'
+    const mtimeMs = stat?.mtimeMs ?? 0
+    const status = stdout(await git(tree.path, ['status', '--porcelain']))
+    const isDirty = status !== null && status.split('\n').some(l => l.slice(3) === STATE)
+    let diffExit: number | null = null
+    let logCt: number | null = null
+    if (!hasCard && !isDirty) {
+      const diff = await git(tree.path, ['diff', '--quiet', `origin/${def}...HEAD`, '--', STATE])
+      diffExit = diff?.exitCode === 0 || diff?.exitCode === 1 ? diff.exitCode : null
+      if (hasState) {
+        const ct = stdout(await git(tree.path, ['log', '-1', '--format=%ct', '--', STATE]))?.trim() ?? ''
+        logCt = /^\d+$/.test(ct) ? Number(ct) : null
+      }
+    }
+    facts[tree.path] = { status, state_diff_exit: diffExit, state_log_ct: logCt, state_mtime: isDirty && hasState ? Math.floor(mtimeMs / 1000) : null }
+    seen.push({ path: tree.path, hasState, hasCard, isDirty, mtimeMs, logCt })
+  }
+  const fetchHeads: Record<string, number> = {}
+  if (common !== null) {
+    const stamp = async (path: string) => {
+      const stat = await $.fs.stat(path).catch(() => undefined)
+      if (stat?.kind === 'file') fetchHeads[path] = Math.floor(stat.mtimeMs / 1000)
+    }
+    await stamp(join(common, 'FETCH_HEAD'))
+    for (const entry of await $.fs.list(join(common, 'worktrees')).catch(() => [])) await stamp(join(common, 'worktrees', entry.name, 'FETCH_HEAD'))
+  }
+  const root = chooseRoot(top, seen)
+  cache.worktrees = {
+    at: now,
+    list,
+    root,
+    git: { default_branch: def, self: top, source: root, common_dir: common, fetch_head_mtimes: fetchHeads, worktree_list: listText ?? '', for_each_ref: refs, worktrees: facts },
+  }
   return cache.worktrees
+}
+
+/** The project files a STATE points derive at: its spec, and the file of each open Tier 3 card; relative paths inside the checkout only. */
+function linkedFiles(text: string | undefined): string[] {
+  let state: unknown = null
+  try {
+    state = text === undefined ? null : JSON.parse(text)
+  } catch {
+    return []
+  }
+  const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
+  if (!isRecord(state)) return []
+  const out: string[] = typeof state.spec === 'string' ? [state.spec] : []
+  if (isRecord(state.cards)) {
+    for (const card of Object.values(state.cards)) {
+      if (isRecord(card) && card.tier === 3 && card.status === 'open' && typeof card.file === 'string') out.push(card.file)
+    }
+  }
+  return out.filter(p => p !== '' && !p.startsWith('/') && !p.split('/').includes('..'))
+}
+
+/** derive's `files` per worktree (STATE, `.delix/card`, `.delix/report.md` and what the STATE points at), each read again only when its mtime moved. */
+async function withFiles($: EngineInterface, cache: Cache, facts: GitLook['worktrees']): Promise<Record<string, RawWorktree>> {
+  const texts: Cache = { ...cache, files: cache.texts }
+  const out: Record<string, RawWorktree> = {}
+  for (const [path, seen] of Object.entries(facts)) {
+    const files: Record<string, string> = {}
+    const add = async (rel: string) => {
+      const text = await readIfChanged<string>($, texts, join(path, rel), null, t => t)
+      if (text !== null) files[rel] = text
+    }
+    for (const rel of [STATE, '.delix/card', '.delix/report.md']) await add(rel)
+    for (const rel of linkedFiles(files[STATE])) await add(rel)
+    out[path] = { ...seen, files }
+  }
+  return out
 }
 
 const emptySnapshot = (root: string): Snapshot => ({
@@ -111,6 +213,11 @@ const emptySnapshot = (root: string): Snapshot => ({
   cards: [],
   verifications: [],
   worktreeCount: 0,
+  agents: [],
+  leads: [],
+  queue: { waiting: [], ready: [], done: [] },
+  actions: [],
+  fetchedAt: 'never fetched',
 })
 
 /** One pass over the project seen from the session's checkout `top`: STATE, cards, metrics, worktrees and their .delix files. */
@@ -159,6 +266,9 @@ export async function readSnapshot($: EngineInterface, top: string, cache: Cache
     }
   }
 
+  // Spec C: derive on the look's git part and the files as they are now (K252: the same rules as board.py).
+  const derived = derive({ ...seen.git, now: Math.floor(now / 1000), worktrees: await withFiles($, cache, seen.git.worktrees) })
+
   const waveOf: Record<string, number> = {}
   for (const w of state?.waves ?? []) for (const id of w.cards) waveOf[id] ??= w.wave
   const ids = [...new Set([...Object.keys(state?.cards ?? {}), ...Object.keys(parsedCards)])].sort()
@@ -172,6 +282,8 @@ export async function readSnapshot($: EngineInterface, top: string, cache: Cache
     const tier = s?.tier ?? p?.table.tier ?? null
     const pr = s?.pr ?? (r?.report?.pr ? `#${r.report.pr}` : null)
     const isMerged = pr !== null && /^merge\b/i.test(pr)
+    const agents = s?.agents ?? []
+    const reasons = agents.length > 0 ? derived.queue.waiting.filter(w => w.card === id).map(w => w.reason) : null
     return {
       id,
       title: p?.title ?? '',
@@ -189,13 +301,14 @@ export async function readSnapshot($: EngineInterface, top: string, cache: Cache
       qa: s?.qa ?? null,
       security: s?.security ?? null,
       approved: s?.approved ?? null,
-      gates: isArchived ? [] : gatesOf({ tier, status, pr, isMerged }, r?.report?.status ?? null),
+      gates: isArchived ? [] : gatesOf({ tier, status, pr, isMerged, reasons }, r?.report?.status ?? null),
       files: p?.files ?? [],
       reviewRounds: p?.reviewRounds ?? [],
       worktree: r?.path ?? null,
       branch: r?.branch ?? null,
       report: r?.report ?? null,
       test: r?.test ?? null,
+      agents,
     }
   })
   cards.sort((a, b) => Number(a.isArchived) - Number(b.isArchived) || (a.wave ?? 99) - (b.wave ?? 99) || a.id.localeCompare(b.id))
@@ -214,5 +327,10 @@ export async function readSnapshot($: EngineInterface, top: string, cache: Cache
     cards,
     verifications: state?.verifications ?? [],
     worktreeCount: trees.length,
+    agents: derived.agents,
+    leads: derived.leads,
+    queue: derived.queue,
+    actions: derived.actions,
+    fetchedAt: derived.fetched_at,
   }
 }

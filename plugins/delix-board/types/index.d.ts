@@ -8,6 +8,61 @@ export type CardReport = { status: string | null; pr: number | null; summary: st
 
 export type TestResult = { pass: number; fail: number; tail: string[] }
 
+/** One `cards.<T>.agents[]` record of STATE.json (Spec C §4); a field the record lacks reads as null. */
+export type AgentRecord = {
+  role: string
+  by: string | null
+  round: number | null
+  sha: string | null
+  verdict: string | null
+  at: string | null
+  branch: string | null
+  session: string | null
+}
+
+/** A worktree as derive sees it (rules R5, R6). */
+export type AgentRow = {
+  path: string
+  branch: string | null
+  main: boolean
+  role: string
+  card: string | null
+  upstream: string
+  uncommitted: number | '?'
+  lands: string
+  opened_by: string | null
+  last_round: string[]
+}
+
+/** The main checkout or a lead worktree, counted from its own STATE (R9). */
+export type LeadRow = {
+  path: string
+  branch: string | null
+  main: boolean
+  source: boolean
+  spec_title: string | null
+  open: number
+  waiting: number
+  ready: number
+  changed_at: number | null
+  stale: boolean
+}
+
+export type WaitEntry = { card: string | null; verification: string | null; reason: string }
+
+export type ReadyEntry = { card: string; pr: number; sha: string | null }
+
+export type DoneEntry = { card: string; pr: number | null }
+
+/** A pending git action (R10); `command` is null when the board will not write one, and `note` says why. */
+export type Action = {
+  kind: 'push' | 'merge' | 'remove_worktree' | 'delete_branch'
+  target: string
+  card: string | null
+  command: string | null
+  note: string
+}
+
 export type Card = {
   id: string
   title: string
@@ -33,6 +88,8 @@ export type Card = {
   branch: string | null
   report: CardReport | null
   test: TestResult | null
+  /** The STATE ledger of who dispatched and who reviewed the card, in list order. */
+  agents: AgentRecord[]
 }
 
 export type Wave = { wave: number; cards: string[]; note: string }
@@ -62,6 +119,13 @@ export type Snapshot = {
   cards: Card[]
   verifications: Verification[]
   worktreeCount: number
+  agents: AgentRow[]
+  leads: LeadRow[]
+  /** The source STATE's queue. */
+  queue: { waiting: WaitEntry[]; ready: ReadyEntry[]; done: DoneEntry[] }
+  actions: Action[]
+  /** The newest FETCH_HEAD mtime (s). */
+  fetchedAt: number | 'never fetched'
 }
 
 export type RunStatus = 'running' | 'passed' | 'failed' | 'silent'
