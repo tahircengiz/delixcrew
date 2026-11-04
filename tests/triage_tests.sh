@@ -467,5 +467,33 @@ st 's["issues"]["30"]["labels"]=["accepted"]; s["issues"]["30"]["comments"].appe
 req2 "changed since accepted, recorded again, not applied" "$NEW30"
 rec30 "changed since accepted, applied record" 'd["status"]="applied"'          "$CHG30"
 rec30 "changed since accepted, old-sha record" 'd["issue_sha"]="0123456789ab"'  "$CHG30"
+# --- read_json (PR #49 security review, Low): a deeply nested, oversized or non-regular record is an invalid record --
+# guard kills the command after 5 s (rc 124): a FIFO that blocks open() fails the test instead of hanging the suite.
+guard(){ python3 -c 'import subprocess, sys
+try:
+    sys.exit(subprocess.run(sys.argv[1:], timeout=5).returncode)
+except subprocess.TimeoutExpired:
+    sys.exit(124)' "$@"; }
+odd30(){ # name, kind (deep / fifo / big), expected stderr of show; 30.json is made that way, then restored
+  cp "$D2/30.json" "$T/30.bak"; rm -f "$D2/30.json"
+  case "$2" in
+    deep) python3 -c 'import sys; open(sys.argv[1], "w").write("[" * 200000)' "$D2/30.json";;
+    fifo) mkfifo "$D2/30.json";;
+    big) python3 -c 'import sys; open(sys.argv[1], "w").write(open(sys.argv[2]).read() + " " * (1 << 20))' "$D2/30.json" "$T/30.bak";;
+  esac
+  out=$(DELIXCREW_TRIAGE_DIR="$D2" guard python3 "$S/triage.py" show 30 --require accepted 2>"$T/err"); rc=$?
+  [ $rc -eq 8 ] && [ -z "$out" ] && [ "$(cat "$T/err")" = "$3" ] && ok "read_json $1: show exit 8, stdout empty, exact line" \
+    || bad "read_json $1: show (rc=$rc, $out, $(head -c 300 "$T/err"))"
+  pv=$(DELIXCREW_TRIAGE_DIR="$D2" guard python3 "$S/triage.py" preview 30 2>&1); rc=$?
+  [ $rc -eq 4 ] && echo "$pv" | grep -qx "VERDICT: BLOCKED: invalid record" && ! echo "$pv" | grep -q "^HASH:" \
+    && ok "read_json $1: preview BLOCKED: invalid record, exit 4" || bad "read_json $1: preview (rc=$rc, $(echo "$pv" | tail -1))"
+  rm -f "$D2/30.json"; cp "$T/30.bak" "$D2/30.json"; }
+odd30 "deeply nested JSON record, changed since accepted"      deep "$CHG30"
+odd30 "FIFO at the record path, changed since accepted"        fifo "$CHG30"
+odd30 "valid record padded past 1 MiB, changed since accepted" big  "$CHG30"
+st 's["issues"]["30"]["labels"]=[]'
+odd30 "deeply nested JSON record, not triaged" deep "$NOT30"
+odd30 "FIFO at the record path, not triaged"   fifo "$NOT30"
+req2 "valid record after the odd ones, not triaged" "$NEW30"
 
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
