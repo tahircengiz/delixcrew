@@ -2,6 +2,16 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## Unreleased
+
+- **Feedback redaction is stricter** (`SANITIZER_VERSION` 3; take a new `preview` before `send`): a URL keeps only an
+  allowlisted host with a plain path, otherwise the part after its scheme becomes `<redacted:url>` (on `github.com` only
+  `tahircengiz/delixcrew` and `anthropics/…`; a user part never stays); `*.test`, `*.invalid` and `*.localhost` are no
+  longer allowed; absolute paths after `>`, `|`, `-` or `\/` and Windows UNC paths are redacted, as are Unicode host
+  names; triage comments use the same redaction. `feedback.py list` and `add` print control characters from the queue as
+  visible escapes, and the hook that guards the feedback and triage directories ignores letter case and Unicode
+  normalization.
+
 ## 0.6.1 — 2026-11-03
 
 - **The main session's role is now called the lead** (Turkish: *ekip lideri*); it was the *orchestrator*. Only the

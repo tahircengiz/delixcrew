@@ -135,12 +135,19 @@ açmadan önce taslağın parmak izi satırını (`delixcrew-fp: …`) arar, bu 
 o URL'yi kaydeder. GitHub'da elle de issue açabilirsiniz; issue formları aynı başlıkları sorar.
 
 **Ne redakte edilir** (önizlemeden önce, başlık dahil): kısa bir izinli liste (`github.com`, `code.claude.com`,
-`docs.anthropic.com`, `anthropic.com`, `example.com`, `example.net`, `example.org` ve alt alanları, `*.example`, `*.test`, `*.invalid`, `localhost`) dışındaki her host
+`docs.anthropic.com`, `anthropic.com`, `example.com`, `example.net`, `example.org` ve alt alanları, `*.example` ve tam
+ad olarak `localhost`; `*.test`, `*.invalid`, `*.localhost` ve ASCII dışı ad yok) dışındaki her host
 adı, ör. `build.example-corp.dev` → `<redacted:host>`; belge aralıkları ve loopback dışındaki IP adresleri
 (`10.1.2.3` → `<redacted:ip>`); MAC ve e-posta adresleri; ev dizini yollarının kullanıcı kısmı (`/Users/<siz>/x` →
 `~/x`) ve diğer her mutlak yol, tek parçalı olanlar ve `ad:/yol` dahil (`/srv/app`, `/srv`, `nas:/volume1/x` →
 `<redacted:path>`; yalnız `/delixcrew:<skill>` ve `/compact` gibi Claude Code yerleşik komutları kalır); kullanıcı adınız ve makine adınız; taslakların geldiği
-projelerin adları (klasör adı, git remote sahibi ve repo) ve `--terms` kelimeleriniz.
+projelerin adları (klasör adı, git remote sahibi ve repo) ve `--terms` kelimeleriniz. URL'ler önce denetlenir
+(`şema://…`, `//…`, `host/…`, `ad:port/…`): bir URL yalnız host'u yukarıdaki izinli listedeyse ya da loopback veya belge
+aralığında bir IP ise, kullanıcı kısmı (`user@`) yoksa ve yolu ile sorgusu yalnız harf, rakam ve `._~-/` (`?` ya da `#`
+sonrası `=&+`) taşıyorsa (`..` parçası, host adı, IP ya da terim yok) kalır; `github.com`'da yalnız
+`tahircengiz/delixcrew` ve `anthropics/…` yolları kalır. Diğer her URL'nin şeması kalır, gerisi `<redacted:url>` olur
+(`http://jenkins:8080/job/x` → `http://<redacted:url>`; şemasızsa URL'nin tamamı, `//fileserver/share` →
+`<redacted:url>`); bu yüzden `%` içeren bağlantı da (`?q=is%3Aopen`) silinir.
 
 **Taslağı ne engeller** (`VERDICT: BLOCKED: <neden>`, `send` 4 ile çıkar; sır değeri basılmaz): ham ya da redakte
 metinde `gitleaks` bulgusu, ya da `gitleaks`'in olmaması, hata vermesi, zaman aşımı; görünmez Unicode kontrol karakteri
@@ -164,7 +171,8 @@ isterseniz kendi `settings.json`'unuza bir deny kuralı ekleyin; delixcrew bunu 
   gibi OS adı), `### What happened`, `### Expected`, `### Steps to reproduce`, `### Context` ve son satır
   `delixcrew-fp: <fingerprint>`. Bu metni önizlemede ve `SEND <hash>`'ten önce terminalinizde aynen görürsünüz.
 - **Ne gönderilmez**: her taslakla tutulan proje terimleri (`origin_terms`), kullanıcı ve makine adınız, ev dizini
-  yollarının kullanıcı kısmı, diğer mutlak yollar, e-posta adresleri ve izinli liste dışındaki host'lar redakte edilir;
+  yollarının kullanıcı kısmı, diğer mutlak yollar, e-posta adresleri, izinli liste dışındaki host'lar ve izinli olmayan
+  URL'ler (`<redacted:url>`) redakte edilir;
   sır içeren taslak redakte edilip gönderilmez, engellenir.
 - **Nereye gider**: `tahircengiz/delixcrew` üzerinde **public** bir issue; `gh` ile **sizin kendi** GitHub hesabınızla
   açılır. Dayanak sizin açık eyleminizdir: siz açana kadar geri bildirim kapalıdır, kendi terminalinizde `SEND <hash>`

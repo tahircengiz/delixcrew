@@ -136,12 +136,19 @@ records that URL instead of opening a second one. You can also open an issue on 
 same headings.
 
 **What is redacted** (before the preview, title included): every host name outside a short allowlist (`github.com`,
-`code.claude.com`, `docs.anthropic.com`, `anthropic.com`, `example.com`, `example.net`, `example.org` and their subdomains, `*.example`, `*.test`, `*.invalid`, `localhost`),
+`code.claude.com`, `docs.anthropic.com`, `anthropic.com`, `example.com`, `example.net`, `example.org` and their
+subdomains, `*.example` and `localhost` as an exact name; not `*.test`, `*.invalid`, `*.localhost` or a non-ASCII name),
 so `build.example-corp.dev` becomes `<redacted:host>`; IP addresses outside the documentation ranges and loopback
 (`10.1.2.3` → `<redacted:ip>`); MAC and e-mail addresses; the user part of home paths (`/Users/<you>/x` → `~/x`) and
 every other absolute path, single-segment ones and `name:/path` included (`/srv/app`, `/srv`, `nas:/volume1/x` →
 `<redacted:path>`; only `/delixcrew:<skill>` and Claude Code's built-in commands such as `/compact` stay); your user name and machine name; the names of the projects the drafts came
-from (folder name, git remote owner and repo) and your `--terms`.
+from (folder name, git remote owner and repo) and your `--terms`. URLs are checked first (`scheme://…`, `//…`, `host/…`,
+`name:port/…`): a URL stays only if its host is on the allowlist above or is a loopback or documentation IP, it has no
+user part (`user@`), and its path and query hold only letters, digits and `._~-/` (`=&+` after `?` or `#`) with no `..`
+segment, host name, IP or term; on `github.com` only `tahircengiz/delixcrew` and `anthropics/…` paths stay. Any other
+URL keeps its scheme and the rest becomes `<redacted:url>` (`http://jenkins:8080/job/x` → `http://<redacted:url>`;
+without a scheme the whole URL, `//fileserver/share` → `<redacted:url>`), so a link with `%` (`?q=is%3Aopen`) is removed
+too.
 
 **What blocks a draft** (`VERDICT: BLOCKED: <reason>`, `send` exits 4; no secret value is printed): a `gitleaks` finding in
 the raw or the redacted text, or `gitleaks` missing, failing or timing out; an invisible Unicode control character
@@ -165,7 +172,8 @@ guard, add a deny rule to your own `settings.json`; delixcrew only suggests this
   `### What happened`, `### Expected`, `### Steps to reproduce`, `### Context`, and the last line
   `delixcrew-fp: <fingerprint>`. You see this exact text in the preview and again in your terminal before `SEND <hash>`.
 - **What is not sent**: the project terms kept with each draft (`origin_terms`), your user and machine names, the user
-  part of home paths, other absolute paths, e-mail addresses and hosts outside the allowlist are redacted; a draft with a
+  part of home paths, other absolute paths, e-mail addresses, hosts outside the allowlist and URLs that are not allowed
+  (`<redacted:url>`) are redacted; a draft with a
   secret is blocked, not redacted and sent.
 - **Where it goes**: a **public** issue on `tahircengiz/delixcrew`, opened with **your own** GitHub account through
   `gh`. The basis is your explicit action: feedback is off until you enable it, and delixcrew sends nothing until you
