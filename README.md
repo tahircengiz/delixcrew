@@ -106,7 +106,8 @@ What runs locally, what it writes and when it uses the network. What a feedback 
   protected path without an approved card, and to an existing test file.
 - `PreToolUse` on `Bash` runs [`scripts/bash_gate.py`](scripts/bash_gate.py). In every session it denies the known send
   and apply paths (`feedback.py send`, `triage.py apply`, terminal wrappers such as `script`, and writing `gh issue`,
-  `gh label` or `gh api` calls aimed at this repository). The security reviewer may run only scanners and git reads; the
+  `gh label` or `gh api` calls aimed at this repository). The security reviewer may run only commands that start with an
+  allowlisted scanner or read command and match no known write pattern; this is a pattern check, not a sandbox. The
   other reviewers get no Bash. In an implementer worktree it denies shell writes into a protected path and runs
   `gitleaks protect --staged` before every `git commit`.
 - `Stop` runs [`scripts/stop_gate.py`](scripts/stop_gate.py), only in an implementer worktree: it runs `test_command`

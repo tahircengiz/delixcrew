@@ -106,8 +106,9 @@ bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
   yola ve mevcut test dosyasına yazmayı reddeder.
 - `Bash` için `PreToolUse`, [`scripts/bash_gate.py`](scripts/bash_gate.py)'yi çalıştırır. Her oturumda bilinen gönderme
   ve uygulama yollarını reddeder (`feedback.py send`, `triage.py apply`, `script` gibi terminal sarmalayıcıları ve bu
-  repoyu hedefleyen yazan `gh issue`, `gh label` ya da `gh api` çağrıları). security inceleyicisi yalnız tarayıcı ve git
-  okuma komutları çalıştırabilir; diğer inceleyicilere Bash verilmez. Uygulayıcı worktree'sinde korumalı yola kabuk
+  repoyu hedefleyen yazan `gh issue`, `gh label` ya da `gh api` çağrıları). security inceleyicisi yalnız izinli bir
+  tarayıcı ya da okuma komutuyla başlayan ve bilinen hiçbir yazma kalıbına uymayan komutları çalıştırabilir; bu bir kalıp
+  denetimidir, sandbox değildir. Diğer inceleyicilere Bash verilmez. Uygulayıcı worktree'sinde korumalı yola kabuk
   yazmasını reddeder ve her `git commit`'ten önce `gitleaks protect --staged` çalıştırır.
 - `Stop`, [`scripts/stop_gate.py`](scripts/stop_gate.py)'yi yalnız uygulayıcı worktree'sinde çalıştırır: projenin
   `docs/delix/delix.json` dosyasındaki `test_command` ve `extra_checks` komutlarını kabukta çalıştırır; bunlar geçene
