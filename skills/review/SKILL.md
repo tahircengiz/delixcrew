@@ -40,6 +40,12 @@ With the `Agent` tool, at the same time:
   size L.
 Give the reviewers **neither your own opinion nor the implementer's reasoning**; file paths only.
 
+**Ledger (Spec C REQ-2).** After each `delixcrew:qa` and each `delixcrew:security` run, append to
+`STATE.json.cards.<T>.agents`
+`{"role": "qa"|"security", "by": "<lead branch>", "round": <n>, "sha": "<40 hex>", "verdict": "<token>", "at": "<ISO-8601 Z>"}`.
+`round` is this review round (1, 2, 3). `sha` is the full `git rev-parse <branch>` you reviewed, never 7 characters.
+`verdict` is the returned token, REJECT and FIX too. Append only. `/delixcrew:status` reads gate 2 from these records.
+
 ## 3. Process the findings
 - Only P0/P1 (and Critical/High/Medium security) ask for a fix; P2s are noted on the card, no fix ("do not fix every
   finding").
@@ -61,7 +67,11 @@ Give the reviewers **neither your own opinion nor the implementer's reasoning**;
 ## 4. Gate 2
 When all reviewers say ACCEPT/CLEAN, one screen for the user: PR link, the card's DoD ✔/✘, reviewer verdicts, and the
 security approval message (global CLAUDE.md format) if there is a 🔐 note. **The merge is the user's**; you do not run
-`gh pr merge`. After the merge `STATE.json` → `accepted`; if a dependent wave exists, open the next wave with
+`gh pr merge` (the user runs the `gh pr merge <n> --squash --match-head-commit <sha40>` block that `/delixcrew:status`
+prints). After the merge, in one STATE write: status → `accepted` and `merged` =
+`{"sha": "<merge commit 40 hex>", "head": "<merged PR head 40 hex>", "at": "<ISO-8601 Z>"}`, read with
+`gh pr view <n> --json mergeCommit,headRefOid` (`mergeCommit.oid` → `sha`, `headRefOid` → `head`); if a dependent wave
+exists, open the next wave with
 `/delixcrew:dispatch` step 4.
 
 **Feedback capture.** Only if one of these happened in this review: (1) a delixcrew hook denied an action and you judged

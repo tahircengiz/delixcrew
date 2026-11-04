@@ -8,7 +8,9 @@ You are the `delix` lead; closing step. Spec: $ARGUMENTS (default `docs/delix/SP
 
 ## 1. State
 Are all cards in `STATE.json` `accepted`? If not, list them and stop (or, if the user approves leaving them out of scope,
-write that to `STATE.json`).
+write that to `STATE.json`). Every `accepted` card with an `agents` list also carries `merged`
+`{"sha": "<merge commit 40 hex>", "head": "<merged PR head 40 hex>", "at": "<ISO-8601 Z>"}`; where it is missing, read
+it with `gh pr view <n> --json mergeCommit,headRefOid` and write it.
 
 ## 2. Metrics (numbers, not claims)
 Per card: round count, `cost_usd` (from `/usage` or OTel/ccusage if available; otherwise `not measured`), cache hits
@@ -29,7 +31,8 @@ spec. Size L with EGM: `egm-drift-report`. Findings go to STATUS "Open work".
   if the user says "yes" (an agent never writes its own output into shared memory automatically).
 
 ## 5. Cleanup
-List the worktrees of merged cards; `git worktree remove` with the user's approval. `.delix/` files go with the worktree.
+Run `/delixcrew:status` and show its Git actions (`remove_worktree`, `delete_branch`); the user runs each block with
+Desktop's Run button, and you never run them yourself. `.delix/` files go with the worktree.
 
 ## 6. Retro (3 lines)
 What went well · what was expensive (rounds, tokens) · which harness part was unnecessary ("remove one component, is it

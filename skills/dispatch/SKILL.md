@@ -59,10 +59,15 @@ One line per card for the user: card, role, tier, how to open it.
   the implementer fast-forwarded). Do not dispatch before committing the card; write "base: <main SHA>" in the dispatch,
   or open the worktree yourself with `git worktree add .claude/worktrees/delix-T<nnn> -b worktree-delix-T<nnn> main` and
   run `cd` + `claude -p`.
-For every opened card, `STATE.json` status → `in_progress`.
+For every opened card, `STATE.json` status → `in_progress`, and append to `STATE.json.cards.<T>.agents` (create the
+list if missing)
+`{"role": "implementer", "by": "<lead branch>", "round": 0, "sha": null, "verdict": null, "at": "<ISO-8601 Z>", "branch": "<name>"|null, "session": "<Desktop name>"|"-p"|null}`.
+`by` is your own branch (`git branch --show-current`). `branch` and `session` stay `null` until known. Append only; a
+re-dispatch appends a new record.
 
 ## 5. Wait and collect
-When an implementer session finishes, `.delix/report.md` and a PR arrive; `STATE.json` status → `in_review`, then
+When an implementer session finishes, `.delix/report.md` and a PR arrive; `STATE.json` status → `in_review`, fill
+`branch` (from the report's `**PR:** #<n> (<branch>)`) and `session` in the last implementer record, then
 `/delixcrew:review`. While waiting the lead **writes no code and does not do the card itself** (it pollutes the
 context and skips the review).
 

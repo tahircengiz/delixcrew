@@ -5,9 +5,10 @@
   "updated": "2026-01-01T00:00:00Z",
   "env_owner": null,
   "$comment_env_owner": "Lock of the shared test environment (K23): null or {\"card\": \"T001\", \"who\": \"lead\", \"since\": \"<ISO>\"}; only the lead writes it.",
+  "$comment_agents": "Spec C ledger, written only by the lead: cards.<T>.agents gets an implementer record at dispatch and a qa/security record per review run (see skills/dispatch and skills/review); merged {sha, head, at} is written with status accepted after the user's merge.",
   "waves": [["T001", "T002"], ["T003"]],
   "cards": {
-    "T001": { "file": "docs/delix/tasks/T001-example.md", "role": "backend", "tier": 2, "status": "open", "pr": null, "rounds": 0, "cost_usd": null }
+    "T001": { "file": "docs/delix/tasks/T001-example.md", "role": "backend", "tier": 2, "status": "open", "pr": null, "rounds": 0, "cost_usd": null, "agents": [], "merged": null }
   },
   "status_values": ["open", "in_progress", "in_review", "fixing", "accepted", "rejected", "escalated"],
   "$comment_verifications": "/delixcrew:verify records (card-less work, K43); only the lead writes them, /delixcrew:status shows them in the 'Verifications' table. Optional \"resolution\" closes a FIX record (\"merged <sha>\", \"abandoned: <why>\"); it then leaves Pending fixes.",
