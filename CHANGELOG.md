@@ -2,7 +2,7 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
-## Unreleased
+## 0.6.2 — 2026-11-04
 
 - **Feedback redaction is stricter** (`SANITIZER_VERSION` 3; take a new `preview` before `send`): a URL keeps only an
   allowlisted host with a plain path, otherwise the part after its scheme becomes `<redacted:url>` (on `github.com` only
