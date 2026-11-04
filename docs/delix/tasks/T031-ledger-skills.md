@@ -11,17 +11,17 @@
 **Docs/site:** none in this card (T032).
 
 ## Files
-- Modify: `skills/dispatch/SKILL.md` (line 57; line 60)
+- Modify: `skills/dispatch/SKILL.md` (line 62; line 65)
 - Modify: `skills/review/SKILL.md` (insert after line 41; lines 63–64)
 - Modify: `skills/close/SKILL.md` (lines 10–11; line 32)
 - Modify: `skills/status/SKILL.md` (line 3; lines 18–20; insert after line 25; line 26 renumbered)
 - Modify: `templates/STATE.json` (insert after line 7; line 10)
 - Test (create): `tests/ledger_tests.sh`
 
-## Edit anchors (base origin/main ad27168; Spec B's T028 also edits `skills/dispatch/SKILL.md` after line 35, so match by content)
+## Edit anchors (base origin/main d9ac35b: Spec B's T028 merged and added 5 lines after `skills/dispatch/SKILL.md` line 35, so the dispatch lines below are given at d9ac35b; every other file is unchanged since ad27168; match by content)
 1. `skills/dispatch/SKILL.md`
-   - Line 57 (`For every opened card, `STATE.json` status → `in_progress`.`) becomes: "For every opened card, `STATE.json` status → `in_progress`, and append to `STATE.json.cards.<T>.agents` (create the list if missing) `{"role": "implementer", "by": "<lead branch>", "round": 0, "sha": null, "verdict": null, "at": "<ISO-8601 Z>", "branch": "<name>"|null, "session": "<Desktop name>"|"-p"|null}`. `by` is your own branch (`git branch --show-current`). `branch` and `session` stay `null` until known. Append only; a re-dispatch appends a new record."
-   - Line 60: after "`STATE.json` status → `in_review`" add ", fill `branch` (from the report's `**PR:** #<n> (<branch>)`) and `session` in the last implementer record".
+   - Line 62 (`For every opened card, `STATE.json` status → `in_progress`.`) becomes: "For every opened card, `STATE.json` status → `in_progress`, and append to `STATE.json.cards.<T>.agents` (create the list if missing) `{"role": "implementer", "by": "<lead branch>", "round": 0, "sha": null, "verdict": null, "at": "<ISO-8601 Z>", "branch": "<name>"|null, "session": "<Desktop name>"|"-p"|null}`. `by` is your own branch (`git branch --show-current`). `branch` and `session` stay `null` until known. Append only; a re-dispatch appends a new record."
+   - Line 65: after "`STATE.json` status → `in_review`" add ", fill `branch` (from the report's `**PR:** #<n> (<branch>)`) and `session` in the last implementer record".
 2. `skills/review/SKILL.md`
    - Insert after line 41 ("Give the reviewers **neither your own opinion…** file paths only."): "**Ledger (Spec C REQ-2).** After each `delixcrew:qa` and each `delixcrew:security` run, append to `STATE.json.cards.<T>.agents` `{"role": "qa"|"security", "by": "<lead branch>", "round": <n>, "sha": "<40 hex>", "verdict": "<token>", "at": "<ISO-8601 Z>"}`. `round` is this review round (1, 2, 3). `sha` is the full `git rev-parse <branch>` you reviewed, never 7 characters. `verdict` is the returned token, REJECT and FIX too. Append only. `/delixcrew:status` reads gate 2 from these records."
    - Lines 63–64 become: "**The merge is the user's**; you do not run `gh pr merge` (the user runs the `gh pr merge <n> --squash --match-head-commit <sha40>` block that `/delixcrew:status` prints). After the merge, in one STATE write: status → `accepted` and `merged` = `{"sha": "<merge commit 40 hex>", "head": "<merged PR head 40 hex>", "at": "<ISO-8601 Z>"}`, read with `gh pr view <n> --json mergeCommit,headRefOid` (`mergeCommit.oid` → `sha`, `headRefOid` → `head`); if a dependent wave exists, open the next wave with". Line 65 stays.

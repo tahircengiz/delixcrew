@@ -18,7 +18,7 @@
 - Modify: `plugins/delix-board/types/index.d.ts` (new types after line 9; Card insert after line 35; Snapshot insert after line 64)
 - Test: `plugins/delix-board/tests/board.test.tsx` (K255: lines 228 and 241 change; insert after line 5; append after line 287)
 
-## Edit anchors (base origin/main ad27168)
+## Edit anchors (base origin/main ad27168, unchanged at d9ac35b)
 1. `register.tsx` line 17: `{ shape: 'snapshot-3' }` → `{ shape: 'snapshot-4' }` (spec §5).
 2. `types/index.d.ts`:
    - add `AgentRecord`, `AgentRow`, `LeadRow`, `WaitEntry`, `ReadyEntry`, `DoneEntry`, `Action` (shapes from R6, R8–R10).

@@ -14,7 +14,7 @@
 - Modify: `scripts/board.py` (anchors below)
 - Test: `tests/board_tests.sh` (insert after line 75 only; every existing line stays byte-identical, K254)
 
-## Edit anchors (base origin/main ad27168; match the content, not only the number)
+## Edit anchors (base origin/main ad27168, unchanged at d9ac35b; match the content, not only the number)
 1. `scripts/board.py`, after line 24 (`OPEN_STATUSES = {"open", "in_progress", "in_review", "fixing"}`): add `BRANCH_RE`, `PATH_RE`, `SHA_RE` (R10), `WEEK = 604800` and `KIND_ORDER = ("push", "merge", "remove_worktree", "delete_branch")`.
 2. Insert before line 118 (`def collect(root):`): `def git_raw(root)` (rules G, I/O only), `def derive(raw)` and its helpers (rules R; no I/O, no clock), and `def git_sections(data)` (format F).
 3. `collect`: both returns (lines 139–142 and 202–204) also carry `**derive(git_raw(root))`. Nothing else in either dict changes.

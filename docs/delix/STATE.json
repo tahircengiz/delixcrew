@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-04T20:03:00Z",
+  "updated": "2026-11-04T20:29:41Z",
   "env_owner": null,
   "waves": [
     {
@@ -32,6 +32,22 @@
         "T028"
       ],
       "note": "Docs/site (REQ-7) after T026 and T027 merge. After T026 merges, the user runs trust.py allow in the main checkout from their own terminal before opening dogfooding sessions."
+    },
+    {
+      "wave": 7,
+      "cards": [
+        "T029",
+        "T030",
+        "T031"
+      ],
+      "note": "Spec C docs/delix/specs/C-board-visibility.md (gate 1 2026-11-04, K240-K261). Parallel, disjoint files; all Tier 2. Parity fixture tests/fixtures/board_parity.json + plugins/delix-board/tests/board_parity.ts written by the lead before dispatch (K252). Spec B's T028 merged (429e79b); T031's dispatch anchors are given at d9ac35b."
+    },
+    {
+      "wave": 8,
+      "cards": [
+        "T032"
+      ],
+      "note": "Docs/site after T029, T030 and T031 merge (T028 already merged). delix-board 0.1.4 -> 0.1.5; root version unchanged. Refresh line anchors at dispatch."
     }
   ],
   "cards": {
@@ -89,6 +105,46 @@
       "cost_usd": null,
       "issue": 17,
       "sha": "429e79b"
+    },
+    "T029": {
+      "file": "docs/delix/tasks/T029-board-derive-git-actions.md",
+      "role": "backend",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
+    },
+    "T030": {
+      "file": "docs/delix/tasks/T030-board-pane-derive.md",
+      "role": "frontend",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
+    },
+    "T031": {
+      "file": "docs/delix/tasks/T031-ledger-skills.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
+    },
+    "T032": {
+      "file": "docs/delix/tasks/T032-docs-site-board.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
     }
   },
   "status_values": [
