@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""delixcrew feedback: local queue of plugin findings → sanitized GitHub issue (SPEC docs/delix/SPEC.md REQ-1…6, REQ-8).
+# REQ-n tags in comments come from several specs (docs/delix/SPEC.md and docs/delix/archive/*/SPEC.md); the K numbers
+# next to them (each spec's §9, STATUS.md) are the stable reference.
+"""delixcrew feedback: local queue of plugin findings → sanitized GitHub issue.
 
 Usage:
     python3 feedback.py enable [--terms a,b] | disable | status

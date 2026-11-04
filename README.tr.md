@@ -158,18 +158,21 @@ bu yüzden `%` içeren bağlantı da (`?q=is%3Aopen`) silinir.
 
 Redakte edilen host, IP, e-posta ya da MAC adresinin hemen ardından gelen yol ya da port da onunla birlikte redakte
 edilir (`see 10.1.2.3/api/x` → `see <redacted:ip><redacted:path>`, `git@github.com:acme/private` →
-`<redacted:email><redacted:path>`, `de:ad:be:ef:00:11/x` → `<redacted:mac><redacted:path>`). Düz metindeki
-`github.com/…` yolu nerede geçerse geçsin aynı sahip kuralından geçer: `vendor/github.com/acme/private-lib/x.go` →
-`vendor/github.com<redacted:path>`.
+`<redacted:email><redacted:path>`, `de:ad:be:ef:00:11/x` → `<redacted:mac><redacted:path>`). İkisinin arasında Markdown
+vurgusu, backtick ya da tırnak varsa port için bu olmaz: `**ci.acme-corp.net**:8080/api/x` →
+`**<redacted:host>**:8080/api/x`; `**ci.acme-corp.net**/api/x` ise `**<redacted:host>**<redacted:path>` olur. Düz
+metindeki `github.com/…` yolu nerede geçerse geçsin aynı sahip kuralından geçer:
+`vendor/github.com/acme/private-lib/x.go` → `vendor/github.com<redacted:path>`.
 
 **Taslağı ne engeller** (`VERDICT: BLOCKED: <neden>`, `send` 4 ile çıkar; sır değeri basılmaz): ham ya da redakte
 metinde `gitleaks` bulgusu, ya da `gitleaks`'in olmaması, hata vermesi, zaman aşımı; görünmez Unicode kontrol karakteri
 (zero-width, bidi); harf, sayı, noktalama işareti, sembol, boşluk, yeni satır ya da sekme olmayan başka her karakter
 (`invisible character`: ör. U+2028, U+2029, variation selector, Hangul filler ya da tek başına surrogate; U+FE0F gibi
-bir emoji seçici yalnız U+2764 gibi görünür bir sembolden sonra gelebilir), bu yüzden birleşik işaretli metin de (ör.
-Devanagari) takılır; 32+ karakterlik opak dizi (`[A-Za-z0-9+=_-]`; tam git SHA'sı da takılır, kısasını kullanın); 15'ten
-fazla kod satırı; 8 KB'tan büyük gövde; redaksiyondan sonra hâlâ redaksiyon kuralına uyan bir şey; kuyruğa alındıktan
-sonra diskte değişmiş kayıt (`fingerprint mismatch`); okunamayan kuyruk kaydı.
+bir emoji seçici yalnız U+2764 gibi görünür bir sembolden sonra gelebilir), bu yüzden NFKC'nin tek karaktere
+birleştirmediği birleşik işaretli metin de (ör. Devanagari) takılır; 32+ karakterlik opak dizi (`[A-Za-z0-9+=_-]`; tam
+git SHA'sı da takılır, kısasını kullanın); 15'ten fazla kod satırı; 8 KB'tan büyük gövde; redaksiyondan sonra hâlâ
+redaksiyon kuralına uyan bir şey; kuyruğa alındıktan sonra diskte değişmiş kayıt (`fingerprint mismatch`); okunamayan
+kuyruk kaydı.
 
 **Kalan risk.** Hook'lar göndermenin *bilinen* yollarını kapatır; her şeyi engellemez. Claude sizin `gh` oturumunuzla
 çalışır ve gizlenmiş bir komut (base64'ten kurulan komut, dosyaya yazılmış bir sarmalayıcı, `gh` dışı bir HTTP isteği)

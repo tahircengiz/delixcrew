@@ -470,7 +470,7 @@ README EN/TR Feedback bölümünü ve CHANGELOG `## Unreleased` maddesini kapsar
 | 10.4 | T021 PR #43 (`d05abf4`), 0 tur, 1 P2 | ✔ merge edildi |
 | 10.5 | Kapanış: metrikler, drift kontrolü (architect: DRIFT, yalnız P2) | ✔ 2026-11-04 |
 
-**Açık iş (kapanış drift kontrolü, 2026-11-04; hepsi P2, takip kartı adayı):**
+**Açık iş (kapanış drift kontrolü, 2026-11-04; hepsi P2; ilk üçü dal `claude/feedback-drift-p2`'de düzeltildi):**
 - README `README.md:160` (TR eşi) "host/IP/e-posta/MAC'ten sonraki yol ya da port silinir" der; Markdown vurgusu ya da tırnak
   arasındaysa kalır (`**ci.acme-corp.net**:8080/api/secret`). SPEC §6 ve K176'da kayıtlı; README'de yok.
 - README "birleşik işaretli metin BLOCKED" der; NFKC'nin birleştirdiği dizi (`e` + U+0301 → `é`) geçer. Yayına giden metin
