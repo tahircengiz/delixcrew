@@ -75,3 +75,5 @@ Wording is fixed. Wrap at ≤ 120 characters like the surrounding lines, and nev
 
 ## Review findings (filled by the lead)
 - Round 1: …
+- Round 0 (qa ACCEPT_WITH_NOTES, 0 P0/P1, 1 P2; PR #43 @ 8a858da). Lead ran the card's verification command and claim check on the 8a858da tree: only `done`, 12 lines identical to the card, `site_tests.sh` exit 0; CI `test` and `check` pass; internal address scan of `+` lines 0.
+  - P2, no fix: `claude plugin validate .` adds a LISTING_URL_SCHEME warning (documentationUrl taken from README's `http://127.1/` example, dropped from the listing preview); validation still passes. The wording is fixed by the card (K167).
