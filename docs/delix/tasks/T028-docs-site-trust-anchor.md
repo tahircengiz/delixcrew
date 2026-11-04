@@ -142,4 +142,4 @@ Read only this card, SPEC REQ-7, §5 and §6, and the merged scripts named above
   - [Low, security] `site/index.html:473` (TR twin): "any command naming `delixcrew/trust.json`" carries no K220 substring caveat on the site. The card asked for one bullet only, so this conforms to the card.
   - [P2, qa] `README.md:70-75` (TR twin): the printed command is shown with placeholders; the real line has `shlex.quote`d absolute paths.
   - [unsure, security] `skills/dispatch/SKILL.md`: an approval made from a worktree is keyed by `git_common_dir`, so a list changed on a branch becomes approved for every worktree of the repo. `trust.py` shows the commands, but the skill does not ask the user to check that the change is intended. This goes to the follow-up card.
-- Gate 2: to the user.
+- Gate 2: the user merged PR #58 as 429e79b (2026-11-04).
