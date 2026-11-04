@@ -12,14 +12,6 @@
       "note": "issue #10 (accepted), size S, gate 1 = card approval. Docs only; no site change, no version bump."
     },
     {
-      "wave": 1,
-      "cards": [
-        "T023",
-        "T024"
-      ],
-      "note": "SPEC #34-#36 (gate 1 2026-11-04, K178-K192). Parallel, no shared files (K185). Both 🔐 (K186): Approved line per card before dispatch; interactive sessions. CHANGELOG at close (lead)."
-    },
-    {
       "wave": 4,
       "cards": [
         "T025"
@@ -38,26 +30,6 @@
       "cost_usd": null,
       "issue": 10,
       "sha": "4b52a3b"
-    },
-    "T023": {
-      "file": "docs/delix/tasks/T023-confirm-prompt-recorded-accept.md",
-      "role": "backend",
-      "tier": 3,
-      "status": "accepted",
-      "pr": 49,
-      "rounds": 0,
-      "cost_usd": null,
-      "sha": "e2a82db"
-    },
-    "T024": {
-      "file": "docs/delix/tasks/T024-bash-gate-cross-capture.md",
-      "role": "backend",
-      "tier": 3,
-      "status": "accepted",
-      "pr": 48,
-      "rounds": 1,
-      "cost_usd": null,
-      "sha": "8d7e21f"
     },
     "T025": {
       "file": "docs/delix/tasks/T025-dependabot-main-rulesets.md",
@@ -241,6 +213,7 @@
     "docs/delix/archive/0.5.0-self-feeding/STATE.json",
     "docs/delix/archive/0.6.0-triage/STATE.json",
     "docs/delix/archive/0.6.x-feedback-cleanup/STATE.json",
-    "docs/delix/archive/0.6.2-feedback-filter-gaps/STATE.json"
+    "docs/delix/archive/0.6.2-feedback-filter-gaps/STATE.json",
+    "docs/delix/archive/0.6.x-triage-fixes/STATE.json"
   ]
 }

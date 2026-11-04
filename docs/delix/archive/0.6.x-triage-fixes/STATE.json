@@ -1,0 +1,36 @@
+{
+  "spec": "docs/delix/archive/0.6.x-triage-fixes/SPEC.md",
+  "size": "M",
+  "waves": [
+    {
+      "wave": 1,
+      "cards": [
+        "T023",
+        "T024"
+      ],
+      "note": "SPEC #34-#36 (gate 1 2026-11-04, K178-K192). Parallel, no shared files (K185). Both 🔐 (K186): Approved line per card before dispatch; interactive sessions. CHANGELOG at close (lead)."
+    }
+  ],
+  "cards": {
+    "T023": {
+      "file": "docs/delix/tasks/T023-confirm-prompt-recorded-accept.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "accepted",
+      "pr": 49,
+      "rounds": 0,
+      "cost_usd": null,
+      "sha": "e2a82db"
+    },
+    "T024": {
+      "file": "docs/delix/tasks/T024-bash-gate-cross-capture.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "accepted",
+      "pr": 48,
+      "rounds": 1,
+      "cost_usd": null,
+      "sha": "8d7e21f"
+    }
+  }
+}

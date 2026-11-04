@@ -1,168 +1,289 @@
-# SPEC — Triage ve feedback akışında üç düzeltme: onay istemi, yerel kayıt mesajı, çapraz heredoc muafiyeti
+# SPEC — Spec B: Stop gate güven çapası, izinli `cat` heredoc'u, repo yazma mesajı
 
 > Size: **M** · Tier: 3 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 2: architect FIX + security FIX işlendi)
-> Source: issue'lar [#34](https://github.com/tahircengiz/delixcrew/issues/34), [#35](https://github.com/tahircengiz/delixcrew/issues/35),
-> [#36](https://github.com/tahircengiz/delixcrew/issues/36) (üçü de triage'da `accepted`, 2026-11-04; istek metni kullanıcı onaylı).
-> Kararlar K178–K192 (lead, geri alınır) ve kapanışta K197. STATUS.md K numaralarının devamıdır. Önceki spec (kapalı):
-> [`archive/0.6.2-feedback-filter-gaps/SPEC.md`](archive/0.6.2-feedback-filter-gaps/SPEC.md) (K159–K176).
+> Source: issue [#17](https://github.com/tahircengiz/delixcrew/issues/17) (triage `accepted`; istek metni kullanıcı onaylı,
+> 2026-11-04) ve lead notları (kural (c) aşırı engellemesi, yanıltıcı deny mesajı). Grill kararları K199–K202
+> (kullanıcı), lead kararları K203–K214. STATUS.md K numaralarının devamıdır. Önceki spec (kapalı):
+> [`archive/0.6.x-triage-fixes/SPEC.md`](archive/0.6.x-triage-fixes/SPEC.md) (K178–K198).
 
 ## 1. Goal
-İlk gerçek triage koşusunda (0.6.1) üç sürtünme ölçüldü: yalnız `APPLY` yazınca ret mesajı beklenen metni söylemiyor;
-kaydı yapılmış ama uygulanmamış `accept` "triage edilmemiş" diye raporlanıyor; bir capture heredoc'unun gövdesi öbür
-script'in kuralına takılıyor (bu oturumda iki kez yeniden üretildi, main `1b3cf9e`). Spec incelemesinde bir açık daha
-ölçüldü: `-` ile başlayan yol (`python3 -ic/…/feedback.py add <<'EOF'`) kalıba uyuyor ve Python gövdeyi kod olarak
-çalıştırıyor (K187). Başarı: üç durumda kullanıcı ne yapacağını mesajdan öğrenir, muafiyet yalnız gerçekten veri olan
-gövdeye uygulanır, mevcut testlerin hiçbir beklentisi gevşemez.
+Stop gate bugün `delix.json` içindeki `test_command` ve `extra_checks`'i, depoda izlenmeyen yerel bir `.delix/card`
+varsa shell'de çalıştırıyor. Kendi `.git`'iyle gelen bir arşiv bu koşulu sağlar (`scripts/common.py:45-47`,
+`scripts/stop_gate.py:31`). Güveni depo dışına taşıyoruz: komutlar, kullanıcının kendi terminalinde bir kez onayladığı
+(depo kimliği + komut hash'i) kaydıyla eşleşmedikçe çalışmaz. Yanında iki hook sürtünmesi giderilir:
+- **Kural (c):** yalnız dosya yazan bir `cat` heredoc'u, gövdesinde `gh issue …` ile `delixcrew` geçtiği için reddediliyor.
+- **Deny mesajı:** repo ayarı yazan `gh api` çağrıları "triage decisions…" mesajıyla reddediliyor.
+
+Başarı: arşiv vakası ve sembolik bağlantılı `.git` vakası testte kırmızıdan yeşile döner. Normal dispatch akışı, ana
+checkout'ta bir kez onay verildikten sonra değişmez.
 
 ## 2. Out of scope
-- Not dosyasına heredoc ile ekleme (`cat >> notes <<'EOF'`) muafiyeti: Write aracı bu işi görür (K183).
-- `cd … &&` önekli ya da `; echo …` sonekli capture çağrısı: tam metin denetimi ve fail closed kalır (K183).
-- Feedback kuralı (c) ve triage (c)/(d) (`gh` yolları) heredoc aşırı engellemesi (spec B, STATUS §9); `${…}` yollu çağrıya
-  muafiyet; triage kuralı (a)'nın argv listesi biçimi ve README.md:312-313 ifadesi (§8).
-- Triage skill'ine "var olan kaydı uygula" girişi (K189). Sürüm, etiket, release (K179); site sayfaları (K184). #9, #10, #12, #17.
+- Onayı geri alma ya da listeleme komutu. README, kayıt dosyasından satır silmeyi anlatır (K208).
+- Komutun çalıştırdığı depo dosyalarını hash'lemek. Onay "bu depo ve bu komut dizesi" içindir (§6).
+- `DELIXCREW_FEEDBACK_DIR` / `DELIXCREW_TRIAGE_DIR` env override'ları (§8).
+- Proje `.claude/settings.json`'unun kendi hook'ları ve `PATH`'i. Klasör güven diyaloğu kabul edilince bunlar zaten kod
+  çalıştırabilir; çapa yalnız `delix.json` kanalını kapatır (§6).
+- Sürüm artırma ve yayın. 0.6.3 kararı ayrı (K209).
+- Yeni heredoc kalıpları: yalnız tek bir `cat` şekli eklenir.
 
 ## 3. Requirements (testable)
 
-### Requirement: REQ-1 Onay istemi beklenen metni söyler (#34, K180)
-The system SHALL `triage.py apply` ve `feedback.py send`'in istem ve ret satırlarını şu metinlerle yazmalı (`<h>` gerçek
-12 hex hash): istem `Type APPLY <h> to apply it (the word APPLY, a space, then the hash): ` ve
-`Type SEND <h> to send it (the word SEND, a space, then the hash): `; ret (stderr, `err()` ile)
-`not confirmed: type exactly APPLY <h> (the word APPLY, a space, then the hash); nothing applied` ve
-`not confirmed: type exactly SEND <h> (the word SEND, a space, then the hash); nothing sent`. Birebir karşılaştırma
-(`readline().strip() != "APPLY " + h`), TTY kontrolü, hash bağlama ve exit 6 aynen kalır; yazılan satır hiçbir çıktıya
-eklenmez (bugünkü kod; yeni test istenmez).
-#### Scenario: yalnız anahtar kelime
-- WHEN `tty_run "APPLY" … apply 12 --confirm <h>` (aynısı `send` için `SEND`)
-- THEN exit 6, gh'ye yazma çağrısı yok; birleşik çıktıda `tr -d '\r' | grep -qF '<ret satırı>'` geçer (pty stdout ve
-  stderr'i birleştirir, `\r\n` verir; `2>dosya` ve `grep -x` kullanılmaz)
-#### Scenario: doğru metin değişmez
-- WHEN `APPLY <h>` (ya da `SEND <h>`) yazılır
-- THEN bugünkü akış sürer; mevcut REQ-6 testleri (yanlış metin exit 6, pipe exit 6) geçer
+### Requirement: REQ-1 Onay anahtarı
+Stop gate, komut listesini yalnız `(git_common_dir, sha256)` çifti güven kaydında varsa çalıştırır (K199):
+- Komut listesi `[test_command or "pytest -q"] + extra_checks`. `delix.json` yok ya da bozuksa liste `["pytest -q"]`
+  olur. Bir öğe `str` değilse (ör. `extra_checks` dizi yerine string) Stop gate hiçbir komutu çalıştırmaz ve REQ-2
+  yoluna girer.
+- `sha256` = listenin kanonik JSON'unun (`json.dumps(list, ensure_ascii=False, separators=(",", ":"))`) özeti.
+  `h12` = `sha256`'nın ilk 12 hex karakteri.
+- `git_common_dir` = `git rev-parse --git-common-dir` çıktısının gerçek yolu (realpath).
 
-### Requirement: REQ-2 Yerelde kaydedilmiş ama uygulanmamış kabul (#35, K181, K189, K190)
-The system SHALL `triage.py show <n> --require accepted`'ın **iki** exit 8 dalında da (etiket/işaret yok; işaret eski
-sha'lı) mesajı basmadan önce `load_record(n)`'a bakmalı: geçerli kayıtta `decision == "accept"`, `status == "recorded"`
-ve `issue_sha` canlı `issue_sha(title, body)`'ye eşitse stderr'e
-`issue #<n> is recorded locally as accept but not applied; from your own terminal run python3 "<path>" preview <n>, then the apply command with the HASH it prints`
-yazmalı (`<path>` = `os.path.abspath(__file__)`). Başka her durumda o dalın bugünkü mesajı birebir kalır. Exit 8 ve boş
-stdout her durumda kalır; yerel kayıt hiçbir zaman kabul sayılmaz. `skills/start/SKILL.md` adım 1a, exit 8'de sabit
-"run triage first" cümlesi yerine yalnız stderr satırını gösterip durur. README.md "From issue to work" paragrafı ve
-README.tr.md karşılığı bu durumu anlatır.
-#### Scenario: kayıt var, apply yok
-- WHEN issue 12'ye `accept` kaydı yapılır, `apply` çalışmaz, `show 12 --require accepted` çağrılır
-- THEN exit 8, stdout boş, stderr birebir yeni mesaj (`<path>` test içinde hesaplanır)
-#### Scenario: bugünkü mesaj kalır (her satır birebir karşılaştırılır)
-- WHEN kayıt yoktur; kayıt JSON'u geçersizdir; kayıt eski sha taşır; kayıt `defer`'dir; kayıt `status: applied`'dır ama
-  etiket yoktur
-- THEN exit 8, stdout boş, stderr birebir `issue #<n> is not triaged as accepted; run /delixcrew:triage #<n>`
+Git'in çıktısına ek olarak, depo kimliği dosya sisteminden doğrulanır; doğrulamada `os.lstat` kullanılır ve sembolik
+bağlantı izlenmez (K211). `R` = `realpath(cwd)`:
+- **Ana worktree:** `<cwd>/.git` sembolik bağlantı olmayan gerçek bir dizindir ve `git_common_dir` == `R + "/.git"`.
+- **Bağlı worktree:** `<cwd>/.git` sembolik bağlantı olmayan düz bir dosyadır ve tek satırı `gitdir: <yol>` biçimindedir.
+  Ayrıca:
+  - `realpath(<yol>)` == `<git_common_dir>/worktrees/<ad>` olmalı (`<ad>` bu yoldan alınır);
+  - `<git_common_dir>/worktrees/<ad>/gitdir` dosyasının içeriği (strip edilmiş) == `R + "/.git"`;
+  - karşılaştırmada cwd tarafında `.git` çözülmez.
+- Başka her durumda `trust_key` `None` döner ve hiçbir komut çalışmaz.
 
-### Requirement: REQ-3 Capture heredoc'u yalnız veri gövdesinde ve iki script için muaf (#36, K182, K187, K188)
-The system SHALL `scripts/bash_gate.py`'de:
-- **(a)** dört yol kalıbında (`_QPATH`, `_PATH`, `_TQPATH`, `_TPATH`) yolun `-` ile başlamasını reddetmeli
-  (`(?!-)`, tırnaklı biçimde tırnaktan hemen sonra); böyle bir komut kalıba uymaz ve tam metinle denetlenir. Tırnaksız
-  `_PATH`/`_TPATH` sınıfları ayrıca `^`'yi dışlar (K197, inceleme turu 1: zsh `extendedglob` ile `^x/…` `-ic/…`'ye
-  açılabilir);
-- **(b)** komutun tamamı `ADD_HEREDOC` ya da `RECORD_HEREDOC`'a fullmatch oluyor ve ayraç gövdede erken geçmiyorsa
-  feedback (a)/(b) ve triage (a)/(b) kurallarının **ikisini de** yalnız başlık satırına (group 1) uygulamalı.
-Kural sırası, kalıpların geri kalanı, `gh` kuralları, deny metinleri ve korumalı yol yönlendirme denetimi değişmez.
-#### Scenario: çapraz allow
-- WHEN feedback add heredoc gövdesi `triage.py apply 12 --confirm abc` ya da `triage.py … under script` içerir; triage
-  record heredoc gövdesi `feedback.py send F001 --confirm abc` ya da `feedback.py … under script` içerir
-- THEN dördü de allow
-#### Scenario: seçenek biçimli yol deny (bugün dördü allow, lead main'de ölçtü)
-- WHEN `python3 -ic/x/feedback.py add <<'EOF'` ve `python3 "-ic/x/feedback.py" add <<'EOF'`, aynısı `triage.py record 12`
-  için; gövde aynı ya da öbür script'in `send`/`apply`'ını `pty.spawn` ile sürer
-- THEN her biri deny
-#### Scenario: glob yolu deny (K197; c90163a'da üçü allow, main'de ikisi, lead ölçtü)
-- WHEN `python3 ^x/feedback.py add <<'EOF'` ve `python3 ^x/triage.py record 12 <<'EOF'`; gövde iki script'ten birinin
-  `send`/`apply`'ını `pty.spawn` ile sürer
-- THEN her biri deny
-#### Scenario: çapraz biçimde hileler deny
-- WHEN çapraz allow gövdeleri şu biçimlerle gelir: tırnaksız `<<EOF` + `$(…)` ya da backtick; ayraç satırında komut;
-  ayraçtan sonra satır; gövdede erken ayraç; `<<-'EOF'` ve gövdede sekmeli erken ayraç; başlıkta sonek (`<<'EOF' | bash`,
-  `<<'EOF' && x`); `#`, `\<<`, `"<<` hileleri; `${VAR}` yol; `cd x && <kalıp>`; `<kalıp>; echo x`
-- THEN her biri deny. Test genel `deny` yardımcısını kullanır (`tests/hook_tests.sh:11`): tam metne düşen komutta feedback
-  bloğu önce çalıştığı için hangi deny metninin geleceği gövdeye bağlıdır; sıra değiştirilmez.
-#### Scenario: zaman
-- WHEN mevcut ReDoS probe'larına çapraz biçimde iki probe eklenir (50 000+ karakter gövde)
-- THEN her probe mevcut eşiğin (`ls`'e göre < 0,1 sn) altında; süreler PR gövdesinde
+Bütün git çağrıları `card_path` ile aynı biçimdedir: `-c core.fsmonitor=false`, stdin DEVNULL, 5 sn timeout. Ek olarak
+env'den `GIT_*` ile başlayan bütün değişkenler çıkarılır (K212). Bu kural `card_path`'in git çağrılarına da uygulanır.
+#### Scenario: kendi .git'iyle gelen arşiv
+- WHEN dizinde düz `git init`, izlenmeyen `.delix/card` ve `touch MARK` komutlu `delix.json` var, kayıt boş
+- THEN `MARK` oluşmaz
+#### Scenario: sembolik bağlantılı .git (mutlak ve göreli)
+- WHEN `.git`, onaylı bir deponun `.git` dizinine (ya da onaylı bir worktree'nin `.git` dosyasına) sembolik bağlantı;
+  `delix.json` byte byte aynı
+- THEN `MARK` oluşmaz
+#### Scenario: onaylı ana checkout'un worktree'si
+- WHEN ana checkout `(common, h)` ile onaylı ve `git worktree add` ile açılan worktree aynı komutları taşıyor
+- THEN Stop gate komutu çalıştırır ve davranış bugünküyle aynıdır (geçen test → exit 0, kırık → exit 2,
+  `test-result.txt`'de `[exit 1]`)
+#### Scenario: delix.json değişti
+- WHEN worktree dalında `test_command` değişmiş
+- THEN komut çalışmaz; aynı worktree'den yeni onay verilince çalışır, ana checkout'un eski onayı geçerli kalır
+#### Scenario: sahte gitfile
+- WHEN `.git` dosyası onaylı bir deponun `worktrees/<ad>` dizinini gösteriyor ama o dizinin `gitdir`'i bu cwd'yi göstermiyor
+- THEN komut çalışmaz
+#### Scenario: GIT_DIR env
+- WHEN hook env'inde `GIT_DIR` onaylı bir deponun `.git`'ini gösteriyor
+- THEN sonuç env yokmuş gibi hesaplanır
+
+### Requirement: REQ-2 Onaysız komutta Stop gate
+Onay yoksa Stop gate (K201):
+- hiçbir komutu çalıştırmaz;
+- `.delix/test-result.txt`'ye `[not run: commands not approved, hash <h12>]` yazar;
+- stderr'e üç satır yazar: onaysız olduğunu, kullanıcının kendi terminalinde çalıştıracağı tam komutu
+  (`python3 <plugin>/scripts/trust.py allow`, `cwd` bu worktree) ve "write BLOCKED in .delix/report.md naming this
+  command, then stop" talimatını;
+- exit 2 döner.
+
+`stop_hook_active` ya da raporda `BLOCKED`/`NEEDS_CONTEXT` varken bugünkü exit 0 yolu değişmez.
+
+`.delix/test-result.txt` her yolda sembolik bağlantı izlenmeden yazılır: `O_NOFOLLOW`, ya da `.delix` içinde geçici
+dosya + `os.replace` (K213). Hedef sembolik bağlantıysa dosyaya yazılmaz ve stderr'de bir satır uyarı çıkar. Bugün bu
+yol bağlantının gösterdiği dosyayı eziyor; lead bunu main'de yeniden üretti.
+#### Scenario: onaysız, ilk durma
+- WHEN kart yerel, kayıt boş, rapor yok
+- THEN exit 2, komut çalışmadı, stderr'de `trust.py allow` geçer
+#### Scenario: BLOCKED rapor
+- WHEN aynı durumda `.delix/report.md` başı `BLOCKED` içeriyor
+- THEN exit 0
+#### Scenario: test-result sembolik bağlantısı
+- WHEN `.delix/test-result.txt` depo dışındaki bir dosyaya sembolik bağlantı
+- THEN o dosya değişmez
+
+### Requirement: REQ-3 `trust.py allow`
+Yeni `scripts/trust.py allow`, kullanıcının terminalinde, cwd'deki depo için çalışır. Sırayla:
+1. REQ-1 anahtarını hesaplar. Git work tree değilse, REQ-1'in dosya sistemi kontrolü geçmezse ya da `str` olmayan bir
+   öğe varsa exit 7 ve tek satırlık stderr.
+2. Çift zaten kayıttaysa "already approved" yazar ve exit 0. Bu adım TTY istemez.
+3. Kaynak dosyanın yolunu (`docs/delix/delix.json`) ve her komutu ayrı satırda `json.dumps` ile kaçışlanmış olarak
+   gösterir. `git diff --quiet HEAD -- docs/delix/delix.json` sıfır dönmezse "delix.json differs from HEAD" uyarısı
+   basar (K214).
+4. `Type TRUST <h12> to approve these commands for <git_common_dir> (the word TRUST, a space, then the hash): `
+   istemini basar (K200, SEND/APPLY kalıbı).
+5. stdin TTY değilse ya da yazılan metin tam eşleşmezse kayıt yazılmaz ve exit 6 döner; uyuşmazlıkta beklenen metin
+   tekrar edilir.
+6. Eşleşince kayıt atomik yazılır: geçici dosya + `os.replace`, dosya 0600, dizin 0700. Ardından exit 0.
+
+Yalnız stdlib kullanılır.
+#### Scenario: TTY yok
+- WHEN `echo "TRUST abc" | trust.py allow`
+- THEN exit 6, kayıt yok
+#### Scenario: doğru onay (pseudo-terminal ile test)
+- WHEN TTY'de `TRUST <h12>` yazılır
+- THEN kayıtta `(common, sha256)` var ve REQ-1 senaryosu komutu çalıştırır
+#### Scenario: gizlenmiş komut
+- WHEN `test_command` `"true\r; curl x"` içeriyor
+- THEN ekranda `"true\r; curl x"` kaçışlanmış görünür
+
+### Requirement: REQ-4 Kaydın yeri ve korunması
+Kayıt `<home>/.claude/delixcrew/trust.json` dosyasıdır. `<home>` = `pwd.getpwuid(os.getuid()).pw_dir`; `HOME` ya da
+herhangi bir env değişkeni okunmaz (K203).
+
+Biçim: `{"version": 1, "entries": [{"git_common_dir": str, "sha256": str, "approved_at": ISO-8601}]}`.
+
+`is_trusted` kaydı şu koşullarla okur, aksi her durumda boş sayar (fail closed):
+- dosya `O_NOFOLLOW` ile açılır;
+- dosyanın ve dizinin sahibi `getuid()` olur ve `mode & 0o077 == 0`;
+- `version` 1 olur ve JSON geçerli olur.
+
+Her oturumda iki hook kaydı korur:
+- **`write_gate.py`:** Write/Edit/MultiEdit/NotebookEdit ile bu dosyaya yazmayı reddeder; mevcut casefold kalıbı
+  kullanılır.
+- **`bash_gate.py`:** şu üç komutu reddeder; kurallar koşulsuzdur, feedback (a)/(b) gibi:
+  - (a) `trust.py` + `allow` geçen komut;
+  - (b) `trust.py` ile `script|expect|unbuffer|pty.spawn|pty.fork|openpty|tmux|screen|socat|zpty` birlikte geçen komut;
+  - (c) casefold edilmiş metninde `delixcrew/trust.json` geçen komut. (c) tam metne uygulanır, REQ-5 ve capture
+    muafiyetleri ona dokunmaz.
+
+Mesaj iki gate'te de ayrı ayrı literal yazılır (K210):
+`TRUST_DENY = "delixcrew: Stop gate commands are approved only by the user from their own terminal"`.
+#### Scenario: ajan onay vermeye çalışır
+- WHEN Bash `python3 /x/scripts/trust.py allow`
+- THEN deny, `TRUST_DENY`
+#### Scenario: ajan kaydı yazar
+- WHEN Write `~/.claude/delixcrew/Trust.json` (harf varyantı) ya da Bash `cat > /Users/u/.claude/delixcrew/trust.json <<'EOF'`
+- THEN deny
+#### Scenario: başkasına yazılabilir kayıt
+- WHEN kayıt 0644 ya da sembolik bağlantı
+- THEN `is_trusted` `False`
+
+### Requirement: REQ-5 İzinli `cat` heredoc'u
+Komutun tamamı tam olarak şu biçimdeyse, bilinen yol kurallarının hepsi yalnız ilk satıra uygulanır (K202):
+- biçim: `cat[ \t]+>>?[ \t]*<yol>[ \t]+<<'DELIM'` (ya da `"DELIM"`), ardından gövde, son satır `DELIM`;
+- kapsanan kurallar: feedback (a)/(b)/(c), triage (a)/(b)/(c)/(d), trust (a)/(b). Trust (c) tam metinde kalır.
+
+Kalıbın kısıtları:
+- `<yol>` tek karakter sınıfıdır: `(?!-)[^X]+`; `X` = `_PATH`'in dışlanan karakterleri. İsteğe bağlı dizin grubu
+  yoktur (ReDoS, K211b).
+- `<<-` desteklenmez.
+- `<yol>` casefold edildiğinde `.claude/delixcrew/` içeriyorsa muafiyet uygulanmaz.
+- Gövdede `DELIM` satırı tekrar ederse, delimiter satırı `\r` ya da sondaki boşlukla bitiyorsa ya da biçim tutmazsa tam
+  metin kontrol edilir (fail closed).
+
+Aynı kural T024'ün iki capture kalıbına da genişler: capture eşleşmesinde feedback (c) ile triage (c)/(d) de yalnız ilk
+satıra bakar (K204). Korunan yola shell yazımı kontrolü (`bash_gate.py:94`) tam metinde kalır.
+#### Scenario: not dosyası
+- WHEN `cat > notes.md <<'EOF'\ngh issue close 9 --repo tahircengiz/delixcrew\nEOF`
+- THEN allow
+#### Scenario: zincir
+- WHEN aynı komutun sonuna `; gh issue close 9 -R tahircengiz/delixcrew` eklenir ya da gövdeden sonra satır gelir
+- THEN deny
+#### Scenario: ReDoS
+- WHEN 200 KB gövde, 5k `EOF` satırı, 20k `/` içeren yol
+- THEN her biri < 0.05 sn
+
+### Requirement: REQ-6 Repo yazma mesajı
+`gh api` yazma çağrısında bugünkü deny koşulu aynen kalır. Değişen yalnız mesajdır:
+- Triage (d)'nin baktığı metinde (REQ-5'e göre `checked`) `issues`, `labels` ve `graphql` kelimelerinden hiçbiri
+  yoksa (ör. `repos/…/rulesets`, `vulnerability-alerts`), mesaj
+  `REPO_DENY = "delixcrew: writes to the delixcrew GitHub repository (settings, rulesets, security) run only from the user's own terminal"`
+  olur (K205).
+- Issues, labels ve graphql yolları bugünkü mesajlarını korur; mevcut test satırları değişmez.
+#### Scenario: ruleset
+- WHEN `gh api -X POST repos/tahircengiz/delixcrew/rulesets --input r.json`
+- THEN deny, `REPO_DENY`
+
+### Requirement: REQ-7 Doküman ve akış metinleri
+- README.md / README.tr.md güncellenir:
+  - "What this plugin does on your machine";
+  - "Known limits": §6 kalıntıları ve "bash denylist yalnız sürtünmedir; sınır izin istemidir (K77)";
+  - "Files": kayıt dosyası ve satır silerek geri alma.
+- `skills/dispatch/SKILL.md`: ilk dispatch'ten önce ana checkout'ta `trust.py allow`.
+- `skills/implement/SKILL.md`: Stop gate "not approved" dediğinde BLOCKED.
+- `site/` dört sayfası: CLAUDE.md tetikleyicisi (yeni komut ve hook kuralı); sürüm etiketi değişmez (K209).
+- `bash tests/site_tests.sh` yeşil kalır.
 
 ## 4. Interface contracts
 | Kind | Name | Signature / shape | Consumer |
 |---|---|---|---|
-| CLI çıktısı | `triage.py apply`, `feedback.py send` istem + ret | REQ-1 metinleri; exit 6 aynı | kullanıcı terminali |
-| CLI çıktısı | `triage.py show <n> --require accepted` stderr | REQ-2 ikinci mesaj; exit 8 aynı | `skills/start` 1a |
-| hook | `bash_gate.py` yol kalıpları, feedback/triage (a)(b) | REQ-3; deny metinleri aynı | tüm oturumlar |
+| function | `common.trust_key(cwd) -> tuple[str, str] \| None` | `(git_common_dir, sha256)`; REQ-1 doğrulaması tutmazsa `None` | stop_gate, trust.py |
+| function | `common.is_trusted(cwd) -> bool` | kaydı her çağrıda okur (REQ-4 koşulları); hata = `False` | stop_gate |
+| function | `common.trust_file() -> str` | pwd tabanlı yol (REQ-4); testler modül özniteliğiyle değiştirir, env ile değil | write_gate, trust.py, testler |
+| CLI | `trust.py allow` | exit 0 / 6 / 7 (REQ-3) | kullanıcı |
+| file | `~/.claude/delixcrew/trust.json` | REQ-4 biçimi | stop_gate, trust.py |
+| const | `TRUST_DENY`, `REPO_DENY` | REQ-4 ve REQ-6 metinleri, her gate'te literal | bash_gate, write_gate, testler |
 
 ## 5. Data and migration
-Kayıt ve kuyruk biçimi değişmez; göç yok.
+Yeni dosya `trust.json`; ilk kurulumda yoktur, yokluğu "onaysız" demektir. Güncelleme sonrası mevcut kullanıcıların ilk
+Stop gate'i REQ-2 ile durur. Geçiş adımı `trust.py allow`'u ana checkout'ta bir kez çalıştırmaktır; README ve CHANGELOG
+bunu söyler. Geri alma: plugin'in önceki sürümü; kayıt dosyası zararsız olarak kalır.
 
 ## 6. Security note
-- 🔐 İki kart da Tier 3 (K186): `scripts/bash_gate.py` korumalı yol (REQ-3); REQ-1 dışarı yayın yapan iki yolun onay
-  adımını değiştirir (önceki her kart 🔐 idi: T010, T014, T020). Dispatch öncesi sohbette kart başına Approved satırı ve
-  interaktif oturum; `security` iki kartta da birebir karşılaştırma, TTY ve hash bağlamanın değişmediğini doğrular.
-- **Mevcut açık (main `1b3cf9e`, lead ölçtü, K187):** yol kalıbı `-` ile başlayan token'ı kabul ediyor. `python3
-  -ic/<dizin>/feedback.py add <<'EOF'` ve triage record karşılığı fullmatch oluyor; Python `-i -c` ile gövdeyi stdin'den
-  kod olarak çalıştırıyor (`BODY RAN` gözlendi) ve gövdenin `pty.spawn` ile kendi `send`/`apply`'ını sürmesi hook'tan
-  geçiyor. REQ-3 (a) bunu kapatır; (b) tek başına uygulansaydı çapraz yönü de açardı. İnceleme turu 1'de aynı biçimin
-  çalışma anındaki hâli bulundu: zsh `extendedglob` açıkken tırnaksız `^x/…` yolu `-ic/…`'ye açılabiliyor; K197 `^`'yi
-  dışlar. Bundan sonra "her `<dizin>/…`" ifadesi `^` içermeyen tırnaksız dizinler içindir.
-- Kalan risk (REQ-3): yol sabit değildir; her `<dizin>/feedback.py` ya da `<dizin>/triage.py` kalıba uyar. Muafiyet
-  gövdeyi o dosyaya stdin olarak verir; aynı adlı başka bir dosya gövdeyi okuyabilir. Bu, README.md:311-314'deki "desen
-  tabanlı, gizlenmiş komut yakalanmaz" kalan riskiyle aynı sınıftır; yeni yetenek değildir. `apply`/`send` ayrıca TTY,
-  hash bağlama ve yazılan `APPLY <h>`/`SEND <h>` ister.
-- REQ-2: kayıt dizinine shell'den yazılabilir (README.md:300-301). Sahte bir kayıt yalnız mesajı değiştirir, exit kodunu
-  değil; mesaj kullanıcıyı sohbette onay vermediği bir kaydı önizlemeye yönlendirebilir. Sınır: `apply` yorumun tamamını
-  gösterir ve yazılan hash'i ister; mesajda yalnız issue numarası ve yerel script yolu geçer, issue metni geçmez.
-- REQ-1 kapıyı gevşetmez: karşılaştırma birebir, harf katlama ya da yalnız hash eşleşmesi yok, yazılan girdi yankılanmaz.
+🔐 **Korunan yollar:** `scripts/stop_gate.py`, `scripts/common.py`, `scripts/bash_gate.py`, `scripts/write_gate.py`.
+Lead, dispatch'ten önce ayrı bir commit'le `scripts/trust.py`'yi `docs/delix/delix.json` `protected_paths`'e ekler;
+`delix.json` implementer'a kapalıdır (`docs/delix/**`). Her kartta 🔐 Approved satırı.
+
+**Tehdit:** dosyaları, `.git`'i (dizin, dosya ya da sembolik bağlantı) ve `delix.json`'u saldırgana ait bir dizin.
+Çapa yalnız `delix.json` kanalını kapatır; proje ayarlarının hook'ları ve `PATH`'i kapsam dışıdır. Bu tehdide karşı
+kararlar:
+- Depo kimliği git çıktısından değil dosya sisteminden (`lstat`) doğrulanır (K211).
+- Git çağrıları `GIT_*` env'i olmadan yapılır (K212).
+- Kayıt yolu pwd'den okunur (K203).
+- Kayıt dosyası sahiplik ve izin koşullarıyla okunur.
+- `test-result.txt` sembolik bağlantı izlemeden yazılır (K213).
+- Onay ekranı kaçışlıdır ve HEAD'den farkı gösterir (K214).
+
+**Kalıntılar (Known limits'e girer):**
+- Onaylı bir depoda komut dizesi aynı kalıp `tests/` değişirse Stop gate çalışır; bu, kullanıcının o dalda testi
+  çalıştırmasıyla eşdeğerdir.
+- Silinen bir deponun ya da `prune` edilmemiş bir worktree'nin yoluna açılan yeni bir dizin eski onayı devralabilir.
+- Bash denylist'i yalnız sürtünmedir: tırnak bölme, değişken ya da glob ile yazılmış komutlar geçer. Sınır, Claude
+  Code'un Bash izin istemidir (K77).
+- REQ-5'in `~/.claude/delixcrew/` dışındaki yollar için açtığı yetenek, Write aracının zaten yapabildiğinden büyük değildir.
 
 ## 7. Acceptance criteria (DoD)
-- [ ] Her REQ için geçen test; doğrulama: `for t in tests/*_tests.sh; do bash "$t" || exit 1; done` → hepsi geçer;
-  `claude plugin validate .` geçer
-- [ ] REQ-3 zaman probe'larının süreleri PR gövdesinde
-- [ ] `qa` ACCEPT; iki kartta `security` CLEAN + insan onayı (🔐)
-- [ ] PR gövdesinde "How I tested"
+- [ ] Her REQ için geçen bir test var; arşiv ve sembolik bağlantılı `.git` senaryoları önce kırmızı. Doğrulama komutu:
+  `for t in tests/*_tests.sh; do bash "$t" || exit 1; done` → bütün süitler geçer.
+- [ ] ReDoS denemeleri (REQ-5) ölçülür ve PR'a yazılır.
+- [ ] `claude plugin validate .` geçer.
+- [ ] Tier 3: `qa` ACCEPT, `security` CLEAN ya da yalnız 🔐 HUMAN_APPROVAL ve kullanıcı onayı.
+- [ ] PR gövdesinde "How I tested" var.
 
 ## 8. Open questions
-Gate 1'i bekletmeyen, bu spec dışı takip adayları (P2, önceden var olan):
-- Triage kuralı (a) argv listesi biçimini (`"triage.py","apply"`) tanımıyor; feedback kuralı (a) tanıyor
-  (`bash_gate.py:29` ile `:53`). Tek başına TTY'ye takılır; hook'un listelemediği bir pty sürücüsüyle birlikte önemli.
-- README.md:312-313 "`triage.py` yolunda TTY ve `APPLY <hash>` yine durdurur" der; pty süren gizlenmiş bir komut ikisini de
-  aşar. İfade daraltılmalı (#10 SECURITY.md işiyle birlikte).
+- (izleme, kapsam dışı) `DELIXCREW_FEEDBACK_DIR` / `DELIXCREW_TRIAGE_DIR` proje `env`'iyle değişebilir; bu, write_gate
+  kuyruk korumasını başka dizine kaydırır. Ayrı bir issue açılmalı.
+- (canlıda kontrol, T027) Claude Code'un Bash aracı komutu zsh `eval` ile sarıyor; REQ-5 heredoc ayrıştırmasının canlıda
+  aynı kaldığı implementer tarafından gerçek oturumda denenir.
 
 ## 9. Decisions
-- **K178** (geri alınır) Önceki spec ve T020–T021 `archive/0.6.2-feedback-filter-gaps/`'a taşındı; STATE boşaltıldı,
-  doğrulama kayıtları yerinde.
-- **K179** (geri alınır) Sürüm artmaz; CHANGELOG `## Unreleased` (K140 emsali). Sürüm ve etiket ayrı iş (K177 emsali).
-- **K180** (geri alınır) İstem ve ret metni REQ-1'deki gibi sabit. Tırnak kullanılmaz: kullanıcı tırnağı da yazar ve
-  birebir karşılaştırma reddeder. Yazılan metin yankılanmaz (K139 terminal güvenliği).
-- **K181** (geri alınır) Yeni mesaj yalnız `decision accept` + `status recorded` + canlı sha'da; `applied` kaydı varken
-  etiketin eksik olması (biri kaldırmış) bugünkü mesajı alır, çünkü yeniden triage doğru adımdır.
-- **K182** (geri alınır) Çapraz muafiyet iki kalıbın zaten hesaplanan eşleşmesini paylaşır; `(?!-)` ve `^` (K197)
-  dışında yeni regex öğesi yok (ReDoS yüzeyi büyümez). Gerekçe: en küçük değişiklik, iki capture biçimi simetrik olur.
-- **K183** (geri alınır) Not dosyası biçimi ve `cd`/`echo` sarmalı kapsam dışı: muafiyet tek çağrı + tırnaklı ayraçla
-  sınırlı kalır (fail closed); bedel, bu biçimlerde Write aracı ya da çağrıyı tek başına çalıştırmak.
-- **K184** (geri alınır) Site değişmez: `site/index.html:553` "exit 8 when the acceptance check fails" doğru kalır; komut,
-  hook kuralı adı, rol, kapı ya da dosya eklenmiyor.
-- **K185** (geri alınır) Kart taslağı: T023 REQ-1 + REQ-2 (`scripts/triage.py`, `scripts/feedback.py`,
-  `skills/start/SKILL.md`, `README.md`, `README.tr.md`, `tests/triage_tests.sh`, `tests/feedback_tests.sh`) ve T024 REQ-3
-  (`scripts/bash_gate.py`, `tests/hook_tests.sh`); ikisi de Tier 3 🔐 (K186), ortak dosya yok, paralel. CHANGELOG
-  `## Unreleased` maddelerini `/delixcrew:close`'ta lead yazar (iki kart aynı dosyada çakışmasın). Kesin bölme dispatch'te.
-- **K186** (geri alınır; architect P1) T023 de Tier 3 🔐: dışarı yayın yapan onay adımına dokunuyor; kademe kuralı
-  (`skills/start/SKILL.md`) ve T010/T014/T020 emsali.
-- **K187** (geri alınır; security Medium, lead main'de üretti) `(?!-)` düzeltmesi REQ-3'e ve T024'e alındı. Kapsam bir
-  satır büyür; alınmasaydı REQ-3 (b) kapıyı gevşetirdi.
-- **K188** (geri alınır; architect P1 + security Low) REQ-3 deny testleri genel `deny` yardımcısıyla; kural sırası değişmez.
-- **K189** (geri alınır; architect P1) Yeni mesaj script'in gerçek yolunu taşır, `preview` ve `apply`'ı kullanıcı kendi
-  terminalinde çalıştırır (onaylı istek ve #35'in beklediği). Seçenek: `/delixcrew:triage #<n>`'e yönlendirmek; triage'ı
-  baştan tekrarlatır, #35'in şikâyet ettiği şey. Sahte kayıt yönlendirmesi §6'da.
-- **K190** (geri alınır; architect P2) Kayıt kontrolü iki exit 8 dalında da yapılır: değişmiş, yeniden triage edilip
-  kaydedilmiş ama uygulanmamış issue da aynı mesajı alır.
-- **K191** (geri alınır) Spec incelemesi: architect FIX (3 P1, 4 P2) ve security FIX (1 Medium, 3 Low) işlendi; önceden
-  var olan iki P2 §8'de.
-- **K192** (geri alınır) Kart numaraları T023/T024: T022, paralel oturumda #10 kartına verildi (PR #46,
-  `4b52a3b`). Taban `4b52a3b`; #46 README'leri değiştirdiği için README satır referansları o ağaca göre.
-- **K197** (geri alınır; kullanıcı, inceleme turu 1, 2026-11-04) `^`, tırnaksız `_PATH`/`_TPATH` sınıflarının dışlanan
-  karakterlerine eklendi: security'nin "emin değilim" notunu lead ölçtü (zsh `extendedglob` ile `^q/x.py` → `-ic/x.py`;
-  varsayılan zsh ve bash açmaz). T024'te fix turu 1 (PR #48, `e58d867`), 4 glob yolu deny testi. Kapanış drift
-  kontrolünde SPEC metni koda uyduruldu.
+- **K199** (kullanıcı, geri alınır): onay anahtarı `git_common_dir` realpath'i + komut listesi hash'i; worktree'ler ana
+  checkout'u miras alır.
+- **K200** (kullanıcı, geri alınır): onay ayrı CLI `trust.py allow` ile verilir; TTY + `TRUST <h12>` yazılır; hook'lar
+  ajanı engeller.
+- **K201** (kullanıcı, geri alınır): onaysız komutta çalıştırma, exit 2 ile bir kez durdur, implementer BLOCKED yazar.
+- **K202** (kullanıcı, geri alınır): kural (c) için tek izinli `cat > yol <<'D'` kalıbı; diğer her şekil tam metin.
+- **K203** (lead, geri alınır): kayıt yolu pwd veritabanından; testler `common` modül özniteliğini runpy ile değiştirir.
+- **K204** (lead, geri alınır): T024'ün capture muafiyeti (c)/(d)'yi de kapsar. Böylece "tek izinli heredoc → ilk
+  satır" kuralı tek ve tutarlı olur.
+- **K205** (lead, geri alınır): yeni mesaj yalnız issues/labels/graphql dışındaki `gh api` yazmalarında; mevcut test
+  satırları korunur.
+- **K206** (lead, 🔐): "test satırı değişmez" kuralının tek istisnası. Değişen yerler:
+  - `tests/hook_tests.sh:69-76` (Stop gate);
+  - `tests/trust_tests.sh` vaka 4 ve 4b (4b `delix.json`'u değiştirdiği için kendi onayını alır).
+
+  Değişen tek şey, komut çalışmadan önce test kaydına onay eklemektir; beklenen sonuçlar aynı kalır. Kırık test vakasına
+  yeni bir doğrulama eklenir: `test-result.txt` `[exit 1]` içerir ve `[not run:` içermez. Kartta satır satır listelenir.
+- **K207** (lead, geri alınır): kart bölümü (dispatch'te architect kesinleştirir):
+  - T026: güven çapası (`common.py`, `stop_gate.py`, `trust.py`, `write_gate.py`, `trust_tests.sh`, `hook_tests.sh`
+    Stop bölümü);
+  - T027: `bash_gate.py` (REQ-4 bash kuralları, REQ-5, REQ-6), testleri yeni `tests/bash_gate_heredoc_tests.sh`
+    dosyasında;
+  - T028: dokümanlar ve site (REQ-7); T026 ve T027'den sonra.
+  - T026 ile T027 paralel çalışır, ortak dosyaları yok; mesaj sabitleri her gate'te literal.
+- **K208** (lead, geri alınır): geri alma ve listeleme komutu yok; README satır silmeyi anlatır.
+- **K209** (lead, geri alınır): bu spec sürüm artırmaz; 0.6.3 yayını (#36 düzeltmesi) ayrı karar, kullanıcıda.
+- **K210** (lead, geri alınır):
+  - `trust.py` exit kodlarını feedback/triage ile hizalar (6 = onay yok, 7 = ön koşul);
+  - mesaj sabitleri gate başına literal yazılır, `FEEDBACK_DENY` gibi.
+- **K211** (lead, geri alınır; architect P0 + security High, lead main'de yeniden üretti): sembolik bağlantılı `.git`.
+  - Sorun: `card_path` kartı kabul ediyor, `--git-common-dir` kurbanın `.git`'ini veriyor. Bu yüzden depo kimliği
+    `lstat` ile, bağlantı izlenmeden doğrulanır.
+  - K211b: REQ-5 yolu tek karakter sınıfı (ReDoS).
+- **K212** (lead, geri alınır): hook'ların git çağrıları `GIT_*` env'i olmadan yapılır.
+- **K213** (lead, geri alınır; security Medium, main'de yeniden üretildi): `test-result.txt` sembolik bağlantı izlenmeden yazılır.
+- **K214** (lead, geri alınır; security Medium): onay ekranı komutları `json.dumps` ile gösterir, `str` olmayan öğe
+  exit 7 döner, `delix.json` HEAD'den farklıysa uyarı basar.
