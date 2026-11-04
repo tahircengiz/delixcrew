@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-04T15:00:00Z",
+  "updated": "2026-11-04T16:00:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -24,10 +24,11 @@
       "file": "docs/delix/tasks/T020-feedback-filter-gaps.md",
       "role": "backend",
       "tier": 3,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
-      "cost_usd": null
+      "status": "fixing",
+      "pr": 39,
+      "rounds": 1,
+      "cost_usd": null,
+      "sha": "907012c"
     },
     "T021": {
       "file": "docs/delix/tasks/T021-feedback-docs-sync.md",

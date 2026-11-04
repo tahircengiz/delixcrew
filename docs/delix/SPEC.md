@@ -21,7 +21,7 @@ testlerin hiçbir beklentisi gevşemez, iki README koddaki kuralı aynı biçimd
 - K151 (birleşik işaretli etiketin host olarak tanınması, `corp.भारत`) ve K153 (`x.internal.1`, `/` olmadan
   `jenkins:8080`, `:` sonrası `a:b:8080/x`): §6'da kalan risk olarak durur.
 - Son etiketi dosya uzantısı olan ad (`x.internal.conf`) bugünkü gibi host sayılmaz; bu davranış yalnız README'ye yazılır.
-- `_url_pass` birleştirmesi (K163), `write_gate.py`, `bash_gate.py`, site sayfaları (K164), sürüm (K161).
+- `write_gate.py`, `bash_gate.py`, site sayfaları (K164), sürüm (K161).
 - `triage.py`'nin davranışı. Yalnız `visible`/`invisible` fonksiyonlarını artık `feedback`'ten import eder (K170).
 
 ## 3. Requirements (testable)
@@ -102,8 +102,8 @@ bitirmeli; çakışan alternation kullanılmaz.
   `1.` tekrarı (kuyruktaki IPv4 regex'i); `key:a.bc/` tekrarı; `<redacted:host>/` tekrarı; `<redacted:host>:` tekrarı;
   `:` tekrarı; `\` tekrarı; `_a:` tekrarı; `github.com/` tekrarı; `010.` tekrarı
 - THEN her biri < 0,5 sn sürer ve test süreyi yazar
-- AND `a //b ` girdisinin 200 000 karakterlik süresi, 50 000 karakterlik süresinin 6 katını geçmez; her süre 3 koşunun en
-  küçüğüdür (K163)
+- AND `a //b ` girdisinin 400 000 karakterlik süresi, 50 000 karakterlik süresinin 12 katını geçmez; her süre 3 koşunun en
+  küçüğüdür. `_url_pass` korunmayan parçaları listede biriktirip sonda birleştirir (K173)
 
 ### Requirement: REQ-6 Eksik testler
 The system SHALL mevcut davranışı testle sabitlemeli:
@@ -193,7 +193,7 @@ Kuyruk ve kayıt biçimi değişmez, göç yok. Sürüm `"3"` kalır: hash içer
   hash zaten içeriğe bağlı.
 - **K162** (geri alınır) `cmd_add` için `ID_RE.fullmatch` yeterli; `id` ile dosya adının eşitliği aranmaz. Ölçüm (main
   kodu, karalama kuyruğu): `id`'si `../x` olan kayıtla aynı parmak izli `add`, kuyruk dizininin bir üstüne `x.json` yazıyor.
-- **K163** (geri alınır) `_url_pass` birleştirmesine dokunulmaz. STATUS §9 O(n²) diyordu, ama main ölçümü doğrusal:
+- **K163** (geri alındı, yerine K173) `_url_pass` birleştirmesine dokunulmaz. STATUS §9 O(n²) diyordu, ama main ölçümü doğrusal:
   `a //b ` tekrarı 50K karakterde 0,106 sn, 100K'da 0,232 sn, 200K'da 0,551 sn. Hatayı yeniden üreten test yok; koruma
   olarak REQ-5'teki büyüme testi kalır.
 - **K164** (geri alınır) Site sayfaları değişmez. "Invisible Unicode control character" ifadesi doğru kalıyor (K141 ile
@@ -218,5 +218,10 @@ Kuyruk ve kayıt biçimi değişmez, göç yok. Sürüm `"3"` kalır: hash içer
   `github.com/…` yolunu sahip izin listesinden geçirir. Main ölçümü: `git@github.com:acme/private`,
   `ci.acme-corp.net:acme/private`, `a/10.1.2.3:8080/api/x`, `vendor/github.com/acme/private-lib/x.go` hiç değişmeden ya da
   yolu açık kalarak çıkıyor. Bu, K159'un yapısal kuralının devamıdır.
+- **K173** (geri alınır; T020 tur 1, deterministik kapı) K163 yanlıştı. CI'da büyüme testi kırmızı: 50K'dan 200K'ya
+  oran 7,79 (sınır 6). Lead ölçümü (main `7d2889a`, `a //b ` tekrarı): 200K 0,533 sn, 800K 5,514 sn, yani kuadratik.
+  Liste birleştirmeli prototipte aynı ölçüm 0,278 sn ve 1,104 sn, yani doğrusal. `_url_pass` korunmayan parçaları
+  listede biriktirip sonda birleştirir, çıktı aynı kalır. Büyüme testi 50K'dan 400K'ya ölçer, sınır ×12; ölçülen oran
+  kuadratik kodda 17,1, doğrusal kodda 8,0. 200K kısa bir girdiydi, iki durumu ayırmaya yetmedi.
 - **K172** (geri alınır; security Low) Baştaki sıfırlı IPv4 fail closed: oktetler ≤ 255 ise `ipaddress` hatası silmeye yol
   açar. Main ölçümü: `010.001.002.003` değişmeden kalıyor.

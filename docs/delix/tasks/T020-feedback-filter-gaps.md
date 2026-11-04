@@ -186,4 +186,10 @@
 `.delix/report.md` (≤ 1.5K tokens): `DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED` · commands + output (✔/✘ count, all REQ-5 timings, growth ratio) · PR number · assumptions. Read only this card and SPEC REQ-1–REQ-6, §4, §6, §9.
 
 ## Review findings (filled by the lead)
-- Round 1: …
+- Round 1 (deterministic gate, PR #39 @ 907012c): CI `test` failed with `✘ REQ-5 t020-growth a //b 50K 0.104 s, 200K 0.809 s, ratio 7.79 (≤ 6)`.
+  - **F1 [P1]** Root cause: `_url_pass` merges unprotected parts by string concatenation, which is quadratic. Lead measurement, main `7d2889a`, `a //b ` repeat: 200K 0.533 s, 800K 5.514 s. With list accumulation the same input takes 0.278 s and 1.104 s. K163 is withdrawn and replaced by K173.
+  - Fix:
+    1. In `put()`, collect the parts of each segment in a list and join them in the `return`, so `_url_pass` returns the same `[(str, bool)]` with identical output.
+    2. The growth check added in this PR measures 50K against 400K (`("a //b " * 66667)[:400000]`) with limit ≤ 12× (best of 3), and prints both times and the ratio.
+  - Measured ratios: quadratic 17.1, linear 8.0.
+  - Global Constraint "K163: do not touch `_url_pass` merging" no longer applies: only this list change is allowed, nothing else in `_url_pass`.
