@@ -1,0 +1,155 @@
+{
+  "spec": "docs/delix/SPEC.md",
+  "size": "M",
+  "updated": "2026-11-04T12:10:27Z",
+  "env_owner": null,
+  "waves": [
+    {
+      "wave": 1,
+      "cards": [
+        "T020"
+      ],
+      "note": "SPEC feedback filter gaps (gate 1 2026-11-04, K159-K172). 🔐: Approved line before dispatch; interactive session."
+    },
+    {
+      "wave": 2,
+      "cards": [
+        "T021"
+      ],
+      "note": "after T020 merged (claim check runs on merged main code). Tier 1 docs; fill <T020 merge sha> in T021.dispatch.md."
+    }
+  ],
+  "cards": {
+    "T020": {
+      "file": "docs/delix/tasks/T020-feedback-filter-gaps.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "accepted",
+      "pr": 39,
+      "rounds": 3,
+      "cost_usd": null,
+      "sha": "7b51b48"
+    },
+    "T021": {
+      "file": "docs/delix/tasks/T021-feedback-docs-sync.md",
+      "role": "docs",
+      "tier": 1,
+      "status": "accepted",
+      "pr": 43,
+      "rounds": 0,
+      "cost_usd": null,
+      "sha": "d05abf4"
+    }
+  },
+  "status_values": [
+    "open",
+    "in_progress",
+    "in_review",
+    "fixing",
+    "accepted",
+    "rejected",
+    "escalated"
+  ],
+  "verifications": [
+    {
+      "name": "github-pages",
+      "date": "2026-11-03",
+      "sha": "68664cef944d3b7ff3b57b73c308e3ce7e87b481",
+      "base": "375623f1e36bc6405477045186608c3fffbb2e24",
+      "input": "claude/github-pages",
+      "tier": "3 🔐",
+      "verdict": "ACCEPT 🔐",
+      "report": "docs/delix/verifications/2026-11-03-github-pages.md",
+      "gates": {
+        "gitleaks": "PASS (archive: pre-existing finding, also on base)",
+        "local": "PASS",
+        "remote_unit": "not run: no delix.json.verify",
+        "full": "not run: no --full"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "🔐 HUMAN_APPROVAL",
+      "cost_usd": null
+    },
+    {
+      "name": "github-pages",
+      "date": "2026-11-03",
+      "input": "claude/github-pages",
+      "tier": "3 🔐",
+      "verdict": "ACCEPT 🔐",
+      "report": "docs/delix/verifications/2026-11-03-github-pages.md",
+      "gates": {
+        "gitleaks": "PASS (archive: pre-existing finding, also on base)",
+        "local": "PASS",
+        "remote_unit": "not run: no delix.json.verify",
+        "full": "not run: no --full"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "🔐 HUMAN_APPROVAL",
+      "cost_usd": null,
+      "sha": "effc814e24f979d03de8b01831426fbf8531f43c",
+      "base": "9dfc83d42ebd22e3f89112ee061cabe311a55783"
+    },
+    {
+      "name": "github-pages",
+      "date": "2026-11-03",
+      "input": "claude/github-pages",
+      "tier": "3 🔐",
+      "verdict": "ACCEPT 🔐",
+      "report": "docs/delix/verifications/2026-11-03-github-pages.md",
+      "gates": {
+        "gitleaks": "PASS (archive: pre-existing finding, also on base)",
+        "local": "PASS",
+        "remote_unit": "not run: no delix.json.verify",
+        "full": "not run: no --full"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "🔐 HUMAN_APPROVAL",
+      "cost_usd": null,
+      "sha": "f6c2d0adae2ff3fbb5085a396629a7137532eebe",
+      "base": "9dfc83d42ebd22e3f89112ee061cabe311a55783"
+    },
+    {
+      "name": "feedback-drift-p2",
+      "date": "2026-11-04",
+      "sha": "acaf7e481c2a5762e8bedf18b1f6aa82520f936d",
+      "base": "b7a6e13ac08d4b2ecdf588753e63a24bf483247c",
+      "input": "claude/feedback-drift-p2",
+      "tier": "2",
+      "verdict": "ACCEPT",
+      "report": "docs/delix/verifications/2026-11-04-feedback-drift-p2.md",
+      "gates": {
+        "gitleaks": "PASS (archive: pre-existing finding, also on base)",
+        "local": "PASS",
+        "remote_unit": "not run: no delix.json.verify",
+        "full": "not run"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "CLEAN",
+      "cost_usd": null
+    },
+    {
+      "name": "site-umami",
+      "date": "2026-11-04",
+      "sha": "e120c5a",
+      "base": "d5d77da",
+      "input": "PR #40 merge",
+      "tier": 2,
+      "verdict": "ACCEPT",
+      "report": "docs/delix/verifications/2026-11-04-site-umami.md",
+      "gates": {
+        "gitleaks": "PASS (pre-existing 1 in archive)",
+        "local": "PASS 8/8",
+        "remote_unit": "not run",
+        "full": "not run"
+      },
+      "qa": "ACCEPT_WITH_NOTES",
+      "security": "CLEAN",
+      "cost_usd": null
+    }
+  ],
+  "archive": [
+    "docs/delix/archive/0.5.0-self-feeding/STATE.json",
+    "docs/delix/archive/0.6.0-triage/STATE.json",
+    "docs/delix/archive/0.6.x-feedback-cleanup/STATE.json"
+  ]
+}

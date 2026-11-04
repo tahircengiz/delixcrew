@@ -457,7 +457,7 @@ Kararlar: `docs/delix/archive/0.6.x-feedback-cleanup/SPEC.md` §9. Öne çıkanl
 `*.test`/`*.invalid`/`*.localhost` artık izinli değil · **K140** sürüm artmaz, CHANGELOG `## Unreleased` · **K143** #12
 (`purge`) kapsam dışı (triage kaydı `accepted` değil).
 
-## 10. Feedback süzgeci kalan açıklar (2026-11-04, SPEC `docs/delix/SPEC.md`, kartlar T020–T021; kapandı, main `d05abf4`)
+## 10. Feedback süzgeci kalan açıklar (2026-11-04, arşiv `docs/delix/archive/0.6.2-feedback-filter-gaps/`: SPEC, kartlar T020–T021, STATE; kapandı, main `d05abf4`)
 
 Kaynak: §9 "Açık iş". Bu spec, T020 ile süzgeç kodunu (`scripts/feedback.py`, `scripts/triage.py` taşıma) ve T021 ile
 README EN/TR Feedback bölümünü ve CHANGELOG `## Unreleased` maddesini kapsar.
@@ -480,7 +480,7 @@ README EN/TR Feedback bölümünü ve CHANGELOG `## Unreleased` maddesini kapsar
 - `claude plugin validate .` README'deki `http://127.1/` örneği yüzünden LISTING_URL_SCHEME uyarısı verir; doğrulama geçer.
 - SPEC §6 kalan riskleri: K151, K153, REQ-1b kapanış koşusu (K176).
 
-Kararlar: `docs/delix/SPEC.md` §9. Öne çıkanlar: **K159** (kullanıcı) host'tan sonraki yol yapısal kural · **K160**
+Kararlar: `docs/delix/archive/0.6.2-feedback-filter-gaps/SPEC.md` §9. Öne çıkanlar: **K159** (kullanıcı) host'tan sonraki yol yapısal kural · **K160**
 U+2028/U+2029/surrogate BLOCKED · **K170** triage K133 izin listesi feedback'te (tab ek) · **K173** `_url_pass` liste
 birleştirme, 50K/400K büyüme testi ×12 (K163'ün yerine; ölçüm: main 200K→800K 0,533→5,514 sn) · **K176** son incelemenin
 Low bulgusu §6'da, 4. tur yok.
