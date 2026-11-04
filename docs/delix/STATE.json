@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-04T10:34:09Z",
+  "updated": "2026-11-04T11:52:58Z",
   "env_owner": null,
   "waves": [
     {
@@ -17,6 +17,13 @@
         "T021"
       ],
       "note": "after T020 merged (claim check runs on merged main code). Tier 1 docs; fill <T020 merge sha> in T021.dispatch.md."
+    },
+    {
+      "wave": 3,
+      "cards": [
+        "T022"
+      ],
+      "note": "issue #10 (accepted), size S, gate 1 = card approval. Docs only; no site change, no version bump."
     }
   ],
   "cards": {
@@ -39,6 +46,16 @@
       "rounds": 0,
       "cost_usd": null,
       "sha": "d05abf4"
+    },
+    "T022": {
+      "file": "docs/delix/tasks/T022-security-policy-machine-section.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "issue": 10
     }
   },
   "status_values": [
