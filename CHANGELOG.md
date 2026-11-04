@@ -2,7 +2,7 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
-## Unreleased
+## 0.6.3 — 2026-11-04
 
 - **Security fix in the Bash hook** (`scripts/bash_gate.py`, #36): a capture call whose path started with `-`
   (`python3 -ic<dir>/feedback.py add <<'EOF'`, and the same `triage.py record` shape) passed the capture exemption, and
