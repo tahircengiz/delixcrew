@@ -11,6 +11,7 @@
     "scripts/bash_gate.py",
     "scripts/stop_gate.py",
     "scripts/common.py",
+    "scripts/trust.py",
     ".gitleaks.toml",
     ".claude-plugin/**",
     "docs/delix/delix.json"
