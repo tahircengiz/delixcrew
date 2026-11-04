@@ -287,7 +287,9 @@ work. Re-running `apply` after a failed step does only the steps still missing.
 
 **What blocks a comment** (`VERDICT: BLOCKED: <reason>`, `preview` exits 4, no command is given): the issue changed
 since it was triaged; an `@` mention, HTML or a character reference in the reason or questions; invisible characters; a
-`gitleaks` finding, or `gitleaks` missing or failing; a 32+ character opaque string. The comment is built only from the recorded reason, questions and
+`gitleaks` finding, or `gitleaks` missing or failing; a 32+ character opaque string; a feedback `config.json` (your
+`--terms`) that is there but not a readable JSON object (malformed, over 1 MiB or 32 levels deep, not a regular file),
+so the comment is never redacted without your terms. The comment is built only from the recorded reason, questions and
 duplicate number, never from the issue text.
 
 **From issue to work.** `/delixcrew:start #12` takes only an issue triaged as `accepted` whose title and body are

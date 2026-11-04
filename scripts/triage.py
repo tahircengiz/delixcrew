@@ -303,9 +303,10 @@ def build(n, rec, live_sha):
     if decision == "duplicate":
         parts += ["", "Duplicate of #%d" % rec["duplicate_of"]]
     raw = "\n".join(parts)
-    term_re = term_regex(set(load_config()["extra_terms"]) | local_terms())
+    config = load_config(strict=True)  # None: config.json is there but unusable; never redact without its extra_terms
+    term_re = term_regex(set(config["extra_terms"] if config else ()) | local_terms())
     comment = sanitize(raw, term_re)
-    reasons = []
+    reasons = [] if config else ["feedback config.json unreadable; fix it so its extra_terms apply"]
     if live_sha != rec["issue_sha"]:
         reasons.append("issue changed since triage; triage again")
     for r in (gitleaks(unicodedata.normalize("NFKC", raw)), gitleaks(comment)):

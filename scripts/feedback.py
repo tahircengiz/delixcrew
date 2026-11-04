@@ -168,9 +168,21 @@ def ensure_queue():
     os.makedirs(queue_dir(), mode=0o700, exist_ok=True)
 
 
-def load_config():
-    c = read_json(os.path.join(queue_dir(), "config.json"))
+def load_config(strict=False):
+    """The config, or the defaults when config.json is missing or not a readable JSON object. strict (triage): None
+    instead of the defaults when config.json is there but unusable, so the caller fails closed rather than redact
+    without the user's extra_terms."""
+    path = os.path.join(queue_dir(), "config.json")
+    c = read_json(path)
     if not isinstance(c, dict):
+        if strict:
+            try:
+                os.lstat(path)
+                return None  # there, but unusable
+            except FileNotFoundError:
+                pass  # missing: the defaults, as before
+            except OSError:
+                return None  # cannot tell: fail closed
         return {"enabled": False, "extra_terms": []}
     terms = c.get("extra_terms")
     return {"enabled": c.get("enabled") is True,
