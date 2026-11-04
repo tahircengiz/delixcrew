@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-04T16:32:00Z",
+  "updated": "2026-11-04T16:39:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -213,7 +213,8 @@
       },
       "qa": "ACCEPT",
       "security": "CLEAN",
-      "cost_usd": null
+      "cost_usd": null,
+      "resolution": "merged f7969f3"
     }
   ],
   "archive": [
