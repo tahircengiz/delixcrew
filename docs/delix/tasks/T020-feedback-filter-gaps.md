@@ -6,6 +6,8 @@
 
 > 🔐 Tier 3: `sanitize()` filters text published on a public repo (issue body, triage comment; SPEC §6). The lead adds the Approved line after the human says "yes".
 
+**🔐 Approved:** 2026-11-04 tahircengiz
+
 **Goal (1 sentence):** `sanitize()` redacts the path or port after a host, IP, e-mail or MAC address, and a plain-text `github.com/…` path outside the owner allowlist. It also recognises IPs next to `_` and IPv4 with leading zeros. `build()` blocks characters outside the K133 allowlist as `invisible character` and never crashes on a lone surrogate, and `cmd_add`/`get_record` accept only ids that pass `ID_RE.fullmatch`. · **Spec:** `docs/delix/SPEC.md#REQ-1` … `#REQ-6`; §4, §6; K159–K163, K165, K168–K172
 
 ## Files
