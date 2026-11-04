@@ -577,6 +577,32 @@ merge etti (`9f3c7fb`, `--match-head-commit`) ve `v0.6.3` etiketini merge commit
 satırı `CHANGELOG (Unreleased)` diyor, T032 madde 8'e. Kullanıcıda kalan: GHSA-r43g-fqh7-qv2h'de patched version 0.6.3 ve
 yayın; plugin güncellemesinden sonra her reponun ana checkout'unda bir kez `trust.py allow`.
 
+## 13. Spec C: board görünürlüğü (2026-11-04, `docs/delix/specs/C-board-visibility.md`; wave 7 incelemede)
+
+Kaynak: kullanıcı isteği (sohbet, 2026-11-04): her ajanın dalı ve worktree'si, kimin kimi gönderip incelediği, onay bekleyen
+ve merge'e hazır işler, git işleri board'da. T029 `scripts/board.py` (derive, Git actions), T030 delix-board paneli, T031 lead
+skill'leri ledger yazar, T032 doküman ve site (wave 9). 🔐 T033 0.6.3 sürümü araya girdi (wave 8, §12 sonu).
+
+| # | Adım | Durum |
+|---|---|---|
+| 13.1 | Spec (grill K240–K243), architect incelemesi, kapı 1; kartlar T029–T032, parite fixture'ı | ✔ 2026-11-04 |
+| 13.2 | T031 PR #59 (`3812e01`), 0 tur: qa ACCEPT, security CLEAN (1 Low) | ◐ kapı 2, merge kullanıcıda |
+| 13.3 | T029 PR #60 (`43736e4`), 1 tur: Medium (STATE alanındaki CR bash fence açıyordu) lead'de üretildi ve prototiplendi; tur 2 qa ACCEPT, security bulgusu Low sayıldı (K269) | ◐ kapı 2, merge kullanıcıda |
+| 13.4 | T030 PR #62 (`5dd8985`), 1 tur: Medium (`\s+$` karesel, ×4 ölçüldü) prototiplendi; tur 2 qa ACCEPT_WITH_NOTES, security CLEAN | ◐ kapı 2, merge kullanıcıda |
+| 13.5 | T032 doküman ve site (wave 9; delix-board 0.1.5) | ◻ K262'den sonra |
+| 13.6 | Kapanış | ◻ |
+
+**Açık iş: K262 takip kartı (T032'den, yani delix-board 0.1.5'ten önce merge edilir):**
+- [Orta, tasarım] Panel kaynağı (`chooseRoot`) kartsız worktree'lerdeki en yeni STATE. Sahte bir `qa ACCEPT` kaydı incelenmemiş
+  bir PR için "Merge'e hazır" ve merge komutu üretir; lead, board.py'yi o worktree'den çalıştırarak gösterdi. Spec revizyonu
+  gerekir: ledger'a yalnız `origin/<default>` STATE'inden güvenmek ya da merge komutunu yalnız kendi kökü kaynakken göstermek.
+- [Low] `git status` için `--no-optional-locks` (iki yüzey, spec §4 argv); STATE'teki `spec`/kart `file` yolunun kapsam, normal
+  dosya ve boyut denetimi; `worktree list --porcelain` `-z` olmadan blok taklidi (iki yüzey, spec R2); board listelerinde
+  girintili kod bloğu ve `reset`/`clean` dal adı; panelde `/\/+$/` ve main'deki karesel regex'ler, terminalde ESC/C0.
+- T031 Low ve notları: review SKILL.md:46 adım 1 SHA'sı; close `merged`'i yalnız PR `MERGED` iken; dispatch `branch`'i
+  `gh pr view`'dan. P2'ler: `_pr("#0")`, derive hata verince kapı kaybı, dar panelde not kesilmesi, `byCode` UTF-16,
+  `core.fsmonitor=false` sertleştirmesi.
+
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
 - [Orta] Rol oturumları paralel çalışırken aynı dosyaya dokunma; görev bölme bunu bağımlılık olarak çözmeli.
