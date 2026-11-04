@@ -99,7 +99,7 @@ Subagents (18: scout, architect, qa, security): output 821K, cache read 13.9M, c
 
 **No single-session baseline** exists for this feature.
 
-## Feedback süzgeci kalan açıklar (closed 2026-11-04; SPEC `docs/delix/SPEC.md`, cards T020–T021)
+## Feedback süzgeci kalan açıklar (closed 2026-11-04; SPEC `docs/delix/archive/0.6.2-feedback-filter-gaps/SPEC.md`, cards T020–T021)
 
 Source: `STATE.json`, `gh pr view` (createdAt → mergedAt), the session transcripts (`message.usage`, summed per
 assistant message, not deduplicated). Session cost in USD: not measured.

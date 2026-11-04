@@ -1,52 +1,26 @@
 {
   "spec": "docs/delix/SPEC.md",
   "size": "M",
-  "updated": "2026-11-04T12:10:27Z",
+  "updated": "2026-11-04T14:00:00Z",
   "env_owner": null,
   "waves": [
-    {
-      "wave": 1,
-      "cards": [
-        "T020"
-      ],
-      "note": "SPEC feedback filter gaps (gate 1 2026-11-04, K159-K172). 🔐: Approved line before dispatch; interactive session."
-    },
-    {
-      "wave": 2,
-      "cards": [
-        "T021"
-      ],
-      "note": "after T020 merged (claim check runs on merged main code). Tier 1 docs; fill <T020 merge sha> in T021.dispatch.md."
-    },
     {
       "wave": 3,
       "cards": [
         "T022"
       ],
       "note": "issue #10 (accepted), size S, gate 1 = card approval. Docs only; no site change, no version bump."
+    },
+    {
+      "wave": 1,
+      "cards": [
+        "T023",
+        "T024"
+      ],
+      "note": "SPEC #34-#36 (gate 1 2026-11-04, K178-K192). Parallel, no shared files (K185). Both 🔐 (K186): Approved line per card before dispatch; interactive sessions. CHANGELOG at close (lead)."
     }
   ],
   "cards": {
-    "T020": {
-      "file": "docs/delix/tasks/T020-feedback-filter-gaps.md",
-      "role": "backend",
-      "tier": 3,
-      "status": "accepted",
-      "pr": 39,
-      "rounds": 3,
-      "cost_usd": null,
-      "sha": "7b51b48"
-    },
-    "T021": {
-      "file": "docs/delix/tasks/T021-feedback-docs-sync.md",
-      "role": "docs",
-      "tier": 1,
-      "status": "accepted",
-      "pr": 43,
-      "rounds": 0,
-      "cost_usd": null,
-      "sha": "d05abf4"
-    },
     "T022": {
       "file": "docs/delix/tasks/T022-security-policy-machine-section.md",
       "role": "docs",
@@ -57,6 +31,24 @@
       "cost_usd": null,
       "issue": 10,
       "sha": "4b52a3b"
+    },
+    "T023": {
+      "file": "docs/delix/tasks/T023-confirm-prompt-recorded-accept.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
+    },
+    "T024": {
+      "file": "docs/delix/tasks/T024-bash-gate-cross-capture.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null
     }
   },
   "status_values": [
@@ -168,6 +160,7 @@
   "archive": [
     "docs/delix/archive/0.5.0-self-feeding/STATE.json",
     "docs/delix/archive/0.6.0-triage/STATE.json",
-    "docs/delix/archive/0.6.x-feedback-cleanup/STATE.json"
+    "docs/delix/archive/0.6.x-feedback-cleanup/STATE.json",
+    "docs/delix/archive/0.6.2-feedback-filter-gaps/STATE.json"
   ]
 }
