@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-04 · **Sürüm:** 0.6.2 (2026-11-04, feedback süzgeci sertleştirmesi T016–T021 ve PR #44; `SANITIZER_VERSION` 3; K177) · **Faz:** 12 kapandı: spec B #17 (Stop gate güven çapası, bash_gate düzeltmeleri) T026–T028 merge edildi, `Unreleased` (§12). §11: #34–#36 düzeltmeleri T023–T024, arşiv `docs/delix/archive/0.6.x-triage-fixes/`.
+**Son güncelleme:** 2026-11-05 · **Sürüm:** 0.6.3 (2026-11-04, Stop gate güven çapası #17 ve #34–#36 düzeltmeleri; T033, PR #61, `9f3c7fb`, etiket v0.6.3) · **Faz:** Spec C (board görünürlüğü, `docs/delix/specs/C-board-visibility.md`) wave 7 incelemede. §12: spec B #17, T026–T028. §11: #34–#36, T023–T024, arşiv `docs/delix/archive/0.6.x-triage-fixes/`.
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -530,7 +530,8 @@ gevşedi).
   bash_gate kartına).
 - SPEC §8'deki iki P2 açık kalır: triage kuralı (a) argv listesi biçimi; README.md:312-313 ifadesi.
 - GitHub Security Advisory GHSA-r43g-fqh7-qv2h GitHub'da gizli taslak (2026-11-04, kullanıcı açtı; severity low,
-  CWE-88, etkilenen 0.5.0–0.6.2, patched version boş); yayın kullanıcıda, düzeltmeyi içeren sürüm etiketlenince (K194).
+  CWE-88, etkilenen 0.5.0–0.6.2, patched version boş); düzeltmeyi içeren sürüm v0.6.3 olarak etiketlendi (`9f3c7fb`);
+  patched version ve yayın kullanıcıda (K194).
 
 ## 12. Spec B: Stop gate güven çapası ve bash_gate düzeltmeleri, #17 (2026-11-04, `docs/delix/SPEC.md` canlı, sonraki spec başında arşivlenir; kapandı, main `d9ac35b`)
 
@@ -568,6 +569,13 @@ Kararlar: `docs/delix/SPEC.md` (K199–K225) ve oturumda:
 - REQ-2 "üç satır" diyor; sembolik ya da hardlink `test-result.txt` olduğunda stderr'e 4 satır düşüyor (T026 qa P2).
 - K225: `test-result.txt` FIFO'sunda takılma ve `load_trust`'ta `st_nlink` denetimi eksik. Bunlara ek olarak T028'in 3 Low notu: README'de `cat` heredoc cümlesi, README'de K225'in etkisi, sitede K220 uyarısı.
 - T027 kartının istediği §8 canlı zsh-eval denetiminin kaydı repoda yok.
+
+**Sürüm 0.6.3 (2026-11-04 UTC):** §11 ve §12'yi (#34–#36, #17) yayınlar. 🔐 T033 (kart kapı 1, kullanıcı onayı 2026-11-04):
+`plugin.json` 0.6.3, CHANGELOG `## Unreleased` → `## 0.6.3 — 2026-11-04`, dört site sayfasında 8 sürüm işareti, 12 "sonraki
+sürümle gelecek" etiketi kaldırıldı. PR #61 (`3d9a7f7`), 0 tur: qa ACCEPT, security 🔐 HUMAN_APPROVAL (bulgu yok); kullanıcı
+merge etti (`9f3c7fb`, `--match-head-commit`) ve `v0.6.3` etiketini merge commit'ine koydu. P2: `site/index.html:489` Kaynak
+satırı `CHANGELOG (Unreleased)` diyor, T032 madde 8'e. Kullanıcıda kalan: GHSA-r43g-fqh7-qv2h'de patched version 0.6.3 ve
+yayın; plugin güncellemesinden sonra her reponun ana checkout'unda bir kez `trust.py allow`.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

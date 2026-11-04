@@ -139,7 +139,7 @@
           "round": 1,
           "sha": "3423549aeba709d6893b39497b5836975e319865",
           "verdict": "ACCEPT",
-          "at": "2026-11-04T21:27:00Z"
+          "at": "2026-11-04T21:23:03Z"
         },
         {
           "role": "security",
@@ -147,7 +147,7 @@
           "round": 1,
           "sha": "3423549aeba709d6893b39497b5836975e319865",
           "verdict": "FIX",
-          "at": "2026-11-04T21:27:00Z"
+          "at": "2026-11-04T21:23:03Z"
         },
         {
           "role": "implementer",
@@ -155,7 +155,7 @@
           "round": 1,
           "sha": null,
           "verdict": null,
-          "at": "2026-11-04T21:27:00Z",
+          "at": "2026-11-04T21:23:03Z",
           "branch": "claude/xenodochial-goldwasser-185cc2",
           "session": "t029-board-py-ajanlar-ku"
         }
@@ -165,8 +165,8 @@
       "file": "docs/delix/tasks/T030-board-pane-derive.md",
       "role": "frontend",
       "tier": 2,
-      "status": "in_progress",
-      "pr": null,
+      "status": "in_review",
+      "pr": 62,
       "rounds": 0,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
@@ -235,7 +235,7 @@
       "file": "docs/delix/tasks/T033-release-0-6-3.md",
       "role": "docs",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 61,
       "rounds": 0,
       "cost_usd": null,
@@ -267,7 +267,12 @@
           "verdict": "🔐 HUMAN_APPROVAL",
           "at": "2026-11-04T21:11:10Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "9f3c7fb5759d7318f47866af09d1ddf585bcd25b",
+        "head": "3d9a7f79ee3fd3a84de1f230b15ca668d69bcf62",
+        "at": "2026-11-04T21:25:39Z"
+      }
     }
   },
   "status_values": [
