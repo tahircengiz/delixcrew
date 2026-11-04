@@ -117,8 +117,8 @@
       "file": "docs/delix/tasks/T029-board-derive-git-actions.md",
       "role": "backend",
       "tier": 2,
-      "status": "in_progress",
-      "pr": null,
+      "status": "in_review",
+      "pr": 60,
       "rounds": 0,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
@@ -209,11 +209,39 @@
       "file": "docs/delix/tasks/T033-release-0-6-3.md",
       "role": "docs",
       "tier": 3,
-      "status": "open",
-      "pr": null,
+      "status": "in_review",
+      "pr": 61,
       "rounds": 0,
       "cost_usd": null,
-      "spec": null
+      "spec": null,
+      "agents": [
+        {
+          "role": "implementer",
+          "by": "claude/spec-c-board",
+          "round": 0,
+          "sha": null,
+          "verdict": null,
+          "at": "2026-11-04T21:11:10Z",
+          "branch": "claude/relaxed-ramanujan-88fa5d",
+          "session": "t033-s-r-m-0-6-3-s-r-m-c"
+        },
+        {
+          "role": "qa",
+          "by": "claude/spec-c-board",
+          "round": 1,
+          "sha": "3d9a7f79ee3fd3a84de1f230b15ca668d69bcf62",
+          "verdict": "ACCEPT",
+          "at": "2026-11-04T21:11:10Z"
+        },
+        {
+          "role": "security",
+          "by": "claude/spec-c-board",
+          "round": 1,
+          "sha": "3d9a7f79ee3fd3a84de1f230b15ca668d69bcf62",
+          "verdict": "🔐 HUMAN_APPROVAL",
+          "at": "2026-11-04T21:11:10Z"
+        }
+      ]
     }
   },
   "status_values": [

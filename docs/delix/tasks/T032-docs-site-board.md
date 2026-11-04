@@ -8,7 +8,7 @@
 
 **Goal (1 sentence):** The docs and the site describe the merged T029–T031 behaviour, and delix-board's version becomes 0.1.5 while the root version stays unchanged. · **Spec:** `docs/delix/specs/C-board-visibility.md#REQ-1`–`#REQ-6`; §6 (Known limits); K245, K247, K259
 
-**Docs/site:** this card is the update. The site is affected because `site/usage.html` line 124 describes `/delixcrew:status` output and its Known limits list mirrors README Known limits (CLAUDE.md: README Flow and Known limits). `site/index.html` has no status or board claim, so it is not affected.
+**Docs/site:** this card is the update. The site is affected because `site/usage.html` line 124 describes `/delixcrew:status` output and its Known limits list mirrors README Known limits (CLAUDE.md: README Flow and Known limits). `site/index.html` and `site/tr/index.html` have no status or board claim; they change only in their line 489 Source / Kaynak line, which still cites `CHANGELOG (Unreleased)` after the 0.6.3 release (T033 review, P2).
 
 ## Files
 - Modify: `docs/spec/delix-board.md` (§4 table after line 38 and lines 54–56; §6 lines 88–95 and 101–104; §8 lines 139–141)
@@ -18,6 +18,8 @@
 - Modify: `README.tr.md` (line 74; line 91; new paragraph right before `## Lisans`)
 - Modify: `site/usage.html` (line 124; Known limits `ul`: new `li` after line 224)
 - Modify: `site/tr/usage.html` (the same elements)
+- Modify: `site/index.html` (line 489, Source line only)
+- Modify: `site/tr/index.html` (line 489, Kaynak line only)
 
 ## Edit anchors
 Base: main after T029, T030, T031, **Spec B's T028** (merged, 429e79b) **and T033** (0.6.3 release, wave 8) merge. T028 edits README Known limits after line 339 and `site/usage.html` lines 95, 104, 229–237; T033 changes the `data-version` marks to 0.6.3 and removes the 12 "(coming in the next release)" / "(sonraki sürümle gelecek)" labels, so the labels this card adds are the only ones on the site. Line numbers are from ad27168; the lead refreshes them at dispatch; match the content. Quote section names, commands and messages from the merged code byte for byte.
@@ -50,6 +52,7 @@ Base: main after T029, T030, T031, **Spec B's T028** (merged, 429e79b) **and T03
    - After line 224, add `<li><code>/delixcrew:status</code> and delix-board use no network: remote branch data is as of your last <code>git fetch</code>. No hook stops the lead from running <code>gh pr merge</code> itself; that rule is skill text (coming in the next release).</li>`.
    - Source lines 130 and 237 already name README.md (Flow) and README.md (Known limits); leave them.
 7. `site/tr/usage.html`: the same two elements in Turkish, with "(sonraki sürümle gelecek)".
+8. `site/index.html` and `site/tr/index.html` line 489: in the Source / Kaynak line, `CHANGELOG (Unreleased)` becomes `CHANGELOG 0.6.3`. Nothing else on these two pages changes.
 
 ## Interfaces
 - Consumed (merged T029–T031; quote exactly): section names, the line "You run these with Desktop's Run button; the lead never runs them.", the command forms, the git argv list, and the panel headings `Leads`, `Ajanlar`, `Seni bekliyor`, `Merge'e hazır`, `Git işleri`.
@@ -77,7 +80,7 @@ Base: main after T029, T030, T031, **Spec B's T028** (merged, 429e79b) **and T03
 - `git diff origin/main -- site | grep -c 'data-version'` → `0`.
 - `grep -cF 'match-head-commit' README.md README.tr.md` → each ≥ 1.
 - `grep -cF 'coming in the next release' site/usage.html` equals `grep -cF 'sonraki sürümle gelecek' site/tr/usage.html`.
-- `git diff --stat origin/main` → only the 7 files.
+- `git diff --stat origin/main` → only the 9 files.
 
 ## Review Focus
 - Every quoted name and command matches the merged code.
@@ -86,7 +89,7 @@ Base: main after T029, T030, T031, **Spec B's T028** (merged, 429e79b) **and T03
 - The root version and every `data-version` mark are unchanged.
 
 ## Don'ts
-- Do not touch `scripts/**`, `plugins/delix-board/hooks/**`, `plugins/delix-board/tests/**`, `tests/**`, `skills/**`, `.claude-plugin/**` (root), `CHANGELOG.md` (written at `/delixcrew:close`), or `site/index.html`.
+- Do not touch `scripts/**`, `plugins/delix-board/hooks/**`, `plugins/delix-board/tests/**`, `tests/**`, `skills/**`, `.claude-plugin/**` (root), or `CHANGELOG.md` (written at `/delixcrew:close`). On `site/index.html` and `site/tr/index.html` change only item 8.
 - Claim nothing the merged code does not do. If they disagree, write `NEEDS_CONTEXT`.
 
 ## Report contract

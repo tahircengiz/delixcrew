@@ -71,4 +71,5 @@ Merge sonrası (kullanıcı):
 **Docs/site:** this card is the site update the CLAUDE.md version rule asks for.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 1 (3d9a7f7, 2026-11-04): deterministic gates pass (site_tests 0 ✘, full suite 898 ✔ 0 ✘, validate passes; 22 changed lines = 12 labels + 9 version + 1 heading, nothing else). qa `ACCEPT`, security `🔐 HUMAN_APPROVAL` (no finding; protected path is the version value only).
+- P2 (no fix here): `site/index.html:489` and `site/tr/index.html:489` Source / Kaynak lines still cite `CHANGELOG (Unreleased)`, which this release renames to `0.6.3`. Moved to T032 (Edit anchors item 8).
