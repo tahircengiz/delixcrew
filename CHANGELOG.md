@@ -20,6 +20,22 @@ Earlier versions: git history and the [v0.2.0 release](https://github.com/tahirc
   valid local `accept` record for the live issue text exists, stderr says the issue is recorded locally but not
   applied and gives the `preview` command to run from your own terminal. A local record never counts as acceptance;
   `/delixcrew:start` shows the line as it is.
+- **Stop gate commands need your approval** (#17): the Stop gate runs `test_command` and `extra_checks` from
+  `docs/delix/delix.json` only when you approved that exact list for the repository (its `git_common_dir`, identified
+  on the file system and never through a symlink, and a SHA-256 of the list) with `trust.py allow` from your own
+  terminal, typing `TRUST <hash>`. Worktrees of an approved checkout inherit the approval; a changed list needs a new
+  one. Without approval it runs nothing, writes `[not run: commands not approved, hash <h12>]` to
+  `.delix/test-result.txt`, prints the command and stops the turn once; the implementer writes `BLOCKED`. Approvals
+  live in `~/.claude/delixcrew/trust.json` (directory `0700`, file `0600`); to withdraw one, delete its object from
+  `entries`. Migration: after updating, run `python3 <plugin dir>/scripts/trust.py allow` once in each repository's
+  main checkout.
+- **One `cat` heredoc is checked on its first line only** (K202, K204): exactly one `cat > <path> <<'EOF'` call (`>>`
+  too, a quoted delimiter, nothing after the closing line, a path outside `~/.claude/delixcrew/`) gets the same
+  first-line check as one `feedback.py add` or `triage.py record` heredoc, and one capture call now also skips the
+  `gh` rules for its body. The trust record rule and the protected-path redirect check still see the full text.
+- **Repository settings writes get their own message** (REQ-6): a `gh api` write aimed at this repository that names
+  none of `issues`, `labels` or `graphql` is denied with
+  `delixcrew: writes to the delixcrew GitHub repository (settings, rulesets, security) run only from the user's own terminal`.
 
 ## 0.6.2 — 2026-11-04
 

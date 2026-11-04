@@ -33,6 +33,11 @@ full plan is passed.**
 
 ## 4. Open the sessions (in wave order)
 One line per card for the user: card, role, tier, how to open it.
+- **Stop gate approval (once per repository):** before the first session, the user runs
+  `python3 <plugin root>/scripts/trust.py allow` in the main checkout, in their own terminal, and types `TRUST <hash>`.
+  Give the command with the plugin root written out (`${CLAUDE_PLUGIN_ROOT}`); never run it yourself, because the Bash
+  hook denies it. Worktrees inherit the approval. A card whose branch changes `test_command` or `extra_checks` needs a
+  new approval from its worktree.
 - **Claude Desktop (Code tab):** if the `start_session` tool exists, `use_worktree: true`, `context: fresh`, prompt =
   the dispatch file content; `initiation: user_asked` only when the user asked in this chat to open the sessions,
   otherwise (and always when this lead was itself started by another session, where the app refuses a start)
