@@ -18,6 +18,13 @@
         "T024"
       ],
       "note": "SPEC #34-#36 (gate 1 2026-11-04, K178-K192). Parallel, no shared files (K185). Both 🔐 (K186): Approved line per card before dispatch; interactive sessions. CHANGELOG at close (lead)."
+    },
+    {
+      "wave": 4,
+      "cards": [
+        "T025"
+      ],
+      "note": "issue #9 (accepted), size S, gate 1 = card approval. 🔐 .github/**; rulesets applied by the user from their own terminal (owner bypass, K-T025-1)."
     }
   ],
   "cards": {
@@ -49,6 +56,16 @@
       "pr": null,
       "rounds": 0,
       "cost_usd": null
+    },
+    "T025": {
+      "file": "docs/delix/tasks/T025-dependabot-main-rulesets.md",
+      "role": "devops",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "issue": 9
     }
   },
   "status_values": [
