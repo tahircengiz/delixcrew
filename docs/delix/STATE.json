@@ -117,7 +117,7 @@
       "file": "docs/delix/tasks/T029-board-derive-git-actions.md",
       "role": "backend",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 60,
       "rounds": 1,
       "cost_usd": null,
@@ -175,13 +175,18 @@
           "verdict": "FIX",
           "at": "2026-11-04T21:44:00Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "234d014513a6800ca9c43284e120748bccfc4f35",
+        "head": "43736e40eb32c6aca6e16711e35175ab679847ae",
+        "at": "2026-11-05T04:24:08Z"
+      }
     },
     "T030": {
       "file": "docs/delix/tasks/T030-board-pane-derive.md",
       "role": "frontend",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 62,
       "rounds": 1,
       "cost_usd": null,
@@ -239,13 +244,18 @@
           "verdict": "CLEAN",
           "at": "2026-11-04T21:59:41Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "c64374337a6b98321188a051078898c542eaf0e2",
+        "head": "5dd89853a2ab6b4d939ad76d97895b2ee9e1351c",
+        "at": "2026-11-05T04:24:18Z"
+      }
     },
     "T031": {
       "file": "docs/delix/tasks/T031-ledger-skills.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 59,
       "rounds": 0,
       "cost_usd": null,
@@ -277,7 +287,12 @@
           "verdict": "CLEAN",
           "at": "2026-11-04T20:57:05Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "348de66b3c962562f76ec2de423182720a628b61",
+        "head": "3812e018ab3b12bca4e4876f08353796e7bac3a4",
+        "at": "2026-11-05T04:23:56Z"
+      }
     },
     "T032": {
       "file": "docs/delix/tasks/T032-docs-site-board.md",
