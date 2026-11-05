@@ -42,6 +42,11 @@ const GATE: Record<string, { icon: IconName; color: string; label: string }> = {
 
 const shortTime = (iso: string | null) => (iso ? iso.replace('T', ' ').replace(/:\d{2}(\.\d+)?([+-]\d{2}:\d{2}|Z)?$/, '') : '-')
 
+/** Seconds since the epoch as `YYYY-MM-DD HH:MM UTC`. */
+const utcMinute = (seconds: number) => `${new Date(seconds * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC`
+
+const base = (p: string) => p.replace(/\/+$/, '').split('/').pop() ?? p
+
 export type Ctx = {
   k: Kit
   snap: Snapshot | null
@@ -62,6 +67,7 @@ function header($: EngineInterface, { k, snap, view }: Ctx): RenderElement {
         {snap?.updated ? <Text dimColor size="caption">STATE {shortTime(snap.updated)}</Text> : null}
       </Box>
       {snap?.source ? <Text dimColor size="caption">{cut(`kaynak: ${snap.source} worktree'i`, k.cols)}</Text> : null}
+      {snap?.isDelix ? <Text dimColor size="caption">{snap.fetchedAt === 'never fetched' ? 'fetch yok' : `son fetch: ${utcMinute(snap.fetchedAt)}`}</Text> : null}
       <Box flexDirection="row" gap={1} flexWrap="wrap">
         {VIEWS.map((v, i) => (
           <Button
@@ -137,6 +143,93 @@ function cardRow($: EngineInterface, { k }: Ctx, c: Card): RenderElement {
   )
 }
 
+function sectionHead(k: Kit, icon: IconName, color: string, title: string, count?: number): RenderElement {
+  const { Box, Text } = k
+  return (
+    <Box flexDirection="row" gap={1} alignItems="center">
+      {k.icon(icon, color)}
+      <Text weight="semibold">{title}</Text>
+      {count === undefined ? null : <Text dimColor>{count}</Text>}
+    </Box>
+  )
+}
+
+const ROLE_COLOR: Record<string, string> = { lead: ACCENT, implementer: MERGE, other: MUTED }
+
+/** Spec C: leads, agents, what waits on the user, what is ready to merge, and the git actions as text the user runs. */
+function agentSections(k: Kit, snap: Snapshot): RenderElement {
+  const { Box, Text } = k
+  const w = Math.max(10, k.cols - 2)
+  const { waiting, ready } = snap.queue
+  return (
+    <Box flexDirection="column" gap={1}>
+      <Box flexDirection="column">
+        {sectionHead(k, 'board', ACCENT, 'Leads', snap.leads.length)}
+        {snap.leads.map(l => {
+          const name = `${l.main ? 'ana checkout' : base(l.path)}${l.source ? ' (kaynak)' : ''}`
+          const rest = ` · ${l.branch ?? '-'} · ${l.spec_title ?? '-'} · açık ${l.open} · bekleyen ${l.waiting} · hazır ${l.ready}`
+          return (
+            <Text>
+              <Text weight="semibold">{cut(name, 32)}</Text>
+              <Text dimColor>{cut(rest, Math.max(8, w - Math.min(32, name.length) - (l.stale ? 8 : 0)))}</Text>
+              {l.stale ? <Text color="warning"> · stale</Text> : null}
+            </Text>
+          )
+        })}
+      </Box>
+
+      <Box flexDirection="column">
+        {sectionHead(k, 'users', ACCENT, 'Ajanlar', snap.agents.length)}
+        {snap.agents.map(a => {
+          const rest = ` · ${base(a.path)} · ${a.branch ?? 'detached'} · ${a.upstream} · ${a.lands}`
+          const dirty = a.uncommitted === 0 ? '' : ` · commit'lenmemiş ${a.uncommitted}`
+          return (
+            <Text>
+              <Text color={ROLE_COLOR[a.role.split(' ')[0] ?? ''] ?? MUTED}>{a.role}</Text>
+              <Text dimColor>{cut(rest, Math.max(8, w - a.role.length - dirty.length))}</Text>
+              {dirty ? <Text color="warning">{dirty}</Text> : null}
+            </Text>
+          )
+        })}
+      </Box>
+
+      <Box flexDirection="column">
+        {sectionHead(k, waiting.length ? 'alert' : 'check', waiting.length ? WARN : GOOD, 'Seni bekliyor', waiting.length)}
+        {waiting.length === 0 ? <Text dimColor>Bekleyen yok.</Text> : null}
+        {waiting.map(e => (
+          <Text>
+            <Text weight="semibold">{cut(e.card ?? `${e.verification ?? '?'} (doğrulama)`, 32)}</Text>
+            <Text color={e.reason === 'ready to merge' ? MERGE : WARN}> · {e.reason}</Text>
+          </Text>
+        ))}
+      </Box>
+
+      <Box flexDirection="column">
+        {sectionHead(k, 'merge', MERGE, "Merge'e hazır", ready.length)}
+        {ready.length === 0 ? <Text dimColor>Hazır kart yok.</Text> : null}
+        {ready.map(r => (
+          <Text>
+            <Text weight="semibold">{r.card}</Text>
+            <Text dimColor> · PR #{r.pr} · @{r.sha?.slice(0, 7) ?? '-'}</Text>
+          </Text>
+        ))}
+      </Box>
+
+      <Box flexDirection="column">
+        {sectionHead(k, 'card', ACCENT, 'Git işleri', snap.actions.length)}
+        {snap.actions.length === 0 ? <Text dimColor>Bekleyen git işi yok.</Text> : null}
+        {snap.actions.map(a => (
+          <Box flexDirection="column">
+            <Text dimColor size="caption">{cut(`${a.kind} · ${a.target}`, w)}</Text>
+            {a.command !== null ? <Text mono>{a.command}</Text> : <Text color="warning">{cut(a.note, w)}</Text>}
+          </Box>
+        ))}
+        <Text dimColor size="caption">Komutları sen çalıştırırsın; panel çalıştırmaz.</Text>
+      </Box>
+    </Box>
+  )
+}
+
 function pano($: EngineInterface, ctx: Ctx, snap: Snapshot): RenderElement {
   const { k } = ctx
   const { Box, Text } = k
@@ -194,6 +287,8 @@ function pano($: EngineInterface, ctx: Ctx, snap: Snapshot): RenderElement {
         ))}
         {snap.envOwner ? <Text color="warning">Test ortamı kilitli: {snap.envOwner}</Text> : null}
       </Box>
+
+      {agentSections(k, snap)}
 
       {[...byWave.entries()].map(([w, cards]) => (
         <Box flexDirection="column">
@@ -357,6 +452,23 @@ function kart($: EngineInterface, ctx: Ctx, snap: Snapshot): RenderElement {
           <Text dimColor>security </Text>
           <Text color={verdictTone(c.security)}>{cut(c.security ?? 'yok', Math.max(20, k.cols - 20))}</Text>
         </Text>
+      </Box>
+
+      <Box flexDirection="column">
+        {sectionHead(k, 'users', ACCENT, 'Kayıt', c.agents.length)}
+        {c.agents.length === 0 ? <Text dimColor>Kayıt yok.</Text> : null}
+        {c.agents.map(a => {
+          if (a.role === 'implementer') return <Text dimColor>{cut(`implementer · by ${a.by ?? '-'} · ${a.branch ?? '-'} · ${a.session ?? '-'}`, w)}</Text>
+          const round = cut(`${a.role} r${a.round ?? '-'} @${a.sha?.slice(0, 7) ?? '-'} `, 32)
+          const verdict = cut(a.verdict ?? '-', 24)
+          return (
+            <Text>
+              <Text dimColor>{round}</Text>
+              <Text color={verdictTone(a.verdict)}>{verdict}</Text>
+              <Text dimColor>{cut(` · by ${a.by ?? '-'}`, Math.max(8, w - round.length - verdict.length))}</Text>
+            </Text>
+          )
+        })}
       </Box>
 
       <Box flexDirection="column">
