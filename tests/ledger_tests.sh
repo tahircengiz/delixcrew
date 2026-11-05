@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Spec C REQ-2: lead skills carry the ledger record shapes; templates/STATE.json is valid JSON with the two fields. Run: bash tests/ledger_tests.sh
+set -u
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"; FAIL=0
+ok(){ echo "✔ $1"; }; bad(){ echo "✘ $1"; FAIL=1; }
+IMPL='{"role": "implementer", "by": "<lead branch>", "round": 0, "sha": null, "verdict": null, "at": "<ISO-8601 Z>", "branch": "<name>"|null, "session": "<Desktop name>"|"-p"|null}'
+REV='{"role": "qa"|"security", "by": "<lead branch>", "round": <n>, "sha": "<40 hex>", "verdict": "<token>", "at": "<ISO-8601 Z>"}'
+MERGED='{"sha": "<merge commit 40 hex>", "head": "<merged PR head 40 hex>", "at": "<ISO-8601 Z>"}'
+grep -qF "$IMPL" "$ROOT/skills/dispatch/SKILL.md" && ok "dispatch: implementer record" || bad "dispatch: implementer record missing"
+grep -qF "$REV" "$ROOT/skills/review/SKILL.md" && ok "review: qa/security record" || bad "review: qa/security record missing"
+grep -qF "$MERGED" "$ROOT/skills/review/SKILL.md" && ok "review: merged record" || bad "review: merged record missing"
+grep -qF "$MERGED" "$ROOT/skills/close/SKILL.md" && ok "close: merged record" || bad "close: merged record missing"
+grep -qF 'gh pr view <n> --json mergeCommit,headRefOid' "$ROOT/skills/review/SKILL.md" && ok "review: merged source" || bad "review: gh pr view line missing"
+grep -qF 'You never run the Git actions commands yourself' "$ROOT/skills/status/SKILL.md" && ok "status: never runs Git actions" || bad "status: never-run line missing"
+python3 - "$ROOT/templates/STATE.json" <<'PYS' && ok "template: valid JSON, agents [] and merged null" || bad "template STATE.json"
+import json, sys
+c = json.load(open(sys.argv[1], encoding="utf-8"))["cards"]["T001"]
+assert c["agents"] == [] and c["merged"] is None, c
+PYS
+[ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
