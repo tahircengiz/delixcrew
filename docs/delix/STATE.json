@@ -52,9 +52,18 @@
     {
       "wave": 9,
       "cards": [
+        "T034",
+        "T035",
+        "T036"
+      ],
+      "note": "Spec C K262 follow-up (user chose A, 2026-11-11): trusted ledger from origin/<default> STATE, git hardening (K263), T029-T031 Lows. Parallel, disjoint files; all Tier 2. Fixture key raw.trusted_state added by the lead before dispatch (expected unchanged; both suites green). Release blocker for delix-board 0.1.5 (T032)."
+    },
+    {
+      "wave": 10,
+      "cards": [
         "T032"
       ],
-      "note": "Docs/site after T029, T030 and T031 merge and after T033 (0.6.3 release) merges: T033 edits site/usage.html and site/tr/usage.html first. delix-board 0.1.4 -> 0.1.5; root version unchanged. Refresh line anchors at dispatch."
+      "note": "Docs/site after wave 9 (T034-T036, K262-K263) merges; T029-T031 and T033 merged. delix-board 0.1.4 -> 0.1.5; root version unchanged. The lead rewrites the anchors at dispatch (wave 9 changes spec §4 argv, 3+3N -> 4+3N, cat-file row, Known limits)."
     }
   ],
   "cards": {
@@ -346,6 +355,39 @@
         "head": "3d9a7f79ee3fd3a84de1f230b15ca668d69bcf62",
         "at": "2026-11-04T21:25:39Z"
       }
+    },
+    "T034": {
+      "file": "docs/delix/tasks/T034-board-trusted-ledger.md",
+      "role": "backend",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md",
+      "agents": []
+    },
+    "T035": {
+      "file": "docs/delix/tasks/T035-pane-trusted-ledger.md",
+      "role": "frontend",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md",
+      "agents": []
+    },
+    "T036": {
+      "file": "docs/delix/tasks/T036-ledger-skills-followup.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md",
+      "agents": []
     }
   },
   "status_values": [
