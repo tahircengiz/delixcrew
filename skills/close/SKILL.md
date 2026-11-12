@@ -10,7 +10,8 @@ You are the `delix` lead; closing step. Spec: $ARGUMENTS (default `docs/delix/SP
 Are all cards in `STATE.json` `accepted`? If not, list them and stop (or, if the user approves leaving them out of scope,
 write that to `STATE.json`). Every `accepted` card with an `agents` list also carries `merged`
 `{"sha": "<merge commit 40 hex>", "head": "<merged PR head 40 hex>", "at": "<ISO-8601 Z>"}`; where it is missing, read
-it with `gh pr view <n> --json mergeCommit,headRefOid` and write it.
+it with `gh pr view <n> --json state,mergeCommit,headRefOid` and write it only when `state` is `MERGED`;
+otherwise list the card and stop.
 
 ## 2. Metrics (numbers, not claims)
 Per card: round count, `cost_usd` (from `/usage` or OTel/ccusage if available; otherwise `not measured`), cache hits
