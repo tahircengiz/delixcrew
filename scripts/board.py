@@ -232,8 +232,8 @@ def git_raw(root):
         _add_file(w, p, ".delix/card")
         _add_file(w, p, ".delix/report.md")
         if _card_id(w) is None and not _state_dirty(w["status"]):
-            r = _git(["git", "diff", "--quiet", "origin/%s...HEAD" % raw["default_branch"], "--", STATE_REL],
-                     p, codes=(0, 1))
+            r = _git(["git", "diff", "--no-ext-diff", "--quiet", "origin/%s...HEAD" % raw["default_branch"], "--",
+                      STATE_REL], p, codes=(0, 1))
             w["state_diff_exit"] = None if r is None else r[0]
     # the source STATE decides the roles (R4, R5c), so it is read even when the source is not a Leads row
     src = wts.setdefault(root, {"status": None, "state_diff_exit": None, "state_log_ct": None,
@@ -249,9 +249,9 @@ def git_raw(root):
             w["state_mtime"] = _mtime(os.path.join(p, STATE_REL))
         else:
             w["state_log_ct"] = _num((_out(["git", "log", "-1", "--format=%ct", "--", STATE_REL], p) or "").strip())
-    # §4 call 7 (R1, K262): the origin/<default> STATE, the only one that may make a card ready to merge
+    # §4 call 7 (R1, K262, K276): the origin/HEAD STATE, the only one that may make a card ready to merge
     raw["trusted_state"] = _out(["git", "--no-lazy-fetch", "cat-file", "blob",
-                                 "refs/remotes/origin/%s:%s" % (raw["default_branch"], STATE_REL)], root)
+                                 "refs/remotes/origin/HEAD:%s" % STATE_REL], root)
     return raw
 
 
@@ -545,7 +545,8 @@ def derive(raw):
     rank = {"lead": 0, "implementer": 1}
     agents.sort(key=lambda a: (rank.get(a["role"].split(" ")[0], 2), a["path"]))
 
-    tr = {(x["card"], x["pr"], x["sha"]) for x in _queue(trusted, {}, refs, card_wt)["ready"]}  # R8' TR
+    # R8' TR: T alone, no local report or worktree branch
+    tr = {(x["card"], x["pr"], x["sha"]) for x in _queue(trusted, {}, refs, {})["ready"]}
     leads = []
     lead_rows = rows[:1] + sorted((r for r in rows[1:] if r["role"] == "lead"), key=lambda r: r["b"]["path"])
     for r in lead_rows:
@@ -593,7 +594,7 @@ def derive(raw):
         c = t_cards.get(cid)  # R10': merged and the R7 branch from T's card; a card that T lacks gives none
         if not isinstance(c, dict) or not isinstance(c.get("merged"), dict):
             continue
-        br = _facts(cid, c, refs, card_wt)["branch"]
+        br = _facts(cid, c, refs, {})["branch"]
         f = refs.get("refs/heads/%s" % br) if br is not None else None
         if f and br not in checked_out and f[1] == c["merged"].get("head"):
             actions.append(_action("delete_branch", br, cid, "git branch -D %s" % br, _branch_ok(br)))

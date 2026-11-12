@@ -160,6 +160,7 @@ H="$(mktemp -d)"; H="$(cd "$H" && pwd -P)"
 git init -q --bare "$H/origin.git"; git init -q -b main "$H/r"
 mkdir -p "$H/r/docs/delix"; printf '{"spec":"docs/delix/SPEC.md","cards":{}}\n' > "$H/r/docs/delix/STATE.json"
 gc -C "$H/r" add -A && gc -C "$H/r" commit -q -m init && git -C "$H/r" remote add origin "$H/origin.git" && git -C "$H/r" push -q -u origin main 2>/dev/null
+git -C "$H/r" remote set-head origin main
 echo ".delix/" >> "$H/r/.git/info/exclude"
 # T034 3) a core.fsmonitor script in the shared config never runs
 printf '#!/bin/sh\ntouch "%s/fsmonitor-ran"\nexit 1\n' "$H" > "$H/fsmonitor.sh"; chmod +x "$H/fsmonitor.sh"
@@ -196,6 +197,23 @@ TIP="$(git -C "$H/impl" rev-parse HEAD)"
 git -C "$H/r" worktree add -q -b claude/f "$H/f" >/dev/null 2>&1
 printf '{"spec":"docs/delix/SPEC.md","cards":{"T001":{"tier":1,"status":"in_review","pr":7,"agents":[{"role":"implementer","by":"claude/f","round":0,"sha":null,"verdict":null,"at":"2026-11-11T08:00:00Z","branch":"claude/impl","session":null},{"role":"qa","by":"claude/f","round":1,"sha":"%s","verdict":"ACCEPT","at":"2026-11-11T09:00:00Z"}]}}}\n' "$TIP" > "$H/f/docs/delix/STATE.json"
 (cd "$H/f" && python3 "$S/board.py" --json) > "$H/out1a.json"
+# T034 fix round 1) K276: a card-less worktree that names its own branch as default_branch and pushes a forged STATE there gets no merge
+printf '{"default_branch":"claude/f"}\n' > "$H/f/docs/delix/delix.json"
+gc -C "$H/f" add -A && gc -C "$H/f" commit -q -m forged && git -C "$H/f" push -q -u origin claude/f 2>/dev/null
+(cd "$H/f" && python3 "$S/board.py" --json) > "$H/out1c.json"
+python3 - "$H/out1c.json" <<'PYS' && ok "T034 K276: default_branch in the worktree does not pick the trusted ref" || { bad "T034 K276: trusted ref taken from the worktree"; cat "$H/out1c.json"; }
+import json, sys
+d = json.load(open(sys.argv[1], encoding="utf-8"))
+assert d["queue"]["ready"] == [], d["queue"]
+assert not [x for x in d["actions"] if x["kind"] == "merge"], d["actions"]
+PYS
+# T034 fix round 1) K275: diff.external with diff.trustExitCode never runs on the STATE diff call
+printf '#!/bin/sh\ntouch "%s/extdiff-ran"\nexit 1\n' "$H" > "$H/extdiff.sh"; chmod +x "$H/extdiff.sh"
+git -C "$H/r" config diff.external "$H/extdiff.sh"; git -C "$H/r" config diff.trustExitCode true
+(cd "$H/r" && python3 "$S/board.py" --json) > /dev/null
+git -C "$H/r" config --unset diff.external; git -C "$H/r" config --unset diff.trustExitCode
+[ ! -e "$H/extdiff-ran" ] && ok "T034 K275: external diff helper does not run" || bad "T034 K275: external diff helper ran"
+git -C "$H/f" rm -q docs/delix/delix.json && gc -C "$H/f" commit -q -m "drop delix.json"
 cp "$H/f/docs/delix/STATE.json" "$H/r/docs/delix/STATE.json" && gc -C "$H/r" commit -q -am forged && git -C "$H/r" push -q origin main 2>/dev/null
 (cd "$H/f" && python3 "$S/board.py" --json) > "$H/out1b.json"
 python3 - "$H" "$TIP" <<'PYS' && ok "T034 K262: forged STATE gives no merge; the same record on origin/main does" || { bad "T034 K262: trusted ledger"; cat "$H/out1a.json" "$H/out1b.json"; }
@@ -248,6 +266,20 @@ want = [dict(x, reason="review not on origin/main") if x == {"card": "T029", "ve
 assert got["queue"]["waiting"] == want, got["queue"]["waiting"]
 ready = {l["path"]: l["ready"] for l in got["leads"]}
 assert ready["/r/.claude/worktrees/lead-b"] == 0 and ready["/r/.claude/worktrees/lead-c"] == 0, got["leads"]
+PYS
+
+# T034 fix round 1) pure: a trusted card without pr takes no PR from the local report (R8', REQ-6 parity with the panel)
+python3 - "$S" "$J" <<'PYS' && ok "T034: a trusted card without pr is not Ready from the local report" || bad "T034: a trusted card without pr became Ready from the local report"
+import json, sys
+sys.path.insert(0, sys.argv[1])
+import board
+raw = json.load(open(sys.argv[2], encoding="utf-8"))["raw"]
+t = json.loads(raw["trusted_state"]); t["cards"]["T029"].pop("pr")
+raw["trusted_state"] = json.dumps(t)
+d = board.derive(raw)
+assert d["queue"]["ready"] == [], d["queue"]["ready"]
+assert not [a for a in d["actions"] if a["kind"] == "merge"], d["actions"]
+assert {"card": "T029", "verification": None, "reason": "review not on origin/main"} in d["queue"]["waiting"], d["queue"]["waiting"]
 PYS
 
 cd /; rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
