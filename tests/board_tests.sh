@@ -214,6 +214,26 @@ git -C "$H/r" config diff.external "$H/extdiff.sh"; git -C "$H/r" config diff.tr
 git -C "$H/r" config --unset diff.external; git -C "$H/r" config --unset diff.trustExitCode
 [ ! -e "$H/extdiff-ran" ] && ok "T034 K275: external diff helper does not run" || bad "T034 K275: external diff helper ran"
 git -C "$H/f" rm -q docs/delix/delix.json && gc -C "$H/f" commit -q -m "drop delix.json"
+# T037 A1) K277 call 6: log.showSignature + gpg.program in the shared config never run a signature program
+printf '\n' >> "$H/f/docs/delix/STATE.json" && git -C "$H/f" add docs/delix/STATE.json
+SIG="$(printf 'tree %s\nparent %s\nauthor t <t@t> 1762000000 +0000\ncommitter t <t@t> 1762000000 +0000\ngpgsig -----BEGIN PGP SIGNATURE-----\n \n x\n -----END PGP SIGNATURE-----\n\nsigned\n' "$(git -C "$H/f" write-tree)" "$(git -C "$H/f" rev-parse HEAD)" | git -C "$H/f" hash-object -t commit -w --stdin)"
+git -C "$H/f" update-ref HEAD "$SIG"
+printf '#!/bin/sh\ntouch "%s/gpg-ran"\nexit 1\n' "$H" > "$H/gpg.sh"; chmod +x "$H/gpg.sh"
+git -C "$H/r" config gpg.program "$H/gpg.sh"; git -C "$H/r" config log.showSignature true
+(cd "$H/f" && python3 "$S/board.py" --json) > /dev/null
+git -C "$H/r" config --unset gpg.program; git -C "$H/r" config --unset log.showSignature
+[ ! -e "$H/gpg-ran" ] && ok "T037 K277: log.showSignature runs no gpg.program on call 6" || bad "T037 K277: gpg.program ran on call 6"
+# T037 A2) K277 call 7: a refs/replace object in the shared .git does not change the trusted STATE
+ORIG="$(git -C "$H/r" rev-parse refs/remotes/origin/main)"
+git -C "$H/r" replace "$ORIG" "$(git -C "$H/f" rev-parse HEAD)"
+(cd "$H/f" && python3 "$S/board.py" --json) > "$H/outA2.json"
+git -C "$H/r" replace -d "$ORIG" > /dev/null
+python3 - "$H/outA2.json" <<'PYS' && ok "T037 K277: a replace ref does not make a card ready on call 7" || { bad "T037 K277: a replace ref made a card ready"; cat "$H/outA2.json"; }
+import json, sys
+d = json.load(open(sys.argv[1], encoding="utf-8"))
+assert d["queue"]["ready"] == [], d["queue"]
+assert not [x for x in d["actions"] if x["kind"] == "merge"], d["actions"]
+PYS
 cp "$H/f/docs/delix/STATE.json" "$H/r/docs/delix/STATE.json" && gc -C "$H/r" commit -q -am forged && git -C "$H/r" push -q origin main 2>/dev/null
 (cd "$H/f" && python3 "$S/board.py" --json) > "$H/out1b.json"
 python3 - "$H" "$TIP" <<'PYS' && ok "T034 K262: forged STATE gives no merge; the same record on origin/main does" || { bad "T034 K262: trusted ledger"; cat "$H/out1a.json" "$H/out1b.json"; }
@@ -226,6 +246,18 @@ assert not [x for x in a["actions"] if x["kind"] == "merge"], a["actions"]
 assert {"card": "T001", "verification": None, "reason": "review not on origin/main"} in a["queue"]["waiting"], a["queue"]
 assert b["queue"]["ready"] == [{"card": "T001", "pr": 7, "sha": tip}], b["queue"]
 assert "gh pr merge 7 --squash --match-head-commit %s" % tip in [x["command"] for x in b["actions"]], b["actions"]
+PYS
+# T037 B) K277 R8'': without refs/remotes/origin/HEAD, a branch named refs/remotes/origin/HEAD is not trusted
+git -C "$H/r" remote set-head origin -d
+git -C "$H/r" update-ref refs/heads/refs/remotes/origin/HEAD "$(git -C "$H/r" rev-parse refs/remotes/origin/main)"
+(cd "$H/f" && python3 "$S/board.py" --json) > "$H/outB.json"
+git -C "$H/r" update-ref -d refs/heads/refs/remotes/origin/HEAD; git -C "$H/r" remote set-head origin main
+python3 - "$H/outB.json" <<'PYS' && ok "T037 K277 R8'': no origin/HEAD in call 3 gives no merge" || { bad "T037 K277 R8'': a card became ready without origin/HEAD"; cat "$H/outB.json"; }
+import json, sys
+d = json.load(open(sys.argv[1], encoding="utf-8"))
+assert d["queue"]["ready"] == [], d["queue"]
+assert not [x for x in d["actions"] if x["kind"] == "merge"], d["actions"]
+assert {"card": "T001", "verification": None, "reason": "review not on origin/main"} in d["queue"]["waiting"], d["queue"]
 PYS
 # T034 5) the spec is read only as a regular file inside the worktree and up to 1 MiB; a FIFO card file is never opened
 t5(){ python3 - "$S" "$H/f" <<'PYS'
@@ -249,6 +281,25 @@ t5 && ok "T034: a FIFO card file is not opened (run ends within 20 s)" || bad "T
 rm -f "$H/f/docs/delix/fifo-card.md"
 python3 -c 'import sys; open(sys.argv[1], "w").write("# BIG\n" + "x" * (2 * 1048576) + "\n")' "$H/f/docs/delix/SPEC.md"
 t5 && ok "T034: a 2 MiB spec is not read" || bad "T034: a 2 MiB spec was read"
+# T037 C) K277 S1: collect() reads another worktree's .delix files only through _read_in (no link, no FIFO)
+mkdir -p "$H/impl/.delix"; printf 'docs/delix/tasks/T001-x.md\n' > "$H/impl/.delix/card"
+tc(){ python3 - "$S" "$H/r" "$1" <<'PYS'
+import json, subprocess, sys
+cp = subprocess.run([sys.executable, sys.argv[1] + "/board.py", "--json"], cwd=sys.argv[2],
+                    capture_output=True, text=True, timeout=20)
+assert cp.returncode == 0, cp.stderr
+d = json.loads(cp.stdout)
+if sys.argv[3] == "link":
+    rows = [c for c in d["cards"] if c["id"] == "T001"]
+    assert len(rows) == 1 and rows[0]["report_status"] is None, d["cards"]
+PYS
+}
+printf '# Report - T001\n\n**Status:** BLOCKED\n' > "$H/outside-report.md"; ln -s "$H/outside-report.md" "$H/impl/.delix/report.md"
+tc link && ok "T037 K277: a report.md symlinked outside the worktree is not read" || bad "T037 K277: a report.md symlinked outside the worktree was read"
+rm -f "$H/impl/.delix/report.md"; mkfifo "$H/impl/.delix/report.md"
+tc fifo && ok "T037 K277: a FIFO report.md is not opened (run ends within 20 s)" || bad "T037 K277: a FIFO report.md blocked the run"
+rm -f "$H/impl/.delix/report.md" "$H/impl/.delix/card"; mkfifo "$H/impl/.delix/card"
+tc fifo && ok "T037 K277: a FIFO .delix/card is not opened (run ends within 20 s)" || bad "T037 K277: a FIFO .delix/card blocked the run"
 rm -rf "$H"
 
 # T034 2) pure: an origin/main STATE without cards removes Ready, the merge and the merged-based actions (R8', R10')
@@ -280,6 +331,71 @@ d = board.derive(raw)
 assert d["queue"]["ready"] == [], d["queue"]["ready"]
 assert not [a for a in d["actions"] if a["kind"] == "merge"], d["actions"]
 assert {"card": "T029", "verification": None, "reason": "review not on origin/main"} in d["queue"]["waiting"], d["queue"]["waiting"]
+PYS
+
+# T037 D1, D2) pure R8'': call 3 without refs/remotes/origin/HEAD (line removed, or only a branch of that name) trusts nothing
+td(){ python3 - "$S" "$J" "$1" <<'PYS'
+import copy, json, sys
+sys.path.insert(0, sys.argv[1])
+import board
+f = json.load(open(sys.argv[2], encoding="utf-8"))
+raw = copy.deepcopy(f["raw"])
+lines = raw["for_each_ref"].split("\n")
+hit = [i for i, l in enumerate(lines) if l.startswith("refs/remotes/origin/HEAD\t")]
+assert len(hit) == 1, hit
+if sys.argv[3] == "removed":
+    del lines[hit[0]]
+else:
+    lines[hit[0]] = "refs/heads/" + lines[hit[0]]
+raw["for_each_ref"] = "\n".join(lines)
+got = board.derive(raw)
+assert got["actions"] == f["expected"]["actions"][0:6], json.dumps(got["actions"], ensure_ascii=False)
+assert got["queue"]["ready"] == [], got["queue"]
+want = [dict(x, reason="review not on origin/main") if x == {"card": "T029", "verification": None, "reason": "ready to merge"} else x
+        for x in f["expected"]["queue"]["waiting"]]
+assert got["queue"]["waiting"] == want, got["queue"]["waiting"]
+ready = {l["path"]: l["ready"] for l in got["leads"]}
+assert ready["/r/.claude/worktrees/lead-b"] == 0 and ready["/r/.claude/worktrees/lead-c"] == 0, got["leads"]
+PYS
+}
+td removed && ok "T037 R8'': derive without the origin/HEAD line: no Ready, no merge" || bad "T037 R8'': derive without the origin/HEAD line"
+td renamed && ok "T037 R8'': derive with only refs/heads/refs/remotes/origin/HEAD: no Ready, no merge" || bad "T037 R8'': derive with only a branch named origin/HEAD"
+
+# T037 D3) S1 _read_in: a regular file of at most 1 MiB, reached without a link, read without blocking; no fd left open
+python3 - "$S" <<'PYS' && ok "T037 S1: _read_in rules (CRLF, 1 MiB, FIFO, links, bad paths, bad UTF-8, missing)" || bad "T037 S1: _read_in rules"
+import os, shutil, signal, sys, tempfile
+sys.path.insert(0, sys.argv[1])
+import board
+signal.alarm(10)
+d = tempfile.mkdtemp()
+try:
+    def w(rel, data):
+        with open(os.path.join(d, rel), "wb") as f:
+            f.write(data)
+    os.mkdir(os.path.join(d, "sub"))
+    w("crlf.txt", b"a\r\nb"); w("cr.txt", b"a\rb"); w("max.txt", b"a" * 1048576); w("big.txt", b"a" * 1048577)
+    w("bad.txt", b"\xff"); w("f.txt", b"hello"); w("sub/f.txt", b"in sub")
+    os.mkfifo(os.path.join(d, "fifo"))
+    os.symlink("f.txt", os.path.join(d, "link"))
+    os.symlink("sub", os.path.join(d, "ld"))
+    fds = len(os.listdir("/dev/fd"))
+    assert board._read_in(d, "crlf.txt") == "a\nb"
+    assert board._read_in(d, "cr.txt") == "a\nb"
+    assert board._read_in(d, "f.txt") == "hello"
+    assert board._read_in(d, "sub/f.txt") == "in sub"
+    assert board._read_in(d, "max.txt") == "a" * 1048576
+    assert board._read_in(d, "big.txt") is None
+    assert board._read_in(d, "fifo") is None
+    assert board._read_in(d, "link") is None
+    assert board._read_in(d, "ld/f.txt") is None
+    for rel in ("../x", "/etc/hosts", "a//b", "./f", "", "a\0b", "sub/", None):
+        assert board._read_in(d, rel) is None, rel
+    assert board._read_in(d, "bad.txt") is None
+    assert board._read_in(d, "missing.txt") is None
+    assert board._read_in(d, "sub/missing.txt") is None
+    assert len(os.listdir("/dev/fd")) == fds, "an fd was left open"
+finally:
+    shutil.rmtree(d)
 PYS
 
 cd /; rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
