@@ -360,34 +360,67 @@
       "file": "docs/delix/tasks/T034-board-trusted-ledger.md",
       "role": "backend",
       "tier": 2,
-      "status": "open",
+      "status": "in_progress",
       "pr": null,
       "rounds": 0,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
-      "agents": []
+      "agents": [
+        {
+          "role": "implementer",
+          "by": "claude/spec-c-board",
+          "round": 0,
+          "sha": null,
+          "verdict": null,
+          "at": "2026-11-12T14:30:43Z",
+          "branch": "claude/awesome-ritchie-3dc745",
+          "session": "t034-board-py-g-venilir"
+        }
+      ]
     },
     "T035": {
       "file": "docs/delix/tasks/T035-pane-trusted-ledger.md",
       "role": "frontend",
       "tier": 2,
-      "status": "open",
+      "status": "in_progress",
       "pr": null,
       "rounds": 0,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
-      "agents": []
+      "agents": [
+        {
+          "role": "implementer",
+          "by": "claude/spec-c-board",
+          "round": 0,
+          "sha": null,
+          "verdict": null,
+          "at": "2026-11-12T14:30:43Z",
+          "branch": "claude/blissful-brattain-295c4d",
+          "session": "t035-panel-g-venilir-led"
+        }
+      ]
     },
     "T036": {
       "file": "docs/delix/tasks/T036-ledger-skills-followup.md",
       "role": "docs",
       "tier": 2,
-      "status": "open",
+      "status": "in_progress",
       "pr": null,
       "rounds": 0,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
-      "agents": []
+      "agents": [
+        {
+          "role": "implementer",
+          "by": "claude/spec-c-board",
+          "round": 0,
+          "sha": null,
+          "verdict": null,
+          "at": "2026-11-12T14:30:43Z",
+          "branch": "claude/elegant-fermi-72c04d",
+          "session": "t036-lead-skill-leri-sha"
+        }
+      ]
     }
   },
   "status_values": [
