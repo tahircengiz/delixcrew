@@ -360,7 +360,7 @@
       "file": "docs/delix/tasks/T034-board-trusted-ledger.md",
       "role": "backend",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 64,
       "rounds": 1,
       "cost_usd": null,
@@ -408,13 +408,18 @@
           "verdict": "CLEAN",
           "at": "2026-11-12T15:42:45Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "66f79747a14780d5bff049f458a8e95a6a7cefb4",
+        "head": "ca1374ce1cb81de3ba867a65fb1f9261af4fe044",
+        "at": "2026-11-12T16:19:30Z"
+      }
     },
     "T035": {
       "file": "docs/delix/tasks/T035-pane-trusted-ledger.md",
       "role": "frontend",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 65,
       "rounds": 1,
       "cost_usd": null,
@@ -462,7 +467,12 @@
           "verdict": "CLEAN",
           "at": "2026-11-12T15:42:45Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "704db8eb223f8d40bb4406bfe6325bd7f282523e",
+        "head": "325710b8a9421d0684108ef9d0f55aabb8b7182c",
+        "at": "2026-11-12T16:19:36Z"
+      }
     },
     "T036": {
       "file": "docs/delix/tasks/T036-ledger-skills-followup.md",
