@@ -2,7 +2,7 @@
 
 | id | size | tier | role | wave | status |
 |---|---|---|---|---|---|
-| T032 | S | 2 | docs | 10 | open |
+| T032 | S | 2 | docs | 13 | open |
 
 > Tier 2: no protected path. `plugins/delix-board/.claude-plugin/plugin.json` does not match `.claude-plugin/**`, because that pattern is anchored at the repo root (`scripts/common.py:211`); the root `.claude-plugin/plugin.json` is not touched. It is Tier 2 because it makes public claims on the site.
 

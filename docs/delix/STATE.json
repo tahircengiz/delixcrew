@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/C-board-visibility.md",
   "size": "M",
-  "updated": "2026-11-04T20:57:05Z",
+  "updated": "2026-11-12T17:11:43Z",
   "env_owner": null,
   "waves": [
     {
@@ -16,7 +16,7 @@
       "cards": [
         "T025"
       ],
-      "note": "issue #9 (accepted), size S, gate 1 = card approval. 🔐 .github/**; rulesets applied by the user from their own terminal (owner bypass, K-T025-1)."
+      "note": "issue #9 (accepted), size S, gate 1 = card approval. \ud83d\udd10 .github/**; rulesets applied by the user from their own terminal (owner bypass, K-T025-1)."
     },
     {
       "wave": 5,
@@ -24,7 +24,7 @@
         "T026",
         "T027"
       ],
-      "note": "SPEC B #17 (gate 1 2026-11-04, K199-K214). Parallel, disjoint files (K207). Both 🔐: Approved line per card before dispatch; interactive sessions."
+      "note": "SPEC B #17 (gate 1 2026-11-04, K199-K214). Parallel, disjoint files (K207). Both \ud83d\udd10: Approved line per card before dispatch; interactive sessions."
     },
     {
       "wave": 6,
@@ -47,7 +47,7 @@
       "cards": [
         "T033"
       ],
-      "note": "0.6.3 release (handed over by Spec B's lead, 2026-11-04). Size S, 🔐 Tier 3 (.claude-plugin/plugin.json), approved by the user in this lead's chat 2026-11-04. Runs in parallel with T029 and T030 (user's order); T031 starts when T033 finishes (max_parallel 3). Tag v0.6.3, GHSA publish and trust.py allow stay with the user after the merge."
+      "note": "0.6.3 release (handed over by Spec B's lead, 2026-11-04). Size S, \ud83d\udd10 Tier 3 (.claude-plugin/plugin.json), approved by the user in this lead's chat 2026-11-04. Runs in parallel with T029 and T030 (user's order); T031 starts when T033 finishes (max_parallel 3). Tag v0.6.3, GHSA publish and trust.py allow stay with the user after the merge."
     },
     {
       "wave": 9,
@@ -59,11 +59,28 @@
       "note": "Spec C K262 follow-up (user chose A, 2026-11-11): trusted ledger from origin/<default> STATE, git hardening (K263), T029-T031 Lows. Parallel, disjoint files; all Tier 2. Fixture key raw.trusted_state added by the lead before dispatch (expected unchanged; both suites green). Release blocker for delix-board 0.1.5 (T032)."
     },
     {
-      "wave": 10,
+      "wave": 11,
+      "cards": [
+        "T037",
+        "T038",
+        "T039"
+      ],
+      "note": "Spec C follow-ups (STATUS 13.6, rev 8). T037 board.py and T038 panel: K277 git hardening 2 (R-G6, R-G7, R8'') and one safe-read helper; same rule text, disjoint files, fixture unchanged. T039 review \u00a74 MERGED guard + tests/ledger_tests.sh line 13. All Tier 2, parallel."
+    },
+    {
+      "wave": 12,
+      "cards": [
+        "T040",
+        "T041"
+      ],
+      "note": "T040 F010 (design per K278; Tier 2 under design B) after T039 merges (same file skills/review/SKILL.md). T041 \ud83d\udd10 Tier 3 (scripts/bash_gate.py): implementer sessions push only their card branch, gh pr merge denied (K279); Approved line after the user's yes, interactive session the user opens."
+    },
+    {
+      "wave": 13,
       "cards": [
         "T032"
       ],
-      "note": "Docs/site after wave 9 (T034-T036, K262-K263) merges; T029-T031 and T033 merged. delix-board 0.1.4 -> 0.1.5; root version unchanged. The lead rewrites the anchors at dispatch (wave 9 changes spec §4 argv, 3+3N -> 4+3N, cat-file row, Known limits)."
+      "note": "Docs/site after waves 9, 11 and 12: waits for T037/T038 (argv in delix-board spec \u00a78 and README: --no-show-signature, --no-replace-objects, no origin/HEAD = nothing ready; 0.1.5 ships T038) and T041 (same README/site files). Renumbered from wave 10 (2026-11-12). delix-board 0.1.4 -> 0.1.5; root version unchanged. The lead rewrites the anchors at dispatch."
     }
   ],
   "cards": {
@@ -346,7 +363,7 @@
           "by": "claude/spec-c-board",
           "round": 1,
           "sha": "3d9a7f79ee3fd3a84de1f230b15ca668d69bcf62",
-          "verdict": "🔐 HUMAN_APPROVAL",
+          "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
           "at": "2026-11-04T21:11:10Z"
         }
       ],
@@ -516,6 +533,56 @@
         "head": "d56b8a52e02d46a4b035dfd3f3336e0f7d3ab8ae",
         "at": "2026-11-12T15:22:28Z"
       }
+    },
+    "T037": {
+      "file": "docs/delix/tasks/T037-board-git-hardening-2.md",
+      "role": "backend",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
+    },
+    "T038": {
+      "file": "docs/delix/tasks/T038-pane-git-hardening-2.md",
+      "role": "frontend",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
+    },
+    "T039": {
+      "file": "docs/delix/tasks/T039-review-merged-guard.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
+    },
+    "T040": {
+      "file": "docs/delix/tasks/T040-verification-evidence-file.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
+    },
+    "T041": {
+      "file": "docs/delix/tasks/T041-bash-gate-card-push.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
     }
   },
   "status_values": [
@@ -534,8 +601,8 @@
       "sha": "68664cef944d3b7ff3b57b73c308e3ce7e87b481",
       "base": "375623f1e36bc6405477045186608c3fffbb2e24",
       "input": "claude/github-pages",
-      "tier": "3 🔐",
-      "verdict": "ACCEPT 🔐",
+      "tier": "3 \ud83d\udd10",
+      "verdict": "ACCEPT \ud83d\udd10",
       "report": "docs/delix/verifications/2026-11-03-github-pages.md",
       "gates": {
         "gitleaks": "PASS (archive: pre-existing finding, also on base)",
@@ -544,15 +611,15 @@
         "full": "not run: no --full"
       },
       "qa": "ACCEPT_WITH_NOTES",
-      "security": "🔐 HUMAN_APPROVAL",
+      "security": "\ud83d\udd10 HUMAN_APPROVAL",
       "cost_usd": null
     },
     {
       "name": "github-pages",
       "date": "2026-11-03",
       "input": "claude/github-pages",
-      "tier": "3 🔐",
-      "verdict": "ACCEPT 🔐",
+      "tier": "3 \ud83d\udd10",
+      "verdict": "ACCEPT \ud83d\udd10",
       "report": "docs/delix/verifications/2026-11-03-github-pages.md",
       "gates": {
         "gitleaks": "PASS (archive: pre-existing finding, also on base)",
@@ -561,7 +628,7 @@
         "full": "not run: no --full"
       },
       "qa": "ACCEPT_WITH_NOTES",
-      "security": "🔐 HUMAN_APPROVAL",
+      "security": "\ud83d\udd10 HUMAN_APPROVAL",
       "cost_usd": null,
       "sha": "effc814e24f979d03de8b01831426fbf8531f43c",
       "base": "9dfc83d42ebd22e3f89112ee061cabe311a55783"
@@ -570,8 +637,8 @@
       "name": "github-pages",
       "date": "2026-11-03",
       "input": "claude/github-pages",
-      "tier": "3 🔐",
-      "verdict": "ACCEPT 🔐",
+      "tier": "3 \ud83d\udd10",
+      "verdict": "ACCEPT \ud83d\udd10",
       "report": "docs/delix/verifications/2026-11-03-github-pages.md",
       "gates": {
         "gitleaks": "PASS (archive: pre-existing finding, also on base)",
@@ -580,7 +647,7 @@
         "full": "not run: no --full"
       },
       "qa": "ACCEPT_WITH_NOTES",
-      "security": "🔐 HUMAN_APPROVAL",
+      "security": "\ud83d\udd10 HUMAN_APPROVAL",
       "cost_usd": null,
       "sha": "f6c2d0adae2ff3fbb5085a396629a7137532eebe",
       "base": "9dfc83d42ebd22e3f89112ee061cabe311a55783"
