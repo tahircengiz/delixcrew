@@ -581,7 +581,7 @@
       "file": "docs/delix/tasks/T038-pane-git-hardening-2.md",
       "role": "frontend",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 67,
       "rounds": 0,
       "cost_usd": null,
@@ -613,7 +613,12 @@
           "verdict": "CLEAN",
           "at": "2026-11-12T18:03:22Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "4f7eb92c19b88769191976ebdf429b4a6e67ccba",
+        "head": "988027df2177e93ce11f4ae070aa5b58a5cbeee4",
+        "at": "2026-11-12T18:22:34Z"
+      }
     },
     "T039": {
       "file": "docs/delix/tasks/T039-review-merged-guard.md",
