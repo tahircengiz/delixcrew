@@ -233,3 +233,21 @@ Read only this card and spec §6.
     `--config-env` out of reach. Lead prototype: 10 new deny cases fail on this head, all 131 cases pass with the fix,
     ReDoS case "global flags" ratio 3.96, the four reproductions are denied.
   - qa P2: `gh pr checkout` before a push is not a git token; covered by "another program's own git calls" and now named.
+- Round 3 (PR #69, head `44391659e6e37f2d3525a49af052143b63df18cd`, 2026-11-12): qa `ACCEPT` (0 P0, 0 P1), security
+  `🔐 HUMAN_APPROVAL` (1 Medium, 1 Low). The round-2 fix equals the lead prototype byte for byte. Lead gates on the
+  clean `git archive` of the head: the 12 shell suites exit 0 on Python 3.9.6 and 3.13.13 (push gate 131 ✔), `claude
+  plugin validate .` passes; CI `check` and `test` pass; the four round-2 reproductions are denied. The first security
+  run was stopped by the model's safeguards; the second, with a scope limited to the fixes, finished. Round cap
+  reached (`max_review_rounds` 3): `escalated`, options to the user.
+  - Medium (security, reproduced by the lead with the hook and real git 2.54: the hook allows, the remote `main`
+    moves): a `help.autocorrect` key written with no value (`[help]` then `autocorrect`) is true for git, but
+    `git config --get` prints an empty line, which R-P4a read as off; `git psuh origin main` then runs `push`. Lead
+    prototype: a non-empty read counts as on (an explicit empty value too: fail closed), one deny and one allow case;
+    1 ✘ on this head, 133 ✔ with the fix.
+  - Low (security): the site usage limits did not name `eval`, another URL for `origin`, deleting `.delix/card`, a cwd
+    below the worktree root, or `echo` among the false positives.
+  - Security unsure, reproduced by the lead the same way: another command on the same line that writes a git config
+    file (such as a `>>` redirection adding `remote.origin.push`) runs after the hook read the config. Same class as "a
+    script file"; the lead prototype names it in the Known limits (README and site), no code change.
+  - qa notes (no fix): `--exec-path=<dir>` on a command other than a push runs a program from that directory ("a
+    script file"); a git flag added after git 2.54 that takes no value is denied (fail closed).
