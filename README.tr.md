@@ -123,7 +123,8 @@ bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
   `git push [-u|--set-upstream] [--force-with-lease] origin <HEAD|dal>` biçiminde, kartın varsayılan dal olmayan kendi
   dalından, `remote.origin.push` yokken, aynı komutta `cd` ve `add`, `commit`, `status`, `diff`, `log`, `show`
   dışında bir git komutu yokken çalışır; dal adı biçimi ayrıca dalın upstream'inin olmamasını ya da dalın kendisi
-  olmasını ister. `gh pr merge` orada reddedilir: kapı 2 kullanıcınındır (T041, K279).
+  olmasını ister. Git'in kendi listesinde olmayan bir git genel seçeneği de, `help.autocorrect` açıkken git'in
+  listelemediği bir komut adı da orada reddedilir. `gh pr merge` orada reddedilir: kapı 2 kullanıcınındır (T041, K279).
 - `Stop`, [`scripts/stop_gate.py`](scripts/stop_gate.py)'yi yalnız uygulayıcı worktree'sinde çalıştırır: projenin
   `docs/delix/delix.json` dosyasındaki `test_command` ve `extra_checks` komutlarını kabukta çalıştırır; bunlar geçene
   dek tur bitmez. Bu komutlar plugin'in değil, projenizin komutlarıdır. Onları yalnız o listeyi bu repo için (repo
@@ -377,14 +378,15 @@ bir dizin onun onayını devralabilir. Projenin kendi `.claude/settings.json` ho
 penceresini kabul ettiğinizde yine kod çalıştırabilir; onay yalnız `delix.json` kanalını kapatır. Bash hook'unun
 denylist'i bir sınır değil, sürtünmedir: bölünmüş tırnak, değişken ya da glob ile kurulan komutlar ondan geçer;
 `cd` sonrası göreli yol, `//`, `/./` ya da sembolik bağlantılı bir dizinle yazılan kayıt yolu da geçer, çünkü o kural
-bir alt dize eşleşmesidir (K220); sınır Claude Code'un Bash izin istemidir (K77). Uygulayıcının push kuralı (T041,
-K279) da kelimeler üzerinde bir kalıp denetimidir, derinlemesine savunmadır, GitHub sınırı değildir: değişken ya da
-`eval` ile kurulan kelimeler, ortamdan (`GIT_DIR`, `GIT_CONFIG_*`) ya da `--config-env` ile verilen git ayarları, bir
-betik dosyası ya da başka bir programın kendi git çağrıları, delixcrew'un kendi reposu dışındaki her repoda `gh api`
-ile ref ya da merge yazmak, `.delix/card`'ı silmek, worktree kökünün altındaki bir cwd ve `main-review` ruleset'indeki
-repo sahibi bypass'ı onun erişimi dışındadır; yanlış pozitif olarak bir heredoc gövdesinin, bir `echo`'nun ya da commit
-mesajının tek satırındaki `git` ve `push` kelimelerini ve `cd` ya da `add`, `commit`, `status`, `diff`, `log`, `show`
-dışında bir git komutu da içeren bir komuttaki push'u reddeder. İzin verilen tek `cat` heredoc'u,
+bir alt dize eşleşmesidir (K220); sınır Claude Code'un Bash izin istemidir (K77). Uygulayıcının push kuralı (T041, K279)
+da kelimeler üzerinde bir kalıp denetimidir, derinlemesine savunmadır, GitHub sınırı değildir: değişken, `eval`, glob ya
+da ANSI-C tırnağı (`$'...'`) ile kurulan kelimeler, ortamdan (`GIT_DIR`, `GIT_CONFIG_*`) verilen git ayarları, bir betik
+dosyası ya da başka bir programın kendi git çağrıları (`gh pr checkout` gibi), `pr merge` için bir `gh` alias'ı,
+`git remote` ile `origin`'e verilen başka bir URL, delixcrew'un kendi reposu dışındaki her repoda `gh api` ile ref ya da
+merge yazmak, `.delix/card`'ı silmek, worktree kökünün altındaki bir cwd ve `main-review` ruleset'indeki repo sahibi
+bypass'ı onun erişimi dışındadır; yanlış pozitif olarak bir heredoc gövdesinin, bir `echo`'nun ya da commit mesajının
+tek satırındaki `git` ve `push` kelimelerini ve `cd` ya da `add`, `commit`, `status`, `diff`, `log`, `show` dışında bir
+git komutu da içeren bir komuttaki push'u reddeder. İzin verilen tek `cat` heredoc'u,
 Write aracının zaten yazamayacağı hiçbir şeyi yazmaz. 2.44'ten eski git ile promisor (kısmi klon) bir repoda eksik bir
 nesne, hook'lar index'i okurken uzak depodan yine çekilebilir (K225).
 

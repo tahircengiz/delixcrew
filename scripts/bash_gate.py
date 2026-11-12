@@ -127,9 +127,15 @@ for m in re.finditer(r"(?:>>?|\bcp\b[^|;&]*|\bmv\b[^|;&]*|\btee\b)\s+([^\s;&|]+)
 PUSH_DENY = ("delixcrew: an implementer session pushes only its own card branch (git push [-u] origin <branch>); the "
              "default branch and every other push run from the user's own terminal")
 MERGE_DENY = "delixcrew: gate 2 (merge) is the user's; an implementer session does not run gh pr merge"
-GIT_ARG_OPTS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env"}  # R-P2: take the next token
+GIT_ARG_OPTS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env", "--attr-source",
+                "--shallow-file"}  # R-P2: take the next token
+GIT_FLAG_OPTS = {"-v", "--version", "-h", "--help", "-p", "--paginate", "-P", "--no-pager", "--no-replace-objects",
+                 "--no-lazy-fetch", "--no-optional-locks", "--no-advice", "--bare", "--literal-pathspecs",
+                 "--glob-pathspecs", "--noglob-pathspecs", "--icase-pathspecs", "--exec-path", "--html-path",
+                 "--man-path", "--info-path"}  # R-P2a: no value; `--name=value` is one token; any other option denies
 PUSH_OPTS = {"-u", "--set-upstream", "--force-with-lease"}
-CONFIG_KEYS = ("alias.", "remote.", "push.", "url.", "include")  # R-P5, casefold prefixes
+CONFIG_KEYS = ("alias.", "remote.", "push.", "url.", "include", "help.")  # R-P5, casefold prefixes
+AUTOCORRECT_OFF = {"", "0", "false", "off", "no", "show", "never"}  # R-P4a: help.autocorrect values that run nothing
 PUSH_PEERS = {"add", "commit", "status", "diff", "log", "show"}  # R-P3b: git commands a push may share a line with
 CONFIG_READS = {"--get", "--get-all", "--get-regexp", "--get-urlmatch", "--list", "-l", "get", "list"}
 
@@ -233,6 +239,21 @@ def alias_check(name):
     ok.add(name)
 
 
+_known = []
+
+
+def autocorrect_check(name):
+    """R-P4a: with help.autocorrect on, git runs the closest command in place of a name it does not know (`psuh`),
+    so such a name denies. The setting is read once per command; the command list (builtins, main, others, alias)
+    only when the setting is on."""
+    if not _known:
+        on = git_unset("config", "--get", "help.autocorrect").strip().casefold() not in AUTOCORRECT_OFF
+        _known.append({x.casefold() for x in git_unset("--list-cmds=builtins,main,others,alias").split()} if on
+                      else None)
+    if _known[0] is not None and name not in _known[0]:
+        deny(PUSH_DENY)
+
+
 segs = words(cmd)
 moved = any(t.casefold() in ("cd", "pushd", "popd") for toks in segs for t in toks)
 pushed = other = False  # R-P3b
@@ -258,9 +279,14 @@ for toks in segs:
             while j < n and toks[j].startswith("-"):
                 gopt = True
                 if toks[j] in GIT_ARG_OPTS:
-                    if toks[j] == "-c" and j + 1 < n and toks[j + 1].casefold().startswith(CONFIG_KEYS):
+                    if (toks[j] in ("-c", "--config-env") and j + 1 < n
+                            and toks[j + 1].casefold().startswith(CONFIG_KEYS)):
                         deny(PUSH_DENY)
                     j += 1
+                elif toks[j].startswith("--config-env=") and toks[j][13:].casefold().startswith(CONFIG_KEYS):
+                    deny(PUSH_DENY)  # R-P5: --config-env sets a key like -c
+                elif toks[j] not in GIT_FLAG_OPTS and not (toks[j].startswith("--") and "=" in toks[j]):
+                    deny(PUSH_DENY)  # R-P2a: an option git may take a value for (--attr-source, ...)
                 j += 1
             if j >= n:
                 break
@@ -285,6 +311,7 @@ for toks in segs:
         if gopt or sub not in PUSH_PEERS:
             other = True
         alias_check(sub)
+        autocorrect_check(sub)
         if sub == "config":
             if reads is None:
                 reads, keys = [False] * (n + 1), [False] * (n + 1)

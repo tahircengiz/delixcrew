@@ -166,6 +166,28 @@ allow "status, diff, log, show, then HEAD"  "$W" "$G status; $G diff; $G log -1;
 allow "HEAD, then gh pr create"             "$W" "$G $P -u origin HEAD && gh pr create --title x --body-file b.md"
 allow "switch without a push"               "$W" "$G switch -c claude/t2"
 
+# R-P2a, R-P4a (lead, round 2): an unknown global option denies; with help.autocorrect on, an unlisted name denies
+deny "--attr-source takes a value"          "$W" "$G --attr-source HEAD $P origin main"
+deny "--shallow-file takes a value"         "$W" "$G --shallow-file x $P origin main"
+deny "unknown global option"                "$W" "$G --frobnicate status"
+allow "--no-pager log"                      "$W" "$G --no-pager log -1"
+allow "--git-dir=value status"              "$W" "$G --git-dir=.git status"
+deny "--config-env=alias."                  "$W" "X=v $G --config-env=alias.x=X x"
+deny "--config-env alias. (two tokens)"     "$W" "$G --config-env alias.x=X x"
+allow "--config-env of another key"         "$W" "$G --config-env=core.pager=X log -1"
+deny "-c help.autocorrect"                  "$W" "$G -c help.autocorrect=immediate psuh origin main"
+deny "config help.autocorrect"              "$W" "$G config help.autocorrect 1"
+allow "autocorrect unset, typo"             "$W" "$G psuh origin main"
+$G -C "$W" config help.autocorrect immediate
+deny "autocorrect on, typo of the push"     "$W" "$G psuh origin main"
+allow "autocorrect on, status"              "$W" "$G status"
+allow "autocorrect on, own branch"          "$W" "$G $P origin claude/t1"
+XP="$SH:" FA="--list-cmds=builtins,main,others,alias" deny "command list fails" "$W" "$G status"
+$G -C "$W" config help.autocorrect never
+allow "autocorrect never, typo"             "$W" "$G psuh origin main"
+$G -C "$W" config --unset help.autocorrect
+XP="$SH:" FA="help.autocorrect"            deny "autocorrect lookup fails"  "$W" "$G status"
+
 # ReDoS (repo hook rule): linear time; t(160000) < 3 s and t(160000)/t(20000) < 20
 python3 - "$S/bash_gate.py" "$W" "$G" "$P" <<'PYT' || FAIL=1
 import json, subprocess, sys, time
@@ -176,6 +198,7 @@ cases = [("-c pairs", lambda k: (g + " -c " + g + " ") * k + p),
          ("backslashes", lambda k: "\\" * k),
          ("git words", lambda k: (g + " ") * k + p),
          ("git commands, then a push", lambda k: (g + " status; ") * k + g + " " + p + " origin HEAD"),
+         ("global flags", lambda k: g + " --no-pager" * k + " status"),
          ("own pushes, then main", lambda k: (g + " " + p + " origin claude/t1; ") * k + g + " " + p + " origin main")]
 bad = 0
 for name, make in cases:
