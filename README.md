@@ -379,13 +379,14 @@ boundary: commands built from split quotes, variables or globs get past it, and 
 written as a relative path after `cd`, with `//` or `/./`, or through a symlinked directory, because that rule is a
 substring match (K220); the boundary is Claude Code's Bash permission prompt (K77). The implementer push rule (T041,
 K279) is a pattern check on words too, defence in depth and not a GitHub boundary: words built from variables, `eval`,
-globs or ANSI-C quoting (`$'...'`), git settings given through the environment (`GIT_DIR`, `GIT_CONFIG_*`), a script
-file or another program's own git calls (such as `gh pr checkout`), a `gh` alias for `pr merge`, another URL for
-`origin` set with `git remote`, `gh api` ref or merge writes in any repository other than delixcrew's own, deleting
-`.delix/card`, a cwd below the worktree root and the repository owner's bypass on the `main-review` ruleset are out of
-its reach; as a false positive it denies the words `git` and `push` on one line of a heredoc body, an `echo` or a commit
-message, and a push in a command that also has `cd` or a git command other than `add`, `commit`, `status`, `diff`, `log`
-or `show`. The one allowed `cat` heredoc
+globs or ANSI-C quoting (`$'...'`), git settings given through the environment (`GIT_DIR`, `GIT_CONFIG_*`) or written
+into a git config file by another command on the same line (such as a `>>` redirection), a script file or another
+program's own git calls (such as `gh pr checkout`), a `gh` alias for `pr merge`, another URL for `origin` set with
+`git remote`, `gh api` ref or merge writes in any repository other than delixcrew's own, deleting `.delix/card`, a cwd
+below the worktree root and the repository owner's bypass on the `main-review` ruleset are out of its reach; as a false
+positive it denies the words `git` and `push` on one line of a heredoc body, an `echo` or a commit message, and a push
+in a command that also has `cd` or a git command other than `add`, `commit`, `status`, `diff`, `log` or `show`. The one
+allowed `cat` heredoc
 writes nothing the Write tool could not already write. With git older than 2.44, a missing object in a promisor
 (partial clone) repository can still be fetched from its remote while the hooks read the index (K225).
 

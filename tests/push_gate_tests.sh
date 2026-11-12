@@ -187,6 +187,11 @@ $G -C "$W" config help.autocorrect never
 allow "autocorrect never, typo"             "$W" "$G psuh origin main"
 $G -C "$W" config --unset help.autocorrect
 XP="$SH:" FA="help.autocorrect"            deny "autocorrect lookup fails"  "$W" "$G status"
+# R-P4a (lead, round 4): a help.autocorrect key with no value is on for git; an empty value counts as on (fail closed)
+printf '[help]\n\tautocorrect\n' >> "$W/.git/config"
+deny "autocorrect with no value, typo"      "$W" "$G psuh origin main"
+allow "autocorrect with no value, status"   "$W" "$G status"
+$G -C "$W" config --unset help.autocorrect
 
 # ReDoS (repo hook rule): linear time; t(160000) < 3 s and t(160000)/t(20000) < 20
 python3 - "$S/bash_gate.py" "$W" "$G" "$P" <<'PYT' || FAIL=1

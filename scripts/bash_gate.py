@@ -135,7 +135,7 @@ GIT_FLAG_OPTS = {"-v", "--version", "-h", "--help", "-p", "--paginate", "-P", "-
                  "--man-path", "--info-path"}  # R-P2a: no value; `--name=value` is one token; any other option denies
 PUSH_OPTS = {"-u", "--set-upstream", "--force-with-lease"}
 CONFIG_KEYS = ("alias.", "remote.", "push.", "url.", "include", "help.")  # R-P5, casefold prefixes
-AUTOCORRECT_OFF = {"", "0", "false", "off", "no", "show", "never"}  # R-P4a: help.autocorrect values that run nothing
+AUTOCORRECT_OFF = {"0", "false", "off", "no", "show", "never"}  # R-P4a: help.autocorrect values that run nothing
 PUSH_PEERS = {"add", "commit", "status", "diff", "log", "show"}  # R-P3b: git commands a push may share a line with
 CONFIG_READS = {"--get", "--get-all", "--get-regexp", "--get-urlmatch", "--list", "-l", "get", "list"}
 
@@ -247,7 +247,8 @@ def autocorrect_check(name):
     so such a name denies. The setting is read once per command; the command list (builtins, main, others, alias)
     only when the setting is on."""
     if not _known:
-        on = git_unset("config", "--get", "help.autocorrect").strip().casefold() not in AUTOCORRECT_OFF
+        v = git_unset("config", "--get", "help.autocorrect")  # "" only when unset; a key with no value prints "\n"
+        on = v != "" and v.strip().casefold() not in AUTOCORRECT_OFF
         _known.append({x.casefold() for x in git_unset("--list-cmds=builtins,main,others,alias").split()} if on
                       else None)
     if _known[0] is not None and name not in _known[0]:

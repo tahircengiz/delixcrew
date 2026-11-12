@@ -380,13 +380,14 @@ denylist'i bir sınır değil, sürtünmedir: bölünmüş tırnak, değişken y
 `cd` sonrası göreli yol, `//`, `/./` ya da sembolik bağlantılı bir dizinle yazılan kayıt yolu da geçer, çünkü o kural
 bir alt dize eşleşmesidir (K220); sınır Claude Code'un Bash izin istemidir (K77). Uygulayıcının push kuralı (T041, K279)
 da kelimeler üzerinde bir kalıp denetimidir, derinlemesine savunmadır, GitHub sınırı değildir: değişken, `eval`, glob ya
-da ANSI-C tırnağı (`$'...'`) ile kurulan kelimeler, ortamdan (`GIT_DIR`, `GIT_CONFIG_*`) verilen git ayarları, bir betik
-dosyası ya da başka bir programın kendi git çağrıları (`gh pr checkout` gibi), `pr merge` için bir `gh` alias'ı,
-`git remote` ile `origin`'e verilen başka bir URL, delixcrew'un kendi reposu dışındaki her repoda `gh api` ile ref ya da
-merge yazmak, `.delix/card`'ı silmek, worktree kökünün altındaki bir cwd ve `main-review` ruleset'indeki repo sahibi
-bypass'ı onun erişimi dışındadır; yanlış pozitif olarak bir heredoc gövdesinin, bir `echo`'nun ya da commit mesajının
-tek satırındaki `git` ve `push` kelimelerini ve `cd` ya da `add`, `commit`, `status`, `diff`, `log`, `show` dışında bir
-git komutu da içeren bir komuttaki push'u reddeder. İzin verilen tek `cat` heredoc'u,
+da ANSI-C tırnağı (`$'...'`) ile kurulan kelimeler, ortamdan (`GIT_DIR`, `GIT_CONFIG_*`) verilen ya da aynı satırda
+başka bir komutun (`>>` yönlendirmesi gibi) bir git ayar dosyasına yazdığı git ayarları, bir betik dosyası ya da başka
+bir programın kendi git çağrıları (`gh pr checkout` gibi), `pr merge` için bir `gh` alias'ı, `git remote` ile
+`origin`'e verilen başka bir URL, delixcrew'un kendi reposu dışındaki her repoda `gh api` ile ref ya da merge yazmak,
+`.delix/card`'ı silmek, worktree kökünün altındaki bir cwd ve `main-review` ruleset'indeki repo sahibi bypass'ı onun
+erişimi dışındadır; yanlış pozitif olarak bir heredoc gövdesinin, bir `echo`'nun ya da commit mesajının tek satırındaki
+`git` ve `push` kelimelerini ve `cd` ya da `add`, `commit`, `status`, `diff`, `log`, `show` dışında bir git komutu da
+içeren bir komuttaki push'u reddeder. İzin verilen tek `cat` heredoc'u,
 Write aracının zaten yazamayacağı hiçbir şeyi yazmaz. 2.44'ten eski git ile promisor (kısmi klon) bir repoda eksik bir
 nesne, hook'lar index'i okurken uzak depodan yine çekilebilir (K225).
 
