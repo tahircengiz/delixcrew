@@ -94,4 +94,4 @@
 `.delix/report.md` (≤ 1–2K tokens): `DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED` · the commands and their output · the timing ratios · the screenshot path · PR number and branch · assumptions · remaining work. Read only this card and the spec sections named above.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Dispatch resolution (K273, 2026-11-12, after the implementer's `NEEDS_CONTEXT`): the existing test "derive follows the T029 edge rules" (`tests/board.test.tsx:388`) builds a raw without `trusted_state` and expects T002 Ready and a merge action, so R8' turns it red. Allowed exception to "insertions only": exactly one inserted line after line 421, `    trusted_state: JSON.stringify(state),` (a key of that raw object); no existing line changes. Rejected: no trust check when the key is missing (fail open; against K262/R1 and board.py).
