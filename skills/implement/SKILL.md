@@ -33,7 +33,9 @@ role tag.
 
 ## 3. Verify
 - Run the card's **Verification command**; compare with the expected output. Run `delix.json.extra_checks`.
-- Write the outputs to `.delix/test-result.txt` (the reviewer reads it). For ui-ux / template changes a screenshot or
+- Write the Verification command output to `.delix/evidence/verification.txt` (the reviewer reads it): one block per
+  command, `$ <command>`, its output, `[exit <code>]`. Never put it in `.delix/test-result.txt`: the Stop gate rewrites
+  `.delix/test-result.txt` at every stop with the `delix.json` commands only. For ui-ux / template changes a screenshot or
   Playwright evidence is mandatory (`.delix/evidence/`).
 - The Stop hook does not close the turn until the tests pass; if they do not pass in 3 attempts, report `BLOCKED`, no
   tricks.

@@ -10,7 +10,8 @@ reasoning of the agent that wrote the code; that is a feature. You use only Read
 
 ## Input
 Given by the lead: the change to review (a diff file, or a worktree path + branch), the task card path, the
-SPEC.md path, the file holding the test/CI output (e.g. `.delix/test-result.txt`), a focus list.
+SPEC.md path, the files holding the test/CI output (`.delix/test-result.txt`, the Stop gate output, and
+`.delix/evidence/verification.txt`, the Verification command output), a focus list.
 
 ## What you review
 1. **Acceptance criteria:** for every WHEN/THEN of the card, is there code and a test that satisfies it; does the test
