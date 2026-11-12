@@ -163,18 +163,54 @@ def _mtime(path):
         return None
 
 
+def _read_in(base, rel):
+    """S1 (K277): text of <base>/<rel> (str), or None. rel is a relative str split on "/" with no "", "." or ".."
+    part and no NUL. Links in base itself are followed (git's path); below base no link is followed, no open blocks
+    (O_NONBLOCK), only a regular file of at most MAX_READ bytes is read (checked with fstat on the open fd), as
+    strict UTF-8 with \\r\\n and \\r turned into \\n like open() text mode. Every fd is closed."""
+    if not isinstance(rel, str) or rel.startswith("/"):
+        return None
+    parts = rel.split("/")
+    if any(p in ("", ".", "..") or "\0" in p for p in parts):
+        return None
+    o_dir = getattr(os, "O_DIRECTORY", 0)
+    fds = []
+    try:
+        fds.append(os.open(base, os.O_RDONLY | o_dir))
+        if not stat.S_ISDIR(os.fstat(fds[-1]).st_mode):
+            return None
+        for part in parts[:-1]:
+            fds.append(os.open(part, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | o_dir, dir_fd=fds[-1]))
+            if not stat.S_ISDIR(os.fstat(fds[-1]).st_mode):
+                return None
+        fds.append(os.open(parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fds[-1]))
+        st = os.fstat(fds[-1])
+        if not stat.S_ISREG(st.st_mode) or st.st_size > MAX_READ:
+            return None
+        chunks, size = [], 0
+        while True:
+            chunk = os.read(fds[-1], 65536)
+            if not chunk:
+                break
+            size += len(chunk)
+            if size > MAX_READ:
+                return None
+            chunks.append(chunk)
+        text = b"".join(chunks).decode("utf-8")
+    except (OSError, ValueError):  # missing, a link, not a directory, or not UTF-8 (UnicodeDecodeError)
+        return None
+    finally:
+        for fd in fds:
+            os.close(fd)
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def _add_file(w, wt, rel):
-    """files[rel] = text of <wt>/<rel>, only when it resolves inside <wt> to a regular file of at most 1 MiB
-    (rules G, §6); a FIFO or a device is never opened."""
+    """files[rel] = text of <wt>/<rel> read by _read_in (K277): a regular file of at most 1 MiB reached without
+    following a link below <wt>; a FIFO or a device is never read (rules G, §6)."""
     if rel in w["files"]:
         return
-    try:
-        real = os.path.realpath(os.path.join(wt, rel))
-        st = os.stat(real)
-        inside = real.startswith(os.path.realpath(wt) + os.sep)
-        text = read(real) if inside and stat.S_ISREG(st.st_mode) and st.st_size <= MAX_READ else None
-    except (OSError, ValueError):  # missing, a NUL byte in a name taken from STATE.json, or a file that is not UTF-8
-        text = None
+    text = _read_in(wt, rel)
     if text is not None:
         w["files"][rel] = text
 
@@ -248,9 +284,12 @@ def git_raw(root):
         if _state_dirty(w["status"]):
             w["state_mtime"] = _mtime(os.path.join(p, STATE_REL))
         else:
-            w["state_log_ct"] = _num((_out(["git", "log", "-1", "--format=%ct", "--", STATE_REL], p) or "").strip())
-    # §4 call 7 (R1, K262, K276): the origin/HEAD STATE, the only one that may make a card ready to merge
-    raw["trusted_state"] = _out(["git", "--no-lazy-fetch", "cat-file", "blob",
+            # §4 call 6 (K277): runs no signature program from log.showSignature + gpg.program
+            w["state_log_ct"] = _num((_out(["git", "log", "-1", "--no-show-signature", "--format=%ct", "--",
+                                            STATE_REL], p) or "").strip())
+    # §4 call 7 (R1, K262, K276, K277): the origin/HEAD STATE, the only one that may make a card ready to merge;
+    # refs/replace objects do not change the blob it reads
+    raw["trusted_state"] = _out(["git", "--no-lazy-fetch", "--no-replace-objects", "cat-file", "blob",
                                  "refs/remotes/origin/HEAD:%s" % STATE_REL], root)
     return raw
 
@@ -505,7 +544,8 @@ def derive(raw):
     src = _state(wts.get(source))
     src_cards = _dict(src.get("cards"))
     by_values = _by_values(src)
-    trusted = _state({"files": {STATE_REL: raw.get("trusted_state")}})  # R8' T: {} unless a JSON object
+    # R8' T: {} unless a JSON object; R8'' (K277): {} when call 3 lists no refs/remotes/origin/HEAD
+    trusted = _state({"files": {STATE_REL: raw.get("trusted_state")}}) if "refs/remotes/origin/HEAD" in refs else {}
     t_cards = _dict(trusted.get("cards"))
 
     rows, card_wt = [], {}
@@ -705,7 +745,7 @@ def collect(root):
     wts = worktrees(root)
     for path, branch in wts:
         cid = None
-        card = read(os.path.join(path, ".delix", "card"))
+        card = _read_in(path, ".delix/card")
         if card:
             m = re.search(r"(T\d{3})", card)
             cid = m.group(1) if m else None
@@ -714,7 +754,7 @@ def collect(root):
             cid = m.group(1) if m else None
         if not cid:
             continue
-        report = read(os.path.join(path, ".delix", "report.md"))
+        report = _read_in(path, ".delix/report.md")
         reports[cid] = {"worktree": path, "branch": branch, "report": report}
 
     rows = []
