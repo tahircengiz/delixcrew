@@ -71,7 +71,7 @@ claude plugin install delix-board@delixcrew
 | 5 | `/delixcrew:review <kart>` | Deterministik kapılar → `qa` (+ `security`) sıfır bağlamla → ≤ 3 düzeltme turu → **Kapı 2 (merge, insan).** |
 | 6 | `/delixcrew:close` | STATUS/CHANGELOG, ölçüm (maliyet, tur), drift kontrolü, onaylı bellek yazımı, worktree temizliği. |
 | kısa yol | `/delixcrew:verify <dal\|commit\|dizin>` | Kartsız yapılmış işi (tek oturum ya da sen) **yalnız doğrular** (K43): gitleaks, yerel test, uzak **izole** birim testi (ayrı dizin + ayrı imaj, canlı stack'e dokunmaz), istenirse `--full`; `qa` (+ `security`) **tek geçiş**, düzeltme turu yok → `docs/delix/verifications/<tarih>-<ad>.md` raporu (ACCEPT / FIX, 🔐) ve `STATE.json.verifications`. S/M + iyi tarif + Tier ≤ 2 işte `/delixcrew:start` bunu önerir; tam akış Tier 3 / paralel kart / belirsiz spec'e. |
-| her an | `/delixcrew:status` | Salt-okunur pano: wave · kart · rol · tier · status · tur · PR · maliyet · son rapor · bekleyen kapı (🔐, merge) tablosu sohbete; istenirse (`--write`) `docs/delix/BOARD.md`'ye (git'e girmez). |
+| her an | `/delixcrew:status` | Salt-okunur pano: wave · kart · rol · tier · status · tur · PR · maliyet · son rapor · bekleyen kapı (🔐, merge) tablosu sohbete; istenirse (`--write`) `docs/delix/BOARD.md`'ye (git'e girmez). Altında Leads, Agents, Waiting on you, Ready to merge ve Git actions bölümleri; her push / merge / temizlik komutu Desktop'un Run düğmesi için kendi tek satırlık `bash` bloğunda. Komutları sen çalıştırırsın; lead hiç çalıştırmaz. |
 | issue'lar | `/delixcrew:triage [#n]` | delixcrew reposunda: gelen issue'ları temizlenmiş okur, salt-okunur `architect` her birini kontrol edip bir karar önerir; sohbette `<karar> #<n>` yazınca kaydeder ve yayınlanacak yorumu aynen gösterir; yayını siz kendi terminalinizden yaparsınız. Bkz. [Triage](#triage). |
 
 ## Roller
@@ -88,7 +88,7 @@ claude plugin install delix-board@delixcrew
 ## Proje tarafı dosyalar
 
 `docs/delix/delix.json` (test komutu, korunan yollar, test yolları, paralel üst sınır, `verify` uzak izole koşu bloğu),
-`docs/delix/SPEC.md`, `docs/delix/tasks/T<nnn>-<slug>.md`, `docs/delix/STATE.json` (kartlar + `verifications` kayıtları),
+`docs/delix/SPEC.md`, `docs/delix/tasks/T<nnn>-<slug>.md`, `docs/delix/STATE.json` (`agents` kaydı ve `merged` kaydıyla kartlar + `verifications` kayıtları),
 `docs/delix/verifications/<tarih>-<ad>.md|.patch` (`/delixcrew:verify` raporu ve yaması), `docs/delix/BOARD.md` (yalnız istenince
 üretilir, `.gitignore`'da). Uygulayıcı worktree'sinde `.delix/card` (hook'ları aktifleştirir), `.delix/report.md`,
 `.delix/test-result.txt`, `.delix/evidence/`.
@@ -390,6 +390,17 @@ erişimi dışındadır; yanlış pozitif olarak bir heredoc gövdesinin, bir `e
 içeren bir komuttaki push'u reddeder. İzin verilen tek `cat` heredoc'u,
 Write aracının zaten yazamayacağı hiçbir şeyi yazmaz. 2.44'ten eski git ile promisor (kısmi klon) bir repoda eksik bir
 nesne, hook'lar index'i okurken uzak depodan yine çekilebilir (K225).
+
+`/delixcrew:status` ve delix-board yalnız yerel dosyaları ve yerel git'i okur: `git fetch` ve `gh` çalıştırmaz, bu
+yüzden uzak dal bilgisi son fetch anının hâlidir (başlık zamanını gösterir). Bir kart Ready to merge altında yalnız
+`refs/remotes/origin/HEAD`'in gösterdiği STATE (uzak deponun varsayılan dalı; lead kayıtlarını oraya push eder) aynı
+kartı, PR'ı ve incelenen SHA'yı taşıyınca görünür; o zamana dek `review not on origin/<default>` notuyla bekler.
+`origin/HEAD` yoksa (`git clone` yerine `git init` ve `git remote add` ile kurulan depoda olduğu gibi) hiçbir kart
+Ready to merge altında görünmez; `git remote set-head origin -a` onu kurar. 2.44'ten eski git'te de görünmez, çünkü bu
+okuma `--no-lazy-fetch` kullanır. Bastıkları merge komutu `--match-head-commit <sha>` taşır; bayat bir görünüm
+kimsenin incelemediği bir ucu merge edemez. Lead'in `gh pr merge`'ü ya da bir Git actions komutunu kendisinin
+çalıştırmasını bir hook engellemez: T041 push kuralı `gh pr merge`'ü yalnız uygulayıcı worktree'sinde reddeder; lead
+için kural yalnız review ve status skill metnindedir.
 
 ## Lisans
 

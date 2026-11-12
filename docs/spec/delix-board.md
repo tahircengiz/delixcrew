@@ -32,16 +32,21 @@ Hepsi `$.fs` ve `$.process.run` ile; Node/DOM yok.
 | `docs/delix/tasks/T<nnn>-*.md` | kart başlığı, üst tablo satırı (STATE'te eksik alanlar için yedek, `board.py` `from_card_file` ile aynı), `## Files` maddeleri, `## Review findings` / `## İnceleme bulguları` altındaki tur maddeleri | Başlıklar Türkçe ya da İngilizce olabilir; ikisi de tanınır |
 | `docs/delix/verifications/*.md` | yalnız STATE.verifications'ta adı geçen rapor yolu (ayrıntıda link/ad) | İçerik parse edilmez |
 | `docs/delix/metrics.md` | kart satırı olan markdown tablolar: ilk hücrede `T\d{3}` geçen satırdan maliyet (ilk sayı, Türkçe ondalık virgül), tur, süre (`N dk`, `N,N dk`, `N sn`, `HH:MM–HH:MM`) | Serbest metin; yalnız STATE'te olmayan değerleri doldurur. Bulunamayan "ölçülmedi" |
-| `git worktree list --porcelain` | worktree yolu + dal → kart eşlemesi (`.delix/card`, yoksa dal adındaki `T\d{3}`) | `board.py` ile aynı kural |
+| `git worktree list --porcelain -z` | worktree yolu + dal → kart eşlemesi (`.delix/card`, yoksa dal adındaki `T\d{3}`) | `board.py` ile aynı kural; NUL ile ayrılmış alanlardan biri `\n` ya da `\r` içerirse liste boş sayılır (K263) |
 | `<worktree>/.delix/report.md` | Status (DONE…BLOCKED), PR, tek satır özet | `board.py` `report_summary` mantığı |
 | `<worktree>/.delix/test-result.txt` | son 12 satır + GEÇTİ/KALDI/PASS/FAIL sayısı | Kart ayrıntısında "test sonucu" |
 | STATE `previous` (arşiv STATE yolu) | önceki spec'in kartlarının status, tier, rounds, pr, cost kaydı | Uygulamada eklendi: güncel STATE'te olmayan ama dosyası duran kart **arşiv kartı** sayılır; kaydı arşiv STATE'ten okunur, wave'i yoktur, **kapı tutmaz**, panoda "Önceki spec" grubunda en sonda durur. Eski Türkçe anahtarlar (`kartlar`, `kademe`, `rol`, `tur`, `kabul`…) da okunur |
+| `git for-each-ref refs/heads refs/remotes --format=%(refname)%09%(objectname)%09%(upstream)%09%(upstream:track,nobracket)%09%(committerdate:unix)` | dal ucu, upstream, ahead/behind, commit zamanı | Ağ yok; listede `refs/remotes/origin/HEAD` yoksa hiçbir kart merge'e hazır olmaz (K277) |
+| worktree başına `git status --porcelain`; `.delix/card`'ı olmayan ve STATE'i commit'lenmemiş olmayan worktree'de `git diff --no-ext-diff --quiet origin/<default>...HEAD -- docs/delix/STATE.json` | commit'lenmemiş dosya sayısı; lead tespiti (çıkış 1 = dal STATE'i değiştirmiş) | Üç noktalı, merge-base'e göre (Spec C REQ-1); `--no-ext-diff` dış diff yardımcısını çalıştırmaz (K275) |
+| `git --no-lazy-fetch --no-replace-objects cat-file blob refs/remotes/origin/HEAD:docs/delix/STATE.json` | güvenilir STATE: merge'e hazır, merge komutu ve `merged`'e dayanan temizlik yalnız bu kopya aynı kartı, PR'ı ve SHA'yı gösterince | Bakış başına bir kez, oturumun checkout'unda; hata = hiçbir kart hazır değil (K262, K276, K277) |
+| `<common-dir>/FETCH_HEAD` ve `<common-dir>/worktrees/*/FETCH_HEAD` mtime | son fetch: başlıkta `son fetch: <zaman>`, hiçbiri yoksa `fetch yok` | `<common-dir>` = `git rev-parse --git-common-dir` |
+| STATE `cards.<T>.agents` / `merged` | kim açtı, kim inceledi (rol, tur, SHA, verdict, `by`), merge kaydı | Spec C REQ-2; yalnız lead yazar |
 
 **Proje kökü (0.1.4):** oturumun checkout'u `cwd`'den `git rev-parse --show-toplevel`. Okunan STATE ise
 `git worktree list`'teki worktree'lerin `docs/delix/STATE.json` taşıyanları arasından seçilir: `.delix/card` taşıyan
 uygulayıcı worktree'leri elenir (dağıtım anındaki kopyayı tutarlar); kalanlardan **en son gerçekten değişen kopya**
-kazanır: commit edilmemiş değişikliği olan kopyada dosyanın mtime'ı (`git status --porcelain -- docs/delix/STATE.json`
-boş değil), temiz kopyada o dosyaya dokunan son commit'in zamanı (`git log -1 --format=%ct -- docs/delix/STATE.json`).
+kazanır: commit edilmemiş değişikliği olan kopyada dosyanın mtime'ı (`git status --porcelain`
+çıktısında 3. dizinden sonrası `docs/delix/STATE.json` olan bir satır var), temiz kopyada o dosyaya dokunan son commit'in zamanı (`git log -1 --no-show-signature --format=%ct -- docs/delix/STATE.json`).
 Eşitlikte oturumun kendi checkout'u, sonra ana checkout (listede ilk). Neden: Claude Desktop her oturuma worktree açar;
 orkestratör STATE'i kendi worktree'sinde yazar ve ana checkout geride kalır (0.1.2'de pano ana checkout'u seçtiği için
 yeni spec'in kartlarını hiç göstermiyordu). Ne `updated` ne mtime tek başına güvenilir: orkestratör `updated`'i her
@@ -52,7 +57,7 @@ proje adı ana checkout'un adıdır. Hiçbirinde STATE yoksa oturumun checkout'u
 klasör bir delix projesi değil" ve `/delixcrew:start` ipucu.
 
 **Tazeleme:** `$.clock.every(4000)` ile yalnız `stat` (mtime) okunur; değişen dosya yeniden parse edilir. Worktree
-listesi ve onunla okunan STATE'in seçimi 20 sn'de bir; sonradan açılan orkestratör worktree'si en geç 20 sn'de görünür. Ayrıştırılmış görüntü (`Snapshot`) `$.state`'e yazılır; render yalnız onu okur.
+listesi ve onunla okunan STATE'in seçimi 20 sn'de bir; sonradan açılan orkestratör worktree'si en geç 20 sn'de görünür. Bu bakış N worktree için en çok 4 + 3N git çağrısı yapar (K257, K262); çağrılar §8'de. Ayrıştırılmış görüntü (`Snapshot`) `$.state`'e yazılır; render yalnız onu okur.
 Bütçe: bir tik ≤ ~15 `stat`; LLMPortal'da 22 kart dosyası mtime değişmedikçe tekrar okunmaz.
 
 ## 5. Bekleme görünümü: uzun koşu nasıl yakalanır (karar)
@@ -87,12 +92,22 @@ Seçili görünüm ve kart `$.state`'te; sekme `hotkey` 1–4.
 
 **(a) Pano.** Özet şeridi: kart sayısı, durum dağılımı (renkli yığılmış çubuk), toplam maliyet, toplam tur, açık
 worktree. Wave grupları altında kart satırları: durum noktası + id + başlık + rol + tier + tur + maliyet + kapı
-rozetleri (kilit = 🔐 Tier 3 açık kart, merge = kabul edilmiş ve PR var ama merge edilmemiş, escalated, needs_context /
+rozetleri (kilit = 🔐 Tier 3 açık kart, merge = merge'e hazır kart (`agents` kaydı varsa) ya da `in_review` + PR (kayıt yoksa), escalated, needs_context /
 blocked rapordan). Bir satıra basmak kart ayrıntısını açar. Altta "Bekleyen kapılar" kutusu (yoksa "Bekleyen kapı yok"),
 `env_owner` doluysa ortak test ortamı kilidi, verifications özeti (ad · verdict · maliyet).
 
-Kapı kuralları `board.py` ile birebir: Tier 3 ve açık durum → kilit; `accepted` + PR → merge; ancak PR alanı
-`merge <sha>` ile başlıyorsa merge kapısı kapanmış sayılır (LLMPortal'ın kaydı; board.py bunu ayırmıyor).
+Spec C bölümleri (`views.tsx` `agentSections`), "Bekleyen kapılar" kutusundan sonra, wave gruplarından önce:
+**Leads** (ana checkout ve lead worktree'leri: dal, spec başlığı, açık / bekleyen / hazır sayısı, `stale`),
+**Ajanlar** (rol, worktree, dal, upstream, değişikliğin düştüğü yer, commit'lenmemiş dosya sayısı), **Seni bekliyor**
+(kart ya da doğrulama · neden), **Merge'e hazır** (kart · PR · incelenen SHA), **Git işleri** (tür · hedef; komut düz
+metin ya da not; altında "Komutları sen çalıştırırsın; panel çalıştırmaz."). Başlıkta `son fetch: <zaman>` ya da
+`fetch yok`.
+
+Kapı kuralları (K254, K255; `parse.ts` `gatesOf`): `agents` kaydı olan kart Spec C REQ-3'ü izler (`tier 3 approval`
+→ kilit, `ready to merge` → merge, `escalated`, rapordan `needs_context` / `blocked`); kaydı olmayan kart bugünkü
+kuralı izler: Tier 3 ve açık durum → kilit; `in_review` + PR → merge, ancak PR alanı `merge <sha>` ile başlıyorsa
+merge kapısı yok (LLMPortal'ın kaydı; board.py bunu ayırmıyor); `escalated`; rapordan `needs_context` / `blocked`.
+`accepted` = merge edildi (review skill §4): merge kapısı yok.
 
 **(b) Bekleme.** Aktif koşu kartı: ikon, etiket, komutun kısaltılmışı, geçen süre (tabular), ilerleme çubuğu (beklenen
 süre varsa), takım ve kontrol sayaçları (GEÇTİ yeşil, KALDI kırmızı), son 8 satır (mono). Altında çalışan inceleyici alt
@@ -101,7 +116,7 @@ ajanlar ve son biten 5 koşu (sonuç ikonu, süre, sayım). Koşu yoksa: "Bekley
 **(c) Kart ayrıntısı.** Başlık, üst bilgiler (rol, tier, wave, durum, PR, maliyet, onay), Files listesi (Create/Modify/
 Test etiketli), worktree ve rapor durumu + özeti, test sonucu (sayım + son satırlar), qa / security kararı (STATE'ten,
 renkli rozet), tur geçmişi (her tur maddesi tek satır; altındaki bulgu maddeleri önem etiketiyle: High/Yüksek,
-Medium/Orta, Low/Düşük, P0–P2). Önceki / sonraki kart düğmeleri.
+Medium/Orta, Low/Düşük, P0–P2), **Kayıt** bölümü (Spec C `agents` listesinin tamamı: `implementer · by <lead dalı> · <dal> · <oturum>`, inceleyici için `<rol> r<tur> @<sha7> <verdict> · by <lead dalı>`; boşsa "Kayıt yok."). Önceki / sonraki kart düğmeleri.
 
 **(d) Ölçüm.** Kart başına dört seri: maliyet (USD), tur, süre (dk), kapı sayısı. Kart başına yatay çubuk; ölçülmeyen
 değer taralı/soluk çubuk + "ölçülmedi". Üstte her seri için sparkline (kart sırasıyla) ve toplam/ortalama. Kapı sayısı
@@ -136,9 +151,19 @@ düğmesi. `hasSurvey` iken çekilir. delix projesi değilse ve koşu yoksa hiç
   `claude -p` hiçbir şey başlatmaz: zamanlayıcı yok, pane yok, `tool.call` hook'ları doğrudan `next(e)`. Böylece
   kullanıcı kapsamında kurulu olsa bile headless uygulayıcılara yük bindirmez (K3). `/delix-board` komutu her oturumda
   kaydedilir; UI çizmez.
-- Salt okunur: `$.fs.write` yok; `$.process.run` yalnız salt-okur git: `rev-parse`, `worktree list`, STATE için
-  `status --porcelain` ve `log -1`. `tool.call` hook'ları
-  çağrıyı değiştirmez, reddetmez (gating hook yok). Ağ yok.
+- Salt okunur: `$.fs.write` yok; `$.process.run` yalnız salt-okur yerel git (Spec C, K257, K262, K263, K275, K277).
+  Her çağrı `git --no-optional-locks -c core.fsmonitor=false` ile başlar ve 5 sn zaman aşımlıdır; depo çağrıları
+  oturumun checkout'unda, worktree çağrıları o worktree'de (`cwd`) koşar. Açılışta bir kez `rev-parse --show-toplevel`.
+  20 sn'de bir: `rev-parse --git-common-dir`, `worktree list --porcelain -z`,
+  `for-each-ref refs/heads refs/remotes --format=%(refname)%09%(objectname)%09%(upstream)%09%(upstream:track,nobracket)%09%(committerdate:unix)`,
+  `--no-lazy-fetch --no-replace-objects cat-file blob refs/remotes/origin/HEAD:docs/delix/STATE.json`; sonra her
+  worktree'de `status --porcelain`; `.delix/card`'ı olmayan ve STATE'i commit'lenmemiş olmayan worktree'de
+  `diff --no-ext-diff --quiet origin/<default>...HEAD -- docs/delix/STATE.json` ve, STATE dosyası varsa,
+  `log -1 --no-show-signature --format=%ct -- docs/delix/STATE.json` (`<default>` = `delix.json`'daki
+  `default_branch`, yoksa ya da geçersizse `main`). N worktree için bakış başına en çok 4 + 3N çağrı.
+  `refs/remotes/origin/HEAD` yoksa (`git init` + `remote add` ile kurulan depo) hiçbir kart merge'e hazır olmaz;
+  `git remote set-head origin -a` onu kurar. `tool.call` hook'ları çağrıyı değiştirmez, reddetmez (gating hook yok).
+  Ağ yok: `git fetch` ve `gh` yok; uzak bilgi son fetch anının hâlidir.
 - Okunan dosyalar proje içi; çıktı dosyası yolu yalnız Bash sonucundan gelir.
 
 ## 9. Kabul ölçütleri

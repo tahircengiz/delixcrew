@@ -71,7 +71,7 @@ claude plugin install delix-board@delixcrew
 | 5 | `/delixcrew:review <card>` | Deterministic gates → `qa` (+ `security`) with zero context → ≤ 3 fix rounds → **Gate 2 (merge, human).** |
 | 6 | `/delixcrew:close` | STATUS/CHANGELOG, metrics (cost, rounds), drift check, approved memory writes, worktree cleanup. |
 | shortcut | `/delixcrew:verify <branch\|commit\|dir>` | **Only verifies** work done without a card (a single session or you) (K43): gitleaks, local tests, a remote **isolated** unit test (separate directory + separate image, never touches the live stack), `--full` on request; `qa` (+ `security`) in a **single pass**, no fix rounds → a `docs/delix/verifications/<date>-<name>.md` report (ACCEPT / FIX, 🔐) and `STATE.json.verifications`. For S/M + well-described + Tier ≤ 2 work, `/delixcrew:start` proposes this; the full flow is for Tier 3 / parallel cards / an unclear spec. |
-| any time | `/delixcrew:status` | Read-only board: wave · card · role · tier · status · rounds · PR · cost · last report · pending gate (🔐, merge) table in the chat; on request (`--write`) to `docs/delix/BOARD.md` (not committed). |
+| any time | `/delixcrew:status` | Read-only board: wave · card · role · tier · status · rounds · PR · cost · last report · pending gate (🔐, merge) table in the chat; on request (`--write`) to `docs/delix/BOARD.md` (not committed). Below it: Leads, Agents, Waiting on you, Ready to merge and Git actions; each push / merge / cleanup command in its own one-line `bash` block for Desktop's Run button. You run them; the lead never does. |
 | issues | `/delixcrew:triage [#n]` | In the delixcrew repo: reads incoming issues cleaned, the read-only `architect` checks each one and proposes a decision; after your `<decision> #<n>` in chat it records it and shows the exact comment; you publish it from your own terminal. See [Triage](#triage). |
 
 ## Roles
@@ -88,7 +88,7 @@ claude plugin install delix-board@delixcrew
 ## Files on the project side
 
 `docs/delix/delix.json` (test command, protected paths, test paths, max parallel, the `verify` remote isolated-run block),
-`docs/delix/SPEC.md`, `docs/delix/tasks/T<nnn>-<slug>.md`, `docs/delix/STATE.json` (cards + `verifications` records),
+`docs/delix/SPEC.md`, `docs/delix/tasks/T<nnn>-<slug>.md`, `docs/delix/STATE.json` (cards with their `agents` ledger and `merged` record + `verifications` records),
 `docs/delix/verifications/<date>-<name>.md|.patch` (`/delixcrew:verify` report and patch), `docs/delix/BOARD.md` (generated only
 on request, in `.gitignore`). In the implementer worktree: `.delix/card` (activates the hooks), `.delix/report.md`,
 `.delix/test-result.txt`, `.delix/evidence/`.
@@ -389,6 +389,17 @@ in a command that also has `cd` or a git command other than `add`, `commit`, `st
 allowed `cat` heredoc
 writes nothing the Write tool could not already write. With git older than 2.44, a missing object in a promisor
 (partial clone) repository can still be fetched from its remote while the hooks read the index (K225).
+
+`/delixcrew:status` and delix-board read only local files and local git: they run no `git fetch` and no `gh`, so
+remote branch data is as of your last fetch (the header shows its time). A card shows under Ready to merge only when
+the STATE that `refs/remotes/origin/HEAD` points at (the remote's default branch, where the lead pushes its records)
+holds the same card, PR and reviewed SHA; until then it waits as `review not on origin/<default>`. When `origin/HEAD`
+is missing, as in a repository set up with `git init` and `git remote add` instead of `git clone`, nothing shows as
+Ready to merge; `git remote set-head origin -a` sets it. With git older than 2.44 nothing does either, because that
+read uses `--no-lazy-fetch`. The merge command they print carries `--match-head-commit <sha>`, so a stale view cannot
+merge a head nobody reviewed. No hook stops the lead from running `gh pr merge` or a Git actions command itself: the
+T041 push rule denies `gh pr merge` only in an implementer worktree, and for the lead the rule lives in the review and
+status skill text only.
 
 ## License
 
