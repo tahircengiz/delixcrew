@@ -667,7 +667,7 @@
       "file": "docs/delix/tasks/T040-verification-evidence-file.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 70,
       "rounds": 0,
       "cost_usd": null,
@@ -699,7 +699,12 @@
           "verdict": "CLEAN",
           "at": "2026-11-12T18:37:46Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "86ff36dc260367b279f36a51668dec8d82a560eb",
+        "head": "a0fdf6f27c8a82e92eedf2006a64c90b820a264e",
+        "at": "2026-11-12T18:53:08Z"
+      }
     },
     "T041": {
       "file": "docs/delix/tasks/T041-bash-gate-card-push.md",
