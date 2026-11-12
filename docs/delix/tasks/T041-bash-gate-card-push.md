@@ -254,3 +254,15 @@ Read only this card and spec §6.
     script file"; the lead prototype names it in the Known limits (README and site), no code change.
   - qa notes (no fix): `--exec-path=<dir>` on a command other than a push runs a program from that directory ("a
     script file"); a git flag added after git 2.54 that takes no value is denied (fail closed).
+- Round 4 (PR #69, head `0867104ae7e78c242b4691a85af42e794c050854`, 2026-11-12; one round over the cap by the user's
+  choice, K283): qa `ACCEPT` (0 P0, 0 P1, 0 P2), security `🔐 HUMAN_APPROVAL` (no rated finding; Tier 3). The round-3 fix
+  equals the lead prototype byte for byte. Lead gates on the clean `git archive` of the head: the 12 shell suites exit
+  0 on Python 3.9.6 and 3.13.13 (push gate 133 ✔), `claude plugin validate .` passes; CI `check` and `test` pass; the
+  round-3 Medium and the round-2 reproductions are denied, the own-branch push and `status` are allowed. Ready for
+  gate 2.
+  - Security unsure (older code, reproduced by the lead): a byte that is not UTF-8 in a git config value (an alias)
+    makes `common.git` raise `UnicodeDecodeError`; the hook exits 1 with no decision on every git command that reads
+    the alias list. `hooks.json` has `"onFailure": "block"`, which K56 measured as blocking (exit 127), so the
+    command is blocked: fail closed, the session's own git commands stop until the byte is removed. Follow-up: deny
+    with a clear message instead of the traceback (`common.py` is outside this card).
+  - qa unsure (no finding): numeric `help.autocorrect` values such as `00` count as on (fail closed).
