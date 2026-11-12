@@ -4,7 +4,7 @@
 |---|---|---|---|---|---|
 | T040 | S | 2 | docs | 12 | open |
 
-> Tier 2 under design B: skill and agent text only. `scripts/stop_gate.py` is not touched, so K213/K218 stay exactly as they are. Dispatch waits for the user's design choice (K278) and for T039's merge (same file). If the user picks design A, this card is replaced by a 🔐 Tier 3 card.
+> Tier 2 under design B: skill and agent text only. `scripts/stop_gate.py` is not touched, so K213/K218 stay exactly as they are. The user chose design B (K278, 2026-11-12). Dispatch waits for T039's merge (same file `skills/review/SKILL.md`).
 
 **Goal (1 sentence):** The implementer writes the Verification command output to a file the Stop gate never opens, and the review and qa read both files. · **Spec:** feedback draft F010 (the user's local draft, quoted by the lead in the dispatch); `docs/delix/specs/C-board-visibility.md` K278. No REQ: size S, gate 1 is this card plus the user's answer on K278.
 

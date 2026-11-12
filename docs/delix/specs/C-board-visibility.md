@@ -1,7 +1,7 @@
 # SPEC — Spec C: board'da ajanlar, onay/merge kuyruğu ve bekleyen git işleri
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
-> işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'')
+> işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
 > K244–K261, K263 ve K273–K277. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
 > burada durur ve K numaraları K240'tan başlar (K244).
@@ -266,3 +266,12 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
   son tur (3) harcanmaz. K275 açık bir düzeltme turuna eklendiği için yükseltilmişti. Takip kartları (rev 8): T037 board.py ve
   T038 panel (aynı R-G6, R-G7, R8'' ve tek güvenli okuma yardımcısı), T039 review §4 `MERGED` kontrolü, T040 F010 (K278),
   T041 🔐 kart oturumunun push kuralı (K279).
+- **K278** (kullanıcı, 2026-11-12, geri alınır) F010 tasarım B: uygulayıcı kartın Verification çıktısını
+  `.delix/evidence/verification.txt`'ye yazar, review ve qa iki dosyayı da okur; Stop gate ve `test-result.txt` aynen kalır
+  (K213/K218 değişmez, Tier 2, T040). A (gate `.delix/stop-gate.txt`'ye yazar) reddedildi: Tier 3, ~10 mevcut test satırı,
+  README/site ve panelin "test sonucu" anlamı değişirdi.
+- **K279** (kullanıcı, 2026-11-12, geri alınır) `main-review` ruleset'indeki sahip bypass'ı kalır: lead her turda STATE'i
+  main'e doğrudan push eder (review §4). Kart oturumlarının varsayılan dala push'unu ve `gh pr merge`'ü T041'deki
+  `bash_gate` kuralı reddeder (🔐, kullanıcı "Evet, T041 (R-P6 dahil)"); bu derinlemesine savunmadır, GitHub sınırı değildir
+  ve Known limits'e yazılır. Lead ekleri: başarısız git çağrısı = reddet (çıkış 0/1 dışı ya da yok), komutta `cd`/`pushd`/`popd`
+  varsa push reddedilir.

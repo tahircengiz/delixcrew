@@ -4,6 +4,8 @@
 |---|---|---|---|---|---|
 | T041 | M | 3 | backend | 12 | open |
 
+**🔐 Approved:** 2026-11-12 tahircengiz
+
 > 🔐 Tier 3: `scripts/bash_gate.py` is a protected path (`docs/delix/delix.json`).
 > - The lead adds the `**🔐 Approved:**` line after the user's explicit yes in chat and commits it to main before dispatch; the session is interactive and the user opens it.
 > - It closes spec §6 "Kart oturumları … `git push origin HEAD:<default>` … T041'de 🔐 kapatılır".
