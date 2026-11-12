@@ -61,22 +61,41 @@ export async function findTop($: EngineInterface, cwd: string): Promise<string> 
   return top || cwd
 }
 
-async function readIfChanged<T>($: EngineInterface, cache: Cache, path: string, mtimeMs: number | null, parse: (text: string) => T): Promise<T | null> {
-  let mtime = mtimeMs
-  if (mtime === null) {
-    const stat = await $.fs.stat(path).catch(() => undefined)
-    if (!stat || stat.kind !== 'file') {
-      cache.files.delete(path)
-      return null
+/**
+ * S1 (Spec C §6, K277): `rel` under `base` when it names a regular file of at most 1 MiB reached through no link.
+ * `rel` is not empty, not absolute and has no part `''`, `.` or `..`; every part below `base` stats as a directory
+ * that is not a link, the last part as a file that is not a link. `$.fs.stat`'s `isLink` speaks of the path itself
+ * only, so each part is asked. Any throw is null.
+ */
+async function safeStat($: EngineInterface, base: string, rel: string): Promise<{ path: string; mtimeMs: number } | null> {
+  const parts = rel.split('/')
+  if (rel === '' || rel.startsWith('/') || parts.some(p => p === '' || p === '.' || p === '..')) return null
+  try {
+    for (let i = 1; i < parts.length; i++) {
+      const dir = await $.fs.stat(join(base, ...parts.slice(0, i)))
+      if (dir.kind !== 'dir' || dir.isLink !== false) return null
     }
-    mtime = stat.mtimeMs
+    const path = join(base, rel)
+    const file = await $.fs.stat(path)
+    return file.kind === 'file' && file.isLink === false && file.size <= MAX_FILE_BYTES ? { path, mtimeMs: file.mtimeMs } : null
+  } catch {
+    return null
   }
-  const hit = cache.files.get(path)
-  if (hit && hit.mtimeMs === mtime) return hit.value as T
-  const text = await $.fs.read(path).catch(() => undefined)
-  if (typeof text !== 'string') return null
+}
+
+/** `rel` under `base` parsed, through `safeStat`; parsed again only when its mtime moved. A text over 1 MiB is dropped. */
+async function readIfChanged<T>($: EngineInterface, cache: Cache, base: string, rel: string, parse: (text: string) => T): Promise<T | null> {
+  const stat = await safeStat($, base, rel)
+  if (stat === null) {
+    cache.files.delete(join(base, rel))
+    return null
+  }
+  const hit = cache.files.get(stat.path)
+  if (hit && hit.mtimeMs === stat.mtimeMs) return hit.value as T
+  const text = await $.fs.read(stat.path).catch(() => undefined)
+  if (typeof text !== 'string' || text.length > MAX_FILE_BYTES) return null
   const value = parse(text)
-  cache.files.set(path, { mtimeMs: mtime, value })
+  cache.files.set(stat.path, { mtimeMs: stat.mtimeMs, value })
   return value
 }
 
@@ -108,7 +127,7 @@ function chooseRoot(top: string, trees: Seen[]): string {
 
 /** The branch `origin/<default>...HEAD` compares with: delix.json's `default_branch` when it is a plain name, else `main`. */
 async function defaultBranch($: EngineInterface, cache: Cache, top: string): Promise<string> {
-  const value = await readIfChanged($, cache, join(top, 'docs/delix/delix.json'), null, text => {
+  const value = await readIfChanged($, cache, top, 'docs/delix/delix.json', text => {
     try {
       const json: unknown = JSON.parse(text)
       return typeof json === 'object' && json !== null && 'default_branch' in json ? json.default_branch : null
@@ -136,8 +155,9 @@ async function worktrees($: EngineInterface, cache: Cache, top: string, now: num
   const list = listText === null ? [] : parseWorktrees(listText)
   const refs = stdout(await git(top, ['for-each-ref', 'refs/heads', 'refs/remotes', REFS_FORMAT])) ?? ''
   const def = await defaultBranch($, cache, top)
-  // R1 (K262): the STATE the lead pushed; `cat-file blob` runs no textconv or filter, `--no-lazy-fetch` keeps it off the network.
-  const trusted = stdout(await git(top, ['--no-lazy-fetch', 'cat-file', 'blob', `refs/remotes/origin/HEAD:${STATE}`]))
+  // R1 (K262), R-G7 (K277): the STATE the lead pushed; `cat-file blob` runs no textconv or filter, `--no-lazy-fetch` keeps
+  // it off the network, `--no-replace-objects` reads the blob itself, not a `refs/replace/*` stand-in.
+  const trusted = stdout(await git(top, ['--no-lazy-fetch', '--no-replace-objects', 'cat-file', 'blob', `refs/remotes/origin/HEAD:${STATE}`]))
   const facts: GitLook['worktrees'] = {}
   const seen: Seen[] = []
   for (const tree of list) {
@@ -153,7 +173,8 @@ async function worktrees($: EngineInterface, cache: Cache, top: string, now: num
       const diff = await git(tree.path, ['diff', '--no-ext-diff', '--quiet', `origin/${def}...HEAD`, '--', STATE])
       diffExit = diff?.exitCode === 0 || diff?.exitCode === 1 ? diff.exitCode : null
       if (hasState) {
-        const ct = stdout(await git(tree.path, ['log', '-1', '--format=%ct', '--', STATE]))?.trim() ?? ''
+        // R-G6 (K277): `--no-show-signature`, so `log.showSignature` runs no `gpg.program` per signed commit.
+        const ct = stdout(await git(tree.path, ['log', '-1', '--no-show-signature', '--format=%ct', '--', STATE]))?.trim() ?? ''
         logCt = /^\d+$/.test(ct) ? Number(ct) : null
       }
     }
@@ -205,10 +226,7 @@ async function withFiles($: EngineInterface, cache: Cache, facts: GitLook['workt
   for (const [path, seen] of Object.entries(facts)) {
     const files: Record<string, string> = {}
     const add = async (rel: string) => {
-      const file = join(path, rel)
-      const stat = await $.fs.stat(file).catch(() => undefined)
-      if (stat?.kind !== 'file' || stat.isLink !== false || stat.size > MAX_FILE_BYTES) return
-      const text = await readIfChanged<string>($, texts, file, stat.mtimeMs, t => t)
+      const text = await readIfChanged<string>($, texts, path, rel, t => t)
       if (text !== null) files[rel] = text
     }
     for (const rel of [STATE, '.delix/card', '.delix/report.md']) await add(rel)
@@ -246,19 +264,19 @@ export async function readSnapshot($: EngineInterface, top: string, cache: Cache
   const root = seen.root ?? top
   const main = trees[0]?.path ?? root
   const delix = join(root, 'docs/delix')
-  const state = await readIfChanged<ParsedState | null>($, cache, join(delix, 'STATE.json'), null, parseState)
+  const state = await readIfChanged<ParsedState | null>($, cache, root, STATE, parseState)
   const taskEntries = await $.fs.list(join(delix, 'tasks')).catch(() => [])
   const cardFiles = taskEntries.filter(f => f.kind === 'file' && /^T\d{3}-.*\.md$/.test(f.name))
   if (state === null && cardFiles.length === 0) return emptySnapshot(root)
 
   // Cards of an earlier spec keep their files; their record is in the archived STATE `previous` names.
-  const previous = state?.previous ? await readIfChanged<ParsedState | null>($, cache, join(root, state.previous), null, parseState) : null
-  const metrics = (await readIfChanged($, cache, join(delix, 'metrics.md'), null, parseMetrics)) ?? ({} as Record<string, MetricRow>)
+  const previous = state?.previous ? await readIfChanged<ParsedState | null>($, cache, root, state.previous, parseState) : null
+  const metrics = (await readIfChanged($, cache, root, 'docs/delix/metrics.md', parseMetrics)) ?? ({} as Record<string, MetricRow>)
   const parsedCards: Record<string, ParsedCard & { file: string }> = {}
   for (const f of cardFiles) {
     const id = f.name.slice(0, 4)
     const path = join(delix, 'tasks', f.name)
-    const card = await readIfChanged($, cache, path, f.mtimeMs, parseCard)
+    const card = await readIfChanged($, cache, root, `docs/delix/tasks/${f.name}`, parseCard)
     if (card) parsedCards[id] = { ...card, file: path }
   }
 
@@ -270,7 +288,7 @@ export async function readSnapshot($: EngineInterface, top: string, cache: Cache
     let id: string | null = null
     const cardEntry = byName.get('card')
     if (cardEntry) {
-      const text = await readIfChanged($, cache, join(dot, 'card'), cardEntry.mtimeMs, t => t)
+      const text = await readIfChanged($, cache, tree.path, '.delix/card', t => t)
       id = /(T\d{3})/.exec(text ?? '')?.[1] ?? null
     }
     id ??= /(T\d{3})/.exec(tree.branch || basename(tree.path))?.[1] ?? null
@@ -280,8 +298,8 @@ export async function readSnapshot($: EngineInterface, top: string, cache: Cache
     reports[id] = {
       path: tree.path,
       branch: tree.branch,
-      report: reportEntry ? await readIfChanged($, cache, join(dot, 'report.md'), reportEntry.mtimeMs, parseReport) : null,
-      test: testEntry ? await readIfChanged($, cache, join(dot, 'test-result.txt'), testEntry.mtimeMs, parseTestResult) : null,
+      report: reportEntry ? await readIfChanged($, cache, tree.path, '.delix/report.md', parseReport) : null,
+      test: testEntry ? await readIfChanged($, cache, tree.path, '.delix/test-result.txt', parseTestResult) : null,
     }
   }
 

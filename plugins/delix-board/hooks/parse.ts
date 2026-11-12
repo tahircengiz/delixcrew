@@ -629,8 +629,10 @@ function deriveUnsafe(raw: Raw): Derived {
     return q
   }
 
-  // R1, R8' (K262): T = the STATE on origin/<default> when it is a JSON object, else {}; TR = what R8 marks Ready on it
+  // R1, R8' (K262), R8'' (K277): T = the STATE on origin/<default> when it is a JSON object and call 3 lists
+  // refs/remotes/origin/HEAD, else {}; TR = what R8 marks Ready on it
   const trustedState = ((): Json => {
+    if (!refs.has('refs/remotes/origin/HEAD')) return {}
     try {
       const parsed: unknown = JSON.parse(textOf(raw.trusted_state) ?? '')
       return isObject(parsed) ? parsed : {}
