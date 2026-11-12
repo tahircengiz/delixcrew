@@ -8,10 +8,11 @@ You are the `delix` lead; in this step **you review, you do not fix**. Target: $
 if empty, the cards in `in_review` in `STATE.json`).
 
 ## 1. Deterministic gates first (cheap)
-- Does the card's worktree have `.delix/report.md` and `.delix/test-result.txt`; does the report follow the contract
+- Does the card's worktree have `.delix/report.md`, `.delix/test-result.txt` (the Stop gate output) and
+  `.delix/evidence/verification.txt` (the Verification command output); does the report follow the contract
   (`DONE|DONE_WITH_CONCERNS|NEEDS_CONTEXT|BLOCKED`). On `NEEDS_CONTEXT`/`BLOCKED` open no review: answer, or take it to
   the user.
-- Does the verification command output match the card's expected output; if there is CI, is it green (`gh pr checks`).
+- Does `.delix/evidence/verification.txt` match the card's expected output; if there is CI, is it green (`gh pr checks`).
   The Stop gate runs only `delix.json.test_command` (in most projects build + quick checks); the card's **Verification
   command** and the full test suite (remote test environment included) **you run here**, or you verify their evidence.
   **No LLM review while red** (token waste): write the finding to the card as `Round n (deterministic gate)` and send it
@@ -33,7 +34,8 @@ if empty, the cards in `in_review` in `STATE.json`).
 
 ## 2. Independent review (parallel, zero chat context)
 With the `Agent` tool, at the same time:
-- `delixcrew:qa` — diff path, card path, SPEC path, test result file, round count. Expected: `ACCEPT | ACCEPT_WITH_NOTES |
+- `delixcrew:qa` — diff path, card path, SPEC path, round count and both test output files
+  (`.delix/test-result.txt`, `.delix/evidence/verification.txt`). Expected: `ACCEPT | ACCEPT_WITH_NOTES |
   REJECT | ESCALATE`.
 - Tier ≥ 2: `delixcrew:security` — same inputs + tier + protected paths. Expected: `CLEAN | FIX | 🔐 HUMAN_APPROVAL`.
 - Tier 3 with the `/security-review` skill available: run it too; with Claude Security installed, "scan changes" at
