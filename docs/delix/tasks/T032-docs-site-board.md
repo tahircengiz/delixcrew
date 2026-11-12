@@ -228,4 +228,22 @@ Base: main at fee18189eded717ee232d9405801e13e71ae8684. Line numbers are from th
 Read only this card, spec §3–§6 and the merged files named in Interfaces.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 1 (PR #71, head `3ae69413912ce22308a22d4b97f043e7a633ec55`, 2026-11-12): qa `ACCEPT` (0 P0, 0 P1), security
+  `CLEAN` (2 Low). Lead gates on the clean `git archive` of the head: the shell suites exit 0 on Python 3.9.6 and
+  3.13.13, `claude plugin validate .` and `claude plugin validate plugins/delix-board` pass, the delix-board test is
+  37 pass 0 fail; every Verification check of this card passes on the archive; 9 files, no protected path, no removed
+  test line; CI `check` and `test` pass. Ready for gate 2.
+  - Notes (follow-ups, not this card):
+    - Lead, reproduced (security unsure): in a treeless partial clone (`--filter=tree:0`, git 2.54) the board's
+      `git log -1 --no-show-signature --format=%ct -- docs/delix/STATE.json` fetches from the remote (packs 3 to 4);
+      with `--no-lazy-fetch` the same call exits 128 and fetches nothing. `status` and `diff` fetched nothing in that
+      test. So the site's "use no network" / "ağ kullanmaz" (this card's text, spec §8) does not hold for such
+      a clone. Follow-up code card: `--no-lazy-fetch` on the `status`, `diff` and `log` calls in `scripts/board.py`
+      and `plugins/delix-board/hooks/data.ts`.
+    - Security Low: README line 74 (both languages) "the lead never does" is stronger than what enforces it (skill
+      text only); the README's Known limits says so.
+    - Security Low: the site's Known limits names only `gh pr merge`; the README also names the Git actions
+      commands (push, worktree remove, branch -D).
+    - Security unsure, not traced: the trusted STATE is read from the local ref `refs/remotes/origin/HEAD`, and
+      `scripts/bash_gate.py` has no rule for `git update-ref` or `git remote set-head` in an implementer worktree. A
+      forged Ready to merge also needs the source STATE to agree; follow-up check.

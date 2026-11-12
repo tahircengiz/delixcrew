@@ -324,8 +324,8 @@
       "file": "docs/delix/tasks/T032-docs-site-board.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_progress",
-      "pr": null,
+      "status": "in_review",
+      "pr": 71,
       "rounds": 0,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
@@ -337,8 +337,24 @@
           "sha": null,
           "verdict": null,
           "at": "2026-11-12T20:13:38Z",
-          "branch": null,
+          "branch": "claude/zealous-blackwell-0b3e05",
           "session": "t032-docs-and-site-delix"
+        },
+        {
+          "role": "qa",
+          "by": "claude/eager-wescoff-11de1e",
+          "round": 1,
+          "sha": "3ae69413912ce22308a22d4b97f043e7a633ec55",
+          "verdict": "ACCEPT",
+          "at": "2026-11-12T20:27:28Z"
+        },
+        {
+          "role": "security",
+          "by": "claude/eager-wescoff-11de1e",
+          "round": 1,
+          "sha": "3ae69413912ce22308a22d4b97f043e7a633ec55",
+          "verdict": "CLEAN",
+          "at": "2026-11-12T20:31:27Z"
         }
       ]
     },
