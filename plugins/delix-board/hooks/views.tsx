@@ -7,7 +7,7 @@ import type { EngineInterface, RenderElement } from 'claude-code'
 
 import type { Card, Run, Snapshot, View } from '../types'
 import { ACCENT, BAD, GOOD, MERGE, MUTED, STATUS_COLORS, WARN, severityTone, statusColor, verdictTone, type IconName, type Kit } from './gfx'
-import { DEFAULT_PATTERNS, clock, cut, formatDuration, plain, usd } from './parse'
+import { DEFAULT_PATTERNS, clock, cut, formatDuration, plain, trimSlashes, usd } from './parse'
 
 // The board's values; the same atoms in each file that reads them, as the module scan requires.
 const viewAtom = atom({ plugin: 'delix-board', key: 'view' } as const, 'pano')
@@ -45,7 +45,7 @@ const shortTime = (iso: string | null) => (iso ? iso.replace('T', ' ').replace(/
 /** Seconds since the epoch as `YYYY-MM-DD HH:MM UTC`. */
 const utcMinute = (seconds: number) => `${new Date(seconds * 1000).toISOString().slice(0, 16).replace('T', ' ')} UTC`
 
-const base = (p: string) => p.replace(/\/+$/, '').split('/').pop() ?? p
+export const base = (p: string) => trimSlashes(p).split('/').pop() ?? p
 
 export type Ctx = {
   k: Kit
@@ -221,7 +221,7 @@ function agentSections(k: Kit, snap: Snapshot): RenderElement {
         {snap.actions.map(a => (
           <Box flexDirection="column">
             <Text dimColor size="caption">{cut(`${a.kind} · ${a.target}`, w)}</Text>
-            {a.command !== null ? <Text mono>{a.command}</Text> : <Text color="warning">{cut(a.note, w)}</Text>}
+            {a.command !== null ? <Text mono>{a.command}</Text> : <Text color="warning">{a.note}</Text>}
           </Box>
         ))}
         <Text dimColor size="caption">Komutları sen çalıştırırsın; panel çalıştırmaz.</Text>

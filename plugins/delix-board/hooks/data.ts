@@ -15,6 +15,7 @@ import {
   parseState,
   parseTestResult,
   parseWorktrees,
+  trimSlashes,
   type MetricRow,
   type ParsedCard,
   type ParsedState,
@@ -39,12 +40,23 @@ export const newCache = (): Cache => ({ files: new Map(), texts: new Map(), work
 const STATE = 'docs/delix/STATE.json'
 const REFS_FORMAT = '--format=%(refname)%09%(objectname)%09%(upstream)%09%(upstream:track,nobracket)%09%(committerdate:unix)'
 
+/** K263: every git call takes no optional lock (another worktree's index stays unwritten) and runs no fsmonitor hook from the shared config. */
+const GIT = ['git', '--no-optional-locks', '-c', 'core.fsmonitor=false']
+/** Spec C §6: a file the board reads is a regular file, not a link, of at most 1 MiB. */
+const MAX_FILE_BYTES = 1048576
+
 const join = (...parts: string[]) => parts.join('/').replace(/\/+/g, '/')
-const basename = (p: string) => p.replace(/\/+$/, '').split('/').pop() ?? p
+export const basename = (p: string) => trimSlashes(p).split('/').pop() ?? p
+
+/** `git worktree list --porcelain -z` in the newline form the parsers read; '' when a field holds a newline or a CR (K263). */
+export function zList(text: string): string {
+  const fields = text.split('\0')
+  return fields.some(f => f.includes('\n') || f.includes('\r')) ? '' : fields.join('\n')
+}
 
 /** The session's checkout: the git toplevel of `cwd`, else `cwd` itself. */
 export async function findTop($: EngineInterface, cwd: string): Promise<string> {
-  const git = await $.process.run(['git', 'rev-parse', '--show-toplevel'], { cwd, timeoutMs: 5000 }).catch(() => undefined)
+  const git = await $.process.run([...GIT, 'rev-parse', '--show-toplevel'], { cwd, timeoutMs: 5000 }).catch(() => undefined)
   const top = git?.exitCode === 0 ? git.stdout.trim().split('\n')[0] : undefined
   return top || cwd
 }
@@ -108,20 +120,24 @@ async function defaultBranch($: EngineInterface, cache: Cache, top: string): Pro
 }
 
 /**
- * The 20-second look (Spec C §4, K257): at most 3 + 3N git calls for N worktrees, each in its worktree as `cwd`.
- * Three for the repository (common dir, worktree list, refs), then per worktree `status`, and for a card-less one
- * whose STATE is not uncommitted the three-dot `diff` and, if it holds a STATE, its last commit time.
+ * The 20-second look (Spec C §4, K257, K262): at most 4 + 3N git calls for N worktrees, each in its worktree as `cwd`.
+ * Four for the repository (common dir, worktree list, refs, the STATE at origin/<default>), then per worktree
+ * `status`, and for a card-less one whose STATE is not uncommitted the three-dot `diff` and, if it holds a STATE,
+ * its last commit time.
  */
 async function worktrees($: EngineInterface, cache: Cache, top: string, now: number) {
   if (now - cache.worktrees.at < 20_000 && cache.worktrees.at !== 0) return cache.worktrees
-  const git = (cwd: string, args: string[]) => $.process.run(['git', ...args], { cwd, timeoutMs: 5000 }).catch(() => undefined)
+  const git = (cwd: string, args: string[]) => $.process.run([...GIT, ...args], { cwd, timeoutMs: 5000 }).catch(() => undefined)
   const stdout = (run: Awaited<ReturnType<typeof git>>) => (run?.exitCode === 0 ? run.stdout : null)
   const commonLine = stdout(await git(top, ['rev-parse', '--git-common-dir']))?.split('\n')[0]?.trim() ?? ''
   const common = commonLine === '' ? null : commonLine.startsWith('/') ? commonLine : join(top, commonLine)
-  const listText = stdout(await git(top, ['worktree', 'list', '--porcelain']))
+  const listZ = stdout(await git(top, ['worktree', 'list', '--porcelain', '-z']))
+  const listText = listZ === null ? null : zList(listZ)
   const list = listText === null ? [] : parseWorktrees(listText)
   const refs = stdout(await git(top, ['for-each-ref', 'refs/heads', 'refs/remotes', REFS_FORMAT])) ?? ''
   const def = await defaultBranch($, cache, top)
+  // R1 (K262): the STATE the lead pushed; `cat-file blob` runs no textconv or filter, `--no-lazy-fetch` keeps it off the network.
+  const trusted = stdout(await git(top, ['--no-lazy-fetch', 'cat-file', 'blob', `refs/remotes/origin/${def}:${STATE}`]))
   const facts: GitLook['worktrees'] = {}
   const seen: Seen[] = []
   for (const tree of list) {
@@ -158,7 +174,7 @@ async function worktrees($: EngineInterface, cache: Cache, top: string, now: num
     at: now,
     list,
     root,
-    git: { default_branch: def, self: top, source: root, common_dir: common, fetch_head_mtimes: fetchHeads, worktree_list: listText ?? '', for_each_ref: refs, worktrees: facts },
+    git: { default_branch: def, trusted_state: trusted, self: top, source: root, common_dir: common, fetch_head_mtimes: fetchHeads, worktree_list: listText ?? '', for_each_ref: refs, worktrees: facts },
   }
   return cache.worktrees
 }
@@ -189,7 +205,10 @@ async function withFiles($: EngineInterface, cache: Cache, facts: GitLook['workt
   for (const [path, seen] of Object.entries(facts)) {
     const files: Record<string, string> = {}
     const add = async (rel: string) => {
-      const text = await readIfChanged<string>($, texts, join(path, rel), null, t => t)
+      const file = join(path, rel)
+      const stat = await $.fs.stat(file).catch(() => undefined)
+      if (stat?.kind !== 'file' || stat.isLink !== false || stat.size > MAX_FILE_BYTES) return
+      const text = await readIfChanged<string>($, texts, file, stat.mtimeMs, t => t)
       if (text !== null) files[rel] = text
     }
     for (const rel of [STATE, '.delix/card', '.delix/report.md']) await add(rel)

@@ -45,9 +45,10 @@ export function minutes(text: string): number | null {
     const span = h2 * 60 + m2 - (h1 * 60 + m1)
     return span >= 0 ? span : null
   }
-  const h = /(\d+(?:[.,]\d+)?)\s*(?:sa|saat|h)\b/.exec(text)
-  const m = /(\d+(?:[.,]\d+)?)\s*(?:dk|min)\b/.exec(text)
-  const s = /(\d+(?:[.,]\d+)?)\s*(?:sn|s)\b/.exec(text)
+  // (?<!\d): a match starts only where a number does, so a long digit run is tried once (the leftmost match is the same; K263).
+  const h = /(?<!\d)(\d+(?:[.,]\d+)?)\s*(?:sa|saat|h)\b/.exec(text)
+  const m = /(?<!\d)(\d+(?:[.,]\d+)?)\s*(?:dk|min)\b/.exec(text)
+  const s = /(?<!\d)(\d+(?:[.,]\d+)?)\s*(?:sn|s)\b/.exec(text)
   if (!h && !m && !s) return null
   const n = (x: RegExpExecArray | null) => (x?.[1] === undefined ? 0 : Number(x[1].replace(',', '.')))
   return Math.round((n(h) * 60 + n(m) + n(s) / 60) * 10) / 10
@@ -209,13 +210,14 @@ export function parseCard(text: string): ParsedCard {
   }
   const files: CardFile[] = []
   for (const line of section(text, /^##\s+Files\b/i)) {
-    const m = /^-\s+(?:\*\*)?([A-Za-zÇĞİÖŞÜçğıöşü]+)(?:\*\*)?\s*:\s*(.+)$/.exec(line)
+    // s: `.` takes `\r` too, so a CRLF line matches and the `\s*` / `.+` split never backtracks (K263).
+    const m = /^-\s+(?:\*\*)?([A-Za-zÇĞİÖŞÜçğıöşü]+)(?:\*\*)?\s*:\s*(.+)$/s.exec(line)
     if (m?.[1] !== undefined && m[2] !== undefined) files.push({ kind: m[1], path: tidy(m[2]) })
   }
   const reviewRounds: ReviewRound[] = []
   for (const line of section(text, /^##\s+(Review findings|İnceleme bulguları)/i)) {
-    const top = /^-\s+(.+)$/.exec(line)
-    const nested = /^\s{2,}-\s+(.+)$/.exec(line)
+    const top = /^-\s+(.+)$/s.exec(line)
+    const nested = /^\s{2,}-\s+(.+)$/s.exec(line)
     if (top?.[1] !== undefined) {
       reviewRounds.push({ title: tidy(top[1]), findings: [] })
     } else if (nested?.[1] !== undefined && reviewRounds.length > 0) {
@@ -344,6 +346,13 @@ export function parseWorktrees(text: string): { path: string; branch: string }[]
   return out
 }
 
+/** `p` without its trailing slashes; a loop, so a long run of them costs linear time (K263). */
+export function trimSlashes(p: string): string {
+  let end = p.length
+  while (end > 0 && p[end - 1] === '/') end -= 1
+  return p.slice(0, end)
+}
+
 /** K254/K255: a card with an `agents` ledger follows Spec C REQ-3 (its R8 reasons); one without follows board.py's rule. */
 export function gatesOf(card: { tier: number | null; status: string; pr: string | null; isMerged: boolean; reasons: string[] | null }, reportStatus: string | null): string[] {
   const gates: string[] = []
@@ -385,6 +394,8 @@ export type Raw = {
   worktree_list?: string | null
   for_each_ref?: string | null
   worktrees?: Record<string, RawWorktree> | null
+  /** R1 (K262): the STATE.json at `refs/remotes/origin/<default>`, `cat-file blob` stdout; null on any failure. */
+  trusted_state?: string | null
 }
 
 export type Derived = {
@@ -404,6 +415,8 @@ const SHA_RE = /^[0-9a-f]{40}$/
 const ROLE_ORDER = ['lead', 'implementer', 'other']
 const KIND_ORDER = ['push', 'merge', 'remove_worktree', 'delete_branch']
 const UNSAFE = 'unsafe name: run by hand'
+/** K248, REQ-4: a branch name a command may carry; `reset` and `clean` never. */
+const isSafeBranch = (b: string) => BRANCH_RE.test(b) && b !== 'reset' && b !== 'clean'
 
 const isInt = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v)
 const textOf = (v: unknown): string | null => (typeof v === 'string' ? v : null)
@@ -536,11 +549,13 @@ function deriveUnsafe(raw: Raw): Derived {
     if (card !== null && !cardTree.has(card)) cardTree.set(card, t)
   }
 
-  // R7
-  const prOf = (id: string, card: Json): number | null => {
+  // R7: a pr of 0 (`0`, `"#0"`) is no PR; withFiles = false (R8' on T) reads no report
+  const prOf = (id: string, card: Json, withFiles = true): number | null => {
     const v = card.pr
     if (isInt(v) && v > 0) return v
-    if (typeof v === 'string' && /^#?[0-9]+$/.test(v)) return Number(v.replace('#', ''))
+    const n = typeof v === 'string' && /^#?[0-9]+$/.test(v) ? Number(v.replace('#', '')) : 0
+    if (n > 0) return n
+    if (!withFiles) return null
     const t = cardTree.get(id)
     const m = t ? /\*\*PR:\*\* #(\d+)/.exec(fileOf(t.path, '.delix/report.md') ?? '') : null
     return m ? Number(m[1]) : null
@@ -550,9 +565,10 @@ function deriveUnsafe(raw: Raw): Derived {
     return t ? (/\*\*Status:\*\*\s*([A-Z_]+)/.exec(fileOf(t.path, '.delix/report.md') ?? '')?.[1] ?? null) : null
   }
   const lastOf = (list: Json[], role: string) => list.filter(r => r.role === role).at(-1) ?? null
-  const branchOf = (id: string, card: Json): string | null => {
+  const branchOf = (id: string, card: Json, withFiles = true): string | null => {
     const b = lastOf(records(card), 'implementer')?.branch
     if (typeof b === 'string') return b
+    if (!withFiles) return null
     return cardTree.get(id)?.branch ?? null
   }
   const tierOf = (card: Json) => (isInt(card.tier) ? card.tier : 2)
@@ -561,21 +577,22 @@ function deriveUnsafe(raw: Raw): Derived {
     return rounds.length === 0 ? null : Math.max(...rounds)
   }
 
-  // R8
-  const queueOf = (state: Json | null, statePath: string | null): Queue => {
+  // R8, R8' (K262): `trusted` = TR, the (card, pr, sha) R8 marks Ready on T with no files and the same refs; null while TR is built
+  const readyKey = (card: string, pr: number | null, sha: string | null) => `${card}\t${String(pr)}\t${String(sha)}`
+  const queueOf = (state: Json | null, statePath: string | null, trusted: Set<string> | null): Queue => {
     const cards = cardsOf(state)
     const q: Queue = { waiting: [], ready: [], done: [], reasons: new Map() }
     for (const id of Object.keys(cards).sort(byCode)) {
       const card = cards[id]
       if (!isObject(card)) continue
       const status = textOf(card.status)
-      const pr = prOf(id, card)
+      const pr = prOf(id, card, trusted !== null)
       const tier = tierOf(card)
       const list = records(card)
       const r = lastRound(card)
       const qa = r === null ? null : (list.filter(x => x.role === 'qa' && x.round === r).at(-1) ?? null)
       const sec = r === null ? null : (list.filter(x => x.role === 'security' && x.round === r).at(-1) ?? null)
-      const branch = branchOf(id, card)
+      const branch = branchOf(id, card, trusted !== null)
       const tip = branch === null ? null : (refs.get(`refs/remotes/origin/${branch}`)?.object ?? null)
       const qaSha = qa === null ? null : textOf(qa.sha)
       const isReviewed =
@@ -584,9 +601,10 @@ function deriveUnsafe(raw: Raw): Derived {
         qa !== null &&
         (qa.verdict === 'ACCEPT' || qa.verdict === 'ACCEPT_WITH_NOTES') &&
         (tier < 2 || (sec !== null && (sec.verdict === 'CLEAN' || sec.verdict === `${LOCK} HUMAN_APPROVAL`)))
-      const isReady = isReviewed && qaSha !== null && tip === qaSha
+      const meetsReady = isReviewed && qaSha !== null && tip === qaSha
+      const isReady = meetsReady && (trusted === null || trusted.has(readyKey(id, pr, qaSha)))
       const reasons: string[] = []
-      if (isReady) reasons.push('ready to merge')
+      if (meetsReady) reasons.push(isReady ? 'ready to merge' : `review not on origin/${def}`)
       if (status === 'open' && tier === 3) {
         const file = textOf(card.file)
         const text = file === null || statePath === null ? null : fileOf(statePath, file)
@@ -595,7 +613,7 @@ function deriveUnsafe(raw: Raw): Derived {
       const report = reportStatus(id)
       if ((report === 'NEEDS_CONTEXT' || report === 'BLOCKED') && status !== null && OPEN_STATUSES.includes(status)) reasons.push(report.toLowerCase())
       if (status === 'escalated') reasons.push('escalated')
-      if (isReviewed && !isReady) reasons.push('changed after review')
+      if (isReviewed && !meetsReady) reasons.push('changed after review')
       if (status === 'in_review' && pr !== null && (!Array.isArray(card.agents) || card.agents.length === 0)) reasons.push('no review record')
       for (const reason of reasons) q.waiting.push({ card: id, verification: null, reason })
       if (reasons.length > 0) q.reasons.set(id, reasons)
@@ -610,6 +628,18 @@ function deriveUnsafe(raw: Raw): Derived {
     }
     return q
   }
+
+  // R1, R8' (K262): T = the STATE on origin/<default> when it is a JSON object, else {}; TR = what R8 marks Ready on it
+  const trustedState = ((): Json => {
+    try {
+      const parsed: unknown = JSON.parse(textOf(raw.trusted_state) ?? '')
+      return isObject(parsed) ? parsed : {}
+    } catch {
+      return {}
+    }
+  })()
+  const trustedCards = cardsOf(trustedState)
+  const trustedReady = new Set(queueOf(trustedState, null, null).ready.map(r => readyKey(r.card, r.pr, r.sha)))
 
   // R6
   const roundLine = (r: Json) =>
@@ -657,7 +687,7 @@ function deriveUnsafe(raw: Raw): Derived {
   const leadTrees = [...trees.filter(t => t.main), ...trees.filter(t => !t.main && roleOf(t) === 'lead').sort((a, b) => byCode(a.path, b.path))]
   const leads: LeadRow[] = leadTrees.map(t => {
     const state = stateOf(t.path)
-    const q = queueOf(state, t.path)
+    const q = queueOf(state, t.path, trustedReady)
     const cards = cardsOf(state)
     const spec = state === null ? null : textOf(state.spec)
     const specText = spec === null ? null : fileOf(t.path, spec)
@@ -676,8 +706,8 @@ function deriveUnsafe(raw: Raw): Derived {
     }
   })
 
-  // R10
-  const queue = queueOf(sourceState, sourcePath)
+  // R10, R10' (K262): the merged cleanup and delete_branch read status, merged and the branch from T's card
+  const queue = queueOf(sourceState, sourcePath, trustedReady)
   const actions: Action[] = []
   const guarded = (kind: Action['kind'], target: string, card: string | null, isSafe: boolean, command: string, uncommitted: number | '?' = 0) => {
     if (uncommitted !== 0) actions.push({ kind, target, card, command: null, note: `uncommitted ${uncommitted} files: commit or discard in its session` })
@@ -691,10 +721,10 @@ function deriveUnsafe(raw: Raw): Derived {
     const card = cardOf(t.path)
     const up = upstreamText(t)
     if (t.branch !== null && t.branch !== def && up !== 'gone' && up !== '?' && (up === 'no upstream' || up.includes('ahead'))) {
-      guarded('push', t.path, card, PATH_RE.test(t.path) && BRANCH_RE.test(t.branch), `git -C ${t.path} push -u origin ${t.branch}`, uncommitted)
+      guarded('push', t.path, card, PATH_RE.test(t.path) && isSafeBranch(t.branch), `git -C ${t.path} push -u origin ${t.branch}`, uncommitted)
     }
-    const source = card === null ? null : sourceCards[card]
-    const isMergedCard = isObject(source) && source.status === 'accepted' && isObject(source.merged)
+    const trusted = card === null ? null : trustedCards[card]
+    const isMergedCard = isObject(trusted) && trusted.status === 'accepted' && isObject(trusted.merged)
     const isIdle = isOld(lastActivity(t, row?.role === 'lead')) && hasUpstream(t) && (up === 'in sync' || /^\d+ behind$/.test(up))
     if (isMergedCard || isIdle) guarded('remove_worktree', t.path, card, PATH_RE.test(t.path), `git worktree remove ${t.path}`, uncommitted)
   }
@@ -703,13 +733,13 @@ function deriveUnsafe(raw: Raw): Derived {
   }
   const checkedOut = new Set(trees.map(t => t.branch).filter((b): b is string => b !== null))
   for (const id of Object.keys(sourceCards).sort(byCode)) {
-    const card = sourceCards[id]
+    const card = trustedCards[id]
     if (!isObject(card) || !isObject(card.merged)) continue
-    const branch = branchOf(id, card)
+    const branch = branchOf(id, card, false)
     if (branch === null || checkedOut.has(branch)) continue
     const ref = refOf(branch)
     if (ref === undefined || ref.object !== card.merged.head) continue
-    guarded('delete_branch', branch, id, BRANCH_RE.test(branch), `git branch -D ${branch}`)
+    guarded('delete_branch', branch, id, isSafeBranch(branch), `git branch -D ${branch}`)
   }
   actions.sort((a, b) => byCode(a.card ?? a.target, b.card ?? b.target) || KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind))
 
