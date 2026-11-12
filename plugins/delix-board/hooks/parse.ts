@@ -394,7 +394,7 @@ export type Raw = {
   worktree_list?: string | null
   for_each_ref?: string | null
   worktrees?: Record<string, RawWorktree> | null
-  /** R1 (K262): the STATE.json at `refs/remotes/origin/<default>`, `cat-file blob` stdout; null on any failure. */
+  /** R1 (K262): the STATE.json at `refs/remotes/origin/HEAD`, `cat-file blob` stdout; null on any failure. */
   trusted_state?: string | null
 }
 

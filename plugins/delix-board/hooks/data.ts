@@ -121,7 +121,7 @@ async function defaultBranch($: EngineInterface, cache: Cache, top: string): Pro
 
 /**
  * The 20-second look (Spec C §4, K257, K262): at most 4 + 3N git calls for N worktrees, each in its worktree as `cwd`.
- * Four for the repository (common dir, worktree list, refs, the STATE at origin/<default>), then per worktree
+ * Four for the repository (common dir, worktree list, refs, the STATE at origin/HEAD), then per worktree
  * `status`, and for a card-less one whose STATE is not uncommitted the three-dot `diff` and, if it holds a STATE,
  * its last commit time.
  */
@@ -137,7 +137,7 @@ async function worktrees($: EngineInterface, cache: Cache, top: string, now: num
   const refs = stdout(await git(top, ['for-each-ref', 'refs/heads', 'refs/remotes', REFS_FORMAT])) ?? ''
   const def = await defaultBranch($, cache, top)
   // R1 (K262): the STATE the lead pushed; `cat-file blob` runs no textconv or filter, `--no-lazy-fetch` keeps it off the network.
-  const trusted = stdout(await git(top, ['--no-lazy-fetch', 'cat-file', 'blob', `refs/remotes/origin/${def}:${STATE}`]))
+  const trusted = stdout(await git(top, ['--no-lazy-fetch', 'cat-file', 'blob', `refs/remotes/origin/HEAD:${STATE}`]))
   const facts: GitLook['worktrees'] = {}
   const seen: Seen[] = []
   for (const tree of list) {
@@ -150,7 +150,7 @@ async function worktrees($: EngineInterface, cache: Cache, top: string, now: num
     let diffExit: number | null = null
     let logCt: number | null = null
     if (!hasCard && !isDirty) {
-      const diff = await git(tree.path, ['diff', '--quiet', `origin/${def}...HEAD`, '--', STATE])
+      const diff = await git(tree.path, ['diff', '--no-ext-diff', '--quiet', `origin/${def}...HEAD`, '--', STATE])
       diffExit = diff?.exitCode === 0 || diff?.exitCode === 1 ? diff.exitCode : null
       if (hasState) {
         const ct = stdout(await git(tree.path, ['log', '-1', '--format=%ct', '--', STATE]))?.trim() ?? ''
