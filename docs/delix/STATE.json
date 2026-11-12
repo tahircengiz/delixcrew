@@ -436,7 +436,7 @@
       "file": "docs/delix/tasks/T036-ledger-skills-followup.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 63,
       "rounds": 0,
       "cost_usd": null,
@@ -468,7 +468,12 @@
           "verdict": "CLEAN",
           "at": "2026-11-12T15:13:53Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "05c8447561cf006c67bf0d1ef0466217f4efa696",
+        "head": "d56b8a52e02d46a4b035dfd3f3336e0f7d3ab8ae",
+        "at": "2026-11-12T15:22:28Z"
+      }
     }
   },
   "status_values": [

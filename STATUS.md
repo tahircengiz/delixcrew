@@ -589,7 +589,7 @@ skill'leri ledger yazar, T032 doküman ve site (wave 9). 🔐 T033 0.6.3 sürüm
 | 13.2 | T031 PR #59 (`3812e01`), 0 tur: qa ACCEPT, security CLEAN (1 Low) | ✔ 2026-11-05 merge `348de66` |
 | 13.3 | T029 PR #60 (`43736e4`), 1 tur: Medium (STATE alanındaki CR bash fence açıyordu) lead'de üretildi ve prototiplendi; tur 2 qa ACCEPT, security bulgusu Low sayıldı (K269) | ✔ 2026-11-05 merge `234d014` |
 | 13.4 | T030 PR #62 (`5dd8985`), 1 tur: Medium (`\s+$` karesel, ×4 ölçüldü) prototiplendi; tur 2 qa ACCEPT_WITH_NOTES, security CLEAN | ✔ 2026-11-05 merge `c643743` |
-| 13.5 | K262 takip işi, wave 9: T034 board.py, T035 panel, T036 lead skill'leri (kullanıcı A'yı seçti 2026-11-11: merge kararı yalnız `origin/<default>` STATE'inden; K263 git sertleştirmesi); spec rev 5, fixture'a `trusted_state` | ◐ 2026-11-12 tur 1: T036 (#63) kapı 2'de; T034 (#64) ve T035 (#65) düzeltmede (K274 TR yalnız T'den, K275 `--no-ext-diff`, K276 `origin/HEAD`); spec rev 6 |
+| 13.5 | K262 takip işi, wave 9: T034 board.py, T035 panel, T036 lead skill'leri (kullanıcı A'yı seçti 2026-11-11: merge kararı yalnız `origin/<default>` STATE'inden; K263 git sertleştirmesi); spec rev 5, fixture'a `trusted_state` | ◐ 2026-11-12 tur 1: T036 (#63, `d56b8a5`) 0 tur, merge `05c8447`; T034 (#64) ve T035 (#65) düzeltmede (K274 TR yalnız T'den, K275 `--no-ext-diff`, K276 `origin/HEAD`); spec rev 6 |
 | 13.6 | T032 doküman ve site (wave 10; delix-board 0.1.5; çapalar wave 9'dan sonra yenilenir) | ◻ |
 | 13.7 | Kapanış | ◻ |
 
