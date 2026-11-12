@@ -2,6 +2,28 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## Unreleased
+
+- **The board shows agents, the review ledger and what waits on you** (Spec C; #59, #60, #62, #71): below the card
+  table, `/delixcrew:status` and the delix-board pane (0.1.5) show Leads, Agents, Waiting on you, Ready to merge and
+  Git actions. The lead skills append every implementer, qa and security run to `STATE.json.cards.<T>.agents` (who
+  sent it, round, reviewed SHA, verdict). Each push, merge or cleanup command comes in its own one-line `bash` block
+  for Desktop's Run button; you run it, the board does not.
+- **Ready to merge comes only from the pushed STATE** (K262; #63, #64, #65, #66, #67, #68): a card shows under Ready to
+  merge only when the `STATE.json` that `refs/remotes/origin/HEAD` points at holds the same card, PR and reviewed SHA,
+  and the merge command carries `--match-head-commit <sha>`. The lead pushes its records before gate 2 and writes
+  `merged` only when the PR is `MERGED`. When `origin/HEAD` is missing, nothing shows as ready;
+  `git remote set-head origin -a` sets it.
+- **The board's git calls are hardened** (K263, K277; #64, #65, #66, #67): no optional locks, `core.fsmonitor=false`,
+  `--no-show-signature` on the log call, and `--no-lazy-fetch --no-replace-objects` on the trusted STATE read. The board
+  reads a file only when it is a regular file of at most 1 MiB with no link in its path.
+- **The card's verification output has its own file** (F010; #70): the implementer writes the Verification command
+  output to `.delix/evidence/verification.txt`, because the Stop gate rewrites `.delix/test-result.txt`.
+- **An implementer pushes only its card branch** (🔐 K279–K283; #69): in an implementer worktree the Bash hook allows
+  a push only from the card's own branch, which is not the default branch, and denies `gh pr merge`: gate 2 is yours.
+  It also denies a git global option outside git's own list, and a command name git does not list while
+  `help.autocorrect` is on. The README's Known limits name what the hook cannot see.
+
 ## 0.6.3 — 2026-11-04
 
 - **Security fix in the Bash hook** (`scripts/bash_gate.py`, #36): a capture call whose path started with `-`
