@@ -1,7 +1,9 @@
 # SPEC — Spec C: board'da ajanlar, onay/merge kuyruğu ve bekleyen git işleri
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
-> işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279; rev 9 (2026-11-12): T041 tur 1, K280–K281; rev 10: T041 tur 2, K282; rev 11: T041 tur 3, K283)
+> işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279; rev 9 (2026-11-12): T041 tur 1, K280–K281; rev 10: T041 tur 2, K282; rev 11: T041 tur 3, K283; rev 12 (2026-11-13): kapanış drift kontrolü, grill K290–K293
+> (kullanıcı), K294–K297 (lead), takip kartları. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
+> yazma kartı, 🔐 Tier 3, K279)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
 > K244–K261, K263 ve K273–K277. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
 > burada durur ve K numaraları K240'tan başlar (K244).
@@ -24,7 +26,9 @@ verir. Board yine hiçbir komut çalıştırmaz ve `--write` dışında dosya ya
 - Farklı lead STATE kopyalarındaki kartları tek tabloda ya da kuyrukta birleştirmek (K243): diğer lead'ler yalnız
   Leads tablosunda sayılarla görünür.
 - Mevcut kart tablosunun sütunları ve satır biçimi (K254); kök `.claude-plugin/plugin.json` sürüm yükseltmesi (Tier 3,
-  sürüm çıkarken ayrı iş); hook ve `delix.json.protected_paths` altındaki her dosya.
+  sürüm çıkarken ayrı iş); hook ve `delix.json.protected_paths` altındaki her dosya. İstisna: kart oturumlarının push ve
+  ref yazma kuralı için `scripts/bash_gate.py` (T041 ve rev 12'nin ref yazma kartı, 🔐 Tier 3, kullanıcının o işe özel
+  evet'iyle; K279, K296).
 
 ## 3. Requirements (testable)
 
@@ -48,16 +52,30 @@ rapor ya da STATE'te PR varsa `PR #<n> → <default_branch>`, yoksa upstream var
 
 ### Requirement: REQ-2 Gönderen ve inceleyen kaydı (ledger)
 The system SHALL lead adımlarında `STATE.json.cards.<T>.agents` listesine §4'teki biçimde kayıt ekler: `dispatch`
-uygulayıcıyı açınca bir `implementer` kaydı (dal ve Desktop oturum adı rapordan ya da `start_session` sonucundan
-bilinince doldurulur), `review` her `qa` ve `security` koşusu için incelenen SHA ve verdict'le bir kayıt. Kullanıcı
-merge edince lead `status` → `accepted` ile aynı anda `merged`'i yazar. Board her kart için "kim açtı" ve son tur
-inceleyicilerini Ajanlar/Kuyruk bölümlerinde, panelin kart görünümü tüm listeyi gösterir.
+uygulayıcıyı açınca bir `implementer` kaydı (dal `gh pr view <n> --json headRefName`'den, rapordan değil (T036);
+Desktop oturum adı `start_session` sonucundan; bilinince doldurulur), `review` her `qa` ve `security` koşusu için
+incelenen SHA ve verdict'le bir kayıt. Kullanıcı merge edince lead `status` → `accepted` ile aynı anda `merged`'i yazar; `merged.head` son turun `qa`
+SHA'sından farklıysa `accepted` yerine `escalated` (K297).
+`board.py` ve panel her kart için "kim açtı" (`opened_by`) ve son tur inceleyicilerini (`last_round`) kartın worktree'si
+varsa Ajanlar satırında, worktree'si olsun olmasın Seni bekliyor ve Merge'e hazır satırlarında gösterir (K290, K291);
+panelin kart görünümü tüm listeyi gösterir.
 #### Scenario: iki inceleme turu
 - WHEN T029'un `agents` listesinde tur 1 ve tur 2 için `qa` kayıtları varsa
 - THEN board yalnız tur 2'yi (`qa r2 @<sha7> ACCEPT · by <lead branch>`), panel kart görünümü ikisini gösterir
 #### Scenario: eski STATE
 - WHEN bir kartta `agents` ve `merged` yoksa
 - THEN board `—` gösterir, hata vermez; `pr: "merge <sha>"` biçimi merge edilmiş sayılır
+#### Scenario: worktree'si olmayan hazır kart
+- WHEN merge'e hazır bir kartın hiçbir worktree'si yoksa ve son turu `qa ACCEPT`, `security 🔐 HUMAN_APPROVAL` ise
+- THEN iki yüzeyin Seni bekliyor ve Merge'e hazır satırları `opened_by`'ı ve iki kaydı (security verdict'i dahil)
+  gösterir (K291)
+#### Scenario: panelde ikinci satır
+- WHEN kartı olan bir worktree ve bir lead worktree'si varsa
+- THEN panelin Ajanlar satırının altındaki soluk satır `opened_by`'ı ve `last_round`'u, Leads satırı `changed_at`'i
+  gösterir (K290)
+#### Scenario: incelenmemiş uç merge edildi
+- WHEN `gh pr view` `MERGED` ve son turun `qa` SHA'sından farklı bir `headRefOid` döndürürse
+- THEN lead `merged`'i yazar, kartı `escalated` yapar ve kullanıcıya söyler; kart Seni bekliyor'da kalır (K297)
 #### Scenario: skill metinleri biçimi taşır
 - WHEN `skills/dispatch`, `skills/review`, `skills/close` SKILL.md ve `templates/STATE.json` okunursa
 - THEN üçü §4'teki kayıt alan adlarını birebir içerir, şablon geçerli JSON'dur
@@ -71,7 +89,8 @@ bu koşulları sağlar (güvenilir kopya, K262; Leads sayılarında da).
 raporu `NEEDS_CONTEXT`/`BLOCKED` olan açık kart; `escalated`; son turu ACCEPT ama ucu değişmiş kart
 (`changed after review`); son turu ACCEPT ama bu kayıt `origin/<default>` STATE'inde olmayan kart
 (`review not on origin/<default>`); `agents` kaydı olmayan `in_review` + PR kart (`no review record`); bugünkü kuralla bekleyen
-doğrulama (`FIX*` ve `resolution` yok). **Bitti:** `accepted`. Kart tablosunun "pending gate" sütunu `agents` kaydı
+doğrulama (`FIX*` ve `resolution` yok). **Bitti** (`queue.done`): `accepted`; derive ve `board.py --json` üretir, hiçbir
+yüzey ayrı bölüm olarak göstermez, panel kart durumunu `kabul` yazar (K295). Kart tablosunun "pending gate" sütunu `agents` kaydı
 olan kartta bu kuralı, olmayanda bugünkü kuralı izler (K254).
 #### Scenario: inceleme sonrası değişen dal
 - WHEN `in_review` bir kartın son turu ACCEPT ama `origin/<dal>` ucu o turdaki SHA'dan farklıysa
@@ -81,7 +100,7 @@ olan kartta bu kuralı, olmayanda bugünkü kuralı izler (K254).
 - THEN kart merge'e hazır değildir
 #### Scenario: merge edilmiş kart panelde
 - WHEN kart `accepted` ve `pr` sayıysa
-- THEN panel kartı "bitti" gösterir, merge kapısı yok (bugün panel "merge" diyor; K255)
+- THEN panel kartın durumunu `kabul` gösterir, merge kapısı yok (önceden panel "merge" diyordu; K255)
 #### Scenario: sahte kaynak STATE
 - WHEN kartsız bir worktree'deki STATE, `origin/<default>` STATE'inde kaydı olmayan bir kart için `qa ACCEPT` ve PR ucunun
   SHA'sını taşıyor ve board o worktree'den çalışıyor ya da panel onu kaynak seçiyorsa
@@ -90,14 +109,16 @@ olan kartta bu kuralı, olmayanda bugünkü kuralı izler (K254).
 
 ### Requirement: REQ-4 Bekleyen git işleri ve tek satırlık komutlar
 The system SHALL bekleyen git işlerini §4'teki sırayla ve komutuyla listeler:
-- **push:** bir worktree'de checkout edilmiş, varsayılan dal olmayan, detached olmayan, upstream'i `gone` olmayan ve
-  (upstream'i yok ya da upstream'den ileride) dal: `git -C <path> push -u origin <branch>`
+- **push:** ana checkout ve board'u çalıştıran worktree dışında bir worktree'de checkout edilmiş, varsayılan dal olmayan,
+  detached olmayan, upstream'i `gone` olmayan ve (upstream'i yok ya da upstream'den ileride) dal:
+  `git -C <path> push -u origin <branch>`
 - **merge:** merge'e hazır kart: `gh pr merge <n> --squash --match-head-commit <sha40>` (SHA son `qa` kaydından; K247)
 - **remove_worktree:** temiz, ana checkout olmayan, board'u çalıştıran worktree olmayan ve (kartı `origin/<default>` STATE'inde
   `accepted` ve `merged` kayıtlı ya da son etkinliği 7 günden eski, upstream'i var ve ileride değil) worktree: `git worktree remove <path>`
-- **delete_branch:** hiçbir worktree'de checkout edilmemiş, kartının `origin/<default>` STATE'inde `merged` kaydı olan ve yerel ucu `merged.head`'e
+- **delete_branch:** hiçbir worktree'de checkout edilmemiş, kartı kaynak STATE'te olan, o kartın `origin/<default>` STATE'inde `merged` kaydı olan ve yerel ucu `merged.head`'e
   eşit dal: `git branch -D <branch>` (K249)
-- commit'lenmemiş dosyası olan worktree'ye komut yok: `uncommitted <n> files: commit or discard in its session`.
+- commit'lenmemiş dosyası olan worktree'ye komut yok: `uncommitted <n> files: commit or discard in its session`; `git
+  status` hata verince `<n>` yerine `?` yazar ve komut yine yoktur.
 Komut yalnız dal adı `^[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*$` (`reset` ve `clean` hariç), yol `^/[A-Za-z0-9_./-]+$`, PR
 numarası pozitif tamsayı ve SHA `^[0-9a-f]{40}$` iken üretilir; aksi halde `unsafe name: run by hand` (K248).
 `/delixcrew:status` her komutu kendi tek satırlık ` ```bash ` bloğunda basar ve komutları kendisi çalıştırmaz; panel
@@ -116,8 +137,8 @@ aynı listeyi düz metin gösterir.
 ### Requirement: REQ-5 Leads tablosu
 The system SHALL ana checkout ve rolü `lead` olan her worktree için bir satır üretir: yol, dal, spec başlığı (o
 worktree'deki `STATE.json.spec` dosyasının ilk `#` başlığı), o STATE'teki açık / seni bekleyen / merge'e hazır kart
-sayıları, STATE'in son değişme zamanı ve `stale` (son etkinlik 7 günden eski, K250). Ana tablonun ve kuyruğun kaynağı
-başlıkta adlandırılır (K256).
+sayıları, STATE'in son değişme zamanı (`changed_at`; iki yüzey de gösterir, K290) ve `stale` (son etkinlik 7 günden
+eski, K250; ana checkout hiç stale olmaz). Ana tablonun ve kuyruğun kaynağı başlıkta adlandırılır (K256).
 #### Scenario: iki aktif lead
 - WHEN ana checkout dışında, dalında ya da çalışma ağacında STATE değişikliği olan iki lead worktree'si varsa
 - THEN Leads tablosunda üç satır görünür ve her birinin sayıları kendi STATE'inden gelir
@@ -126,18 +147,29 @@ başlıkta adlandırılır (K256).
 The system SHALL board.py'de ve panelde ham girdiden (§4 git çıktıları + dosyalar) `agents`, `leads`, `queue`
 (`waiting`/`ready`/`done`), `actions` ve `fetched_at` alanlarını üreten saf bir `derive(raw)` fonksiyonu tutar;
 `board.py --json` bu alanları ekler. Eşlik fixture'ı `tests/fixtures/board_parity.json` (ham girdi + beklenen çıktı)
-ve bayt-eş kopyası `plugins/delix-board/tests/board_parity.json`'dır (K252). Panel 20 sn'lik yenilemede N worktree
-için en çok 4 + 3N git çağrısı yapar (K257, K262).
+ve panel kopyası `plugins/delix-board/tests/board_parity.ts`'tir: `export const PARITY = ` + JSON dosyasının baytları
+(K252, K261). Panel 20 sn'lik yenilemede N worktree için en çok 4 + 3N git çağrısı yapar (K257, K262).
+Fixture yalnız `derive`'ı sınar; ham girdiyi toplayan kod iki yüzeyde aynı kuralları izler ve her yüzey bunları kendi
+testinde sınar (K293): `delix.json.default_branch` REQ-4'teki dal kalıbına
+(`^[A-Za-z0-9][A-Za-z0-9._-]*(/[A-Za-z0-9][A-Za-z0-9._-]*)*$`) uyan bir metinse o, değilse `main`; çağrı 5
+yalnız worktree'de `.delix/card` hiçbir biçimde (normal dosya, bağlantı, dizin, okunamayan dosya) yokken koşar;
+çağrı 4–6'nın argv'si §4'teki gibi `--no-lazy-fetch` taşır (K284, K294).
 #### Scenario: eşlik
 - WHEN fixture iki süite verilirse
-- THEN iki `derive` çıktısı fixture'daki `expected` ile alan alan eşittir ve `cmp` iki kopyayı eş bulur
+- THEN iki `derive` çıktısı fixture'daki `expected` ile alan alan eşittir ve panel kopyası öneki atılınca `cmp` ile
+  JSON'a eştir
+#### Scenario: ham girdi kuralları
+- WHEN `delix.json`'da `default_branch` `"-x"`, `"a b"` ya da `"a//b"` ise ve bir worktree'de `.delix/card` başka bir
+  dosyaya bağlantı, hedefi olmayan bir bağlantı, bir dizin ya da kart kimliği taşımayan bir dosyaysa
+- THEN iki yüzey `origin/main...HEAD` ile karşılaştırır ve o worktree için çağrı 5'i koşmaz (git çağrı kaydında yok)
 
 ## 4. Interface contracts
 | Kind | Name | Signature / shape | Consumer |
 |---|---|---|---|
 | data | `cards.<T>.agents[]` | `{"role":"implementer"\|"qa"\|"security","by":"<lead branch>","round":<int>,"sha":"<40 hex>"\|null,"verdict":"<token>"\|null,"at":"<ISO-8601 Z>"}`; yalnız `implementer`: `"branch":"<name>"\|null,"session":"<Desktop name>"\|"-p"\|null` | board.py, panel, dispatch/review/close |
+| data | `queue.waiting[]`, `queue.ready[]` | bugünkü alanlar aynen + `"opened_by":"<lead branch>"\|null` ve `"last_round":["<role> r<n> @<sha7> <verdict> · by <lead branch>", …]`; ikisi Ajanlar satırındakiyle aynı kaynaktan ve aynı biçimde, kartsız (doğrulama) girdide `null` ve `[]` (K291) | board.py, panel, parite fixture'ı |
 | data | `cards.<T>.merged` | `{"sha":"<merge commit 40 hex>","head":"<merged PR head 40 hex>","at":"<ISO>"}`; lead `gh pr view <n> --json state,mergeCommit,headRefOid` ile okur ve yalnız `state` `MERGED` iken yazar (T039) | board.py, panel |
-| git | çağrılar (sıra ve argv birebir) | her çağrı `git --no-optional-locks -c core.fsmonitor=false` ile başlar (K263); 1) `git rev-parse --git-common-dir` 2) `git worktree list --porcelain -z` → NUL ile ayrılmış kayıtlar, `\n` ya da `\r` içeren bir kayıt tüm listeyi geçersiz kılar; yol, HEAD, `branch refs/heads/<b>` \| `detached` 3) `git for-each-ref refs/heads refs/remotes --format=%(refname)%09%(objectname)%09%(upstream)%09%(upstream:track,nobracket)%09%(committerdate:unix)` → track: boş = `in sync`, `ahead N`, `behind N`, `ahead N, behind M`, `gone`; upstream boş = `no upstream` 4) worktree başına `git -C <wt> status --porcelain` → satır sayısı, STATE kirli mi 5) kartsız ve STATE'i kirli olmayan worktree başına `git -C <wt> diff --no-ext-diff --quiet origin/<default>...HEAD -- docs/delix/STATE.json` → exit 1 = dal STATE'i değiştirmiş (K275) 6) lead başına STATE kirli değilse `git -C <wt> log -1 --no-show-signature --format=%ct -- docs/delix/STATE.json` (K277) 7) bakış başına bir kez, kendi kökünde `--no-lazy-fetch --no-replace-objects cat-file blob refs/remotes/origin/HEAD:docs/delix/STATE.json` → ham `trusted_state`; hata ya da `origin/HEAD` yok = null, hiçbir kart merge'e hazır olmaz (K262, K276); derive, çağrı 3 çıktısında `refs/remotes/origin/HEAD` yoksa `trusted_state` ne olursa olsun T = `{}` sayar (R8'', K277); her çağrı zaman aşımlı, hata alanı `?` yapar | derive |
+| git | çağrılar (sıra ve argv birebir) | her çağrı `git --no-optional-locks -c core.fsmonitor=false` ile başlar (K263); 4–6 da 7 gibi bu önekten sonra `--no-lazy-fetch` alır (K284, K294); worktree başına çağrılar worktree'yi süreç `cwd`'si olarak alır, argv'de `-C` yoktur; sıra iki yüzeyde farklıdır ve sonucu değiştirmez: panel 7'yi worktree döngüsünden (4–6) önce koşar, board.py 2'yi iki kez okur (K295); 1) `git rev-parse --git-common-dir` 2) `git worktree list --porcelain -z` → NUL ile ayrılmış kayıtlar, `\n` ya da `\r` içeren bir kayıt tüm listeyi geçersiz kılar; yol, HEAD, `branch refs/heads/<b>` \| `detached` 3) `git for-each-ref refs/heads refs/remotes --format=%(refname)%09%(objectname)%09%(upstream)%09%(upstream:track,nobracket)%09%(committerdate:unix)` → track: boş = `in sync`, `ahead N`, `behind N`, `ahead N, behind M`, `gone`; upstream boş = `no upstream` 4) worktree başına `status --porcelain` → satır sayısı, STATE kirli mi 5) `.delix/card`'ı hiçbir biçimde olmayan (K293) ve STATE'i kirli olmayan worktree başına `diff --no-ext-diff --quiet origin/<default>...HEAD -- docs/delix/STATE.json` → exit 1 = dal STATE'i değiştirmiş (K275) 6) STATE kirli değilse `log -1 --no-show-signature --format=%ct -- docs/delix/STATE.json`: board.py ana checkout ve her lead için, panel `.delix/card`'ı olmayan ve STATE dosyası olan her worktree için (panel rolü çağrılardan sonra bilir; sonuç aynı, bütçe 4 + 3N içinde; K277, K295) 7) bakış başına bir kez, kendi kökünde `--no-lazy-fetch --no-replace-objects cat-file blob refs/remotes/origin/HEAD:docs/delix/STATE.json` → ham `trusted_state`; hata ya da `origin/HEAD` yok = null, hiçbir kart merge'e hazır olmaz (K262, K276); derive, çağrı 3 çıktısında `refs/remotes/origin/HEAD` yoksa `trusted_state` ne olursa olsun T = `{}` sayar (R8'', K277); her çağrı zaman aşımlı, hata alanı `?` yapar | derive |
 | fs | `fetched_at` | `<common-dir>/FETCH_HEAD` ve `<common-dir>/worktrees/*/FETCH_HEAD` mtime'larının en büyüğü; yoksa `never fetched` | başlık |
 | fs | Approved | kart dosyasındaki `**🔐 Approved:**` satırı (dispatch §2) | REQ-3 |
 | function | `derive(raw) -> {agents, leads, queue, actions, fetched_at}` | saf; sıralama: agents rol (lead, implementer, other) sonra yol; queue kart id; actions kart id ya da hedef, sonra push < merge < remove_worktree < delete_branch | board.py, panel |
@@ -153,24 +185,26 @@ bileşen yok.
 örnek kartına iki alan eklenir. Panel snapshot anahtarı (`register.tsx`) bir artar.
 
 ## 6. Security note
-Tier 2: korumalı yola dokunulmaz. Risk: board'un ürettiği komut Run düğmesiyle kullanıcının Mac'inde çalışır; dal ve
+Tier 2; korumalı yola yalnız `scripts/bash_gate.py` kartları dokunur (T041 ve rev 12'nin ref yazma kartı, 🔐 Tier 3, K279, K296). Risk: board'un ürettiği komut Run düğmesiyle kullanıcının Mac'inde çalışır; dal ve
 yol adları git'ten gelir ve auto mode'daki bir oturum `refs/heads/-f` gibi bir dal yaratabilir. K248: ad kalıpları
 `-` ile başlayan, boşluk ya da kabuk karakteri içeren her şeyi dışlar, böylece tırnaklamaya gerek kalmaz ve iki dilde
 aynı kalır; `gh pr merge` incelenen SHA'ya `--match-head-commit` ile bağlanır, bayat ref incelenmemiş ucu merge
-edemez. Board ve panel ağ kullanmaz, yazmaz, çalıştırmaz. Merge kullanıcının tıklamasıdır (kapı 2). Bilinen sınır:
-lead'in `gh pr merge` çalıştırmasını bir hook engellemez (yalnız skill metni); Known limits'e yazılır.
+edemez. Board ve panel ağ kullanmaz, yazmaz, çalıştırmaz; nesne okuyan çağrılar (4–7) `--no-lazy-fetch` taşır: ağaçsız partial clone'da (`--filter=tree:0`) çağrı 6'nın `log`'u eksik nesneyi remote'tan çekiyordu (lead git 2.54'te üretti; bayrakla çıkış 128, çekme yok; K284). git < 2.44 bu bayrağı reddeder: 4–6 hata verir, alanlar `?` olur ve o worktree'ler için Git actions komutu çıkmaz (fail closed, K294). Merge kullanıcının tıklamasıdır (kapı 2). Bilinen sınır:
+lead'in `gh pr merge`'ü ya da bir Git actions komutunu çalıştırmasını bir hook engellemez (yalnız skill metni);
+Known limits'e yazılır.
 
 Kaynak STATE güvenilir değildir (K262): kartsız herhangi bir worktree'ye yazılan STATE kaynak olabilir. Merge'e hazır,
 merge komutu ve `merged`'e dayanan temizlik önerileri yalnız `refs/remotes/origin/HEAD`'in gösterdiği STATE de
 (uzak deponun varsayılan dalı; `delix.json`'daki `default_branch` bu ref'i seçmez, K276) aynı kart, PR ve SHA'yı gösterince
 üretilir; o kopyaya lead push eder (review §4). Bu spec'te "`origin/<default>` STATE'i" bu kopyadır. Kalan risk: bir oturum yerel izleme ref'ini commit +
-`update-ref` ile yeniden yazabilir; bu, uç denetiminin `refs/remotes/origin/<dal>`'a duyduğu güvenle aynıdır, dosya
+`update-ref` ile yeniden yazabilir (kart oturumunda bunu ve `git remote set-head`'i rev 12'nin 🔐 ref yazma kartı reddeder; K296); bu, uç denetiminin `refs/remotes/origin/<dal>`'a duyduğu güvenle aynıdır, dosya
 yazmaktan fazlasını ister ve sonraki fetch ref'i düzeltir. `origin/HEAD`'i `git remote set-head` ile başka dala çevirmek
 de `.git`'e yazmaktır; fetch onu düzeltmez, `git remote set-head origin -a` düzeltir. `git clone` `origin/HEAD`'i kurar;
 `git init` + `remote add` ile kurulan depoda bir kez `git remote set-head origin -a` gerekir, yoksa hiçbir kart hazır olmaz.
-Kart oturumları kullanıcının kimliğiyle `git push origin HEAD:<default>` çalıştırabilir: `bash_gate` bunu engellemez ve
-varsayılan dalın ruleset'i kullanıcı rolüne bypass verir (T036 tur 1 security notu); bu board'dan bağımsız, eski bir
-boşluktur, T041'de 🔐 kapatılır. Git çağrıları `--no-optional-locks` (başka worktree'nin
+Kart oturumları kullanıcının kimliğiyle `git push origin HEAD:<default>` çalıştırabiliyordu ve varsayılan dalın ruleset'i
+kullanıcı rolüne bypass verir (T036 tur 1 security notu); T041'den beri `bash_gate` kart oturumunun varsayılan dala push'unu
+ve `gh pr merge`'ü reddeder (🔐, K279–K283). Bu derinlemesine savunmadır, ruleset'teki sahip bypass'ı kalır; kuralın tamamı
+(R-P2a–R-P6) yalnız T041 kartındadır, kalan açıkları rev 12'nin ref yazma kartı kapatır. Git çağrıları `--no-optional-locks` (başka worktree'nin
 index'ine yazmaz) ve `-c core.fsmonitor=false` ile koşar: paylaşılan `.git/config`'teki bir fsmonitor betiği her
 worktree'deki `git status`'ta çalışır (lead 2026-11-05'te git 2.54'te üretti; bayrakla çalışmadı) (K263). `git diff
 --quiet` paylaşılan config'teki `diff.external` + `diff.trustExitCode`'u ve `.gitattributes` diff sürücüsünü çalıştırır
@@ -189,10 +223,13 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
 ## 7. Acceptance criteria (DoD)
 - [ ] Her REQ için geçen test; doğrulama: `for t in tests/*_tests.sh; do bash "$t" || exit 1; done` → exit 0,
   `claude plugin test plugins/delix-board` → geçer, `claude plugin validate .` → geçer
-- [ ] Mevcut `tests/board_tests.sh` ve panel testlerinde değişen satır yalnız K255'in izin verdiği panel satırları
+- [ ] Mevcut `tests/board_tests.sh` ve panel testlerinde değişen satır yalnız kartlarda satır numarası ve gerekçesiyle
+  adı geçenlerdir (K255, K273, T038 satır 678, T043)
 - [ ] `qa` ACCEPT (Tier 2)
-- [ ] Bu repoda gerçek koşu: `/delixcrew:status` bu oturumun worktree'sini `lead` gösterir, Run bloklarında `-f`,
-  `reset`, `clean` yoktur; panel aynı satırları gösterir, Desktop'ta ekran görüntüsüyle doğrulanır
+- [x] Bu repoda gerçek koşu: `/delixcrew:status` bu oturumun worktree'sini `lead` gösterir, Run bloklarında `-f`,
+  `reset`, `clean` yoktur (2026-11-12, kapanış; STATUS §13)
+- [ ] Panel aynı satırları gösterir, Desktop'ta ekran görüntüsüyle doğrulanır: delix-board'un rev 12'yi taşıyan sürümü bu
+  Mac'e kurulduktan sonra; görüntü ve gözlem `docs/delix/verifications/` altına yazılır (K292)
 - [ ] PR gövdesinde "How I tested"
 
 ## 8. Open questions
@@ -302,3 +339,65 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
   sınırlara girer (kod değil), site sınır listesi kartla eşitlenir. Kuralı daraltır; 🔐 onayının kapsamı büyümez.
   4. turda yeni Medium çıkarsa düzeltme turu açılmaz, kullanıcıya gelinir. Satırın tamamını izin listesine bağlamak
   takip işidir.
+- **K284** (lead, 2026-11-12, geri alınır) T032 güvenlik notu: ağaçsız partial clone'da (`--filter=tree:0`, git 2.54)
+  çağrı 6'nın `log`'u eksik nesneyi remote'tan çekiyordu (lead üretti: pack 3 → 4; `--no-lazy-fetch` ile çıkış 128,
+  çekme yok). Düzeltme turu açılmadı, düzeltme takip kartında (K294).
+- **K285** (lead, 2026-11-12, geri alınır) Spec C değişiklikleri kapanışta CHANGELOG `## Unreleased`'a yazıldı; sürüm
+  numarası, kök `plugin.json` (korunan yol, 🔐) ve sitedeki "sonraki sürümle gelecek" etiketleri ayrı bir sürüm kartının
+  işi.
+- **K290** (kullanıcı, 2026-11-13, geri alınır) Kapanış drift kontrolü: panel `changed_at`'i (Leads), `opened_by`'ı ve
+  `last_round`'u (Ajanlar) göstermiyordu; derive üretiyor, `board.py` basıyordu. Panele eklenir (seçenek A, "Panele
+  ekle"); dar panelde kesilmemesi için Ajanlar satırının altında ikinci, soluk bir satır. Spec'i daraltmak (B) reddedildi:
+  veri hazır ve REQ-5 ile DoD "panel aynı satırları gösterir" diyor. delix-board yama sürümü artar.
+- **K291** (kullanıcı, 2026-11-13, geri alınır) "Kim açtı" ve son tur yalnız Ajanlar satırındaydı; worktree'si olmayan
+  kartta `board.py`'de hiç, panelde yalnız kart görünümünde vardı. `queue.waiting[]` ve `queue.ready[]` girdileri
+  `opened_by` ve `last_round` taşır (§4), iki yüzey basar. Neden: merge kararı Merge'e hazır listesinden verilir ve
+  `security` verdict'inin `CLEAN` mi `🔐 HUMAN_APPROVAL` mı olduğu orada görünmeli. Bedel: parite fixture'ının
+  `expected`'ı değişir (K252: architect üretir, lead dispatch'ten önce yazar).
+- **K292** (kullanıcı, 2026-11-13, geri alınır) DoD'un panel ekran görüntüsü, delix-board'un rev 12'yi taşıyan sürümü
+  bu Mac'e kurulunca alınır ve `docs/delix/verifications/` altına yazılır; o zamana kadar madde açık. Bu Mac'te kurulu
+  delix-board 0.1.4, Spec C'nin paneli 0.1.5'te ve yayınlanmadı. Yerelden kurmak (Mac değişiklik protokolü, kapsam büyür)
+  ve maddeyi kaldırmak (gerçek görünüm doğrulanmamış kalır) reddedildi.
+- **K293** (kullanıcı, 2026-11-13, geri alınır) Ham girdi iki yüzeyde tek kurala bağlanır (REQ-6): `default_branch` REQ-4
+  dal kalıbı, değilse `main` (bugün panelin davranışı; `board.py` boş olmayan her metni alıyordu); çağrı 5 `.delix/card`
+  hiçbir biçimde yokken koşar (bugün panelin davranışı; `board.py` kart kimliği okunamayınca, bağlantıda da koşuyordu).
+  Kırık kartlı bir worktree üç noktalı diff yüzünden lead sayılmaz; STATE'i kirliyse ya da dalı bir `by` değeriyse
+  REQ-1 gereği lead'dir. Etki küçüktü (rol tespiti, Leads tablosu; merge kararı `origin/HEAD`
+  STATE'inden); farkı spec'e yazmak (B) reddedildi.
+- **K294** (lead, 2026-11-13, geri alınır) K284'ün düzeltmesi: çağrı 4–6 (`status`, `diff`, `log`) iki yüzeyde 7 gibi
+  `--no-lazy-fetch` alır. git < 2.44 bayrağı reddeder: 4–6 hata verir, alanlar `?`, o worktree'lerin Git actions'ı not
+  olur; K262'den beri o sürümde zaten hiçbir kart hazır değildir (fail closed). Reddedilen: hook'lardaki gibi
+  `GIT_NO_LAZY_FETCH=1` ortam değişkeni (K225): eski git'te korumayı sessizce kaybeder, panelin süreç çağrısında ortam
+  verilebildiği doğrulanmadı ve ham toplama iki yüzeyde yine ayrışırdı (K293). Kapsam 4–6: 1–3 ağaç ya da blob okumaz
+  (lead üretmedi, doğrulanmadı); README ve site Known limits'e eski git satırı docs kartıyla girer.
+- **K295** (lead, 2026-11-13, geri alınır) Drift düzeltmeleri, davranış değişmez, spec koda uyar: §4 çağrı sırası ve
+  argv (`cwd`, `-C` yok; panel 7'yi döngüden önce, `board.py` 2'yi iki kez okur); REQ-6 panel kopyası `board_parity.ts`
+  (K261); REQ-2 dal `gh pr view`'dan (T036); Tier ve kapsam (§2, §6; T041 korunan yolu değiştirdi, K279); §6'daki
+  "`bash_gate` bunu engellemez" cümlesi T041'le eskidi; "bitti" yerine `kabul`, `queue.done` hiçbir yüzeyde bölüm değil;
+  ana checkout ve board'un kendi worktree'si push ve `remove_worktree` almaz, ana checkout stale olmaz; `delete_branch`
+  kartın kaynak STATE'te de olmasını ister; `git status` hatasında `uncommitted ? files` notu; T041 kuralının tamamı
+  yalnız kartta.
+- **K296** (lead, 2026-11-13, geri alınır) T032 security notu (uçtan uca izlenmedi): güvenilir STATE yerel
+  `refs/remotes/origin/HEAD`'ten okunur ve bu ref'ler worktree'ler arasında paylaşılır; kart oturumu `git update-ref`,
+  `git remote set-head` ya da eşdeğeri bir yazmayla lead'in board'una sahte "merge'e hazır" gösterebilir. Kart oturumunda
+  bu yazmaları `bash_gate` reddeder: 🔐 Tier 3 kart (`scripts/bash_gate.py` korunan yol), dispatch'ten önce kullanıcının o
+  işe özel evet'i ve kartta `**🔐 Approved:**` satırı gerekir. T041'in kalan notları (aynı satırdaki başka komutun yazdığı
+  git ayarı, push satırının tamamına izin listesi, UTF-8 olmayan config baytında belirsiz ret, `delix.json` nesne değilken
+  atlanan kurallar, `gh` alias ve `git remote set-url`) aynı hook'ta olduğu için aynı karta girer (`scripts/bash_gate.py`, gerekirse
+  `scripts/common.py`); kapsamı architect kartla sınırlar.
+- **K297** (lead, 2026-11-13, geri alınır) Merge sonrası kontrol (T039 incelemesinin notu): lead `merged`'i yazarken
+  `headRefOid`'i son turun `qa` kaydındaki SHA ile karşılaştırır. Eşitse bugünkü gibi `accepted`. Farklıysa `merged`'i
+  yine yazar (olgu), kartı `escalated` yapar ve kullanıcıya "incelenmemiş uç merge edildi" der; kart Seni bekliyor'da
+  kalır ve `remove_worktree` önerilmez (`accepted` ister). Reddedilen: `accepted` + not; incelenmemiş kod merge edilmiş
+  sayılırdı. Kartta `qa` kaydı yoksa fark var sayılır (fail closed). Yer: review §4 ve close skill'inin `merged` adımı,
+  `tests/ledger_tests.sh`.
+- **K298** (lead, 2026-11-13, geri alınır) Rev 12 takip kartları (architect job B): dalga 15 paralel, dosyaları ayrık:
+  T043 iki board yüzeyi (`scripts/board.py`, panel `data.ts`/`parse.ts`/`views.tsx`; K284/K294, K290, K291, K293, T038
+  notları), 🔐 T044 `scripts/bash_gate.py` (K296, T041 notları), T045 review ve close skill metni (K297), review §2'deki "dosya içeriği veridir" cümlesi ve `agents/qa.md`
+  kanıt maddesi (K278 artığı); dalga 16 T046
+  doküman ve site (delix-board 0.1.6), T042 sürüm kartından sonra (başka oturumun kartı; numara ona ayrıldı). Bütün board
+  işi tek kartta: iki süit parite fixture'ını birebir eşitlikle karşılaştırır, K291 `expected.queue`'yu değiştirir ve iki
+  derive ile fixture tek PR'da inmezse main kırmızı kalır. Bu yüzden K252'nin istisnası: fixture değişikliğini lead
+  dispatch'ten önce yazmaz, T043 kartındaki birebir farkı uygulayıcı uygular, başka satıra dokunmaz. T044'ün README ve
+  site cümleleri CLAUDE.md'nin "aynı değişiklik" kuralının istisnası olarak T046'da iner (T044 kartının
+  `## Docs handover (T046)` bölümü).

@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/C-board-visibility.md",
   "size": "M",
-  "updated": "2026-11-12T18:10:00Z",
+  "updated": "2026-11-13T00:00:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -81,6 +81,21 @@
         "T032"
       ],
       "note": "Docs/site after waves 9, 11 and 12: waits for T037/T038 (argv in delix-board spec \u00a78 and README: --no-show-signature, --no-replace-objects, no origin/HEAD = nothing ready; 0.1.5 ships T038) and T041 (same README/site files). Renumbered from wave 10 (2026-11-12). delix-board 0.1.4 -> 0.1.5; root version unchanged. The lead rewrites the anchors at dispatch."
+    },
+    {
+      "wave": 15,
+      "cards": [
+        "T043",
+        "T045"
+      ],
+      "note": "Spec C rev 12 (closing drift check; grill K290-K293, user 2026-11-13; K294-K298). Parallel, disjoint files. T043 Tier 2: both board surfaces (K284/K294 --no-lazy-fetch on calls 4-6, K290 panel captions, K291 queue opened_by/last_round, K293 raw-input rules, T038 notes); the parity fixture delta is in the card (K298, named exception to K252). T045 Tier 2: review/close skill K297 merged-head check, review data line, qa evidence item. T044 (\ud83d\udd10 Tier 3, scripts/bash_gate.py: K296 ref writes in implementer sessions + T041 notes) belongs to this wave but has no card yet: the architect call was stopped twice by model safeguards; the card is added here when written, and needs the user's explicit yes and an Approved line before dispatch."
+    },
+    {
+      "wave": 16,
+      "cards": [
+        "T046"
+      ],
+      "note": "Docs and site for rev 12 (README/README.tr, four site pages, delix-board README and spec), delix-board 0.1.5 -> 0.1.6; root version unchanged. Waits for T043, T044, T045 and the release card T042 (another session; number reserved). Needs T044's '## Docs handover (T046)'. The lead rewrites the anchors and writes 'labels: on|off' in T046.dispatch.md at dispatch."
     }
   ],
   "cards": {
@@ -829,6 +844,36 @@
         "head": "0867104ae7e78c242b4691a85af42e794c050854",
         "at": "2026-11-12T19:53:04Z"
       }
+    },
+    "T043": {
+      "file": "docs/delix/tasks/T043-board-queue-fields-lazy-fetch.md",
+      "role": "frontend",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
+    },
+    "T045": {
+      "file": "docs/delix/tasks/T045-review-merged-head-check.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
+    },
+    "T046": {
+      "file": "docs/delix/tasks/T046-docs-site-rev12.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
     }
   },
   "status_values": [
