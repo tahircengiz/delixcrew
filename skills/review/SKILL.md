@@ -72,11 +72,11 @@ pull request is merged first); `/delixcrew:status` shows Ready to merge only fro
 the user: PR link, the card's DoD ✔/✘, reviewer verdicts, and the
 security approval message (global CLAUDE.md format) if there is a 🔐 note. **The merge is the user's**; you do not run
 `gh pr merge` (the user runs the `gh pr merge <n> --squash --match-head-commit <sha40>` block that `/delixcrew:status`
-prints). After the merge, in one STATE write: status → `accepted` and `merged` =
-`{"sha": "<merge commit 40 hex>", "head": "<merged PR head 40 hex>", "at": "<ISO-8601 Z>"}`, read with
-`gh pr view <n> --json mergeCommit,headRefOid` (`mergeCommit.oid` → `sha`, `headRefOid` → `head`); if a dependent wave
-exists, open the next wave with
-`/delixcrew:dispatch` step 4.
+prints). After the merge, read `gh pr view <n> --json state,mergeCommit,headRefOid`; only when `state` is `MERGED`,
+in one STATE write: status → `accepted` and `merged` =
+`{"sha": "<merge commit 40 hex>", "head": "<merged PR head 40 hex>", "at": "<ISO-8601 Z>"}` (`mergeCommit.oid` → `sha`,
+`headRefOid` → `head`); otherwise leave the card `in_review`, tell the user the PR is not merged and stop.
+If a dependent wave exists, open the next wave with `/delixcrew:dispatch` step 4.
 
 **Feedback capture.** Only if one of these happened in this review: (1) a delixcrew hook denied an action and you judged
 the denial a false positive; (2) a delixcrew skill step could not be followed as written (the instruction contradicted

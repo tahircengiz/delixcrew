@@ -10,7 +10,9 @@ grep -qF "$IMPL" "$ROOT/skills/dispatch/SKILL.md" && ok "dispatch: implementer r
 grep -qF "$REV" "$ROOT/skills/review/SKILL.md" && ok "review: qa/security record" || bad "review: qa/security record missing"
 grep -qF "$MERGED" "$ROOT/skills/review/SKILL.md" && ok "review: merged record" || bad "review: merged record missing"
 grep -qF "$MERGED" "$ROOT/skills/close/SKILL.md" && ok "close: merged record" || bad "close: merged record missing"
-grep -qF 'gh pr view <n> --json mergeCommit,headRefOid' "$ROOT/skills/review/SKILL.md" && ok "review: merged source" || bad "review: gh pr view line missing"
+grep -qF 'gh pr view <n> --json state,mergeCommit,headRefOid`; only when `state` is `MERGED`' "$ROOT/skills/review/SKILL.md" && ok "review: merged only when MERGED" || bad "review: MERGED check line missing"
+! grep -qF -- '--json mergeCommit,headRefOid' "$ROOT/skills/review/SKILL.md" && ok "review: no unguarded merged read" || bad "review: unguarded gh pr view still present"
+grep -qF 'otherwise leave the card `in_review`' "$ROOT/skills/review/SKILL.md" && ok "review: not merged, stop" || bad "review: not-merged branch missing"
 grep -qF 'You never run the Git actions commands yourself' "$ROOT/skills/status/SKILL.md" && ok "status: never runs Git actions" || bad "status: never-run line missing"
 # T036 (K262): reviewed SHA from step 1, push STATE before gate 2, merged only when MERGED, branch from gh
 grep -qF 'the full step-1 SHA (`git rev-parse <branch>`, taken before the diff)' "$ROOT/skills/review/SKILL.md" && ok "review: sha is the step-1 SHA" || bad "review: step-1 SHA line missing"
