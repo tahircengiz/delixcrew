@@ -324,7 +324,7 @@
       "file": "docs/delix/tasks/T032-docs-site-board.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 71,
       "rounds": 0,
       "cost_usd": null,
@@ -356,7 +356,12 @@
           "verdict": "CLEAN",
           "at": "2026-11-12T20:31:27Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "8b7e51e19db4a4ecf26334489a9d7842fbe5363b",
+        "head": "3ae69413912ce22308a22d4b97f043e7a633ec55",
+        "at": "2026-11-12T20:38:37Z"
+      }
     },
     "T033": {
       "file": "docs/delix/tasks/T033-release-0-6-3.md",
