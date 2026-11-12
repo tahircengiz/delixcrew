@@ -360,7 +360,7 @@
       "file": "docs/delix/tasks/T034-board-trusted-ledger.md",
       "role": "backend",
       "tier": 2,
-      "status": "fixing",
+      "status": "in_review",
       "pr": 64,
       "rounds": 1,
       "cost_usd": null,
@@ -391,6 +391,22 @@
           "sha": "e11d52e0e397e50761e1c96117fd7c5098b5d837",
           "verdict": "FIX",
           "at": "2026-11-12T15:13:53Z"
+        },
+        {
+          "role": "qa",
+          "by": "claude/spec-c-board",
+          "round": 2,
+          "sha": "ca1374ce1cb81de3ba867a65fb1f9261af4fe044",
+          "verdict": "ACCEPT",
+          "at": "2026-11-12T15:42:45Z"
+        },
+        {
+          "role": "security",
+          "by": "claude/spec-c-board",
+          "round": 2,
+          "sha": "ca1374ce1cb81de3ba867a65fb1f9261af4fe044",
+          "verdict": "CLEAN",
+          "at": "2026-11-12T15:42:45Z"
         }
       ]
     },
@@ -398,7 +414,7 @@
       "file": "docs/delix/tasks/T035-pane-trusted-ledger.md",
       "role": "frontend",
       "tier": 2,
-      "status": "fixing",
+      "status": "in_review",
       "pr": 65,
       "rounds": 1,
       "cost_usd": null,
@@ -429,6 +445,22 @@
           "sha": "754049cf127d4525ffeea94e046106ddf54e81fc",
           "verdict": "CLEAN",
           "at": "2026-11-12T15:13:53Z"
+        },
+        {
+          "role": "qa",
+          "by": "claude/spec-c-board",
+          "round": 2,
+          "sha": "325710b8a9421d0684108ef9d0f55aabb8b7182c",
+          "verdict": "ACCEPT_WITH_NOTES",
+          "at": "2026-11-12T15:42:45Z"
+        },
+        {
+          "role": "security",
+          "by": "claude/spec-c-board",
+          "round": 2,
+          "sha": "325710b8a9421d0684108ef9d0f55aabb8b7182c",
+          "verdict": "CLEAN",
+          "at": "2026-11-12T15:42:45Z"
         }
       ]
     },

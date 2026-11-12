@@ -1,9 +1,9 @@
 # SPEC — Spec C: board'da ajanlar, onay/merge kuyruğu ve bekleyen git işleri
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
-> işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276)
+> işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
-> K244–K261, K263 ve K273–K276. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
+> K244–K261, K263 ve K273–K277. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
 > burada durur ve K numaraları K240'tan başlar (K244).
 
 ## 1. Goal
@@ -179,6 +179,13 @@ dosyası yalnız worktree içinde, normal dosya ve ≤ 1 MiB ise okunur. Doğrul
 çalışabilir; ön koşulu `.git/config`'e yazmak ya da global config'te tanımlı bir sürücü için worktree'ye `.gitattributes`
 yazmak (ör. `filter.lfs.clean`).
 
+Wave 9 tur 2'de lead'in git 2.54'te ürettiği üç yol (K277, takip kartı): `log.showSignature` + `gpg.program` çağrı 6'da
+imzalı commit başına bir program çalıştırır (`--no-show-signature` ile çalışmadı); `refs/replace/*` çağrı 7'nin okuduğu
+blob'u değiştirir (`--no-replace-objects` ile değişmedi); `origin/HEAD` yokken `refs/heads/refs/remotes/origin/HEAD` ya da
+aynı adlı etiket çağrı 7'de çözülür, yani "`origin/HEAD` yok = null" git düzeyinde tutmaz (varken tam ad kazanır). Üçünün
+ön koşulu paylaşılan `.git`'e (config ya da ref) yazmaktır; bu yazma `core.hooksPath` ile lead'in sıradan commit'inde de
+kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler derinlemesine savunmadır.
+
 ## 7. Acceptance criteria (DoD)
 - [ ] Her REQ için geçen test; doğrulama: `for t in tests/*_tests.sh; do bash "$t" || exit 1; done` → exit 0,
   `claude plugin test plugins/delix-board` → geçer, `claude plugin validate .` → geçer
@@ -251,3 +258,9 @@ yazmak (ör. `filter.lfs.clean`).
   kökün `delix.json`'ındaki `default_branch`'ten gelince kartsız worktree kendi dalını `default_branch` yapıp sahte STATE'i
   o dala push ederek güvenilir kopyayı seçiyordu; fetch bunu düzeltmez. Bedel: `origin/HEAD`'i olmayan depoda hiçbir kart
   hazır olmaz (fail closed); `review not on origin/<default>` notu `default_branch` adını göstermeye devam eder.
+- **K277** (lead, 2026-11-12, geri alınır) Wave 9 tur 2'de kapanır (T034 qa ACCEPT, security CLEAN; T035 qa ACCEPT_WITH_NOTES,
+  security CLEAN). Tur 2 güvenlik notları (§6'daki üç git yolu, stat ile open arası yarış ve sınırsız okuma, yol parçasındaki
+  bağlantı, `readSnapshot` okumaları) tek takip kartına gider: çağrı 6 `--no-show-signature`, çağrı 7 `--no-replace-objects`,
+  derive çağrı 3 çıktısında `refs/remotes/origin/HEAD` yoksa T'yi `{}` sayar, tek güvenli okuma yardımcısı. Neden: hepsi Low,
+  ön koşulları `.git`'e yazmak ve bu zaten kod çalıştırıyor; inceleme kuralı yalnız Medium ve üstünü düzeltir, Low için
+  son tur (3) harcanmaz. K275 açık bir düzeltme turuna eklendiği için yükseltilmişti.
