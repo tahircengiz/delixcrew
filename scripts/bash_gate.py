@@ -130,6 +130,7 @@ MERGE_DENY = "delixcrew: gate 2 (merge) is the user's; an implementer session do
 GIT_ARG_OPTS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env"}  # R-P2: take the next token
 PUSH_OPTS = {"-u", "--set-upstream", "--force-with-lease"}
 CONFIG_KEYS = ("alias.", "remote.", "push.", "url.", "include")  # R-P5, casefold prefixes
+PUSH_PEERS = {"add", "commit", "status", "diff", "log", "show"}  # R-P3b: git commands a push may share a line with
 CONFIG_READS = {"--get", "--get-all", "--get-regexp", "--get-urlmatch", "--list", "-l", "get", "list"}
 
 
@@ -234,6 +235,7 @@ def alias_check(name):
 
 segs = words(cmd)
 moved = any(t.casefold() in ("cd", "pushd", "popd") for toks in segs for t in toks)
+pushed = other = False  # R-P3b
 for toks in segs:
     n = len(toks)
     i = 0
@@ -278,7 +280,10 @@ for toks in segs:
                     or toks[k + 1] not in ("HEAD", push_branch())
                     or (toks[k + 1] != "HEAD" and not own_upstream(toks[k + 1]))):
                 deny(PUSH_DENY)
+            pushed = True
             break
+        if gopt or sub not in PUSH_PEERS:
+            other = True
         alias_check(sub)
         if sub == "config":
             if reads is None:
@@ -289,6 +294,9 @@ for toks in segs:
             if keys[j + 1] and not reads[j + 1]:
                 deny(PUSH_DENY)
         i = j + 1
+
+if pushed and other:  # R-P3b: another git command on the line may move HEAD or the upstream before the push runs
+    deny(PUSH_DENY)
 
 if re.search(r"\bgit\s+commit\b", cmd):
     gl = shutil.which("gitleaks")

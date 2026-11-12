@@ -152,6 +152,20 @@ allow "alias without the push"              "$W" "$G lg"
 for a in q r a b lg c0 c1 c2 c3 c4 c5 c6 c7 c8 c9 c10 c11; do $G -C "$W" config --unset "alias.$a"; done
 allow "aliases removed"                     "$W" "$G status"
 
+# R-P3b (lead, round 1): a push shares its line only with git add, commit, status, diff, log or show (no global option)
+deny "checkout main, then HEAD"             "$W" "$G checkout main && $G $P origin HEAD"
+deny "switch main; HEAD"                    "$W" "$G switch main; $G $P -u origin HEAD"
+deny "alias co, then HEAD"                  "$W" "$G co main && $G $P origin HEAD"
+deny "set-upstream-to, then the name"       "$W" "$G branch --set-upstream-to=origin/main && $G $P origin claude/t1"
+deny "symbolic-ref HEAD, then HEAD"         "$W" "$G symbolic-ref HEAD refs/heads/main; $G $P origin HEAD"
+deny "push, then checkout in background"    "$W" "$G $P origin HEAD & $G checkout main"
+deny "sh -c checkout, then HEAD"            "$W" "sh -c '$G checkout main' && $G $P origin HEAD"
+deny "-C on add, then HEAD"                 "$W" "$G -C .. add a.py && $G $P origin HEAD"
+deny "-c on commit, then HEAD"              "$W" "$G -c core.hooksPath=/tmp/h commit -m x && $G $P origin HEAD"
+allow "status, diff, log, show, then HEAD"  "$W" "$G status; $G diff; $G log -1; $G show -s; $G $P origin HEAD"
+allow "HEAD, then gh pr create"             "$W" "$G $P -u origin HEAD && gh pr create --title x --body-file b.md"
+allow "switch without a push"               "$W" "$G switch -c claude/t2"
+
 # ReDoS (repo hook rule): linear time; t(160000) < 3 s and t(160000)/t(20000) < 20
 python3 - "$S/bash_gate.py" "$W" "$G" "$P" <<'PYT' || FAIL=1
 import json, subprocess, sys, time
@@ -161,6 +175,7 @@ cases = [("-c pairs", lambda k: (g + " -c " + g + " ") * k + p),
          ("separators", lambda k: "; " * k + g + " " + p + " origin main"),
          ("backslashes", lambda k: "\\" * k),
          ("git words", lambda k: (g + " ") * k + p),
+         ("git commands, then a push", lambda k: (g + " status; ") * k + g + " " + p + " origin HEAD"),
          ("own pushes, then main", lambda k: (g + " " + p + " origin claude/t1; ") * k + g + " " + p + " origin main")]
 bad = 0
 for name, make in cases:
