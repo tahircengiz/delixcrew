@@ -1,9 +1,9 @@
 # SPEC — Spec C: board'da ajanlar, onay/merge kuyruğu ve bekleyen git işleri
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
-> işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi)
+> işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
-> K244–K261 ve K263. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
+> K244–K261, K263 ve K273–K276. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
 > burada durur ve K numaraları K240'tan başlar (K244).
 
 ## 1. Goal
@@ -137,7 +137,7 @@ için en çok 4 + 3N git çağrısı yapar (K257, K262).
 |---|---|---|---|
 | data | `cards.<T>.agents[]` | `{"role":"implementer"\|"qa"\|"security","by":"<lead branch>","round":<int>,"sha":"<40 hex>"\|null,"verdict":"<token>"\|null,"at":"<ISO-8601 Z>"}`; yalnız `implementer`: `"branch":"<name>"\|null,"session":"<Desktop name>"\|"-p"\|null` | board.py, panel, dispatch/review/close |
 | data | `cards.<T>.merged` | `{"sha":"<merge commit 40 hex>","head":"<merged PR head 40 hex>","at":"<ISO>"}`; lead `gh pr view <n> --json mergeCommit,headRefOid` ile okur | board.py, panel |
-| git | çağrılar (sıra ve argv birebir) | her çağrı `git --no-optional-locks -c core.fsmonitor=false` ile başlar (K263); 1) `git rev-parse --git-common-dir` 2) `git worktree list --porcelain -z` → NUL ile ayrılmış kayıtlar, `\n` ya da `\r` içeren bir kayıt tüm listeyi geçersiz kılar; yol, HEAD, `branch refs/heads/<b>` \| `detached` 3) `git for-each-ref refs/heads refs/remotes --format=%(refname)%09%(objectname)%09%(upstream)%09%(upstream:track,nobracket)%09%(committerdate:unix)` → track: boş = `in sync`, `ahead N`, `behind N`, `ahead N, behind M`, `gone`; upstream boş = `no upstream` 4) worktree başına `git -C <wt> status --porcelain` → satır sayısı, STATE kirli mi 5) kartsız ve STATE'i kirli olmayan worktree başına `git -C <wt> diff --quiet origin/<default>...HEAD -- docs/delix/STATE.json` → exit 1 = dal STATE'i değiştirmiş 6) lead başına STATE kirli değilse `git -C <wt> log -1 --format=%ct -- docs/delix/STATE.json` 7) bakış başına bir kez, kendi kökünde `--no-lazy-fetch cat-file blob refs/remotes/origin/<default>:docs/delix/STATE.json` → ham `trusted_state`; hata = null, hiçbir kart merge'e hazır olmaz (K262); her çağrı zaman aşımlı, hata alanı `?` yapar | derive |
+| git | çağrılar (sıra ve argv birebir) | her çağrı `git --no-optional-locks -c core.fsmonitor=false` ile başlar (K263); 1) `git rev-parse --git-common-dir` 2) `git worktree list --porcelain -z` → NUL ile ayrılmış kayıtlar, `\n` ya da `\r` içeren bir kayıt tüm listeyi geçersiz kılar; yol, HEAD, `branch refs/heads/<b>` \| `detached` 3) `git for-each-ref refs/heads refs/remotes --format=%(refname)%09%(objectname)%09%(upstream)%09%(upstream:track,nobracket)%09%(committerdate:unix)` → track: boş = `in sync`, `ahead N`, `behind N`, `ahead N, behind M`, `gone`; upstream boş = `no upstream` 4) worktree başına `git -C <wt> status --porcelain` → satır sayısı, STATE kirli mi 5) kartsız ve STATE'i kirli olmayan worktree başına `git -C <wt> diff --no-ext-diff --quiet origin/<default>...HEAD -- docs/delix/STATE.json` → exit 1 = dal STATE'i değiştirmiş (K275) 6) lead başına STATE kirli değilse `git -C <wt> log -1 --format=%ct -- docs/delix/STATE.json` 7) bakış başına bir kez, kendi kökünde `--no-lazy-fetch cat-file blob refs/remotes/origin/HEAD:docs/delix/STATE.json` → ham `trusted_state`; hata ya da `origin/HEAD` yok = null, hiçbir kart merge'e hazır olmaz (K262, K276); her çağrı zaman aşımlı, hata alanı `?` yapar | derive |
 | fs | `fetched_at` | `<common-dir>/FETCH_HEAD` ve `<common-dir>/worktrees/*/FETCH_HEAD` mtime'larının en büyüğü; yoksa `never fetched` | başlık |
 | fs | Approved | kart dosyasındaki `**🔐 Approved:**` satırı (dispatch §2) | REQ-3 |
 | function | `derive(raw) -> {agents, leads, queue, actions, fetched_at}` | saf; sıralama: agents rol (lead, implementer, other) sonra yol; queue kart id; actions kart id ya da hedef, sonra push < merge < remove_worktree < delete_branch | board.py, panel |
@@ -161,14 +161,23 @@ edemez. Board ve panel ağ kullanmaz, yazmaz, çalıştırmaz. Merge kullanıcı
 lead'in `gh pr merge` çalıştırmasını bir hook engellemez (yalnız skill metni); Known limits'e yazılır.
 
 Kaynak STATE güvenilir değildir (K262): kartsız herhangi bir worktree'ye yazılan STATE kaynak olabilir. Merge'e hazır,
-merge komutu ve `merged`'e dayanan temizlik önerileri yalnız `refs/remotes/origin/<default>`'taki STATE de aynı kart, PR
-ve SHA'yı gösterince üretilir; o kopyaya lead push eder (review §4). Kalan risk: bir oturum yerel izleme ref'ini commit +
+merge komutu ve `merged`'e dayanan temizlik önerileri yalnız `refs/remotes/origin/HEAD`'in gösterdiği STATE de
+(uzak deponun varsayılan dalı; `delix.json`'daki `default_branch` bu ref'i seçmez, K276) aynı kart, PR ve SHA'yı gösterince
+üretilir; o kopyaya lead push eder (review §4). Bu spec'te "`origin/<default>` STATE'i" bu kopyadır. Kalan risk: bir oturum yerel izleme ref'ini commit +
 `update-ref` ile yeniden yazabilir; bu, uç denetiminin `refs/remotes/origin/<dal>`'a duyduğu güvenle aynıdır, dosya
-yazmaktan fazlasını ister ve sonraki fetch ref'i düzeltir. Git çağrıları `--no-optional-locks` (başka worktree'nin
+yazmaktan fazlasını ister ve sonraki fetch ref'i düzeltir. `origin/HEAD`'i `git remote set-head` ile başka dala çevirmek
+de `.git`'e yazmaktır; fetch onu düzeltmez, `git remote set-head origin -a` düzeltir. `git clone` `origin/HEAD`'i kurar;
+`git init` + `remote add` ile kurulan depoda bir kez `git remote set-head origin -a` gerekir, yoksa hiçbir kart hazır olmaz.
+Kart oturumları kullanıcının kimliğiyle `git push origin HEAD:<default>` çalıştırabilir: `bash_gate` bunu engellemez ve
+varsayılan dalın ruleset'i kullanıcı rolüne bypass verir (T036 tur 1 security notu); bu board'dan bağımsız, eski bir
+boşluktur, takip kartında 🔐 kapatılır. Git çağrıları `--no-optional-locks` (başka worktree'nin
 index'ine yazmaz) ve `-c core.fsmonitor=false` ile koşar: paylaşılan `.git/config`'teki bir fsmonitor betiği her
-worktree'deki `git status`'ta çalışır (lead 2026-11-05'te git 2.54'te üretti; bayrakla çalışmadı) (K263). Spec ve kart
+worktree'deki `git status`'ta çalışır (lead 2026-11-05'te git 2.54'te üretti; bayrakla çalışmadı) (K263). `git diff
+--quiet` paylaşılan config'teki `diff.external` + `diff.trustExitCode`'u ve `.gitattributes` diff sürücüsünü çalıştırır
+(lead 2026-11-12'de üretti; `--no-ext-diff` ile çalışmadı; textconv `--quiet` ile çalışmaz) (K275). Spec ve kart
 dosyası yalnız worktree içinde, normal dosya ve ≤ 1 MiB ise okunur. Doğrulanmadı: `filter.<driver>.clean` `git status`'ta
-çalışabilir; ön koşulu fsmonitor'la aynı (`.git/config`'e yazmak).
+çalışabilir; ön koşulu `.git/config`'e yazmak ya da global config'te tanımlı bir sürücü için worktree'ye `.gitattributes`
+yazmak (ör. `filter.lfs.clean`).
 
 ## 7. Acceptance criteria (DoD)
 - [ ] Her REQ için geçen test; doğrulama: `for t in tests/*_tests.sh; do bash "$t" || exit 1; done` → exit 0,
@@ -230,3 +239,15 @@ dosyası yalnız worktree içinde, normal dosya ve ≤ 1 MiB ise okunur. Doğrul
 - **K263** (lead, geri alınır) T029–T031 incelemelerinin Low'ları: her git çağrısı `--no-optional-locks -c
   core.fsmonitor=false`; `worktree list -z`; dosya okumaları kapsam + normal dosya + 1 MiB; liste değerleri `one_line` +
   `strip` (girintili kod bloğu açılmaz); `reset`/`clean` adlı dal komut almaz.
+- **K273** (lead, 2026-11-12, geri alınır) T035'in `NEEDS_CONTEXT`'i: mevcut "T029 edge rules" testinin raw'ına tek satır
+  `trusted_state: JSON.stringify(state)` eklenir ("yalnız ekleme" kuralının tek istisnası); anahtar yokken güven denetimini
+  atlamak reddedildi (fail open, K262'ye aykırı).
+- **K274** (lead, 2026-11-12, geri alınır) R8' TR yalnız T'den kurulur: board.py `_queue(T, {}, refs, {})`, yerel rapordan
+  PR ve worktree'den dal almaz; R10' `delete_branch` dalı da T'nin kartından. T029 kartında `pr` yokken board.py yerel
+  rapordaki PR ile merge önerdi, panel önermedi (REQ-6; T034 tur 1 qa P1, lead üretti).
+- **K275** (lead, 2026-11-12, geri alınır) Çağrı 5 `git diff --no-ext-diff --quiet`: `--quiet` güvenilen dış diff
+  yardımcısını çalıştırır (§6). Bedel yok; çıkış kodu aynı.
+- **K276** (lead, 2026-11-12, geri alınır) Çağrı 7 `refs/remotes/origin/HEAD` okur (T034 tur 1 security Medium): ref adı
+  kökün `delix.json`'ındaki `default_branch`'ten gelince kartsız worktree kendi dalını `default_branch` yapıp sahte STATE'i
+  o dala push ederek güvenilir kopyayı seçiyordu; fetch bunu düzeltmez. Bedel: `origin/HEAD`'i olmayan depoda hiçbir kart
+  hazır olmaz (fail closed); `review not on origin/<default>` notu `default_branch` adını göstermeye devam eder.

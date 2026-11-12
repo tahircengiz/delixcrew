@@ -56,4 +56,5 @@
 `.delix/report.md` (≤ 1K tokens): `DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED` · the commands and their output · PR number and branch · assumptions. Read only this card and the spec sections named above.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 1 (PR #63, head `d56b8a52e02d46a4b035dfd3f3336e0f7d3ab8ae`, 2026-11-12): qa `ACCEPT` (P2 1), security `CLEAN` (Low 1). Gates green: `ledger_tests.sh` ALL PASSED, the shell-test loop, `claude plugin validate .`. Ready for gate 2.
+  - Follow-up, not in this card: [P2/Low] `skills/review/SKILL.md:77` still writes `merged` after the merge with no `state`/`MERGED` check (`close` now has one); tighten it and `tests/ledger_tests.sh` line 14 in one change. Unsure: who merges the lead's STATE pull request (the user); fetch before the rebase; `<n>` for `gh pr view` still comes from the report. Existing gap (spec §6, follow-up 🔐): sessions can push to the default branch.

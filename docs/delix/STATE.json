@@ -360,9 +360,9 @@
       "file": "docs/delix/tasks/T034-board-trusted-ledger.md",
       "role": "backend",
       "tier": 2,
-      "status": "in_review",
+      "status": "fixing",
       "pr": 64,
-      "rounds": 0,
+      "rounds": 1,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
       "agents": [
@@ -375,6 +375,22 @@
           "at": "2026-11-12T14:30:43Z",
           "branch": "claude/awesome-ritchie-3dc745",
           "session": "t034-board-py-g-venilir"
+        },
+        {
+          "role": "qa",
+          "by": "claude/spec-c-board",
+          "round": 1,
+          "sha": "e11d52e0e397e50761e1c96117fd7c5098b5d837",
+          "verdict": "REJECT",
+          "at": "2026-11-12T15:13:53Z"
+        },
+        {
+          "role": "security",
+          "by": "claude/spec-c-board",
+          "round": 1,
+          "sha": "e11d52e0e397e50761e1c96117fd7c5098b5d837",
+          "verdict": "FIX",
+          "at": "2026-11-12T15:13:53Z"
         }
       ]
     },
@@ -382,9 +398,9 @@
       "file": "docs/delix/tasks/T035-pane-trusted-ledger.md",
       "role": "frontend",
       "tier": 2,
-      "status": "in_review",
+      "status": "fixing",
       "pr": 65,
-      "rounds": 0,
+      "rounds": 1,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
       "agents": [
@@ -397,6 +413,22 @@
           "at": "2026-11-12T14:30:43Z",
           "branch": "claude/blissful-brattain-295c4d",
           "session": "t035-panel-g-venilir-led"
+        },
+        {
+          "role": "qa",
+          "by": "claude/spec-c-board",
+          "round": 1,
+          "sha": "754049cf127d4525ffeea94e046106ddf54e81fc",
+          "verdict": "ACCEPT_WITH_NOTES",
+          "at": "2026-11-12T15:13:53Z"
+        },
+        {
+          "role": "security",
+          "by": "claude/spec-c-board",
+          "round": 1,
+          "sha": "754049cf127d4525ffeea94e046106ddf54e81fc",
+          "verdict": "CLEAN",
+          "at": "2026-11-12T15:13:53Z"
         }
       ]
     },
@@ -419,6 +451,22 @@
           "at": "2026-11-12T14:30:43Z",
           "branch": "claude/elegant-fermi-72c04d",
           "session": "t036-lead-skill-leri-sha"
+        },
+        {
+          "role": "qa",
+          "by": "claude/spec-c-board",
+          "round": 1,
+          "sha": "d56b8a52e02d46a4b035dfd3f3336e0f7d3ab8ae",
+          "verdict": "ACCEPT",
+          "at": "2026-11-12T15:13:53Z"
+        },
+        {
+          "role": "security",
+          "by": "claude/spec-c-board",
+          "round": 1,
+          "sha": "d56b8a52e02d46a4b035dfd3f3336e0f7d3ab8ae",
+          "verdict": "CLEAN",
+          "at": "2026-11-12T15:13:53Z"
         }
       ]
     }

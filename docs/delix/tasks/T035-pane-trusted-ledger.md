@@ -95,3 +95,12 @@
 
 ## Review findings (filled by the lead)
 - Dispatch resolution (K273, 2026-11-12, after the implementer's `NEEDS_CONTEXT`): the existing test "derive follows the T029 edge rules" (`tests/board.test.tsx:388`) builds a raw without `trusted_state` and expects T002 Ready and a merge action, so R8' turns it red. Allowed exception to "insertions only": exactly one inserted line after line 421, `    trusted_state: JSON.stringify(state),` (a key of that raw object); no existing line changes. Rejected: no trust check when the key is missing (fail open; against K262/R1 and board.py).
+- Round 1 (PR #65, head `754049cf127d4525ffeea94e046106ddf54e81fc`, 2026-11-12): qa `ACCEPT_WITH_NOTES` (P1 against T034, P2 1), security `CLEAN` (Low 2). Gates green: `claude plugin test plugins/delix-board` 31 pass 0 fail on the head tree, both validates, the shell tests.
+  - **Fix round for REQ-6 parity (K275, K276; the same change as T034 round 1):**
+    - `hooks/data.ts:140`: `refs/remotes/origin/${def}:${STATE}` becomes `refs/remotes/origin/HEAD:${STATE}` (the ref name no longer comes from `delix.json`; fails closed when `origin/HEAD` is missing).
+    - `hooks/data.ts:153`: `['diff', '--quiet', ...]` becomes `['diff', '--no-ext-diff', '--quiet', ...]` (`--quiet` still runs a trusted external diff helper).
+    - `hooks/parse.ts:397` comment: `refs/remotes/origin/<default>` becomes `refs/remotes/origin/HEAD`.
+    - `tests/board.test.tsx`, the PR's own test "one look: at most 4 + 3N git calls ..." (line 678, not on main): expect `'refs/remotes/origin/HEAD:docs/delix/STATE.json'`, and add `expect(look.some(a => a.includes('diff'))).toBe(true)` and `expect(look.filter(a => a.includes('diff')).every(a => a[4] === 'diff' && a[5] === '--no-ext-diff')).toBe(true)`.
+    - Lead prototype: red on the PR head (1 fail), green with the fix (31 pass, 0 fail), `validate plugins/delix-board` passes.
+  - qa P1 (TR with local files) belongs to T034; the panel already builds TR from T alone.
+  - Notes, not fixed here: [P2] `.delix/test-result.txt` lacks the `claude plugin test` output (the lead ran it). Follow-up: [Low] `readSnapshot` reads (root STATE, `previous`, metrics, cards, report, test-result) have no size or link check, and `state.previous` skips the `..`/absolute filter. Unsure: `RawWorld.trusted_state` type under `tsc`; `Number()` on a long `pr` gives `Infinity`; `GIT_NO_LAZY_FETCH=1` for every call.
