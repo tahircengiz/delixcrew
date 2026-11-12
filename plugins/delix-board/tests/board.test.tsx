@@ -42,6 +42,7 @@ function world(on: On, files: Record<string, string>, git: Repo = { top: ROOT, c
   on('fs.exists', (_, e) => ({ value: e.path in files }))
   on('fs.stat', (_, e) => {
     const text = files[e.path]
+    if (text === undefined && Object.keys(files).some(p => p.startsWith(e.path + '/'))) return { value: { kind: 'dir', size: 0, mtimeMs: 1, isLink: false } }
     if (text === undefined) throw missing(e.path)
     return { value: { kind: 'file', size: text.length, mtimeMs: git.mtimes?.[e.path] ?? 1, isLink: false } }
   })
@@ -328,6 +329,7 @@ function gitWorld(on: On, raw: RawWorld) {
   on('fs.exists', (_, e) => ({ value: disk.has(e.path) }))
   on('fs.stat', (_, e) => {
     const file = disk.get(e.path)
+    if (file === undefined && [...disk.keys()].some(p => p.startsWith(e.path + '/'))) return { value: { kind: 'dir', size: 0, mtimeMs: 1, isLink: false } }
     if (file === undefined) throw missing(e.path)
     return { value: { kind: 'file', size: file.text.length, mtimeMs: file.mtimeMs, isLink: false } }
   })
@@ -413,6 +415,7 @@ test('derive follows the T029 edge rules: no branch and no detached line, a null
       ['refs/heads/feat', sha('3'), 'refs/remotes/origin/feat', 'ahead 2', '1799999000'],
       ['refs/heads/t001', sha('4'), '', '', '1799999000'],
       ['refs/remotes/origin/t002', sha('5'), '', '', '1799999000'],
+      ['refs/remotes/origin/HEAD', sha('1'), '', '', '1799999000'],
     ]
       .map(f => f.join('\t'))
       .join('\n'),
@@ -531,6 +534,7 @@ test('delete_branch and the merged cleanup read the card on origin/main, not the
       refLine('refs/heads/main', hex('1'), 'refs/remotes/origin/main', '', '1799999000'),
       refLine('refs/heads/impl-2', hex('2'), 'refs/remotes/origin/impl-2', '', '1799999000'),
       refLine('refs/heads/done-1', hex('7'), '', '', '1799999000'),
+      refLine('refs/remotes/origin/HEAD', hex('1'), '', '', '1799999000'),
     ].join('\n'),
     worktrees: {
       '/r': { status: '', files: { 'docs/delix/STATE.json': JSON.stringify(source) } },
@@ -675,7 +679,7 @@ test('one look: at most 4 + 3N git calls, each with the K263 flags first; worktr
   expect(look.length).toBeGreaterThan(0)
   expect(look.length).toBeLessThanOrEqual(4 + 3 * n)
   for (const argv of argvs) expect(argv.slice(0, 4)).toEqual(K263)
-  expect(look.filter(a => a.includes('cat-file'))).toEqual([[...K263, '--no-lazy-fetch', 'cat-file', 'blob', 'refs/remotes/origin/HEAD:docs/delix/STATE.json']])
+  expect(look.filter(a => a.includes('cat-file'))).toEqual([[...K263, '--no-lazy-fetch', '--no-replace-objects', 'cat-file', 'blob', 'refs/remotes/origin/HEAD:docs/delix/STATE.json']])
   expect(look.some(a => a.includes('diff'))).toBe(true)
   expect(look.filter(a => a.includes('diff')).every(a => a[4] === 'diff' && a[5] === '--no-ext-diff')).toBe(true)
   expect(argvs.filter(a => a.includes('--no-lazy-fetch')).every(a => a.includes('cat-file'))).toBe(true)
@@ -689,4 +693,115 @@ test('a git action note is drawn whole, not cut to the pane width (P2)', async (
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal', props: { ...PANE.props, bodyColumns: 24 } })
   expect(await ui.find({ type: 'Text', text: 'uncommitted 1 files: commit or discard in its session' })).toBeDefined()
   await ui.unmount()
+})
+
+// T038: the K277 rules of board.py (R-G6, R-G7, R8'') and one safe read that checks every path part (S1).
+
+/** `on` for a world whose handlers stay as they are: records the path of each fs.stat and fs.read, and may change what fs.stat says of a path. */
+function fsSpy(on: On, stat?: (path: string, value: Record<string, unknown>) => Record<string, unknown>) {
+  const stats: string[] = []
+  const reads: string[] = []
+  type Handler = (x: unknown, e: { path?: string }, ...rest: unknown[]) => unknown
+  const register = on as unknown as (name: string, handler: Handler) => unknown
+  const wrapped = (name: string, handler: Handler) => {
+    if (name === 'fs.stat') {
+      return register(name, (x, e, ...rest) => {
+        stats.push(e.path ?? '')
+        const result = handler(x, e, ...rest) as { value: Record<string, unknown> }
+        return stat === undefined ? result : { value: stat(e.path ?? '', result.value) }
+      })
+    }
+    if (name === 'fs.read') {
+      return register(name, (x, e, ...rest) => {
+        reads.push(e.path ?? '')
+        return handler(x, e, ...rest)
+      })
+    }
+    return register(name, handler)
+  }
+  return { on: wrapped as unknown as On, stats, reads }
+}
+
+test("no refs/remotes/origin/HEAD in call 3: nothing trusted, whatever trusted_state holds (R8'', K277)", () => {
+  const raw = PARITY.raw as unknown as Raw
+  const forged = derive({ ...raw, trusted_state: '{"cards":{}}' })
+  expect(derive(raw).queue.ready.length).toBeGreaterThan(0)
+  const lines = PARITY.raw.for_each_ref.split('\n')
+  const isHead = (line: string) => line.split('\t')[0] === 'refs/remotes/origin/HEAD'
+  expect(lines.filter(isHead)).toHaveLength(1)
+  const removed = lines.filter(line => !isHead(line)).join('\n')
+  const renamed = lines.map(line => (isHead(line) ? `refs/heads/${line}` : line)).join('\n')
+  expect(derive({ ...raw, for_each_ref: removed })).toEqual(forged)
+  expect(derive({ ...raw, for_each_ref: renamed })).toEqual(forged)
+})
+
+test('one look: every log call is `log -1 --no-show-signature --format=%ct -- docs/delix/STATE.json` (R-G6, K277)', async ($, on) => {
+  const { on: recorded, argvs } = spy(on)
+  const { now } = gitWorld(recorded, PARITY.raw)
+  await $.session.start({ cwd: PARITY.raw.self, surface: 'desktop', isInteractive: true })
+  await now.advance(20_100)
+  const logs = argvs.filter(a => a.includes('log'))
+  expect(logs.length).toBeGreaterThan(0)
+  expect(logs.every(a => a.includes('--no-show-signature'))).toBe(true)
+  for (const argv of logs) expect(argv).toEqual([...K263, 'log', '-1', '--no-show-signature', '--format=%ct', '--', 'docs/delix/STATE.json'])
+})
+
+test('a spec under a directory that is a link is not read: every path part is checked (S1, K277)', async ($, on) => {
+  const raw = JSON.parse(JSON.stringify(PARITY.raw)) as RawWorld
+  const dir = '/r/.claude/worktrees/lead-c/docs/delix/specs'
+  const lead = raw.worktrees['/r/.claude/worktrees/lead-c']
+  if (lead) lead.state_log_ct = 1762299999
+  const { on: linked } = spy(on, (path, value) => (path === dir ? { ...value, isLink: true } : value))
+  gitWorld(linked, raw)
+  await $.session.start({ cwd: raw.self, surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(await ui.find({ type: 'Text', text: /Spec C: board visibility/ })).toBeUndefined()
+  expect(await ui.find({ type: 'Text', text: / · claude\/lead-c · - · açık 7/ })).toBeDefined()
+  await ui.unmount()
+})
+
+for (const previous of ['../outside/STATE.json', '/outside/STATE.json']) {
+  test(`a STATE whose previous is ${previous} gets no stat and no read outside its checkout (S1, K277)`, async ($, on) => {
+    const raw = JSON.parse(JSON.stringify(PARITY.raw)) as RawWorld
+    const lead = raw.worktrees['/r/.claude/worktrees/lead-c']
+    if (lead) {
+      lead.state_log_ct = 1762299999
+      const state = JSON.parse(lead.files['docs/delix/STATE.json'] ?? '{}') as Record<string, unknown>
+      lead.files['docs/delix/STATE.json'] = JSON.stringify({ ...state, previous })
+    }
+    const { on: recorded, stats, reads } = fsSpy(on)
+    gitWorld(recorded, raw)
+    await $.session.start({ cwd: raw.self, surface: 'desktop', isInteractive: true })
+    const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+    expect(await ui.find({ type: 'Button', key: 'card-T029' })).toBeDefined()
+    await ui.unmount()
+    const paths = [...stats, ...reads]
+    expect(reads.length).toBeGreaterThan(0)
+    expect(paths.filter(p => p.includes('/../') || p === '/outside/STATE.json' || p.endsWith('/outside/STATE.json'))).toEqual([])
+  })
+}
+
+test('a linked root STATE, a card over 1 MiB and a test result that is not a regular file are not read (S1, K277)', async ($, on) => {
+  const raw = JSON.parse(JSON.stringify(PARITY.raw)) as RawWorld
+  const lead = '/r/.claude/worktrees/lead-c'
+  const leadTree = raw.worktrees[lead]
+  if (leadTree) leadTree.state_log_ct = 1762299999
+  const implTree = raw.worktrees['/r/.claude/worktrees/impl-29']
+  if (implTree) implTree.files['.delix/test-result.txt'] = 'PASS\n'
+  const state = `${lead}/docs/delix/STATE.json`
+  const card = `${lead}/docs/delix/tasks/T038-ci.md`
+  const result = '/r/.claude/worktrees/impl-29/.delix/test-result.txt'
+  const { on: recorded, reads } = fsSpy(on, (path, value) => {
+    if (path === state) return { ...value, isLink: true }
+    if (path === card) return { ...value, size: 2097152 }
+    if (path === result) return { ...value, kind: 'fifo' }
+    return value
+  })
+  gitWorld(recorded, raw)
+  await $.session.start({ cwd: raw.self, surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(await ui.find({ type: 'Button', key: 'card-T037' })).toBeDefined()
+  await ui.unmount()
+  expect(reads.length).toBeGreaterThan(0)
+  expect(reads.filter(p => p === state || p === card || p === result)).toEqual([])
 })
