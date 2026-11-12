@@ -65,4 +65,5 @@
 Read only this card and spec REQ-2.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 1 (PR #68, head `4c01f1de13ac7166c06cbc4a4559b12de67c87c0`, 2026-11-12): qa `ACCEPT` (0 findings), security `CLEAN` (0 findings). Lead gates on the clean `git archive` of the head: the 12 shell suites exit 0 on Python 3.9.6 and 3.13.13, `claude plugin validate .` passes, 1 removed test line (line 13, named in the card); CI `check` and `test` pass. Ready for gate 2.
+  - Notes: the last sentence is wrapped differently from the anchor block (same words; every test phrase on one line). Spec §4 `merged` row now names the guarded read (lead, rev 8). Follow-up idea (security unsure, not this card): neither review §4 nor close §1 compares the merged `headRefOid` with the last reviewed `sha`, so a merge from the GitHub UI after an unreviewed push would still be written `accepted`.

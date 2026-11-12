@@ -126,4 +126,5 @@
 Read only this card and spec §4 and §6.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 1 (PR #66, head `be5d89055ae78d8b1b95f182fb6f9cddcf9ce2c4`, 2026-11-12): qa `ACCEPT` (0 findings), security `CLEAN` (0 findings). Lead gates on the clean `git archive` of the head: the 12 shell suites exit 0 on Python 3.9.6 and 3.13.13, `claude plugin validate .` passes, 0 removed test lines, fixture pair unchanged; CI `check` and `test` pass. Red on base reproduced by the lead: the head's `board_tests.sh` against `board.py` of 4ae458c gives the 9 new checks ✘ and the 34 old ✔. Ready for gate 2.
+  - Notes, not fixed (security unsure, accepted residuals): R8'' reads call 3 while call 7 resolves the name again (a concurrent `.git` writer between the two; the card's "Not chosen" keeps it); the last open runs before `fstat`, so a device node would reach its driver's `open` (needs root); calls 4–6 still run without `--no-lazy-fetch` in a treeless partial clone (not reproduced, outside K277).
