@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """PreToolUse (Bash): reviewer roles may run only read-only commands; in the implementer worktree, gitleaks runs
-before commit and shell writes to protected paths are blocked."""
+before commit, shell writes to protected paths are blocked, a push goes only to the card's own branch on origin and
+`gh pr merge` is denied."""
 import os
 import re
 import shutil
 import subprocess
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import REVIEWERS, card_path, delix_json, deny, matches, read_input  # noqa: E402
+from common import REVIEWERS, card_path, delix_json, deny, git, matches, read_input  # noqa: E402
 
 g = read_input()
 cmd = ((g.get("tool_input") or {}).get("command") or "").strip()
@@ -118,6 +119,176 @@ for m in re.finditer(r"(?:>>?|\bcp\b[^|;&]*|\bmv\b[^|;&]*|\btee\b)\s+([^\s;&|]+)
     d = matches(target, protected, cwd)
     if d:
         deny(f"delixcrew: the command writes to a protected path ('{target}' ~ {d}). Tier 3 path; human approval required.")
+
+# T041 (spec C section 6, K279): in the implementer worktree a push goes only to the card's own branch on origin,
+# from a branch other than the default; `gh pr merge` is gate 2, the user's. A pattern check on words over the full
+# text (no heredoc exemption), allowlist, fail closed. Every step is a character class or a token comparison
+# (linear); command names compare casefolded (`GIT` and `GH` resolve on a case-insensitive file system).
+PUSH_DENY = ("delixcrew: an implementer session pushes only its own card branch (git push [-u] origin <branch>); the "
+             "default branch and every other push run from the user's own terminal")
+MERGE_DENY = "delixcrew: gate 2 (merge) is the user's; an implementer session does not run gh pr merge"
+GIT_ARG_OPTS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env"}  # R-P2: take the next token
+PUSH_OPTS = {"-u", "--set-upstream", "--force-with-lease"}
+CONFIG_KEYS = ("alias.", "remote.", "push.", "url.", "include")  # R-P5, casefold prefixes
+CONFIG_READS = {"--get", "--get-all", "--get-regexp", "--get-urlmatch", "--list", "-l", "get", "list"}
+
+
+def words(text):
+    """R-P1: one token list per segment. Quotes and backslashes removed; a redirection token is dropped, and when it
+    is only the operator, the next token too."""
+    segs = []
+    for seg in re.split(r"[;&|(){}\n\r`]", text.translate({34: None, 39: None, 92: None})):
+        toks, skip = [], False
+        for t in re.split(r"[\s,\[\]]+", seg):
+            if not t:
+                continue
+            if skip:
+                skip = False
+                continue
+            rest = t.lstrip("0123456789")
+            if rest[:1] in ("<", ">"):
+                skip = not rest.strip("<>")
+                continue
+            toks.append(t)
+        segs.append(toks)
+    return segs
+
+
+def git_unset(*args):
+    """R-P3a: stdout of a config / symbolic-ref read; "" for exit 1 with empty stdout (not set). Any other result
+    (no git, timeout, another exit code, exit 1 with output) denies."""
+    r = git(cwd, *args)
+    if r is None or r.returncode not in (0, 1) or (r.returncode == 1 and r.stdout):
+        deny(PUSH_DENY)
+    return r.stdout if r.returncode == 0 else ""
+
+
+_branch = []
+
+
+def push_branch():
+    """R-P3: the current branch, read once per command; denies on a detached HEAD, a default branch name, a failed
+    git call or a configured remote.origin.push."""
+    if not _branch:
+        r = git(cwd, "symbolic-ref", "--quiet", "--short", "HEAD")
+        b = r.stdout.strip() if r is not None and r.returncode == 0 else ""
+        db = cfg.get("default_branch")
+        if not b or (db is not None and not isinstance(db, str)):
+            deny(PUSH_DENY)
+        names = {"main", "master", db or "main"}
+        oh = git_unset("symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD").strip()
+        if oh:
+            names.add(oh[len("origin/"):] if oh.startswith("origin/") else oh)
+        if b.casefold() in {x.casefold() for x in names} or git_unset("config", "--get-all", "remote.origin.push"):
+            deny(PUSH_DENY)
+        _branch.append(b)
+    return _branch[0]
+
+
+_upstream = {}
+
+
+def own_upstream(b):
+    """User addition (2026-11-12): with push.default=upstream git sends the name `<b>` to its upstream branch
+    (builtin/push.c, refspec_append_mapped), so the name form needs branch.<b>.merge unset or naming b itself. Read
+    once per command: one git call per push segment could run past the hook timeout."""
+    if b not in _upstream:
+        _upstream[b] = set(git_unset("config", "--get-all", "branch." + b + ".merge").split()) <= {b, "refs/heads/" + b}
+    return _upstream[b]
+
+
+_aliases = []
+
+
+def alias_check(name):
+    """R-P4: follow an alias to the first token of each value, at most 10 names deep; deny on `!`, a push, send-pack
+    or http-push token, or a longer chain. The list is read once per command, when a subcommand needs it."""
+    if not _aliases:
+        amap, last = {}, None
+        for line in git_unset("config", "--get-regexp", "^alias\\.").split("\n"):
+            if line.casefold().startswith("alias."):
+                key, _, val = line.partition(" ")
+                last = amap.setdefault(key[len("alias."):].casefold(), [])
+                last.append(val)
+            elif last:
+                last[-1] += "\n" + line  # a value with a newline goes on over the next line
+        _aliases.extend([amap, set()])
+    amap, ok = _aliases
+    if name in ok:
+        return
+    frontier, depth = {name}, 0
+    while frontier & amap.keys():
+        depth += 1
+        if depth > 10:
+            deny(PUSH_DENY)
+        nxt = set()
+        for a in frontier & amap.keys():
+            for v in amap[a]:
+                vt = [t.casefold() for s in words(v) for t in s]
+                if v.lstrip().startswith("!") or {"push", "send-pack", "http-push"} & set(vt):
+                    deny(PUSH_DENY)
+                nxt.update(vt[:1])
+        frontier = nxt
+    ok.add(name)
+
+
+segs = words(cmd)
+moved = any(t.casefold() in ("cd", "pushd", "popd") for toks in segs for t in toks)
+for toks in segs:
+    n = len(toks)
+    i = 0
+    while i < n:  # R-P6: gh pr [-R <repo> | --option]... merge
+        t = toks[i].casefold()
+        if (t == "gh" or t.endswith("/gh")) and i + 1 < n and toks[i + 1].casefold() == "pr":
+            i += 2
+            while i < n and toks[i].startswith("-"):
+                i += 2 if toks[i] in ("-R", "--repo") else 1
+            if i < n and toks[i].casefold() == "merge":
+                deny(MERGE_DENY)
+        else:
+            i += 1
+    reads = keys = None  # R-P5: does the rest of the segment from index x hold a read flag / a config key
+    i = 0
+    while i < n:  # R-P2: one left-to-right pass
+        t = toks[i].casefold()
+        if t == "git" or t.endswith("/git"):
+            j, gopt = i + 1, False
+            while j < n and toks[j].startswith("-"):
+                gopt = True
+                if toks[j] in GIT_ARG_OPTS:
+                    if toks[j] == "-c" and j + 1 < n and toks[j + 1].casefold().startswith(CONFIG_KEYS):
+                        deny(PUSH_DENY)
+                    j += 1
+                j += 1
+            if j >= n:
+                break
+            sub = toks[j].casefold()
+        elif t.rsplit("/", 1)[-1] in ("git-push", "git-send-pack"):
+            j, gopt, sub = i, False, t.rsplit("/", 1)[-1][len("git-"):]
+        else:
+            i += 1
+            continue
+        if sub in ("send-pack", "http-push", "subtree"):
+            deny(PUSH_DENY)
+        if sub == "push":  # R-P3: first token, no global option, no cd; [opts] origin <HEAD|current branch>
+            k = j + 1
+            while k < n and toks[k] in PUSH_OPTS:
+                k += 1
+            if (i != 0 or gopt or moved or n - k != 2 or toks[k] != "origin"
+                    or toks[k + 1] not in ("HEAD", push_branch())
+                    or (toks[k + 1] != "HEAD" and not own_upstream(toks[k + 1]))):
+                deny(PUSH_DENY)
+            break
+        alias_check(sub)
+        if sub == "config":
+            if reads is None:
+                reads, keys = [False] * (n + 1), [False] * (n + 1)
+                for x in range(n - 1, -1, -1):
+                    reads[x] = reads[x + 1] or toks[x] in CONFIG_READS
+                    keys[x] = keys[x + 1] or toks[x].casefold().startswith(CONFIG_KEYS)
+            if keys[j + 1] and not reads[j + 1]:
+                deny(PUSH_DENY)
+        i = j + 1
 
 if re.search(r"\bgit\s+commit\b", cmd):
     gl = shutil.which("gitleaks")

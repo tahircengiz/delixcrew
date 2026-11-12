@@ -472,7 +472,7 @@
       <dl>
         <div><dt>Her oturum</dt><dd><code>feedback.py send</code> reddedilir; <code>script</code>, <code>expect</code>, <code>unbuffer</code> ve <code>pty.spawn</code> sarmalayıcıları da reddedilir. delixcrew'u hedefleyen <code>gh issue create|comment|edit</code> ve <code>gh api … issues</code> çağrıları da reddedilir. Triage yazma yolları da kapalıdır (yukarıdaki not). <code>trust.py allow</code>, bir terminal sarmalayıcısı altında <code>trust.py</code> ve <code>delixcrew/trust.json</code> adını geçiren her komut reddedilir; tam olarak bir <code>cat &gt; &lt;path&gt; &lt;&lt;'EOF'</code> heredoc'u, tek bir <code>feedback.py add</code> heredoc'u gibi yalnız ilk satırından denetlenir.</dd></div>
         <div><dt>Reviewer</dt><dd>security yalnız tarayıcı (gitleaks, semgrep, pip-audit, trivy, …) ve git okuma komutu çalıştırır; diğer reviewer'lar Bash kullanamaz.</dd></div>
-        <div><dt>Uygulayıcı</dt><dd>Korumalı yola shell ile yazma reddedilir. <code>git commit</code> öncesinde staged değişikliklerde <code>gitleaks protect</code> koşar; bulgu varsa commit durur. gitleaks yoksa <code>.delix/warnings.log</code>'a not düşülür.</dd></div>
+        <div><dt>Uygulayıcı</dt><dd>Korumalı yola shell ile yazma reddedilir. <code>git commit</code> öncesinde staged değişikliklerde <code>gitleaks protect</code> koşar; bulgu varsa commit durur. gitleaks yoksa <code>.delix/warnings.log</code>'a not düşülür. Push yalnız kartın kendi dalından, hiçbir zaman varsayılan daldan değil, <code>git push [-u] origin &lt;HEAD|dal&gt;</code> biçiminde çalışır ve <code>gh pr merge</code> reddedilir (sonraki sürümle gelecek).</dd></div>
       </dl>
     </article>
     <article class="hook">

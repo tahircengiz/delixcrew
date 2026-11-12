@@ -119,7 +119,10 @@ What runs locally, what it writes and when it uses the network. What a feedback 
   The security reviewer may run only commands that start with an
   allowlisted scanner or read command and match no known write pattern; this is a pattern check, not a sandbox. The
   other reviewers get no Bash. In an implementer worktree it denies shell writes into a protected path and runs
-  `gitleaks protect --staged` before every `git commit`.
+  `gitleaks protect --staged` before every `git commit`. There a push runs only as
+  `git push [-u|--set-upstream] [--force-with-lease] origin <HEAD|branch>` from the card's own branch, which is not the
+  default branch, with no `remote.origin.push` and no `cd` in the command; the branch name form also needs the
+  branch's upstream unset or the branch itself. `gh pr merge` is denied there: gate 2 is the user's (T041, K279).
 - `Stop` runs [`scripts/stop_gate.py`](scripts/stop_gate.py), only in an implementer worktree: it runs `test_command`
   and `extra_checks` from the project's `docs/delix/delix.json` through the shell, and the turn does not end until they
   pass. These are your project's commands, not the plugin's. It runs them only when you approved that exact list for
@@ -372,7 +375,13 @@ inherit its approval. The project's own `.claude/settings.json` hooks and `PATH`
 folder trust dialog; the approval closes only the `delix.json` channel. The Bash hook's denylist is friction, not a
 boundary: commands built from split quotes, variables or globs get past it, and so does a path to the trust record
 written as a relative path after `cd`, with `//` or `/./`, or through a symlinked directory, because that rule is a
-substring match (K220); the boundary is Claude Code's Bash permission prompt (K77). The one allowed `cat` heredoc
+substring match (K220); the boundary is Claude Code's Bash permission prompt (K77). The implementer push rule (T041,
+K279) is a pattern check on words too, defence in depth and not a GitHub boundary: words built from variables or
+`eval`, git settings given through the environment (`GIT_DIR`, `GIT_CONFIG_*`) or `--config-env`, a script file or
+another program's own git calls, `gh api` ref or merge writes in another repository, deleting `.delix/card`, a cwd
+below the worktree root and the repository owner's bypass on the `main-review` ruleset are out of its reach; as a
+false positive it denies the words `git` and `push` on one line of a heredoc body, an `echo` or a commit message, and
+a push in a command that also has `cd`. The one allowed `cat` heredoc
 writes nothing the Write tool could not already write. With git older than 2.44, a missing object in a promisor
 (partial clone) repository can still be fetched from its remote while the hooks read the index (K225).
 
