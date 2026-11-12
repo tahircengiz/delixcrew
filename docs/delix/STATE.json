@@ -538,7 +538,7 @@
       "file": "docs/delix/tasks/T037-board-git-hardening-2.md",
       "role": "backend",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 66,
       "rounds": 0,
       "cost_usd": null,
@@ -570,7 +570,12 @@
           "verdict": "CLEAN",
           "at": "2026-11-12T18:02:59Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "691beff477543454bfff7b98b20c15130db82d07",
+        "head": "be5d89055ae78d8b1b95f182fb6f9cddcf9ce2c4",
+        "at": "2026-11-12T18:18:20Z"
+      }
     },
     "T038": {
       "file": "docs/delix/tasks/T038-pane-git-hardening-2.md",
@@ -614,7 +619,7 @@
       "file": "docs/delix/tasks/T039-review-merged-guard.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 68,
       "rounds": 0,
       "cost_usd": null,
@@ -646,7 +651,12 @@
           "verdict": "CLEAN",
           "at": "2026-11-12T17:58:58Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "f4bca1116568850047c8df1cdc5655b3fd80dba6",
+        "head": "4c01f1de13ac7166c06cbc4a4559b12de67c87c0",
+        "at": "2026-11-12T18:18:29Z"
+      }
     },
     "T040": {
       "file": "docs/delix/tasks/T040-verification-evidence-file.md",
