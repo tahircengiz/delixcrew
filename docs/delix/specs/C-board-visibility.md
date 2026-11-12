@@ -1,7 +1,7 @@
 # SPEC — Spec C: board'da ajanlar, onay/merge kuyruğu ve bekleyen git işleri
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
-> işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279; rev 9 (2026-11-12): T041 tur 1, K280–K281; rev 10: T041 tur 2, K282)
+> işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279; rev 9 (2026-11-12): T041 tur 1, K280–K281; rev 10: T041 tur 2, K282; rev 11: T041 tur 3, K283)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
 > K244–K261, K263 ve K273–K277. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
 > burada durur ve K numaraları K240'tan başlar (K244).
@@ -294,3 +294,11 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
   `--config-env` ile verilen alias da main'i push ediyordu; R-P5 `--config-env` anahtarını `-c` gibi denetler. Kuralı
   daraltır; 🔐 onayının kapsamı büyümez. Tur 3 son turdur (`max_review_rounds` 3); orada da Medium çıkarsa kullanıcıya
   seçenek götürülür.
+- **K283** (kullanıcı, 2026-11-12, geri alınır) T041 tur 3: qa ACCEPT, security Medium. Değersiz yazılmış
+  `help.autocorrect` (`[help]` altında yalnız `autocorrect`) git için açıktır, ama `git config --get` boş satır basar ve
+  R-P4a onu kapalı okuyordu; lead gerçek git 2.54 ile üretti (hook izin verdi, uzaktaki main ilerledi). Tur sınırı
+  (`max_review_rounds` 3) doldu; kullanıcı sınırın üstünde tek, küçük bir 4. turu seçti ("Evet, 4. tur"). İçerik: boş
+  olmayan okuma açık sayılır (açıkça boş değer de: fail closed), aynı satırda başka komutun yazdığı git ayarı bilinen
+  sınırlara girer (kod değil), site sınır listesi kartla eşitlenir. Kuralı daraltır; 🔐 onayının kapsamı büyümez.
+  4. turda yeni Medium çıkarsa düzeltme turu açılmaz, kullanıcıya gelinir. Satırın tamamını izin listesine bağlamak
+  takip işidir.

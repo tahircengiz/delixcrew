@@ -710,7 +710,7 @@
       "file": "docs/delix/tasks/T041-bash-gate-card-push.md",
       "role": "backend",
       "tier": 3,
-      "status": "escalated",
+      "status": "fixing",
       "pr": 69,
       "rounds": 3,
       "cost_usd": null,

@@ -58,10 +58,11 @@
 - **R-P3a, git call results (lead):** a git call fails when `common.git` returns None or its exit code is neither 0 nor 1. Exit 1 with empty stdout means "not set" for `config --get-all remote.origin.push`, `config --get-regexp ^alias\.` and `symbolic-ref --quiet --short refs/remotes/origin/HEAD` (no `origin/HEAD`: the other three names still apply). Exit 1 of `symbolic-ref --quiet --short HEAD` (detached HEAD) means deny. A failed call means deny.
 - **R-P4, alias:** the alias list comes from `git(cwd,"config","--get-regexp","^alias\\.")`, read once per command and only when needed; names are compared lowercased. Any other subcommand found in that list is followed to the first token of each value, for up to 10 steps. Deny when a value starts with `!`, holds a `push`, `send-pack` or `http-push` token, or the chain is longer than 10.
 - **R-P4a, autocorrect (lead, round 2, K282):** `git(cwd,"config","--get","help.autocorrect")` is read once per command,
-  when a subcommand other than `push` needs it. If the value (casefold) is not empty, `0`, `false`, `off`, `no`, `show` or
-  `never`, the list from `git(cwd,"--list-cmds=builtins,main,others,alias")` is read once, and a subcommand (casefold) not
-  in it denies with `PUSH_DENY`: git would run the closest command in its place (`psuh` runs `push`). Both reads follow
-  R-P3a.
+  when a subcommand other than `push` needs it. If the read is not empty (the key is set; a key with no value prints an
+  empty line and is on for git; lead, round 4, K283) and its value (casefold) is not `0`, `false`, `off`, `no`, `show`
+  or `never`, the list from `git(cwd,"--list-cmds=builtins,main,others,alias")` is read once, and a subcommand
+  (casefold) not in it denies with `PUSH_DENY`: git would run the closest command in its place (`psuh` runs `push`).
+  Both reads follow R-P3a.
 - **R-P5, config writes:** deny in either case:
   - subcommand `config` with none of `--get --get-all --get-regexp --get-urlmatch --list -l get list`, and a token starting (casefold) with `alias.`, `remote.`, `push.`, `url.`, `include` or `help.` (`help.`: lead, round 2, K282);
   - a `-c` or `--config-env` value with one of those prefixes (`--config-env`: lead, round 2, K282).
@@ -73,6 +74,8 @@
   - words built from variables, `eval`, globs or ANSI-C quoting (`$'...'`) (globs and ANSI-C: lead, round 2);
   - a script file or another program's own git calls (such as `gh pr checkout`); a `gh` alias for `pr merge`; another
     URL for `origin` set with `git remote` (lead, round 2);
+  - git config written into a file by another command on the same line, such as a `>>` redirection (lead, round 4,
+    K283);
   - `gh api` ref or merge writes in any repository other than delixcrew's own (REPO_DENY covers only the delixcrew
     repository; lead, round 1, K281);
   - deleting `.delix/card`;
