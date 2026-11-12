@@ -43,7 +43,8 @@ Give the reviewers **neither your own opinion nor the implementer's reasoning**;
 **Ledger (Spec C REQ-2).** After each `delixcrew:qa` and each `delixcrew:security` run, append to
 `STATE.json.cards.<T>.agents`
 `{"role": "qa"|"security", "by": "<lead branch>", "round": <n>, "sha": "<40 hex>", "verdict": "<token>", "at": "<ISO-8601 Z>"}`.
-`round` is this review round (1, 2, 3). `sha` is the full `git rev-parse <branch>` you reviewed, never 7 characters.
+`round` is this review round (1, 2, 3). `sha` is the full step-1 SHA (`git rev-parse <branch>`, taken before the diff)
+that the reviewers' diff was made from; never 7 characters, never re-read after the review.
 `verdict` is the returned token, REJECT and FIX too. Append only. `/delixcrew:status` reads gate 2 from these records.
 
 ## 3. Process the findings
@@ -65,7 +66,10 @@ Give the reviewers **neither your own opinion nor the implementer's reasoning**;
   a stronger model / narrow the scope / accept).
 
 ## 4. Gate 2
-When all reviewers say ACCEPT/CLEAN, one screen for the user: PR link, the card's DoD ✔/✘, reviewer verdicts, and the
+When all reviewers say ACCEPT/CLEAN, first commit `STATE.json` with this round's records,
+rebase on `origin/<default_branch>` and push it there (where that branch takes only pull requests, the lead's STATE
+pull request is merged first); `/delixcrew:status` shows Ready to merge only from that copy (K262). Then one screen for
+the user: PR link, the card's DoD ✔/✘, reviewer verdicts, and the
 security approval message (global CLAUDE.md format) if there is a 🔐 note. **The merge is the user's**; you do not run
 `gh pr merge` (the user runs the `gh pr merge <n> --squash --match-head-commit <sha40>` block that `/delixcrew:status`
 prints). After the merge, in one STATE write: status → `accepted` and `merged` =

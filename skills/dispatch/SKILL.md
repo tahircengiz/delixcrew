@@ -67,8 +67,8 @@ re-dispatch appends a new record.
 
 ## 5. Wait and collect
 When an implementer session finishes, `.delix/report.md` and a PR arrive; `STATE.json` status → `in_review`, fill
-`branch` (from the report's `**PR:** #<n> (<branch>)`) and `session` in the last implementer record, then
-`/delixcrew:review`. While waiting the lead **writes no code and does not do the card itself** (it pollutes the
+`branch` (from `gh pr view <n> --json headRefName`, not from the report) and `session` in the last implementer record,
+then `/delixcrew:review`. While waiting the lead **writes no code and does not do the card itself** (it pollutes the
 context and skips the review).
 
 Reply in the user's language; keep status values, verdict tokens and labels as written.
