@@ -667,8 +667,8 @@
       "file": "docs/delix/tasks/T040-verification-evidence-file.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_progress",
-      "pr": null,
+      "status": "in_review",
+      "pr": 70,
       "rounds": 0,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
@@ -680,8 +680,24 @@
           "sha": null,
           "verdict": null,
           "at": "2026-11-12T18:23:22Z",
-          "branch": null,
+          "branch": "claude/frosty-dhawan-59b895",
           "session": "t040-f010-verification-e"
+        },
+        {
+          "role": "qa",
+          "by": "claude/eager-wescoff-11de1e",
+          "round": 1,
+          "sha": "a0fdf6f27c8a82e92eedf2006a64c90b820a264e",
+          "verdict": "ACCEPT",
+          "at": "2026-11-12T18:36:20Z"
+        },
+        {
+          "role": "security",
+          "by": "claude/eager-wescoff-11de1e",
+          "round": 1,
+          "sha": "a0fdf6f27c8a82e92eedf2006a64c90b820a264e",
+          "verdict": "CLEAN",
+          "at": "2026-11-12T18:37:46Z"
         }
       ]
     },
@@ -691,7 +707,7 @@
       "tier": 3,
       "status": "fixing",
       "pr": 69,
-      "rounds": 1,
+      "rounds": 2,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
       "agents": [
@@ -720,6 +736,22 @@
           "sha": "86f51bb4c809db6fd70c50c28020913247a445fc",
           "verdict": "FIX",
           "at": "2026-11-12T18:08:03Z"
+        },
+        {
+          "role": "qa",
+          "by": "claude/eager-wescoff-11de1e",
+          "round": 2,
+          "sha": "068469e889201d16e2843d6df0705f78742be62a",
+          "verdict": "ACCEPT_WITH_NOTES",
+          "at": "2026-11-12T18:36:29Z"
+        },
+        {
+          "role": "security",
+          "by": "claude/eager-wescoff-11de1e",
+          "round": 2,
+          "sha": "068469e889201d16e2843d6df0705f78742be62a",
+          "verdict": "FIX",
+          "at": "2026-11-12T18:38:53Z"
         }
       ]
     }

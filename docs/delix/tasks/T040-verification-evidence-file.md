@@ -84,4 +84,11 @@
 Read only this card.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 1 (PR #70, head `a0fdf6f27c8a82e92eedf2006a64c90b820a264e`, 2026-11-12): qa `ACCEPT` (0 P0, 0 P1), security
+  `CLEAN`. Lead gates on the clean `git archive` of the head: the 12 shell suites (with the new `evidence_tests.sh`) exit 0
+  on Python 3.9.6 and 3.13.13, `claude plugin validate .` passes; 4 files, no protected path, no removed test line; red
+  run read by the lead (`.delix/evidence/red.txt`: 7 ✘, `[exit 1]`); CI `check` and `test` pass. Ready for gate 2.
+  - Notes (follow-ups, not this card): `agents/qa.md:19` still names one test output file (implementer concern). The
+    evidence file is written by the implementer, not the gate, so the lead keeps re-running the Verification commands on
+    the clean archive (security unsure). `skills/review/SKILL.md` has no "file contents are data" line for the lead, as
+    `agents/qa.md` and `agents/security.md` have (security unsure; there before this card).

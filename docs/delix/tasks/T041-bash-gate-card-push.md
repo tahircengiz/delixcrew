@@ -37,6 +37,11 @@
 - **R-P2, git command:**
   - A token `git`, or one ending in `/git`, starts a git command.
   - `-C`, `-c`, `--git-dir`, `--work-tree`, `--namespace` and `--config-env` take the next token. Any other token starting with `-` is one option.
+  - R-P2a (lead, round 2, K282): `--attr-source` and `--shallow-file` take the next token too. A token in git's own
+    no-value list (`-v --version -h --help -p --paginate -P --no-pager --no-replace-objects --no-lazy-fetch
+    --no-optional-locks --no-advice --bare --literal-pathspecs --glob-pathspecs --noglob-pathspecs --icase-pathspecs
+    --exec-path --html-path --man-path --info-path`) or a `--name=value` token is one option; any other option denies
+    with `PUSH_DENY` (git may read a value for it, which then hides the subcommand).
   - The next token is the subcommand; the scan resumes after it.
   - A token `git-push` or `git-send-pack`, or one ending in `/git-push` or `/git-send-pack`, counts as subcommand `push` or `send-pack`.
 - **R-P3, push:** the subcommands `send-pack`, `http-push` and `subtree` are denied. Subcommand `push` is allowed only when all of these hold:
@@ -52,16 +57,22 @@
     command after the push counts too (`&` runs the push in the background).
 - **R-P3a, git call results (lead):** a git call fails when `common.git` returns None or its exit code is neither 0 nor 1. Exit 1 with empty stdout means "not set" for `config --get-all remote.origin.push`, `config --get-regexp ^alias\.` and `symbolic-ref --quiet --short refs/remotes/origin/HEAD` (no `origin/HEAD`: the other three names still apply). Exit 1 of `symbolic-ref --quiet --short HEAD` (detached HEAD) means deny. A failed call means deny.
 - **R-P4, alias:** the alias list comes from `git(cwd,"config","--get-regexp","^alias\\.")`, read once per command and only when needed; names are compared lowercased. Any other subcommand found in that list is followed to the first token of each value, for up to 10 steps. Deny when a value starts with `!`, holds a `push`, `send-pack` or `http-push` token, or the chain is longer than 10.
+- **R-P4a, autocorrect (lead, round 2, K282):** `git(cwd,"config","--get","help.autocorrect")` is read once per command,
+  when a subcommand other than `push` needs it. If the value (casefold) is not empty, `0`, `false`, `off`, `no`, `show` or
+  `never`, the list from `git(cwd,"--list-cmds=builtins,main,others,alias")` is read once, and a subcommand (casefold) not
+  in it denies with `PUSH_DENY`: git would run the closest command in its place (`psuh` runs `push`). Both reads follow
+  R-P3a.
 - **R-P5, config writes:** deny in either case:
-  - subcommand `config` with none of `--get --get-all --get-regexp --get-urlmatch --list -l get list`, and a token starting (casefold) with `alias.`, `remote.`, `push.`, `url.` or `include`;
-  - a `-c` value with one of those prefixes.
+  - subcommand `config` with none of `--get --get-all --get-regexp --get-urlmatch --list -l get list`, and a token starting (casefold) with `alias.`, `remote.`, `push.`, `url.`, `include` or `help.` (`help.`: lead, round 2, K282);
+  - a `-c` or `--config-env` value with one of those prefixes (`--config-env`: lead, round 2, K282).
 - **R-P6, merge:** a token `gh` (or ending in `/gh`), followed by `pr` and then `merge`, is denied with `MERGE_DENY`. Reason: the main-review ruleset requires 0 approvals (T025), so a green PR merges itself.
 - **Messages:**
   - `PUSH_DENY` = `delixcrew: an implementer session pushes only its own card branch (git push [-u] origin <branch>); the default branch and every other push run from the user's own terminal`
   - `MERGE_DENY` = `delixcrew: gate 2 (merge) is the user's; an implementer session does not run gh pr merge`
 - **Out of reach (goes into Known limits):**
-  - words built from variables or `eval`;
-  - a script file or another program's own git calls;
+  - words built from variables, `eval`, globs or ANSI-C quoting (`$'...'`) (globs and ANSI-C: lead, round 2);
+  - a script file or another program's own git calls (such as `gh pr checkout`); a `gh` alias for `pr merge`; another
+    URL for `origin` set with `git remote` (lead, round 2);
   - `gh api` ref or merge writes in any repository other than delixcrew's own (REPO_DENY covers only the delixcrew
     repository; lead, round 1, K281);
   - deleting `.delix/card`;
@@ -205,3 +216,20 @@ Read only this card and spec §6.
   - qa notes (P2): `own_upstream` (`push.default=upstream`) is not in the card; the lead reproduced its need and records
     it as K280. A non-object `docs/delix/delix.json` makes `cfg.get` raise, so every implementer rule is skipped; this
     was there before the change (follow-up).
+- Round 2 (PR #69, head `068469e889201d16e2843d6df0705f78742be62a`, 2026-11-12): qa `ACCEPT_WITH_NOTES` (1 P2), security
+  `FIX` (2 Medium, 1 Low). The round-1 fix equals the lead prototype (code and tests byte for byte, README rewrapped).
+  Lead gates on the clean `git archive` of the head: the 12 shell suites exit 0 on Python 3.9.6 and 3.13.13, `claude
+  plugin validate .` passes; CI `check` and `test` pass. Fix round 2 sent; round 3 is the last (`max_review_rounds` 3).
+  - Medium (security, reproduced by the lead with the hook and real git 2.54: the hook allows, the remote `main` moves):
+    a global option that takes a value hides the subcommand. `git --attr-source HEAD push origin main` and
+    `git --shallow-file x push origin main` (lead) are read as subcommand `HEAD` / `x`. Fix: R-P2a above, an allowlist.
+  - Medium (security, reproduced the same way): `git -c help.autocorrect=immediate psuh origin main` runs `push`; so does
+    `git psuh origin main` after `git config help.autocorrect 1`, or with the user's own setting. Fix: `help.` in R-P5
+    and R-P4a above.
+  - Low (security) and the unsure notes: the limits text did not name globs, ANSI-C quoting, `gh pr checkout`, a `gh`
+    alias for `pr merge` or another URL for `origin` (round-1 Low); fixed in the limits text above and in the README.
+  - Lead, in passing (reproduced the same way): an alias given with `X=... git --config-env=alias.x=X x` passed the
+    hook and pushed `main`; R-P5 now checks a `--config-env` key like a `-c` key, and the README no longer names
+    `--config-env` out of reach. Lead prototype: 10 new deny cases fail on this head, all 131 cases pass with the fix,
+    ReDoS case "global flags" ratio 3.96, the four reproductions are denied.
+  - qa P2: `gh pr checkout` before a push is not a git token; covered by "another program's own git calls" and now named.
