@@ -1,7 +1,7 @@
 # SPEC — Spec C: board'da ajanlar, onay/merge kuyruğu ve bekleyen git işleri
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
-> işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279)
+> işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279; rev 9 (2026-11-12): T041 tur 1, K280–K281)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
 > K244–K261, K263 ve K273–K277. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
 > burada durur ve K numaraları K240'tan başlar (K244).
@@ -205,7 +205,7 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
 - **K242** (kullanıcı, geri alınır) İki yüzey: `/delixcrew:status` (board.py) ve delix-board paneli.
 - **K243** (kullanıcı, geri alınır) Çoklu lead: ana tablo ve kuyruk tek kaynaktan, ayrıca Leads tablosu; kart
   birleştirme yok.
-- **K244** (lead, geri alınır) Spec B açıkken bu spec `docs/delix/specs/C-board-visibility.md`'de, K blok K240–K279,
+- **K244** (lead, geri alınır) Spec B açıkken bu spec `docs/delix/specs/C-board-visibility.md`'de, K blok K240–K299 (K280'den sonrası Spec B kapandıktan sonra),
   kartlar T029'dan; STATE.json'a yazmadan önce her seferinde `origin/main`'e rebase (Spec B lead'i de yazıyor).
 - **K245** (lead, geri alınır) Ağsız; başlıkta `fetched_at`. Bedel: uzak durum bayat olabilir; K247'deki
   `--match-head-commit` merge tarafındaki zararı keser.
@@ -275,3 +275,13 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
   `bash_gate` kuralı reddeder (🔐, kullanıcı "Evet, T041 (R-P6 dahil)"); bu derinlemesine savunmadır, GitHub sınırı değildir
   ve Known limits'e yazılır. Lead ekleri: başarısız git çağrısı = reddet (çıkış 0/1 dışı ya da yok), komutta `cd`/`pushd`/`popd`
   varsa push reddedilir.
+- **K280** (lead, 2026-11-12, geri alınır) T041 uygulayıcı eki: `push.default=upstream` iken dal adı biçimi dalın
+  upstream'ine gider; lead tekrar üretti (`origin/main`'i izleyen dalda `git push origin claude/t1` uzaktaki main'i
+  günceller). Dal adı biçimi yalnız `branch.<b>.merge` boşken ya da dalın kendisiyken geçer; `HEAD` biçimi etkilenmez.
+  Kuralı yalnız daraltır. Uygulayıcı oturumu kullanıcı onayı bildirdi; lead o kaydı görmediği için lead kararı yazılır.
+- **K281** (lead, 2026-11-12, geri alınır) T041 tur 1 security Medium ×2. (1) R-P3b: push aynı komutta yalnız global
+  seçeneksiz `add`, `commit`, `status`, `diff`, `log`, `show` git komutlarıyla durur. Hook dalı ve upstream'i komut
+  çalışmadan okur; aynı satırdaki `checkout`, `switch` ya da bir alias (`co`) push'tan önce dalı değiştirebiliyordu.
+  Engelleme listesi değil izin listesi: alias'lar da kapanır. (2) Known limits'teki `gh api` satırı "delixcrew'un kendi
+  reposu dışındaki her repoda" olur; REPO_DENY yalnız delixcrew reposunu kapsar (kartın Out of reach maddesi yanlıştı).
+  İkisi de kuralı daraltır ya da dokümanı düzeltir; K279'daki 🔐 onayının kapsamı büyümez.

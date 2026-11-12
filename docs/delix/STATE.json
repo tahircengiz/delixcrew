@@ -591,6 +591,22 @@
           "at": "2026-11-12T17:30:00Z",
           "branch": "claude/determined-wilbur-f7cc25",
           "session": "t038-delix-board-panel-k"
+        },
+        {
+          "role": "qa",
+          "by": "claude/eager-wescoff-11de1e",
+          "round": 1,
+          "sha": "988027df2177e93ce11f4ae070aa5b58a5cbeee4",
+          "verdict": "ACCEPT",
+          "at": "2026-11-12T17:58:04Z"
+        },
+        {
+          "role": "security",
+          "by": "claude/eager-wescoff-11de1e",
+          "round": 1,
+          "sha": "988027df2177e93ce11f4ae070aa5b58a5cbeee4",
+          "verdict": "CLEAN",
+          "at": "2026-11-12T18:03:22Z"
         }
       ]
     },
@@ -646,9 +662,9 @@
       "file": "docs/delix/tasks/T041-bash-gate-card-push.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_review",
+      "status": "fixing",
       "pr": 69,
-      "rounds": 0,
+      "rounds": 1,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
       "agents": [
@@ -661,6 +677,22 @@
           "at": "2026-11-12T17:30:00Z",
           "branch": "claude/agitated-bardeen-eb037a",
           "session": "t041-bash-gate-card-bran"
+        },
+        {
+          "role": "qa",
+          "by": "claude/eager-wescoff-11de1e",
+          "round": 1,
+          "sha": "86f51bb4c809db6fd70c50c28020913247a445fc",
+          "verdict": "ACCEPT_WITH_NOTES",
+          "at": "2026-11-12T17:58:58Z"
+        },
+        {
+          "role": "security",
+          "by": "claude/eager-wescoff-11de1e",
+          "round": 1,
+          "sha": "86f51bb4c809db6fd70c50c28020913247a445fc",
+          "verdict": "FIX",
+          "at": "2026-11-12T18:08:03Z"
         }
       ]
     }

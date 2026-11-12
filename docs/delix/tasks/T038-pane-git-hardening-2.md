@@ -106,4 +106,14 @@ The Stop gate runs only the `delix.json` commands; write the `claude plugin test
 Read only this card and spec §4 and §6.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 1 (PR #67, head `988027df2177e93ce11f4ae070aa5b58a5cbeee4`, 2026-11-12): qa `ACCEPT` (0 P0, 0 P1), security
+  `CLEAN` (1 Low). Lead gates on the clean `git archive` of the head: the 12 shell suites exit 0 on Python 3.9.6 and
+  3.13.13, `claude plugin validate .` and `claude plugin validate plugins/delix-board` pass, `claude plugin test
+  plugins/delix-board` gives 37 pass and 0 fail; 1 removed test line (line 678, named in the card); CI `check` and `test`
+  pass. Ready for gate 2.
+  - Low (security, no fix round): `data.ts:96` compares `text.length` (UTF-16 code units), not bytes; only the
+    stat-to-read race the card accepts reaches it, and the engine's 4 MiB read cap still applies.
+  - Notes (follow-ups, not this card): `chooseRoot`'s `hasState` stat does not check `isLink`. The `readIfChanged`
+    cache is keyed by path only, so a `previous` that names `docs/delix/delix.json` shares the entry of the delix.json
+    read and gets the other parser's value (`previous?.cards[id]` can then throw a TypeError); this was there before the
+    change (lead, read in `data.ts`). The test's `fifo` kind is not one the engine returns; it is rejected like `other`.

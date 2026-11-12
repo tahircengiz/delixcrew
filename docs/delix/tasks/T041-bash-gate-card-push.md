@@ -46,6 +46,10 @@
   - that branch is not `cfg["default_branch"]`, `main`, `master`, or the target of `symbolic-ref --quiet --short refs/remotes/origin/HEAD` without `origin/`;
   - `git(cwd,"config","--get-all","remote.origin.push")` prints nothing;
   - no token of the whole command is `cd`, `pushd` or `popd` (lead, K279: after a `cd` the push runs in another checkout, where `HEAD` may be the default branch; fail closed, the message tells the session to push from its worktree).
+  - R-P3b (lead, round 1, K281): every other git command that the R-P2 pass finds in the whole command is `add`,
+    `commit`, `status`, `diff`, `log` or `show` with no global option. Another git command on the line, an alias
+    included, can move `HEAD` or the upstream after the hook has read them; the check runs after the pass, so a git
+    command after the push counts too (`&` runs the push in the background).
 - **R-P3a, git call results (lead):** a git call fails when `common.git` returns None or its exit code is neither 0 nor 1. Exit 1 with empty stdout means "not set" for `config --get-all remote.origin.push`, `config --get-regexp ^alias\.` and `symbolic-ref --quiet --short refs/remotes/origin/HEAD` (no `origin/HEAD`: the other three names still apply). Exit 1 of `symbolic-ref --quiet --short HEAD` (detached HEAD) means deny. A failed call means deny.
 - **R-P4, alias:** the alias list comes from `git(cwd,"config","--get-regexp","^alias\\.")`, read once per command and only when needed; names are compared lowercased. Any other subcommand found in that list is followed to the first token of each value, for up to 10 steps. Deny when a value starts with `!`, holds a `push`, `send-pack` or `http-push` token, or the chain is longer than 10.
 - **R-P5, config writes:** deny in either case:
@@ -58,11 +62,13 @@
 - **Out of reach (goes into Known limits):**
   - words built from variables or `eval`;
   - a script file or another program's own git calls;
-  - `gh api` ref or merge writes in another repository (this repository's writes are already denied by REPO_DENY);
+  - `gh api` ref or merge writes in any repository other than delixcrew's own (REPO_DENY covers only the delixcrew
+    repository; lead, round 1, K281);
   - deleting `.delix/card`;
   - a cwd below the worktree root;
   - the GitHub owner bypass.
-- **Known false positive (fail closed):** the words `git` then `push` on one line of a heredoc body, an `echo` or a commit message; a push in a command that also has `cd`.
+- **Known false positive (fail closed):** the words `git` then `push` on one line of a heredoc body, an `echo` or a commit message; a push in a command that also has `cd` or a git command other than `add`, `commit`, `status`,
+`diff`, `log` or `show`.
 
 ## Interfaces
 - Consumed: `common.git(cwd, *args)` (`scripts/common.py:30–39`: no `GIT_*` env, `core.fsmonitor=false`, 5 s), `card_path`, `delix_json`, `deny`.
@@ -180,4 +186,22 @@
 Read only this card and spec §6.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 1 (PR #69, head `86f51bb4c809db6fd70c50c28020913247a445fc`, 2026-11-12): qa `ACCEPT_WITH_NOTES`, security `FIX`
+  (2 Medium, 2 Low; the first security run was stopped by an API safeguard before a verdict, the rerun gave this one).
+  Lead gates on the clean `git archive` of the head: the 12 shell suites exit 0 on Python 3.9.6 and 3.13.13,
+  `claude plugin validate .` passes; CI `check` and `test` pass. Fix round 1 sent.
+  - Medium (security, confirmed by the lead): the hook reads the branch and its upstream before the command runs, so
+    another git command on the same line can change them first. `git checkout main && git push origin HEAD` passes the
+    hook and sends `main`; so do `switch`, `symbolic-ref HEAD`, `branch --set-upstream-to`, an alias such as `co`,
+    `sh -c '...'` and a push run in the background with `&`. Fix: R-P3b above, an allowlist. Lead prototype: the 9 new
+    deny cases fail on this head, all cases pass with the fix, ReDoS case "git commands, then a push" ratio 4.51.
+  - Medium (security, docs): the README and site Known limits said "`gh api` ref or merge writes in another
+    repository". REPO_DENY covers only the delixcrew repository, so in a user's own project a card session's
+    `gh api` merge or ref write is not denied. The card's Out of reach line had the same error (lead, fixed above).
+    Fix: "in any repository other than delixcrew's own", also in the site usage limits.
+  - Low (notes, no fix): the site index Implementer row states the rule without "pattern check"; `git remote
+    set-url|add` (another URL for origin) is not checked and not in the limits; no timing case for many `git config`
+    segments, aliases or `gh pr` calls (linear from the code).
+  - qa notes (P2): `own_upstream` (`push.default=upstream`) is not in the card; the lead reproduced its need and records
+    it as K280. A non-object `docs/delix/delix.json` makes `cfg.get` raise, so every implementer rule is skipped; this
+    was there before the change (follow-up).
