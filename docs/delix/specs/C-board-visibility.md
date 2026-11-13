@@ -2,7 +2,7 @@
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
 > işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279; rev 9 (2026-11-12): T041 tur 1, K280–K281; rev 10: T041 tur 2, K282; rev 11: T041 tur 3, K283; rev 12 (2026-11-13): kapanış drift kontrolü, grill K290–K293
-> (kullanıcı), K294–K299 (lead), takip kartları. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
+> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
 > yazma kartı, 🔐 Tier 3, K279)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
 > K244–K261, K263 ve K273–K277. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
@@ -412,3 +412,17 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
   reddedilemez, tek yolu kapatmak kuralın vaadini değiştirmez; T046'nın Bilinen sınırlar cümlesi (kartın H2'si) onu
   adıyla anar. Ayrı 🔐 kart adayları (korunan yol): O5 ayrışmayan `delix.json`'ı `common.delix_json` `{}` okur ve
   Bash'in korunan yol denetimi boşalır (kart yazarı 4246815'te ölçtü); O6 `write_gate.py` nesne olmayan değerde çöker.
+- **K300** (lead, 2026-11-13, geri alınır) T047 kartı (🔐 Tier 3, `scripts/bash_gate.py`, dalga 17) T044 tur 1'in
+  Medium ve Low bulgularını kapatır; ikisi T041'in push kuralı için main'de de geçerli. Kart Sonnet oturumunda
+  yazıldı; lead 906eb3d'de doğruladı: yedi çapa alttan yukarı uygulanınca kart yazarının prototipini bayt bayt
+  üretir, yeni test tabanda 36 ✘ / 37 ✔, prototipte 73 ✔, 15 paket Python 3.9.6 ve 3.13.13'te çıkış 0. Kapsam
+  R-W1–R-W5; kartın kararları D1–D10 bu numarada: `words()` gevşek taramayı (R-P1) korur ve bash'in kurduğu argv'yi
+  ikinci görünüm olarak ekler, her kural ikisini okur, birinin reddi kazanır (D1); yönlendirmeler kapsamda (D3:
+  `>&2`, `2>&1` gibi biçimler bugün push kuralını atlatıyor); hiç kapanmayan tırnak yalnız ardından bir `git`
+  kelimesi gelirse reddedilir (D4, bilinen sahte pozitif); alias değerinin başındaki global seçenekler R-P2'nin
+  kümesiyle atlanır (D6). Lead kararı (O1): süslü parantez genişletme (`git {push,origin,HEAD:main}`) için ayrı
+  kart açılmaz; değişkenlerle aynı sınıftır (parçadan kurulan bir değişken bugün de geçer ve Bilinen sınırlarda),
+  kural kelime denetimidir, sınır değil; T046 Bilinen sınırlara ekler (kartın H3'ü). Lead kararı (H0): T046,
+  T047'nin merge'ünü de bekler ve belgeleri kartın H1–H4'üyle tek geçişte yazar; T047 merge edilmeden T046
+  dağıtılırsa H0'ın ilk kolu geçerli (`git remote` URL maddesi kalır). K244'ün K240–K299 bloğu doldu; Spec C
+  kararları K300'den sürer (bu lead K300–K309).
