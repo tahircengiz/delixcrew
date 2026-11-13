@@ -469,3 +469,46 @@ For T046. K298 moves the README and site sentences out of this card. Copy the wo
     probe keeps its result. Open, for T048: `$(...)` nesting, heredoc apostrophe, alias split and variables.
     `bash_gate.py` against main: 6 removed and 102 added non-blank lines, with no added line over 121 characters or
     outside ASCII.
+- Round 4 (PR #75, head `9ae38dbeac979d68de2cbeabb92302b3f6bbece6`, 2026-11-13): qa `ACCEPT_WITH_NOTES` (0 P0,
+  0 P1, 0 P2). Security `🔐 HUMAN_APPROVAL` twice; the model's safety classifier stopped both runs partway. The first
+  run stopped after its structural check: it found no path where main or an earlier head denies and this head allows,
+  and gitleaks found no leaks in the diff or in `bash_gate.py`. The narrow retry stopped before any result. Two stops
+  end the retries, so the lead checked the round-4 code with real bash 3.2.57 and git 2.54. The head equals the lead's
+  round-4 prototype byte for byte (`diff -rq`: no difference), so the prototype runs are the head's: 15 suites exit 0
+  on Python 3.9.6 and 3.13.13; `argv_gate_tests.sh` 110 `✔` (growth ratios up to 6.1, at most 1.3 s); D9 and the
+  comment and brace generators 64,000 cases, 0 mismatches. The Stop gate output has exit 0 for both commands; CI
+  `check` and `test` are green.
+  - Medium (lead): a regression of round 4 against round 3. Main allows these forms too. The round-3 head denied them.
+    A new coverage generator found them (below). Two parts:
+    - A `#` right after a closing backtick or after the `)` of `$(...)` is part of the word in bash, not a comment.
+      `bash_argv` starts a comment there, because `parts` is empty after the separator token.
+    - Since F9 such a comment runs to the end of the line at the top level and to the end of a re-read double-quoted
+      text. Its re-read (F8) stops at the first unclosed quote: `bad` at depth > 0 drops the rest.
+
+    Affected forms:
+    - `` echo `true`# `# it's`; git -c 'user.name=A B' push origin HEAD:main `` pushes `main`. The `update-ref` form
+      and the `$(true)#` form write the ref.
+    - `` echo "# it's `#z`# `git -c 'user.name=A B' update-ref ...` " `` writes the ref.
+    - `` echo "`"'`'; \` # a `b` c "; git -c 'user.name=A B' push origin HEAD:main `` pushes `main`.
+
+    The round-3 head denied them, because there a comment ended at the next backtick. No fix round is left
+    (`rounds` 3 of 3), so the card is `escalated` and the options go to the user (K304).
+  - Open on main and on every head, outside the card (O2 class, for T048): a command word glued to a quoted
+    substitution. `"$(true)"git -c 'user.name=A B' push origin HEAD:main` pushes `main`, and the `` "`true`"git `` and
+    `update-ref` forms write the ref. The bash view reads the word as `$(true)git`, like `"$x"git` (variables).
+    Unquoted `$(true)git` and `""git` deny on the head. Also open on main and every head:
+    `echo "# it's $(git -c 'user.name=A B' update-ref ...)"`, an apostrophe in double quotes, which is the heredoc
+    apostrophe class.
+  - Lead check of the backtick parity (security's unsure point). A coverage generator mixes comment, quote and
+    backtick fragments with tagged stub calls. Real bash runs each command, and every call it makes must appear in
+    `bash_argv`'s view.
+    - Head: 16,000 cases, 5,974 calls run. There are 3 misses, which are the three forms of the Medium, and 15 misses
+      of the glued-word class.
+    - Round-3 head: 8,000 cases, 6 misses and 9 glued-word misses.
+    - Probes with backticks in comments deny on the head: even parity, escaped and quoted backticks, and
+      `` `# it's` ``. The probe `` # `a` `b` it's⏎git -c 'user.name=A B' update-ref ... `` passed on the round-3
+      head and on main.
+  - Note (qa, no fix): on the card's own branch `{ git push origin HEAD; }` now denies; main allows it. This is a
+    false positive in the safe direction. `{ git status; }` and `( git status )` still pass.
+  - qa unsure, checked: in an unquoted heredoc, `# it's $(git -c 'user.name=A B' update-ref ...)` passes on the head
+    and on main and writes the ref. This is the heredoc apostrophe class that K302 and K303 give to T048.

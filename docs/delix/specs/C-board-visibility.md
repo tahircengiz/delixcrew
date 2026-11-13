@@ -2,7 +2,7 @@
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
 > işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279; rev 9 (2026-11-12): T041 tur 1, K280–K281; rev 10: T041 tur 2, K282; rev 11: T041 tur 3, K283; rev 12 (2026-11-13): kapanış drift kontrolü, grill K290–K293
-> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300; rev 14: T047 tur 2, K302; rev 15: T047 tur 3, K303. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
+> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300; rev 14: T047 tur 2, K302; rev 15: T047 tur 3, K303; rev 16: T047 tur 4, K304. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
 > yazma kartı, 🔐 Tier 3, K279)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
 > K244–K261, K263 ve K273–K277. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
@@ -463,3 +463,32 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
   yorumdaki kesme işaretinden sonra main'e push biçimini (`# don't …`) yeniden açar. Düzeltme aynı dosyada ve aynı
   kuralın (R-W1) içinde. Düzeltme: K302'deki "son tur" yanlıştı, `rounds` düzeltme turlarını sayar (T041'de 3 tur,
   qa turu 4). Tur 4 incelemesi temiz değilse kart `escalated` olur ve seçenekler kullanıcıya gider.
+- **K304** (lead, 2026-11-13, geri alınır) T047 tur 4 (#75, uç 9ae38db, lead prototipiyle bayt bayt aynı):
+  - **Kararlar:** qa `ACCEPT_WITH_NOTES` (0 P0, 0 P1, 0 P2), security `🔐 HUMAN_APPROVAL`.
+  - **Security koşuları:** iki koşu da model güvenlik süzgecine takılıp yarıda durdu.
+    - İlk koşunun yapısal incelemesi, main'in ya da önceki bir ucun reddedip bu ucun geçirdiği bir yol bulmadı.
+    - Dar yeniden deneme sonuç vermedi.
+    - Kural gereği ikinci durmadan sonra yeniden deneme yapılmadı. Lead kuralı gerçek bash 3.2.57 ve git 2.54 ile
+      sınadı. Bu sınama için yeni bir kapsama fuzz'u yazdı: bash'in çalıştırdığı her çağrının hook'un görünümünde
+      olup olmadığına bakıyor.
+  - **Bulgu:** lead tur 4'ün tur 3'e göre gerilemesini buldu (Medium). Bu biçimleri main de geçirir.
+    - `` `true`# `` ve `$(true)#` içindeki `#` bash'te kelimenin parçasıdır, hook ise burada yorum başlatır.
+    - F9'dan beri bu yorum satır sonuna kadar sürer. F8'in yeniden okuması ilk kapanmayan tırnakta durur.
+    - `` echo `true`# `# it's`; git -c 'user.name=A B' push origin HEAD:main `` main'e push eder. Çift tırnaklı iki
+      biçim daha var. Tur 3 ucu üçünü de reddediyordu.
+  - **Durum:** düzeltme turu kalmadı (`rounds` 3/3), kart `escalated`. Seçenekler kullanıcıda:
+    1. Ucu olduğu gibi kabul edip merge etmek. Bu biçimler T048'e gider.
+    2. Sınırın üstünde, dar bir 5. tur. Lead önce prototipler.
+    3. Merge etmemek; T047 T048'i bekler.
+  - **Lead önerisi:** 1. Gerekçeler:
+    - Uç, main'in reddettiği her şeyi reddeder. Lead'in bu turdaki bütün denemelerinde main'in reddedip ucun
+      geçirdiği bir satır çıkmadı.
+    - T044 tur 1 biçimlerini kapatır.
+    - Yorum işleme her turda yeni bir boşluk açtı. T048 bunu tek tasarımda, kapsama fuzz'unu kabul testi yaparak
+      çözer.
+  - **T048'e giden, main'de de açık işler:**
+    - tırnaklı komut ikamesine yapışık komut adı (`"$(true)"git -c …`, değişken sınıfı O2);
+    - çift tırnakta kesme işaretinden sonra `$(...)`.
+  - **Yeni sahte pozitif (güvenli yönde):** kart dalında `{ git push origin HEAD; }` reddedilir.
+  - **Kapsam notu:** tepe oturum, kullanıcının ana lead sohbetinde F5 için "Evet, turda kalsın" dediğini aktardı.
+    Lead bunu kapsam bilgisi olarak kaydeder, güvenlik onayı saymaz.
