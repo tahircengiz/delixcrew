@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/C-board-visibility.md",
   "size": "M",
-  "updated": "2026-11-13T16:40:41Z",
+  "updated": "2026-11-13T19:15:03Z",
   "env_owner": null,
   "waves": [
     {
@@ -96,7 +96,7 @@
       "cards": [
         "T046"
       ],
-      "note": "Docs and site for rev 12 (README/README.tr, four site pages, delix-board README and spec), delix-board 0.1.5 -> 0.1.6; root version unchanged. Waits for T043, T044, T045 and the release card T042 (another session; number reserved), and for T047 (K300: one docs pass with T047's H1-H4; if T046 goes first, T047's H0 first branch applies). Needs T044's '## Docs handover (T046)'. The lead rewrites the anchors and writes 'labels: on|off' in T046.dispatch.md at dispatch."
+      "note": "Docs and site for rev 12 (README/README.tr, four site pages, delix-board README and spec), delix-board 0.1.5 -> 0.1.6; root version unchanged. K309 (user): after T048, before the release card T042. Dispatch when T043, T044, T045, T047 and T048 are merged; one docs pass with T044's H1-H3, T047's H0-H4 and T048's H0-H3 (H0 branches 'merged first'). The lead rewrites the anchors and writes 'labels: on' in T046.dispatch.md; T042 removes the labels."
     },
     {
       "wave": 17,
@@ -104,6 +104,13 @@
         "T047"
       ],
       "note": "T047 \ud83d\udd10 Tier 3 (scripts/bash_gate.py): words() reads a command both by the loose scan (R-P1) and the way bash builds its argv (R-W1-R-W5); closes the T044 round 1 Medium and Low, which also hold on main for the T041 push rule (K300). Card from a Sonnet session; the lead checked the anchors on 906eb3d (applied bottom-up they give the prototype byte for byte; red 36/37, green 73). Brace expansion stays a Known limit (O1, K300). Approved 2026-11-13 tahircengiz (the user's item-specific yes in the lead chat); interactive session the user opens."
+    },
+    {
+      "wave": 18,
+      "cards": [
+        "T048"
+      ],
+      "note": "T048 \ud83d\udd10 Tier 3 (scripts/bash_gate.py, new tests/parse_gate_tests.sh, tests/argv_gate_tests.sh line 148 only): bash_argv reads a command in one pass the way bash reads it; closes the T047 round-4 Medium and the forms K304/K305 send here. Card from the card-writer session (Opus); the lead checked it on 408d166 (anchors give the prototype byte for byte, option B equal to the card writer's file; 16 suites green on Python 3.9.6 and 3.13.13 for A and B; red 37/35, green 72). K306 brace expansion stays a Known limit; K307 the lead runs the acceptance fuzz on the PR head; K308 wave 18; K309 order T048, T046, T042; K310 option B and the one test-line exception. Approved 2026-11-13 tahircengiz (the user's item-specific yes in the lead chat); interactive session the user opens."
     }
   ],
   "cards": {
@@ -1098,6 +1105,16 @@
         "head": "9ae38dbeac979d68de2cbeabb92302b3f6bbece6",
         "at": "2026-11-13T16:40:41Z"
       }
+    },
+    "T048": {
+      "file": "docs/delix/tasks/T048-bash-gate-parser.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
     }
   },
   "status_values": [

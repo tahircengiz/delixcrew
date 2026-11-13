@@ -2,7 +2,7 @@
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
 > işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279; rev 9 (2026-11-12): T041 tur 1, K280–K281; rev 10: T041 tur 2, K282; rev 11: T041 tur 3, K283; rev 12 (2026-11-13): kapanış drift kontrolü, grill K290–K293
-> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300; rev 14: T047 tur 2, K302; rev 15: T047 tur 3, K303; rev 16: T047 tur 4, K304; rev 17: T047 merge, K305. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
+> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300; rev 14: T047 tur 2, K302; rev 15: T047 tur 3, K303; rev 16: T047 tur 4, K304; rev 17: T047 merge, K305; rev 18: T048 kartı, K306–K310. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
 > yazma kartı, 🔐 Tier 3, K279)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
 > K244–K261, K263 ve K273–K277. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
@@ -503,3 +503,28 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
       fuzz'udur.
     - Sürüm kartı (T042) push kuralı için tam güvence iddia etmez.
     - T046'nın H3'ü dağıtımdan önce bu biçimleri Bilinen sınır olarak ekler.
+- **K306** (lead, 2026-11-13, geri alınır) T048 açık soru 1 (D9, O1): süslü parantez genişletme
+  (`git {push,origin,HEAD:main}`) Bilinen sınır olarak kalır; dar deny yok (K300 ile tutarlı). T046 bunu T047 H3 ve
+  T048 H2 cümleleriyle yazar.
+- **K307** (lead, 2026-11-13, geri alınır) T048 kabul testi: lead, kart yazarının dört fuzz betiğini (D10) PR ucunda
+  gerçek bash 3.2.57 ve git 2.54 ile koşar (T047 tur 4 gibi); repoya tohumlu fuzz testi girmez.
+- **K308** (lead, 2026-11-13, geri alınır) T048 dalga 18. T046, T048'in Docs handover'ında H0'ın "T048 önce merge
+  edilir" dalını alır.
+- **K309** (kullanıcı, 2026-11-13, geri alınır) Sıra: T048, sonra T046, en son 🔐 T042 (0.7.0).
+  - T046 yeni site cümlelerine `labels: on` ile etiket koyar; T042 sürümde etiketleri kaldırır.
+  - T046'nın dağıtım ön koşulu T043, T044, T045, T047 ve T048'in merge'üdür; T042'yi beklemez.
+  - Gerekçe: sürüm, dokümanı ve sitesiyle birlikte çıkar; T046 tek turda T044, T047 ve T048'in handover'larını işler.
+- **K310** (kullanıcı, 2026-11-13, geri alınır: PR revert) T048 🔐 onayı, lead kararı 1 = B ("Evet, B ile", lead
+  sohbeti).
+  - **B:** heredoc gövdesinin kuyruğu yalnız o gövdenin metnidir; gövdeden sonraki metin komut olarak okunur.
+  - **Ölçüm** (3.000 örneklenmiş gerçek komut): A 13 yeni ret (çoğu kesme işaretli Türkçe heredoc commit mesajı);
+    B 1 yeni ret ve main'in 23 `QUOTE_DENY` yanlış pozitifi geçer (hiçbiri push, ref ya da remote yazmaz). İki
+    seçenekte de fuzz 0 kaçırma.
+  - **Lead doğrulaması** (408d166'nın `git archive` kopyası): kart, prototip ve B kodu bayt bayt eşleşir; 16 test
+    dosyası A ve B için Python 3.9.6 ve 3.13.13'te geçer; yeni test tabanda 37 ✘ / 35 ✔.
+  - **Test istisnası:** `tests/argv_gate_tests.sh` satır 148 (T047 vaka 85) `"$QUOTE_DENY"` → `"$REF_DENY"`. Komut
+    yine reddedilir, yalnız mesaj değişir. "Mevcut testler değişmez" kuralına kullanıcının evet'iyle tek istisna;
+    kartın Files'ına girer.
+  - **Yolda çıktı:** `scripts/board.py:528` ve `plugins/delix-board/hooks/parse.ts:620` `**🔐 Approved:**` önekiyle
+    başlayan her satırı onaylı sayar; `scripts/write_gate.py:52` tarih ister. T048 kartında onaydan önce yer tutucu
+    satır yoktu. Board'un tarihli deseni kullanması ayrı takip kartıdır.
