@@ -402,3 +402,39 @@ For T046. K298 moves the README and site sentences out of this card. Copy the wo
     15 suites on 3.9.6 and 3.13.13 exit 0. For T046 H3: also name double quotes inside `"$(...)"` (until T048)
     and a command word split by quotes after an apostrophe in a comment.
   - Evidence: `T047.*` files and `t047_*` scripts in the lead's scratchpad (not in the repo).
+- Round 2 (PR #75, head `5206098421b5d7d4a4e9c23a57f4b614fce4bd6c`, 2026-11-13): qa `ACCEPT_WITH_NOTES` (0 P0,
+  0 P1), security `🔐 HUMAN_APPROVAL` (2 Medium, 2 Low, 1 unsure). The head equals the lead's round-2 prototype
+  byte for byte. Lead gates on the clean `git archive` of the head: 15 suites exit 0 on Python 3.9.6 and 3.13.13;
+  `argv_gate_tests.sh` 82 `✔`; D9 32,000 cases (seeds 31 and 47, flat and inside `sh -c`, with and without
+  whitespace fragments) against bash 3.2.57, 0 mismatches; CI `check` and `test` green. Every round-1 form denies
+  on the head and F4 removed the alias regression. Every finding below was reproduced by the lead with real git
+  2.54 (hook allows; git writes the ref, changes the URL or pushes `main`); each also holds on main, so none is a
+  regression.
+  - Medium (security): `{` or `}` glued to a word (`git -c x.y={b push origin HEAD:main`, `-c x.y=}`): the loose
+    view splits there, bash does not, and `_MARKS` does not start the bash view. Push to `main` and ref write
+    pass. Fix F5.
+  - Medium (security; the lead's round-1 probe and qa's unsure note): an apostrophe in a comment pairs with a later
+    single quote, so `# don't do this⏎git -c 'user.name=A B' push origin HEAD:main` passes, inside an `sh -c`
+    string too. Fix F7: an unquoted `#` that starts a word starts a comment, which ends at a newline or a backtick.
+    Measured on bash 3.2.57: `a#b`, `'a'#b` and `a\ #b` are words; `#` after a blank, `;`, `|`, `&&` or `>` starts a
+    comment; a comment inside backticks ends at the closing one; a backslash-newline does not continue a comment.
+    The heredoc half (`cat <<EOF⏎don't⏎EOF⏎git -c 'user.name=A B' push origin HEAD:main`) needs heredoc reading:
+    T048, Known limit until then (K302).
+  - Low (security): the R-W3 tail keeps a backslash-newline, so `gi\⏎t` after a quote that is never closed is no
+    git word; after an apostrophe in a heredoc the ref write passes. Fix F6.
+  - Low (security): R-W5 builds the alias value's flat list with `words()`, not the way git's `split_cmdline`
+    splits it (blanks and newline only, quotes, backslash). The alias values `-c x.y=a;b remote set-url ...`,
+    `-c "user.name=A B" remote⏎set-url ...` and `-c x.y=a;b <alias that pushes main>` pass. Each needs an alias
+    already in the repo config (R-P5 denies writing one). T048 (K302).
+  - Unsure (security), reproduced: an alias value of two lines whose second line starts with `alias.`
+    (`-c⏎alias.zz remote set-url origin /x`) is read by the hook as two keys; git runs `remote set-url`. Reading the
+    config with `-z` fixes it. T048 (K302).
+  - Notes (qa, no fix): the Verification counts are now 6 removed and 83 added non-blank lines (the card says 7 and
+    80; round 3 changes them again, below); R-W2 has no depth cap (fails closed, depth about log2 of the input).
+  - Fix round 3 (the last, `max_review_rounds` 3): F5 to F7; cases 32 and 69 to 71 now expect the rule the command
+    breaks (the hook reads past the comment instead of refusing); cases 77 to 93 and two growth lines added.
+    Prototyped by the lead on the head: 101 `✔` (93 cases, 8 growth lines); the new tests give 14 `✘` on the
+    round-2 head; growth ratios up to 6.1 (at most 1.4 s); D9 32,000 cases and the comment and brace generator 24,000 cases (16,000 flat, 8,000 inside `sh -c`) against bash 3.2.57, 0 mismatches (the round-2 head: 1,356 and 1,347 in 4,000 each); 15 suites exit 0 on 3.9.6 and 3.13.13.
+    `bash_gate.py` against main: 6 removed and 98 added non-blank lines, no added line over 121 characters or
+    outside ASCII. For T046 H3: the false-positive clause keeps the heredoc and drops the comment (an apostrophe in a
+    comment no longer denies); name the heredoc form and the alias split forms above as Known limits until T048.

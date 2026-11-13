@@ -2,7 +2,7 @@
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
 > işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279; rev 9 (2026-11-12): T041 tur 1, K280–K281; rev 10: T041 tur 2, K282; rev 11: T041 tur 3, K283; rev 12 (2026-11-13): kapanış drift kontrolü, grill K290–K293
-> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
+> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300; rev 14: T047 tur 2, K302. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
 > yazma kartı, 🔐 Tier 3, K279)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
 > K244–K261, K263 ve K273–K277. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
@@ -436,3 +436,18 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
   geçiriyor (main'de de); `$(` içini okumak ayrıştırıcı değişikliği, ayrı 🔐 kart T048, o zamana dek Bilinen sınır.
   Yorumdaki kesme işaretinden sonra tırnakla bölünmüş komut adı (`g'i't`) değişkenlerle aynı sınıf, Bilinen sınır
   (K300'ün O1 gerekçesi).
+- **K302** (lead, 2026-11-13, geri alınır) T047 tur 2 (#75, uç 5206098, lead prototipiyle bayt bayt aynı): qa
+  `ACCEPT_WITH_NOTES` (0 P0, 0 P1), security `🔐 HUMAN_APPROVAL` (2 Medium, 2 Low, 1 emin değil). Tur 1'in bütün
+  biçimleri uçta reddediliyor, F4 gerilemeyi kaldırdı. Bulguların hepsini lead gerçek git 2.54 ile üretti; hepsi
+  main'de de geçiyor (gerileme yok). Tur 3 (son tur, `max_review_rounds` 3) kartın R-W1 ve R-W3 tanımına giren üç
+  düzeltme: kelimeye bitişik `{` `}` bash için kelime karakteridir, gevşek görünüm orada böler (F5;
+  `git -c x.y={b push origin HEAD:main` main'e push'u geçiriyordu); kelime başındaki tırnaksız `#` yorum başlatır,
+  yorum satır sonunda ya da ters tırnakta biter (F7; yorumdaki kesme işareti sonraki tek tırnakla eşleşiyor,
+  `# don't …⏎git -c 'user.name=A B' push origin HEAD:main` geçiyordu, `sh -c` içinde de; kurallar bash 3.2.57'de
+  ölçüldü); R-W3 kuyruğunda ters bölü + yeni satır silinir (F6). Tur 3'ün kapsamı kullanıcının onayladığı T047
+  işinin içinde: aynı dosya, aynı kural; hook yalnız bash'e daha yakın okur, birleşimdeki gevşek görünüm değişmez.
+  Kart dışı, T048'e (🔐, sürümden önce): heredoc gövdesini okumak (heredoc'taki kesme işareti, ardından tek tırnaklı
+  değerli git komutu), alias değerini git'in `split_cmdline`'ı gibi bölmek (`;` ve tırnaklı boşluk; önceden
+  kurulmuş alias ister, R-P5 alias yazmayı reddeder), alias'ı `git config -z` ile okumak (iki satırlık değer) ve
+  çift tırnak içindeki `$(...)` (K301). T046'nın H3'ü: sahte pozitif maddesinden yorum çıkar (yorumdaki kesme
+  işareti artık reddettirmez), heredoc kalır; T048'in biçimleri Bilinen sınır olarak eklenir.
