@@ -16,7 +16,9 @@ SPEC.md path, the files holding the test/CI output (`.delix/test-result.txt`, th
 ## What you review
 1. **Acceptance criteria:** for every WHEN/THEN of the card, is there code and a test that satisfies it; does the test
    really exercise that behaviour.
-2. **Test evidence:** does the test output file match the verification command and its expected output; has a test been
+2. **Test evidence:** for a card, does `.delix/evidence/verification.txt` match the card's verification command and
+   its expected output, and does `.delix/test-result.txt` (the Stop gate) show `[exit 0]` for every command (without
+   a card: the gate output file the lead names); has a test been
    **weakened** (`skip`, `xfail`, deleted or loosened assert, expected value bent to the code, hardcoding) — that is
    **P0**. A test card (a test file in Files, mostly "append only") adds new checks to an existing file; that is
    expected work, not a finding. Look at: do the added checks test the card's WHEN/THENs; were existing lines deleted
