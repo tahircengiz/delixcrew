@@ -260,4 +260,27 @@ For T046 (wave 16). K298 moves the README and site sentences out of this card. C
 - Every other item in the list stays: variables, `eval`, globs and ANSI-C quoting; git settings from the environment; a git config file written by another command on the same line (`>>`); a script or another program's own git calls; a `gh` alias for `pr merge`; `gh api` writes in other repositories; deleting `.delix/card`; a cwd below the worktree root; the owner bypass on `main-review`. The push line is still not an allowlist as a whole (O2).
 
 ## Review findings (filled by the lead)
-- Round 1: …
+- Round 1 (PR #74, head `d00fa6f44507825624b22ea0c35a87223b34fa14`, 2026-11-13): qa `ACCEPT` (0 P0, 0 P1), security
+  `🔐 HUMAN_APPROVAL` (protected path; 1 Medium, 1 Low, both inherited or Known-limit class per Review Focus).
+  Lead gates on the clean `git archive` of the head: the 14 shell suites exit 0 on Python 3.9.6 and 3.13.13,
+  `tests/ref_gate_tests.sh` gives 67 `✔` (growth ratios 2.75 to 6.86, at most 1.7 s); `bash_gate.py` equals the card
+  writer's prototype byte for byte; 5 lines removed and 28 non-blank added; no test line removed; `common.py`
+  untouched; CI `check` and `test` green. Lead probe with real git 2.54 on temp repos (no network): every form in the
+  card denies, the read forms and the no-card session pass, and the O4 forms pass as the card says. No fix round:
+  the card's Review Focus sends a passing form to a Known limit or a follow-up card, and both findings below also
+  hold on main for the T041 push rule.
+  - Medium (security, lead reproduced on the T044 head and on main): `words()` (`scripts/bash_gate.py:154-156`)
+    does not build bash's argv. It splits on `,`, `[` and `]`, splits quoted whitespace and does not join a
+    backslash-newline, so the R-P2 option walk takes the wrong token as an option value and never sees the real
+    subcommand. Passing on both hooks: `-c x.y=a,b` before a ref update, a remote URL change or a push (main's hook
+    let `push origin HEAD:main` through and the push reached the test remote), `-C "<dir with space>"`,
+    `-c "user.name=A B"`, and `git` then a backslash-newline before the subcommand. Follow-up 🔐 card before the
+    release: R-P1 that matches bash's argv (join backslash-newline, keep quoted whitespace and an option value with
+    `,[]` as one token, deny on unbalanced quotes). T046: H3 must not remove the `git remote` URL item while these
+    forms pass, and H2 names them.
+  - Low (security, lead reproduced): R-U3 and R-P4 take the alias value's first token, so an alias that starts with a
+    global option (`-c core.pager=cat remote set-url origin <url>`) passes and git runs it (the URL changed in the
+    probe). It needs an alias already in a config file (the card session cannot write one: R-P5). Same follow-up
+    card: skip leading global options and their values before the first command token.
+  - Note (security unsure): `git fast-import` also writes any ref in one command; add it to H2's list.
+  - Evidence: `T044.lead-probe.txt` and `t044_probe*.sh` in the lead's scratchpad (not in the repo).

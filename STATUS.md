@@ -631,6 +631,12 @@ Kararlar (oturumda; spec §9'da K240–K299):
     UTF-8 olmayan config baytında hook çöküyor (kapalı kalıyor, mesaj belirsiz, `scripts/common.py`); `delix.json` nesne
     değilse implementer kuralları atlanıyor; `gh` alias ve `git remote set-url` denetlenmiyor.
   - Merge sonrası `merged.head` ile son incelenen SHA karşılaştırılmıyor.
+  - T044 tur 1 security Medium (lead T044 ucunda ve main'de üretti; sürümden önce 🔐 kart): `bash_gate.py`
+    `words()` bash'in argv'sini kurmuyor (virgül ve köşeli parantezde bölüyor, tırnaklı boşluğu bölüyor,
+    ters bölü + yeni satırı birleştirmiyor). `-c x.y=a,b`, `-C "<boşluklu dizin>"` ya da satır devamıyla
+    T041'in push kuralı (main'deki hook `push origin HEAD:main`'i geçirdi) ve T044'ün ref kuralı atlatılıyor;
+    aynı kartta alias değerinin başındaki global seçenek (Low). T046'nın H3'ü bu biçimler geçtikçe `git remote`
+    URL maddesini silmez.
   - T044 kapsam dışı (K299, ayrı 🔐 kart adayları): ayrışmayan `delix.json` `{}` okunuyor ve Bash'in korunan
     yol denetimi boşalıyor (`scripts/common.py` `delix_json`, O5); `write_gate.py` nesne olmayan `delix.json`'da
     çöküyor (O6); `git symbolic-ref` yazma biçimi Bilinen sınır (O4).
