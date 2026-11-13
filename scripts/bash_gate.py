@@ -149,10 +149,10 @@ PUSH_PEERS = {"add", "commit", "status", "diff", "log", "show"}  # R-P3b: git co
 CONFIG_READS = {"--get", "--get-all", "--get-regexp", "--get-urlmatch", "--list", "-l", "get", "list"}
 
 
-_MARKS = re.compile(r"['\"\\,\[\]<>]")  # R-W1: the characters where the quote-blind view and bash's argv can differ
-_SPLIT = re.compile(r"[\s;&|(){}`'\"\\,\[\]]+")
-_TOK = re.compile(r"(?P<sp>[ \t]+)|(?P<op>&>>?|[<>]+(?:&-?|\|)?)|(?P<sep>[;&|(){}\n\r`]+)|\\(?P<esc>.)|(?P<end>\\)"
-                  r"|'(?P<sq>[^']*)'|\"(?P<dq>(?:[^\"\\]|\\.)*)\"|(?P<run>[^ \t;&|(){}\n\r`'\"\\<>]+)"
+_MARKS = re.compile(r"['\"\\,\[\]<>]|[^\S \t\n]")  # R-W1: where the quote-blind view and bash's argv can differ
+_SPLIT = re.compile(r"[\s;&|(){}`'\"\\,\[\]<>]+")
+_TOK = re.compile(r"(?P<sp>[ \t]+)|(?P<op>&>>?|[<>]+(?:&-?|\|)?)|(?P<sep>[;&|(){}\n`]+)|\\(?P<esc>.)|(?P<end>\\)"
+                  r"|'(?P<sq>[^']*)'|\"(?P<dq>(?:[^\"\\]|\\.)*)\"|(?P<run>[^ \t;&|(){}\n`'\"\\<>]+)"
                   r"|(?P<bad>['\"])", re.S)
 _DQ = re.compile(r"\\([\\\"$`]|\n)")  # inside double quotes a backslash escapes only these
 _CODE = re.compile(r"[ \t;&|(){}\n\r`'\"\\]")  # a quoted token with one of these may be code (`sh -c "..."`, `$(...)`)
@@ -243,7 +243,7 @@ def words(text, top=False):
     if _MARKS.search(text):
         more, rest = bash_argv(text)
         segs += more
-        if top and any(gitword(t) for t in _SPLIT.split(rest)):
+        if top and any(gitword(t) for t in _SPLIT.split(rest.translate({34: None, 39: None, 92: None}))):
             deny(QUOTE_DENY)  # R-W3: bash fails on a quote that is never closed, except in a heredoc body or a comment
     return segs
 
@@ -338,6 +338,10 @@ def alias_check(name):
                 vt = [t.casefold() for s in vs for t in s]
                 if v.lstrip().startswith("!") or {"push", "send-pack", "http-push"} & set(vt):
                     deny(PUSH_DENY)
+                k = lead(vt)  # R-W5: git splits an alias value on any blank, so `;` and a newline do not end it
+                if "update-ref" in vt or (vt[k:k + 1] == ["remote"] and remote_writes(vt, k + 1, len(vt))):  # R-U3
+                    deny(REF_DENY)
+                nxt.update(vt[k:k + 1])
                 for s in vs:  # R-W5: the command token comes after the leading global options of each segment
                     st, k = [t.casefold() for t in s], lead(s)
                     if "update-ref" in st or (st[k:k + 1] == ["remote"] and remote_writes(st, k + 1, len(st))):  # R-U3

@@ -9,6 +9,7 @@ set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; S="$ROOT/scripts"; FAIL=0
 G=gi; G="${G}t"; P=pu; P="${P}sh"; U=update; U="${U}-ref"; R=rem; R="${R}ote"; UR=set; UR="${UR}-url"
 NL=$'\n'; OK=$'\342\234\224'; NO=$'\342\234\230'
+VT=$'\v'; FF=$'\f'; CR=$'\r'; NB=$'\302\240'
 T="$(mktemp -d)"; W="$T/w"; L="$T/l"
 GC="$G -c user.name=t -c user.email=t@t -c commit.gpgsign=false -c core.hooksPath=/dev/null"
 mk(){ # <dir> [card]: a repo with one empty commit on claude/t1; with "card", .delix/card and delix.json
@@ -121,6 +122,19 @@ allow "64 backslash at the end of the command"    "$W" "echo a\\"
 allow "65 no card: comma value, ref update"       "$L" "$G -c x.y=a,b $U x y"
 allow "66 no card: glued >, send"                 "$L" "$G $P>/dev/null origin HEAD:main"
 allow "67 no card: quote, then $G"                "$L" "echo don't; $G status"
+
+# Review round 1 (T047): forms qa and security found, and the alias value that git splits on any blank
+$G -C "$W" config alias.lz "$R${NL}$UR origin /tmp/x"
+deny "68 alias with a newline between $R and $UR"   "$W" "$G lz"                                       "$REF_DENY"
+$G -C "$W" config --unset alias.lz
+deny "69 comment quote, then a quoted command word" "$W" "echo x # it's${NL}g\"\"it -c \"user.name=A B\" $U x y" "$QUOTE_DENY"
+deny "70 comment quote, then an escaped command word" "$W" "echo x # it's${NL}g\\it -c \"user.name=A B\" $U x y" "$QUOTE_DENY"
+deny "71 comment quote, then a command word glued to >" "$W" "echo x # it's${NL}$G>f -c \"user.name=A B\" $P origin HEAD:main" "$QUOTE_DENY"
+deny "72 vertical tab in a -c value, ref update"    "$W" "$G -c user.name=A${VT}B $U x y"              "$REF_DENY"
+deny "73 carriage return in a -c value, send to main" "$W" "$G -c user.name=A${CR}B $P origin HEAD:main" "$PUSH_DENY"
+deny "74 no-break space in a -c value, ref update"  "$W" "$G -c user.name=A${NB}B $U x y"              "$REF_DENY"
+deny "75 form feed in a -c value, $R url"           "$W" "$G -c user.name=A${FF}B $R $UR origin /tmp/x" "$REF_DENY"
+allow "76 vertical tab in a -c value, status"       "$W" "$G -c user.name=A${VT}B status"
 
 # Growth (repo hook rule): the least of 3 runs per size; t(40000) < 3 s and t(40000)/t(5000) < 20
 python3 - "$S/bash_gate.py" "$W" "$G" <<'PYT' || FAIL=1
