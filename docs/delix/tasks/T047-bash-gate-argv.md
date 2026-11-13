@@ -4,8 +4,10 @@
 |---|---|---|---|---|---|
 | T047 | M | 3 | backend | 17 | open |
 
+**🔐 Approved:** 2026-11-13 tahircengiz
+
 > 🔐 Tier 3: `scripts/bash_gate.py` is a protected path (`docs/delix/delix.json:11`; `scripts/common.py` `matches` returns that entry for it). `tests/argv_gate_tests.sh` matches `test_paths` (`tests/**`) and no protected entry, and it is a new file.
-> - **This card has no 🔐 Approved line yet.** The lead adds `**🔐 Approved:** <date> tahircengiz` right after the header table only after the user's item-specific yes in chat for T047, commits it to main, and only then dispatches. The card writer does not write the line.
+> - The 🔐 Approved line above records the user's item-specific yes in chat on 2026-11-13 ("Evet, T047'yi onaylıyorum", said in the lead session). The lead commits it to main before dispatch; the session branches from that commit.
 > - The session is interactive and the user opens it, as for T041 and T044.
 > - It closes the two findings of T044 round 1 that both hold on main for the T041 push rule (`docs/delix/tasks/T044-bash-gate-ref-writes.md`, Review findings): the Medium (`words()` does not build bash's argv) and the Low (an alias value that starts with a global option), and the security note on `git fast-import` (docs only, see Docs handover). The card writer's differential test against real bash found more of the Medium's class (redirections, an `sh -c` string, a quote that is never closed); they are in scope because the same function is wrong (D3).
 > - It is defence in depth, not a boundary: the rules are a check on the command's words (see Out of scope).
