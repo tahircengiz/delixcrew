@@ -134,6 +134,8 @@ REF_DENY = ("delixcrew: an implementer session does not write git refs or change
             "set-url, add, remove); those run from the user's own terminal")
 ENC_DENY = ("delixcrew: a git setting or ref name holds a byte that is not UTF-8, which this hook cannot read; "
             "the command is denied until the user removes it from their own terminal")
+QUOTE_DENY = ("delixcrew: a quote that is never closed stands in front of a git command, which this hook cannot read; "
+              "close the quote or put the text in a file, then run the command again")
 GIT_ARG_OPTS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env", "--attr-source",
                 "--shallow-file"}  # R-P2: take the next token
 GIT_FLAG_OPTS = {"-v", "--version", "-h", "--help", "-p", "--paginate", "-P", "--no-pager", "--no-replace-objects",
@@ -147,9 +149,100 @@ PUSH_PEERS = {"add", "commit", "status", "diff", "log", "show"}  # R-P3b: git co
 CONFIG_READS = {"--get", "--get-all", "--get-regexp", "--get-urlmatch", "--list", "-l", "get", "list"}
 
 
-def words(text):
+_MARKS = re.compile(r"['\"\\,\[\]<>{}]|[^\S \t\n]")  # R-W1: where the quote-blind view and bash's argv can differ
+_SPLIT = re.compile(r"[\s;&|(){}`'\"\\,\[\]<>]+")
+_TOK = re.compile(r"(?P<sp>[ \t]+)|(?P<op>&>>?|[<>]+(?:&-?|\|)?)|(?P<sep>[;&|()\n`]+)|\\(?P<esc>.)|(?P<end>\\)"
+                  r"|'(?P<sq>[^']*)'|\"(?P<dq>(?:[^\"\\]|\\.)*)\"|(?P<run>[^ \t;&|()\n`'\"\\<>#][^ \t;&|()\n`'\"\\<>]*)"
+                  r"|(?P<cm>#)|(?P<bad>['\"])", re.S)
+_CMEND = (re.compile(r"\n"), re.compile(r"[\n`]"))  # R-W1: a comment ends at a newline, inside `...` also at `
+_DQ = re.compile(r"\\([\\\"$`]|\n)")  # inside double quotes a backslash escapes only these
+_CODE = re.compile(r"[ \t;&|(){}\n\r`'\"\\]")  # a quoted token with one of these may be code (`sh -c "..."`, `$(...)`)
+
+
+def gitword(t):
+    """R-W4: True for a token that names git (`git`, `/usr/bin/git`, `git-push`), casefolded."""
+    t = t.casefold().rsplit("/", 1)[-1]
+    return t == "git" or t.startswith("git-")
+
+
+def lead(toks):
+    """R-W5: the index of the first token that is not a leading global option or its value (R-P2: -C, -c, ...)."""
+    j = 0
+    while j < len(toks) and toks[j].startswith("-"):
+        j += 2 if toks[j] in GIT_ARG_OPTS else 1
+    return j
+
+
+def bash_argv(text, depth=0, cm=True):
+    """R-W1: the argv bash builds from `text`, as segments of tokens. A quote pairs with the next one of its kind and
+    its text stays in one token; a backslash escapes one character; a backslash-newline vanishes; `,` `[` `]` `{` `}`
+    are word characters; an unquoted `#` that starts a word starts a comment, which ends at a newline (inside `...` also
+    at the closing backtick); the comment is read once more with `cm` off, as a `#` in double quotes or in a heredoc
+    body is no comment (`"# $(...)"`); an unquoted `<` or `>` ends the word and starts a redirection (operator, file
+    descriptor number and target word are no arguments), a quoted or escaped one is an argument. R-W2: a quoted token
+    that holds a blank, a separator or a quote is read again the same way (`sh -c "..."`, `"$(...)"`); each such token
+    is shorter than its text, so the recursion ends. Returns (segments, tail): the tail is the text from a quote that is
+    never closed, set by the outermost call only."""
+    segs, toks, parts, rest = [], [], [], ""
+    skip, bt = False, 0  # bt: 1 inside `...` at this level
+
+    def flush(cut=False, op=False):
+        nonlocal skip
+        if parts:
+            w, q = "".join(v for _, v in parts), any(f for f, _ in parts)
+            parts.clear()
+            if q and _CODE.search(w):
+                segs.extend(bash_argv(w, depth + 1)[0])
+            if skip:
+                skip = False
+            elif not (op and not q and not w.strip("0123456789")):  # an unquoted number before `>` is a file descriptor
+                toks.append(w)
+        if cut:
+            skip = False
+            segs.append(toks[:])
+            toks.clear()
+
+    pos = 0
+    while True:
+        m = _TOK.search(text, pos)
+        if not m:
+            break
+        pos = m.end()
+        k = m.lastgroup
+        v = m.group(k)
+        if k == "sp":
+            flush()
+        elif k == "op":
+            flush(op=True)
+            skip = not v.endswith("-")  # the word after an operator is its target, except after `>&-`
+        elif k == "sep":
+            flush(True)
+            bt ^= v.count("`") & 1
+        elif k == "cm":
+            if parts or not cm:  # `a'b'#c`, `a\ #b`: inside a word `#` is a character
+                parts.append((False, v))
+            else:  # R-W1: a `#` that starts a word starts a comment; bash does not read it
+                e = _CMEND[bt].search(text, pos)
+                end = e.start() if e else len(text)
+                segs.extend(bash_argv(text[m.start():end], depth + 1, False)[0])  # `"# $(...)"`, heredoc body
+                pos = end
+        elif k == "bad":
+            if depth == 0:
+                rest = text[m.start():]
+            break
+        elif k == "dq":
+            parts.append((True, _DQ.sub(lambda x: "" if x.group(1) == "\n" else x.group(1), v)))
+        elif k != "end" and (k != "esc" or v != "\n"):  # a backslash-newline, or a backslash at the end, vanishes
+            parts.append((k != "run", v))
+    flush(True)
+    return segs, rest
+
+
+def words(text, top=False):
     """R-P1: one token list per segment. Quotes and backslashes removed; a redirection token is dropped, and when it
-    is only the operator, the next token too."""
+    is only the operator, the next token too. R-W1: when the text holds a quote, a backslash, `,`, `[`, `]`, `{`,
+    `}`, `<` or `>`, the segments of `bash_argv` follow, so a rule reads both views. R-W3: `top` is the command
+    itself."""
     segs = []
     for seg in re.split(r"[;&|(){}\n\r`]", text.translate({34: None, 39: None, 92: None})):
         toks, skip = [], False
@@ -165,6 +258,12 @@ def words(text):
                 continue
             toks.append(t)
         segs.append(toks)
+    if _MARKS.search(text):
+        more, rest = bash_argv(text)
+        segs += more
+        tail = rest.replace("\\\n", "").translate({34: None, 39: None, 92: None})  # a backslash-newline vanishes
+        if top and any(gitword(t) for t in _SPLIT.split(tail)):
+            deny(QUOTE_DENY)  # R-W3: bash fails on a quote that is never closed, except in a heredoc body or a comment
     return segs
 
 
@@ -254,12 +353,19 @@ def alias_check(name):
         nxt = set()
         for a in frontier & amap.keys():
             for v in amap[a]:
-                vt = [t.casefold() for s in words(v) for t in s]
+                vs = words(v)
+                vt = [t.casefold() for s in vs for t in s]
                 if v.lstrip().startswith("!") or {"push", "send-pack", "http-push"} & set(vt):
                     deny(PUSH_DENY)
-                if "update-ref" in vt or (vt[:1] == ["remote"] and remote_writes(vt, 1, len(vt))):  # R-U3
+                k = lead(vt)  # R-W5: git splits an alias value on any blank, so `;` and a newline do not end it
+                if "update-ref" in vt or (vt[k:k + 1] == ["remote"] and remote_writes(vt, k + 1, len(vt))):  # R-U3
                     deny(REF_DENY)
-                nxt.update(vt[:1])
+                nxt.update(vt[k:k + 1])
+                for s in vs:  # R-W5: the command token comes after the leading global options of each segment
+                    st, k = [t.casefold() for t in s], lead(s)
+                    if "update-ref" in st or (st[k:k + 1] == ["remote"] and remote_writes(st, k + 1, len(st))):  # R-U3
+                        deny(REF_DENY)
+                    nxt.update(st[k:k + 1])
         frontier = nxt
     ok.add(name)
 
@@ -280,7 +386,7 @@ def autocorrect_check(name):
         deny(PUSH_DENY)
 
 
-segs = words(cmd)
+segs = words(cmd, True)
 moved = any(t.casefold() in ("cd", "pushd", "popd") for toks in segs for t in toks)
 pushed = other = False  # R-P3b
 for toks in segs:
