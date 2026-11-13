@@ -512,3 +512,6 @@ For T046. K298 moves the README and site sentences out of this card. Copy the wo
     false positive in the safe direction. `{ git status; }` and `( git status )` still pass.
   - qa unsure, checked: in an unquoted heredoc, `# it's $(git -c 'user.name=A B' update-ref ...)` passes on the head
     and on main and writes the ref. This is the heredoc apostrophe class that K302 and K303 give to T048.
+- Merged (K305): the user merged head `9ae38dbeac979d68de2cbeabb92302b3f6bbece6` as it is (merge commit
+  `59143133deef74de166a25eba7b6b5d97579f947`, 2026-11-13T16:40:41Z). The merged `bash_gate.py` and
+  `argv_gate_tests.sh` equal the reviewed head byte for byte. The round-4 Medium and the O2 forms go to T048.

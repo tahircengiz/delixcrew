@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/C-board-visibility.md",
   "size": "M",
-  "updated": "2026-11-13T16:37:32Z",
+  "updated": "2026-11-13T16:40:41Z",
   "env_owner": null,
   "waves": [
     {
@@ -996,7 +996,7 @@
       "file": "docs/delix/tasks/T047-bash-gate-argv.md",
       "role": "backend",
       "tier": 3,
-      "status": "escalated",
+      "status": "accepted",
       "pr": 75,
       "rounds": 3,
       "cost_usd": null,
@@ -1092,7 +1092,12 @@
           "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
           "at": "2026-11-13T16:28:35Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "59143133deef74de166a25eba7b6b5d97579f947",
+        "head": "9ae38dbeac979d68de2cbeabb92302b3f6bbece6",
+        "at": "2026-11-13T16:40:41Z"
+      }
     }
   },
   "status_values": [
