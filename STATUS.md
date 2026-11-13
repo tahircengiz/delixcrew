@@ -593,14 +593,14 @@ skill'leri ledger yazar, T032 doküman ve site (wave 9). 🔐 T033 0.6.3 sürüm
 | 13.6 | Takip kartları: (a) K277 git sertleştirme 2 (çağrı 6 `--no-show-signature`, çağrı 7 `--no-replace-objects`, derive `refs/remotes/origin/HEAD` for-each-ref'te yoksa T = `{}`, board ve panelde tek güvenli okuma yardımcısı: `collect()`, `_add_file` yarışı, `readSnapshot`, `previous` süzgeci, yol parçasında bağlantı); (b) review §4 merge sonrası `MERGED` kontrolü + `ledger_tests` satır 14; (c) F010: Stop gate `.delix/test-result.txt`'yi sıfırlıyor, kartın doğrulama çıktısı kayboluyor (`scripts/stop_gate.py` korumalı yol, Tier 3 🔐); (d) 🔐 kart oturumlarının varsayılan dala push'u (`bash_gate` + ruleset bypass), kullanıcının açık evet'i ile. Kartlar (architect job B, spec rev 8): dalga 11 T037 board.py + T038 panel (a), T039 (b); dalga 12 T040 (c, tasarım K278 kullanıcıda), 🔐 T041 (d, K279 kullanıcıda) | ✔ 2026-11-12 dalga 11: T037 #66, T038 #67, T039 #68; dalga 12: T040 #70, T041 #69 (🔐, 4 tur, K280–K283) accepted, merged |
 | 13.7 | T032 doküman ve site (wave 13, T037/T038/T041'den sonra; delix-board 0.1.5; çapalar wave 9'dan sonra yenilenir; board artık `origin/HEAD` STATE'ini okur, README/site Known limits: `origin/HEAD` yoksa `git remote set-head origin -a`) | ✔ 2026-11-12 dalga 13: T032 #71 (0 tur, qa ACCEPT, security CLEAN) accepted, merged 8b7e51e |
 | 13.8 | Kapanış (`/delixcrew:close`): metrikler (`docs/delix/metrics.md`), CHANGELOG `## Unreleased`, drift kontrolü (aşağıda Açık iş); board'un temizlik önerisi (7 worktree, 13 dal) önce rapor, her biri kullanıcının Run bloğu | ✔ 2026-11-12; 13 uygulama oturumu merge sonrası zaten arşivliydi; temizlik blokları kullanıcıda |
-| 13.9 | Açık işin takibi, spec rev 12 (2026-11-13, dal `worktree-spec-c-followups`): grill K290–K293 (kullanıcı, dördü de önerilen seçenek), lead K294–K298; kartlar T043 board iki yüzey, 🔐 T044 `bash_gate` ref yazma, T045 review/close skill (dalga 15), T046 doküman ve site (dalga 16, T042 sürüm kartından sonra) | ◐ 2026-11-13: T043, T045, T046 kartları ve dalga 15–16 yazıldı (T043 ve T045 dispatch istemi hazır, çapalar 1da4990'da lead tarafından doğrulandı, fixture farkı ham STATE'ten yeniden hesaplandı); T044 kartı yazılamadı: architect çağrısı iki kez model güvenlik filtresine takıldı, yolu kullanıcıda; dağıtım kullanıcının onayında |
+| 13.9 | Açık işin takibi, spec rev 12 (2026-11-13, dal `worktree-spec-c-followups`): grill K290–K293 (kullanıcı, dördü de önerilen seçenek), lead K294–K299; kartlar T043 board iki yüzey, 🔐 T044 `bash_gate` ref yazma, T045 review/close skill (dalga 15), T046 doküman ve site (dalga 16, T042 sürüm kartından sonra) | ◐ 2026-11-13: T043, T045, T046 kartları ve dalga 15–16 yazıldı (T043 ve T045 dispatch istemi hazır, çapalar 1da4990'da lead tarafından doğrulandı, fixture farkı ham STATE'ten yeniden hesaplandı); T044 kartı Sonnet oturumunda yazıldı (architect çağrısı iki kez model güvenlik filtresine takılmıştı; K299) ve dalga 15'e girdi, dağıtımı kullanıcının o işe özel evet'inde; T043 (#73) ve T045 (#72) dağıtıldı, incelemede |
 
 **K262 kapsamı (kartlarda):** sahte kaynak (Orta, tasarım; A), `--no-optional-locks` ve `-c core.fsmonitor=false` (lead git 2.54'te
 fsmonitor'u üretti), `worktree list -z`, dosya okumada kapsam/normal dosya/1 MiB, girintili liste satırı, `reset`/`clean` dal adı,
 panelde dört karesel regex, T031 Low'u ve notları. Kapsam dışı P2: `deriveUnsafe` hata verince kapı kaybı, `byCode` UTF-16; ESC/C0
 terminal yüzeyi (üretilmedi). Doğrulanmadı: `filter.<driver>.clean` `git status`'ta çalışabilir.
 
-Kararlar (oturumda; spec §9'da K240–K298):
+Kararlar (oturumda; spec §9'da K240–K299):
 - **K284** (lead, geri alınır) T032'de güvenlik notu Low: ağaçsız partial clone'da (`--filter=tree:0`, git 2.54) board'un
   `git log -- STATE` çağrısı remote'tan çekiyor (lead üretti: pack 3 → 4; `--no-lazy-fetch` ile çıkış 128, çekme yok).
   Sitedeki "ağ kullanmaz" metni kartın ve spec §8'in; düzeltme turu açılmadı, düzeltme kodda (takip kartı).
@@ -631,6 +631,9 @@ Kararlar (oturumda; spec §9'da K240–K298):
     UTF-8 olmayan config baytında hook çöküyor (kapalı kalıyor, mesaj belirsiz, `scripts/common.py`); `delix.json` nesne
     değilse implementer kuralları atlanıyor; `gh` alias ve `git remote set-url` denetlenmiyor.
   - Merge sonrası `merged.head` ile son incelenen SHA karşılaştırılmıyor.
+  - T044 kapsam dışı (K299, ayrı 🔐 kart adayları): ayrışmayan `delix.json` `{}` okunuyor ve Bash'in korunan
+    yol denetimi boşalıyor (`scripts/common.py` `delix_json`, O5); `write_gate.py` nesne olmayan `delix.json`'da
+    çöküyor (O6); `git symbolic-ref` yazma biçimi Bilinen sınır (O4).
   - T038: önbellek anahtarı (yol, parser); `chooseRoot` `hasState` bağlantıyı yok sayıyor; UTF-16 uzunluk ile bayt farkı.
 - Doküman takibi (T046): README satır 74 "the lead never does" uygulamadan güçlü, site Known limits yalnız `gh pr merge`'ü
   sayıyor (T032 security Low); site index Implementer satırı ("pattern check", R-P2a/R-P4a); `agents/qa.md:19` tek test

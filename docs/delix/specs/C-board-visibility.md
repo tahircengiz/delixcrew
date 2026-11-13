@@ -2,7 +2,7 @@
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
 > işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279; rev 9 (2026-11-12): T041 tur 1, K280–K281; rev 10: T041 tur 2, K282; rev 11: T041 tur 3, K283; rev 12 (2026-11-13): kapanış drift kontrolü, grill K290–K293
-> (kullanıcı), K294–K297 (lead), takip kartları. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
+> (kullanıcı), K294–K299 (lead), takip kartları. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
 > yazma kartı, 🔐 Tier 3, K279)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
 > K244–K261, K263 ve K273–K277. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
@@ -401,3 +401,14 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
   dispatch'ten önce yazmaz, T043 kartındaki birebir farkı uygulayıcı uygular, başka satıra dokunmaz. T044'ün README ve
   site cümleleri CLAUDE.md'nin "aynı değişiklik" kuralının istisnası olarak T046'da iner (T044 kartının
   `## Docs handover (T046)` bölümü).
+- **K299** (lead, 2026-11-13, geri alınır) T044 kartı Sonnet oturumunda yazıldı (architect çağrısı iki kez model
+  güvenlik filtresine takıldı); lead çapaları 4246815'te doğruladı. Kapsam R-U1–R-U5; kartın kararları D1–D6 bu
+  numarada: `git remote` izin listesine bağlı (düz, `-v` / `--verbose`, `show`, `get-url`; geri kalan her biçim ret,
+  fail closed), `set-url` kapsamda (T041'in push kuralı `origin` adına güvenir), `scripts/common.py` değişmez
+  (`trust.py` `UnicodeDecodeError`'a dayanır; yakalama `bash_gate.py`'de), nesne olmayan `delix.json` kart
+  worktree'sinde bütün Bash'i reddeder, yeni test dosyası `tests/ref_gate_tests.sh`, büyüme testi ×8 girdide oran < 20.
+  K296'daki `gh` alias'ı kapsam dışı (O3, K279: derinlemesine savunma). Lead kararı (O4): `git symbolic-ref`'in
+  yazma biçimi bu karta girmez; `refs/remotes/` içine refspec'li `git fetch` aynı ref'i yazar ve bütünüyle
+  reddedilemez, tek yolu kapatmak kuralın vaadini değiştirmez; T046'nın Bilinen sınırlar cümlesi (kartın H2'si) onu
+  adıyla anar. Ayrı 🔐 kart adayları (korunan yol): O5 ayrışmayan `delix.json`'ı `common.delix_json` `{}` okur ve
+  Bash'in korunan yol denetimi boşalır (kart yazarı 4246815'te ölçtü); O6 `write_gate.py` nesne olmayan değerde çöker.

@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/C-board-visibility.md",
   "size": "M",
-  "updated": "2026-11-13T06:40:09Z",
+  "updated": "2026-11-13T07:05:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -86,9 +86,10 @@
       "wave": 15,
       "cards": [
         "T043",
+        "T044",
         "T045"
       ],
-      "note": "Spec C rev 12 (closing drift check; grill K290-K293, user 2026-11-13; K294-K298). Parallel, disjoint files. T043 Tier 2: both board surfaces (K284/K294 --no-lazy-fetch on calls 4-6, K290 panel captions, K291 queue opened_by/last_round, K293 raw-input rules, T038 notes); the parity fixture delta is in the card (K298, named exception to K252). T045 Tier 2: review/close skill K297 merged-head check, review data line, qa evidence item. T044 (\ud83d\udd10 Tier 3, scripts/bash_gate.py: K296 ref writes in implementer sessions + T041 notes) belongs to this wave but has no card yet: the architect call was stopped twice by model safeguards; the card is added here when written, and needs the user's explicit yes and an Approved line before dispatch."
+      "note": "Spec C rev 12 (closing drift check; grill K290-K293, user 2026-11-13; K294-K299). Parallel, disjoint files. T043 Tier 2: both board surfaces (K284/K294 --no-lazy-fetch on calls 4-6, K290 panel captions, K291 queue opened_by/last_round, K293 raw-input rules, T038 notes); the parity fixture delta is in the card (K298, named exception to K252). T045 Tier 2: review/close skill K297 merged-head check, review data line, qa evidence item. T044 (\ud83d\udd10 Tier 3, scripts/bash_gate.py: K296 ref writes in implementer sessions + T041 notes) has its card from a Sonnet session after the architect call was stopped twice by model safeguards (K299); it needs the user's explicit yes and an Approved line before dispatch."
     },
     {
       "wave": 16,
@@ -866,6 +867,16 @@
           "session": "t043-board-queue"
         }
       ]
+    },
+    "T044": {
+      "file": "docs/delix/tasks/T044-bash-gate-ref-writes.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
     },
     "T045": {
       "file": "docs/delix/tasks/T045-review-merged-head-check.md",
