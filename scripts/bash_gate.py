@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """PreToolUse (Bash): reviewer roles may run only read-only commands; in the implementer worktree, gitleaks runs
-before commit, shell writes to protected paths are blocked, a push goes only to the card's own branch on origin and
-`gh pr merge` is denied."""
+before commit, shell writes to protected paths are blocked, a push goes only to the card's own branch on origin,
+`gh pr merge` is denied, and git commands that write refs or remotes are denied."""
 import os
 import re
 import shutil
@@ -111,6 +111,9 @@ if not card_path(cwd):
     sys.exit(0)
 
 cfg = delix_json(cwd)
+if not isinstance(cfg, dict):  # R-U4: the rules below read cfg; a list, string, number or null is not a config
+    deny("delixcrew: docs/delix/delix.json is not a JSON object; Bash stays blocked in this card worktree until the "
+         "user fixes it from their own terminal")
 protected = cfg.get("protected_paths") or []
 
 # writing to a protected path via shell redirect / cp / mv / tee
@@ -127,6 +130,10 @@ for m in re.finditer(r"(?:>>?|\bcp\b[^|;&]*|\bmv\b[^|;&]*|\btee\b)\s+([^\s;&|]+)
 PUSH_DENY = ("delixcrew: an implementer session pushes only its own card branch (git push [-u] origin <branch>); the "
              "default branch and every other push run from the user's own terminal")
 MERGE_DENY = "delixcrew: gate 2 (merge) is the user's; an implementer session does not run gh pr merge"
+REF_DENY = ("delixcrew: an implementer session does not write git refs or change remotes (update-ref, remote set-head, "
+            "set-url, add, remove); those run from the user's own terminal")
+ENC_DENY = ("delixcrew: a git setting or ref name holds a byte that is not UTF-8, which this hook cannot read; "
+            "the command is denied until the user removes it from their own terminal")
 GIT_ARG_OPTS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env", "--attr-source",
                 "--shallow-file"}  # R-P2: take the next token
 GIT_FLAG_OPTS = {"-v", "--version", "-h", "--help", "-p", "--paginate", "-P", "--no-pager", "--no-replace-objects",
@@ -161,10 +168,26 @@ def words(text):
     return segs
 
 
+def remote_writes(toks, k, n):
+    """R-U2: True unless `git remote` has no subcommand or `show` / `get-url`, after any -v / --verbose. `k` is the
+    index of the first token after `remote`, `n` the token count."""
+    while k < n and toks[k] in ("-v", "--verbose"):
+        k += 1
+    return k < n and toks[k].casefold() not in ("show", "get-url")
+
+
+def git_text(*args):
+    """R-U5: git(cwd, *args); a byte that is not UTF-8 in its output denies with a message, it does not raise."""
+    try:
+        return git(cwd, *args)
+    except UnicodeDecodeError:
+        deny(ENC_DENY)
+
+
 def git_unset(*args):
     """R-P3a: stdout of a config / symbolic-ref read; "" for exit 1 with empty stdout (not set). Any other result
     (no git, timeout, another exit code, exit 1 with output) denies."""
-    r = git(cwd, *args)
+    r = git_text(*args)
     if r is None or r.returncode not in (0, 1) or (r.returncode == 1 and r.stdout):
         deny(PUSH_DENY)
     return r.stdout if r.returncode == 0 else ""
@@ -177,7 +200,7 @@ def push_branch():
     """R-P3: the current branch, read once per command; denies on a detached HEAD, a default branch name, a failed
     git call or a configured remote.origin.push."""
     if not _branch:
-        r = git(cwd, "symbolic-ref", "--quiet", "--short", "HEAD")
+        r = git_text("symbolic-ref", "--quiet", "--short", "HEAD")
         b = r.stdout.strip() if r is not None and r.returncode == 0 else ""
         db = cfg.get("default_branch")
         if not b or (db is not None and not isinstance(db, str)):
@@ -234,6 +257,8 @@ def alias_check(name):
                 vt = [t.casefold() for s in words(v) for t in s]
                 if v.lstrip().startswith("!") or {"push", "send-pack", "http-push"} & set(vt):
                     deny(PUSH_DENY)
+                if "update-ref" in vt or (vt[:1] == ["remote"] and remote_writes(vt, 1, len(vt))):  # R-U3
+                    deny(REF_DENY)
                 nxt.update(vt[:1])
         frontier = nxt
     ok.add(name)
@@ -292,11 +317,13 @@ for toks in segs:
             if j >= n:
                 break
             sub = toks[j].casefold()
-        elif t.rsplit("/", 1)[-1] in ("git-push", "git-send-pack"):
+        elif t.rsplit("/", 1)[-1] in ("git-push", "git-send-pack", "git-update-ref", "git-remote"):
             j, gopt, sub = i, False, t.rsplit("/", 1)[-1][len("git-"):]
         else:
             i += 1
             continue
+        if sub == "update-ref" or (sub == "remote" and remote_writes(toks, j + 1, n)):  # R-U1, R-U2
+            deny(REF_DENY)
         if sub in ("send-pack", "http-push", "subtree"):
             deny(PUSH_DENY)
         if sub == "push":  # R-P3: first token, no global option, no cd; [opts] origin <HEAD|current branch>
