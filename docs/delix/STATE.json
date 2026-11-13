@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/C-board-visibility.md",
   "size": "M",
-  "updated": "2026-11-13T06:11:27Z",
+  "updated": "2026-11-13T06:40:09Z",
   "env_owner": null,
   "waves": [
     {
@@ -849,8 +849,8 @@
       "file": "docs/delix/tasks/T043-board-queue-fields-lazy-fetch.md",
       "role": "frontend",
       "tier": 2,
-      "status": "in_progress",
-      "pr": null,
+      "status": "in_review",
+      "pr": 73,
       "rounds": 0,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
@@ -862,7 +862,7 @@
           "sha": null,
           "verdict": null,
           "at": "2026-11-13T06:11:27Z",
-          "branch": null,
+          "branch": "claude/delix-t043-9935f0",
           "session": "t043-board-queue"
         }
       ]
@@ -871,8 +871,8 @@
       "file": "docs/delix/tasks/T045-review-merged-head-check.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_progress",
-      "pr": null,
+      "status": "in_review",
+      "pr": 72,
       "rounds": 0,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
@@ -884,7 +884,7 @@
           "sha": null,
           "verdict": null,
           "at": "2026-11-13T06:11:27Z",
-          "branch": null,
+          "branch": "claude/delix-t045-030c94",
           "session": "t045-review-merged-head"
         }
       ]
