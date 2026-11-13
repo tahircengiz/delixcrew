@@ -606,3 +606,30 @@ For T046. K298 moves the README and site sentences out of this card. Copy the wo
 - If T046 had written the brace-group false positive (`{ git push origin HEAD; }` denies), it goes: this card makes it pass.
 
 ## Review findings (filled by the lead)
+- Round 1 (PR #76, head `75b12de2c71608b4e7d6e9d4855f214ceb81b010`, 2026-11-13): qa `ACCEPT` (0 P0, 0 P1), security
+  `🔐 HUMAN_APPROVAL` twice (run 1 was stopped by a model safeguard; one narrow retry on exceptions, running time and
+  lead decision B gave 1 Low, 2 unsure notes and no FIX). Lead gates on the clean `git archive` of the head:
+  `scripts/bash_gate.py` and `tests/argv_gate_tests.sh` equal the card's anchors applied to 7d868fa byte for byte;
+  16 suites exit 0 on Python 3.9.6 and 3.13.13 (`parse_gate_tests.sh` 72 `✔`, `argv_gate_tests.sh` 110 `✔`); the new
+  tests on the base give 37 `✘` / 35 `✔` and 1 `✘` / 109 `✔`; CI `check` and `test` green. K307 acceptance fuzz on
+  the head against bash 3.2.57: `fuzz_bt` 16,000 cases and `fuzz_t048` 16,000 cases, 0 missed (12 variable-class
+  misses, O2); `fuzz_argv` and `fuzz_nest` 32,000 cases, 0 mismatches; the T047 and T048 probes: 0 crashes, 5 forms
+  pass with an effect, all Known limits (O1, O2). Lead checks: 30,000 random inputs raise no exception other than a deny; 8
+  probes (a quote-hidden ref write or push in front of an unclosed construct, inside an unclosed brace group and
+  600 levels deep) deny.
+  - Low (security, no fix): a heredoc body that opens another heredoc is re-read once per level, up to about 330
+    levels (then `DEEP_DENY`). Lead measurement above the cap: linear (×4 input gives ×4.1 time), about 24 µs per
+    byte on Python 3.9.6 (192 KB in 4.7 s), so the 60 s hook timeout comes at about 2.5 MB (extrapolated, not
+    measured); the hook then blocks (`hooks/hooks.json` `"onFailure": "block"`) with no message. A depth cap for
+    body re-reads would remove it; not needed for this card.
+  - Note (security unsure): a top-level `(( x << N ))` makes the pass read `N` as a heredoc delimiter, which bash
+    does not do (O3). Lead probe with real bash and git on temp repos (no network): 37 forms (plain, quote-hidden,
+    glued-quote, backslash and quoted-subcommand ref writes and pushes, open and closed fake bodies) after 6
+    arithmetic shapes deny on the head and on 7d868fa; bash ran 36 of them (ref written or `main` pushed).
+  - Note (security unsure): 8 repeat units of the lead's growth check had no character that starts the pass. Lead
+    re-measured all 8 with a quote added (2,000 to 32,000 repeats, up to 192 KB): at most 0.11 s, ×4 ratio at most
+    4.5.
+  - Lead decision B (security Q3): only one shape loses a deny that 7d868fa gave: a heredoc body with a quote that
+    is never closed, then, after the delimiter line, a git command in a Known-limit form (O1, O2); the same forms
+    without the heredoc already pass on 7d868fa. This is the trade-off K310 accepted.
+  - Evidence: `rev76/` files in the lead's scratchpad (not in the repo).

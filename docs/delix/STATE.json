@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/C-board-visibility.md",
   "size": "M",
-  "updated": "2026-11-13T19:23:30Z",
+  "updated": "2026-11-13T19:54:39Z",
   "env_owner": null,
   "waves": [
     {
@@ -1110,8 +1110,8 @@
       "file": "docs/delix/tasks/T048-bash-gate-parser.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_progress",
-      "pr": null,
+      "status": "in_review",
+      "pr": 76,
       "rounds": 0,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
@@ -1125,6 +1125,30 @@
           "at": "2026-11-13T19:23:30Z",
           "branch": "claude/inspiring-bhaskara-cd267d",
           "session": "delix-t048-bash-gate-uyg"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 1,
+          "sha": "75b12de2c71608b4e7d6e9d4855f214ceb81b010",
+          "verdict": "ACCEPT",
+          "at": "2026-11-13T19:50:52Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 1,
+          "sha": "75b12de2c71608b4e7d6e9d4855f214ceb81b010",
+          "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
+          "at": "2026-11-13T19:54:39Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 1,
+          "sha": "75b12de2c71608b4e7d6e9d4855f214ceb81b010",
+          "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
+          "at": "2026-11-13T20:16:32Z"
         }
       ]
     }
