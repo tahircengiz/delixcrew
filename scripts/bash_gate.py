@@ -154,7 +154,7 @@ _SPLIT = re.compile(r"[\s;&|(){}`'\"\\,\[\]<>]+")
 _TOK = re.compile(r"(?P<sp>[ \t]+)|(?P<op>&>>?|[<>]+(?:&-?|\|)?)|(?P<sep>[;&|()\n`]+)|\\(?P<esc>.)|(?P<end>\\)"
                   r"|'(?P<sq>[^']*)'|\"(?P<dq>(?:[^\"\\]|\\.)*)\"|(?P<run>[^ \t;&|()\n`'\"\\<>#][^ \t;&|()\n`'\"\\<>]*)"
                   r"|(?P<cm>#)|(?P<bad>['\"])", re.S)
-_CMEND = re.compile(r"[\n`]")  # R-W1: a comment ends at a newline, or at the backtick that closes `...`
+_CMEND = (re.compile(r"\n"), re.compile(r"[\n`]"))  # R-W1: a comment ends at a newline, inside `...` also at `
 _DQ = re.compile(r"\\([\\\"$`]|\n)")  # inside double quotes a backslash escapes only these
 _CODE = re.compile(r"[ \t;&|(){}\n\r`'\"\\]")  # a quoted token with one of these may be code (`sh -c "..."`, `$(...)`)
 
@@ -173,17 +173,18 @@ def lead(toks):
     return j
 
 
-def bash_argv(text, depth=0):
+def bash_argv(text, depth=0, cm=True):
     """R-W1: the argv bash builds from `text`, as segments of tokens. A quote pairs with the next one of its kind and
     its text stays in one token; a backslash escapes one character; a backslash-newline vanishes; `,` `[` `]` `{` `}`
-    are word characters; an unquoted `#` that starts a word starts a comment, which ends at a newline or a backtick;
-    an unquoted `<` or `>` ends the word and starts a redirection (operator, file descriptor number and
-    target word are no arguments), a quoted or escaped one is an argument. R-W2: a quoted token that holds a blank,
-    a separator or a quote is read again the same way (`sh -c "..."`, `"$(...)"`); each such token is shorter than
-    its text, so the recursion ends. Returns (segments, tail): the tail is the text from a quote that is never
-    closed, set by the outermost call only."""
+    are word characters; an unquoted `#` that starts a word starts a comment, which ends at a newline (inside `...` also
+    at the closing backtick); the comment is read once more with `cm` off, as a `#` in double quotes or in a heredoc
+    body is no comment (`"# $(...)"`); an unquoted `<` or `>` ends the word and starts a redirection (operator, file
+    descriptor number and target word are no arguments), a quoted or escaped one is an argument. R-W2: a quoted token
+    that holds a blank, a separator or a quote is read again the same way (`sh -c "..."`, `"$(...)"`); each such token
+    is shorter than its text, so the recursion ends. Returns (segments, tail): the tail is the text from a quote that is
+    never closed, set by the outermost call only."""
     segs, toks, parts, rest = [], [], [], ""
-    skip = False
+    skip, bt = False, 0  # bt: 1 inside `...` at this level
 
     def flush(cut=False, op=False):
         nonlocal skip
@@ -216,12 +217,15 @@ def bash_argv(text, depth=0):
             skip = not v.endswith("-")  # the word after an operator is its target, except after `>&-`
         elif k == "sep":
             flush(True)
+            bt ^= v.count("`") & 1
         elif k == "cm":
-            if parts:  # `a'b'#c`, `a\ #b`: inside a word `#` is a character
+            if parts or not cm:  # `a'b'#c`, `a\ #b`: inside a word `#` is a character
                 parts.append((False, v))
             else:  # R-W1: a `#` that starts a word starts a comment; bash does not read it
-                e = _CMEND.search(text, pos)
-                pos = e.start() if e else len(text)
+                e = _CMEND[bt].search(text, pos)
+                end = e.start() if e else len(text)
+                segs.extend(bash_argv(text[m.start():end], depth + 1, False)[0])  # `"# $(...)"`, heredoc body
+                pos = end
         elif k == "bad":
             if depth == 0:
                 rest = text[m.start():]

@@ -155,6 +155,15 @@ allow "91 log --format with braces"                "$W" "$G log -1 --format='{%H
 allow "92 -c value with {, status"                 "$W" "$G -c x.y={b status"
 allow "93 sh -c: comment quote, then status"        "$W" "sh -c \"echo x # it's${NL}$G status\""
 
+# Review round 3 (T047): `#` in double quotes or a heredoc body is no comment; a backtick ends a comment only in `...`
+deny "94 # in double quotes, then \$(...)"          "$W" "echo \"# \$($G -c 'user.name=A B' $U x y)\""   "$REF_DENY"
+deny "95 # inside a double-quoted string, send"     "$W" "echo \"x # \$($G -c 'user.name=A B' $P origin HEAD:main)\"" "$PUSH_DENY"
+deny "96 heredoc body line # \$(...)"               "$W" "cat <<EOF${NL}# \$($G -c 'user.name=A B' $U x y)${NL}EOF" "$REF_DENY"
+deny "97 backticks in a comment, then a send"       "$W" "# run \`make\` first, it's needed${NL}$G -c 'user.name=A B' $P origin HEAD:main" "$PUSH_DENY"
+deny "98 backticks in a comment, then a ref update" "$W" "echo x # \`x\` it's${NL}$G -c 'user.name=A B' $U x y" "$REF_DENY"
+allow "99 # and a quote in double quotes, then status" "$W" "echo \"# it's a note\"; $G status"
+allow "100 backticks and a quote in a comment, then status" "$W" "# run \`make\`, it's fine${NL}$G status"
+
 # Growth (repo hook rule): the least of 3 runs per size; t(40000) < 3 s and t(40000)/t(5000) < 20
 python3 - "$S/bash_gate.py" "$W" "$G" <<'PYT' || FAIL=1
 import json, subprocess, sys, time
@@ -166,7 +175,9 @@ cases = [("comma values", lambda k: (g + " -c a,b status; ") * k),
          ("redirections", lambda k: (g + " status 2>&1; ") * k),
          ("one quote never closed", lambda k: "'" + (g + " status; ") * k),
          ("comments with a quote", lambda k: ("echo x # it's\n" * k) + g + " status"),
-         ("braces in values", lambda k: (g + " -c x.y={b status; ") * k)]
+         ("braces in values", lambda k: (g + " -c x.y={b status; ") * k),
+         ("hashes in double quotes", lambda k: ("echo \"# it's\"; " * k) + g + " status"),
+         ("backticks in comments", lambda k: ("# a `b` it's\n" * k) + g + " status")]
 bad = 0
 for name, make in cases:
     t = {}
