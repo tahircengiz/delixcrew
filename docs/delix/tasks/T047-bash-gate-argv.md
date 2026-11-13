@@ -369,3 +369,36 @@ For T046. K298 moves the README and site sentences out of this card. Copy the wo
 **H4, the removed item.** With this card merged, T044's removal of the `git remote` URL item stands: the forms that passed (a `-c` value with a comma, `-C` or `-c` with a blank, a backslash-newline before the subcommand, an alias that starts with `-c core.pager=cat`) now deny. The lead confirms the merge before T046 applies it.
 
 ## Review findings (filled by the lead)
+- Round 1 (PR #75, head `5930256d4775212fb0b25d5e41d482232d335ab6`, 2026-11-13): qa `REJECT` (0 P0, 1 P1), security
+  `🔐 HUMAN_APPROVAL` twice (run 1 was stopped by a model safeguard at checklist item 3; one narrow retry of item 3
+  gave 2 Medium and 1 Low). Lead gates on the clean `git archive` of the head: `bash_gate.py` equals the card's
+  anchors applied to 906eb3d byte for byte; 15 suites exit 0 on Python 3.9.6 and 3.13.13; `argv_gate_tests.sh`
+  73 `✔`; D9 re-run on the head: 24,000 cases (3 seeds, flat and inside `sh -c`) against bash 3.2.57, 0 mismatches;
+  CI `check` and `test` green. Lead probe with real git 2.54 on temp repos (no network): the T044 round-1 forms and
+  the redirection forms (cases 16, 19, 20, 22) deny on the head and pass on main, where the push to `main` landed.
+  Every finding below was reproduced by the lead with real git (hook allows, git writes the ref or pushes `main`);
+  all but the last also hold on main.
+  - P1 (qa): R-W3 splits the tail on quotes, so after an apostrophe in a comment a command word written `g""it`
+    or `g\it` is no git word; with `-c "user.name=A B"` the ref write passes. Fix F3. `g'i't` still passes after
+    F3 (its first quote pairs with the comment's apostrophe): Known limit, the class of variables (K301).
+  - Medium (security): a `-c` value that holds a vertical tab, a form feed, a carriage return or U+00A0 hides the
+    subcommand: the loose view splits on Python `\s`, `_MARKS` does not start the bash view and `_TOK` reads a
+    carriage return as a separator. Ref write and push to `main` pass. The whitespace D9 variant gives 419
+    mismatches in 4,000 cases on the head. Fix F1.
+  - Medium (security): double quotes inside `"$(...)"` (`X="$(git -c "user.name=A B" ...)"`) end the outer token at
+    the inner quote; ref write and push to `main` pass. Not in this card: reading `$(` inside double quotes is a
+    parser change; follow-up 🔐 card T048, Known limit until it lands (K301).
+  - Low (security): the R-W3 tail split does not end a word at `<` `>`, so `git>f ...` after a comment apostrophe
+    passes. Fix F2.
+  - P1 (lead, regression against main): R-W5 reads the alias value per segment, but git splits an alias value on
+    any blank; an alias `remote<newline>set-url origin <url>` passes on the head, main's hook denies it, and git
+    runs it (the URL changed in the probe). Fix F4: the flat check with `lead()` as well.
+  - Notes (security unsure, no fix): R-W2 has no depth cap, but a crash blocks (`hooks/hooks.json`
+    `"onFailure": "block"`) and the depth grows only with escapes; an all-digit word before `&>` is dropped as a
+    file descriptor (no passing command found); the Regex discipline text is slightly inexact (`esc` and `end`
+    both start with a backslash; bounded).
+  - Fix round 2: F1 to F4 and cases 68 to 76, prototyped by the lead on the head: 82 `✔`; the new cases give
+    8 `✘` on the round-1 head; growth ratios up to 5.9; D9 with whitespace fragments 32,000 cases, 0 mismatches;
+    15 suites on 3.9.6 and 3.13.13 exit 0. For T046 H3: also name double quotes inside `"$(...)"` (until T048)
+    and a command word split by quotes after an apostrophe in a comment.
+  - Evidence: `T047.*` files and `t047_*` scripts in the lead's scratchpad (not in the repo).

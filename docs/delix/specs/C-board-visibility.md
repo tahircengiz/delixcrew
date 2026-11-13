@@ -426,3 +426,13 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
   T047'nin merge'ünü de bekler ve belgeleri kartın H1–H4'üyle tek geçişte yazar; T047 merge edilmeden T046
   dağıtılırsa H0'ın ilk kolu geçerli (`git remote` URL maddesi kalır). K244'ün K240–K299 bloğu doldu; Spec C
   kararları K300'den sürer (bu lead K300–K309).
+- **K301** (lead, 2026-11-13, geri alınır) T047 tur 1 (#75, uç 5930256): qa `REJECT` (1 P1), security
+  `🔐 HUMAN_APPROVAL` (ilk koşu model süzgecine takıldı, dar istemle tek tekrar: 2 Medium, 1 Low). Lead hepsini
+  gerçek git 2.54 ile üretti ve R-W5'te main'e göre bir gerileme buldu. Tur 2 kartın kendi kurallarına giren dört
+  düzeltme (F1–F4): `-c` değerinde dikey sekme, sayfa sonu, satır başı ya da U+00A0 alt komutu gizlemez (F1,
+  `_MARKS` ve `_TOK`); R-W3 kuyruğu `<` `>`'da da böler (F2); kelime testinden önce tırnak ve ters bölü silinir
+  (F3); alias değeri git'in böldüğü gibi tek liste olarak da okunur (F4; `remote` + yeni satır + `set-url` main'de
+  reddediliyordu). Kart dışı: çift tırnak içindeki `$(...)`'da iç içe çift tırnak ref yazmayı ve main'e push'u
+  geçiriyor (main'de de); `$(` içini okumak ayrıştırıcı değişikliği, ayrı 🔐 kart T048, o zamana dek Bilinen sınır.
+  Yorumdaki kesme işaretinden sonra tırnakla bölünmüş komut adı (`g'i't`) değişkenlerle aynı sınıf, Bilinen sınır
+  (K300'ün O1 gerekçesi).
