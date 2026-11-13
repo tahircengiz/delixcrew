@@ -11,7 +11,10 @@ Are all cards in `STATE.json` `accepted`? If not, list them and stop (or, if the
 write that to `STATE.json`). Every `accepted` card with an `agents` list also carries `merged`
 `{"sha": "<merge commit 40 hex>", "head": "<merged PR head 40 hex>", "at": "<ISO-8601 Z>"}`; where it is missing, read
 it with `gh pr view <n> --json state,mergeCommit,headRefOid` and write it only when `state` is `MERGED`;
-otherwise list the card and stop.
+otherwise list the card and stop. Before that write, compare `headRefOid` with the `sha` of the card's `qa` record
+with the highest `round` (K297). Different, or no `qa` record: write `merged` all the same and, in the same STATE
+write, status → `escalated`, never `accepted`; tell the user "an unreviewed head was merged" with the PR link,
+`headRefOid` and the reviewed `sha`, and stop. Equal: the card stays `accepted`.
 
 ## 2. Metrics (numbers, not claims)
 Per card: round count, `cost_usd` (from `/usage` or OTel/ccusage if available; otherwise `not measured`), cache hits
