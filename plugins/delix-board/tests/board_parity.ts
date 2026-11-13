@@ -62,16 +62,16 @@ export const PARITY = {
   ],
   "queue": {
    "waiting": [
-    {"card": "T029", "verification": null, "reason": "ready to merge"},
-    {"card": "T030", "verification": null, "reason": "changed after review"},
-    {"card": "T036", "verification": null, "reason": "no review record"},
-    {"card": "T037", "verification": null, "reason": "tier 3 approval"},
-    {"card": "T039", "verification": null, "reason": "needs_context"},
-    {"card": "T040", "verification": null, "reason": "escalated"},
-    {"card": null, "verification": "v-fix", "reason": "verification FIX"}
+    {"card": "T029", "verification": null, "reason": "ready to merge", "opened_by": "claude/lead-c", "last_round": ["qa r2 @d2d2d2d ACCEPT \u00b7 by claude/lead-c", "security r2 @d2d2d2d CLEAN \u00b7 by claude/lead-c"]},
+    {"card": "T030", "verification": null, "reason": "changed after review", "opened_by": "claude/lead-c", "last_round": ["qa r1 @e1e1e1e ACCEPT \u00b7 by claude/lead-c", "security r1 @e1e1e1e CLEAN \u00b7 by claude/lead-c"]},
+    {"card": "T036", "verification": null, "reason": "no review record", "opened_by": null, "last_round": []},
+    {"card": "T037", "verification": null, "reason": "tier 3 approval", "opened_by": null, "last_round": []},
+    {"card": "T039", "verification": null, "reason": "needs_context", "opened_by": "claude/lead-c", "last_round": []},
+    {"card": "T040", "verification": null, "reason": "escalated", "opened_by": null, "last_round": []},
+    {"card": null, "verification": "v-fix", "reason": "verification FIX", "opened_by": null, "last_round": []}
    ],
    "ready": [
-    {"card": "T029", "pr": 60, "sha": "d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2"}
+    {"card": "T029", "pr": 60, "sha": "d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2d2", "opened_by": "claude/lead-c", "last_round": ["qa r2 @d2d2d2d ACCEPT \u00b7 by claude/lead-c", "security r2 @d2d2d2d CLEAN \u00b7 by claude/lead-c"]}
    ],
    "done": [
     {"card": "T031", "pr": 62},

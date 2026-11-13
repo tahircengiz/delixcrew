@@ -156,6 +156,13 @@ function sectionHead(k: Kit, icon: IconName, color: string, title: string, count
 
 const ROLE_COLOR: Record<string, string> = { lead: ACCENT, implementer: MERGE, other: MUTED }
 
+/** K290, K291: who opened a card and its last review round, one dim caption under the row; drawn whole (`plain`, no `cut`), so a narrow pane wraps it instead of cutting it. */
+function ledgerCaption(k: Kit, by: string | null, rounds: string[]): RenderElement {
+  const { Text } = k
+  const text = plain(`açan ${by ?? '—'} · son tur ${rounds.length > 0 ? rounds.join('; ') : '—'}`)
+  return <Text dimColor size="caption">{`  ${text}`}</Text>
+}
+
 /** Spec C: leads, agents, what waits on the user, what is ready to merge, and the git actions as text the user runs. */
 function agentSections(k: Kit, snap: Snapshot): RenderElement {
   const { Box, Text } = k
@@ -169,11 +176,14 @@ function agentSections(k: Kit, snap: Snapshot): RenderElement {
           const name = `${l.main ? 'ana checkout' : base(l.path)}${l.source ? ' (kaynak)' : ''}`
           const rest = ` · ${l.branch ?? '-'} · ${l.spec_title ?? '-'} · açık ${l.open} · bekleyen ${l.waiting} · hazır ${l.ready}`
           return (
-            <Text>
-              <Text weight="semibold">{cut(name, 32)}</Text>
-              <Text dimColor>{cut(rest, Math.max(8, w - Math.min(32, name.length) - (l.stale ? 8 : 0)))}</Text>
-              {l.stale ? <Text color="warning"> · stale</Text> : null}
-            </Text>
+            <Box flexDirection="column">
+              <Text>
+                <Text weight="semibold">{cut(name, 32)}</Text>
+                <Text dimColor>{cut(rest, Math.max(8, w - Math.min(32, name.length) - (l.stale ? 8 : 0)))}</Text>
+                {l.stale ? <Text color="warning"> · stale</Text> : null}
+              </Text>
+              <Text dimColor size="caption">{`  STATE değişti: ${l.changed_at === null ? '?' : utcMinute(l.changed_at)}`}</Text>
+            </Box>
           )
         })}
       </Box>
@@ -184,11 +194,14 @@ function agentSections(k: Kit, snap: Snapshot): RenderElement {
           const rest = ` · ${base(a.path)} · ${a.branch ?? 'detached'} · ${a.upstream} · ${a.lands}`
           const dirty = a.uncommitted === 0 ? '' : ` · commit'lenmemiş ${a.uncommitted}`
           return (
-            <Text>
-              <Text color={ROLE_COLOR[a.role.split(' ')[0] ?? ''] ?? MUTED}>{a.role}</Text>
-              <Text dimColor>{cut(rest, Math.max(8, w - a.role.length - dirty.length))}</Text>
-              {dirty ? <Text color="warning">{dirty}</Text> : null}
-            </Text>
+            <Box flexDirection="column">
+              <Text>
+                <Text color={ROLE_COLOR[a.role.split(' ')[0] ?? ''] ?? MUTED}>{a.role}</Text>
+                <Text dimColor>{cut(rest, Math.max(8, w - a.role.length - dirty.length))}</Text>
+                {dirty ? <Text color="warning">{dirty}</Text> : null}
+              </Text>
+              {a.card === null ? null : ledgerCaption(k, a.opened_by, a.last_round)}
+            </Box>
           )
         })}
       </Box>
@@ -197,10 +210,13 @@ function agentSections(k: Kit, snap: Snapshot): RenderElement {
         {sectionHead(k, waiting.length ? 'alert' : 'check', waiting.length ? WARN : GOOD, 'Seni bekliyor', waiting.length)}
         {waiting.length === 0 ? <Text dimColor>Bekleyen yok.</Text> : null}
         {waiting.map(e => (
-          <Text>
-            <Text weight="semibold">{cut(e.card ?? `${e.verification ?? '?'} (doğrulama)`, 32)}</Text>
-            <Text color={e.reason === 'ready to merge' ? MERGE : WARN}> · {e.reason}</Text>
-          </Text>
+          <Box flexDirection="column">
+            <Text>
+              <Text weight="semibold">{cut(e.card ?? `${e.verification ?? '?'} (doğrulama)`, 32)}</Text>
+              <Text color={e.reason === 'ready to merge' ? MERGE : WARN}> · {e.reason}</Text>
+            </Text>
+            {e.card === null ? null : ledgerCaption(k, e.opened_by, e.last_round)}
+          </Box>
         ))}
       </Box>
 
@@ -208,10 +224,13 @@ function agentSections(k: Kit, snap: Snapshot): RenderElement {
         {sectionHead(k, 'merge', MERGE, "Merge'e hazır", ready.length)}
         {ready.length === 0 ? <Text dimColor>Hazır kart yok.</Text> : null}
         {ready.map(r => (
-          <Text>
-            <Text weight="semibold">{r.card}</Text>
-            <Text dimColor> · PR #{r.pr} · @{r.sha?.slice(0, 7) ?? '-'}</Text>
-          </Text>
+          <Box flexDirection="column">
+            <Text>
+              <Text weight="semibold">{r.card}</Text>
+              <Text dimColor> · PR #{r.pr} · @{r.sha?.slice(0, 7) ?? '-'}</Text>
+            </Text>
+            {ledgerCaption(k, r.opened_by, r.last_round)}
+          </Box>
         ))}
       </Box>
 

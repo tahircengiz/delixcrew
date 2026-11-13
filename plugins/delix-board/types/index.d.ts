@@ -48,9 +48,9 @@ export type LeadRow = {
   stale: boolean
 }
 
-export type WaitEntry = { card: string | null; verification: string | null; reason: string }
+export type WaitEntry = { card: string | null; verification: string | null; reason: string; opened_by: string | null; last_round: string[] }
 
-export type ReadyEntry = { card: string; pr: number; sha: string | null }
+export type ReadyEntry = { card: string; pr: number; sha: string | null; opened_by: string | null; last_round: string[] }
 
 export type DoneEntry = { card: string; pr: number | null }
 

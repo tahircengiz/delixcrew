@@ -6,6 +6,7 @@ import type { EngineInterface } from 'claude-code'
 
 import type { Card, CardReport, Snapshot, TestResult } from '../types'
 import {
+  BRANCH_RE,
   derive,
   gateCount,
   gatesOf,
@@ -54,6 +55,21 @@ export function zList(text: string): string {
   return fields.some(f => f.includes('\n') || f.includes('\r')) ? '' : fields.join('\n')
 }
 
+/** R-T c: the UTF-8 byte length of a text, the unit of the 1 MiB limit; a lone surrogate counts as U+FFFD (3 bytes). */
+export function utf8Bytes(text: string): number {
+  let n = 0
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i)
+    if (c < 0x80) n += 1
+    else if (c < 0x800) n += 2
+    else if (c >= 0xd800 && c <= 0xdbff && i + 1 < text.length && (text.charCodeAt(i + 1) & 0xfc00) === 0xdc00) {
+      n += 4
+      i += 1
+    } else n += 3 // includes a lone surrogate (U+FFFD)
+  }
+  return n
+}
+
 /** The session's checkout: the git toplevel of `cwd`, else `cwd` itself. */
 export async function findTop($: EngineInterface, cwd: string): Promise<string> {
   const git = await $.process.run([...GIT, 'rev-parse', '--show-toplevel'], { cwd, timeoutMs: 5000 }).catch(() => undefined)
@@ -83,19 +99,23 @@ async function safeStat($: EngineInterface, base: string, rel: string): Promise<
   }
 }
 
-/** `rel` under `base` parsed, through `safeStat`; parsed again only when its mtime moved. A text over 1 MiB is dropped. */
-async function readIfChanged<T>($: EngineInterface, cache: Cache, base: string, rel: string, parse: (text: string) => T): Promise<T | null> {
+/**
+ * `rel` under `base` parsed, through `safeStat`; parsed again only when its mtime moved. A text over 1 MiB (UTF-8
+ * bytes) is dropped. The cache is keyed by `kind:path` (R-T a): one fixed word per parser, so a path read by two
+ * parsers (a `previous` naming delix.json) never gets the other's value.
+ */
+async function readIfChanged<T>($: EngineInterface, cache: Cache, base: string, rel: string, kind: string, parse: (text: string) => T): Promise<T | null> {
   const stat = await safeStat($, base, rel)
   if (stat === null) {
-    cache.files.delete(join(base, rel))
+    cache.files.delete(`${kind}:${join(base, rel)}`)
     return null
   }
-  const hit = cache.files.get(stat.path)
+  const hit = cache.files.get(`${kind}:${stat.path}`)
   if (hit && hit.mtimeMs === stat.mtimeMs) return hit.value as T
   const text = await $.fs.read(stat.path).catch(() => undefined)
-  if (typeof text !== 'string' || text.length > MAX_FILE_BYTES) return null
+  if (typeof text !== 'string' || utf8Bytes(text) > MAX_FILE_BYTES) return null
   const value = parse(text)
-  cache.files.set(stat.path, { mtimeMs: stat.mtimeMs, value })
+  cache.files.set(`${kind}:${stat.path}`, { mtimeMs: stat.mtimeMs, value })
   return value
 }
 
@@ -125,9 +145,9 @@ function chooseRoot(top: string, trees: Seen[]): string {
   return found[0]?.path ?? top
 }
 
-/** The branch `origin/<default>...HEAD` compares with: delix.json's `default_branch` when it is a plain name, else `main`. */
+/** The branch `origin/<default>...HEAD` compares with: delix.json's `default_branch` when it matches the REQ-4 branch pattern (K293), else `main`. */
 async function defaultBranch($: EngineInterface, cache: Cache, top: string): Promise<string> {
-  const value = await readIfChanged($, cache, top, 'docs/delix/delix.json', text => {
+  const value = await readIfChanged($, cache, top, 'docs/delix/delix.json', 'delix', text => {
     try {
       const json: unknown = JSON.parse(text)
       return typeof json === 'object' && json !== null && 'default_branch' in json ? json.default_branch : null
@@ -135,14 +155,24 @@ async function defaultBranch($: EngineInterface, cache: Cache, top: string): Pro
       return null
     }
   })
-  return typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(value) ? value : 'main'
+  return typeof value === 'string' && BRANCH_RE.test(value) ? value : 'main'
+}
+
+/** K293: `.delix/card` is there in any form when the listing of `.delix` names an entry `card`, whatever its kind (a link is listed, not followed, a dangling one too). A `.delix` that cannot be listed but stats as a directory counts as holding one (fail closed); one that neither lists nor stats holds none. */
+async function hasCardEntry($: EngineInterface, tree: string): Promise<boolean> {
+  const dot = join(tree, '.delix')
+  const entries = await $.fs.list(dot).catch(() => null)
+  if (entries !== null) return entries.some(e => e.name === 'card')
+  const stat = await $.fs.stat(dot).catch(() => undefined)
+  return stat?.kind === 'dir'
 }
 
 /**
  * The 20-second look (Spec C §4, K257, K262): at most 4 + 3N git calls for N worktrees, each in its worktree as `cwd`.
  * Four for the repository (common dir, worktree list, refs, the STATE at origin/HEAD), then per worktree
  * `status`, and for a card-less one whose STATE is not uncommitted the three-dot `diff` and, if it holds a STATE,
- * its last commit time.
+ * its last commit time. Card-less means no `.delix/card` in any form (`K293`); `status`, `diff` and `log` carry
+ * `--no-lazy-fetch` like `cat-file` (`K294`).
  */
 async function worktrees($: EngineInterface, cache: Cache, top: string, now: number) {
   if (now - cache.worktrees.at < 20_000 && cache.worktrees.at !== 0) return cache.worktrees
@@ -161,20 +191,20 @@ async function worktrees($: EngineInterface, cache: Cache, top: string, now: num
   const facts: GitLook['worktrees'] = {}
   const seen: Seen[] = []
   for (const tree of list) {
-    const hasCard = await $.fs.exists(join(tree.path, '.delix/card')).catch(() => false)
-    const stat = await $.fs.stat(join(tree.path, STATE)).catch(() => undefined)
-    const hasState = stat?.kind === 'file'
+    const hasCard = await hasCardEntry($, tree.path)
+    const stat = await safeStat($, tree.path, STATE)
+    const hasState = stat !== null
     const mtimeMs = stat?.mtimeMs ?? 0
-    const status = stdout(await git(tree.path, ['status', '--porcelain']))
+    const status = stdout(await git(tree.path, ['--no-lazy-fetch', 'status', '--porcelain']))
     const isDirty = status !== null && status.split('\n').some(l => l.slice(3) === STATE)
     let diffExit: number | null = null
     let logCt: number | null = null
     if (!hasCard && !isDirty) {
-      const diff = await git(tree.path, ['diff', '--no-ext-diff', '--quiet', `origin/${def}...HEAD`, '--', STATE])
+      const diff = await git(tree.path, ['--no-lazy-fetch', 'diff', '--no-ext-diff', '--quiet', `origin/${def}...HEAD`, '--', STATE])
       diffExit = diff?.exitCode === 0 || diff?.exitCode === 1 ? diff.exitCode : null
       if (hasState) {
         // R-G6 (K277): `--no-show-signature`, so `log.showSignature` runs no `gpg.program` per signed commit.
-        const ct = stdout(await git(tree.path, ['log', '-1', '--no-show-signature', '--format=%ct', '--', STATE]))?.trim() ?? ''
+        const ct = stdout(await git(tree.path, ['--no-lazy-fetch', 'log', '-1', '--no-show-signature', '--format=%ct', '--', STATE]))?.trim() ?? ''
         logCt = /^\d+$/.test(ct) ? Number(ct) : null
       }
     }
@@ -226,7 +256,7 @@ async function withFiles($: EngineInterface, cache: Cache, facts: GitLook['workt
   for (const [path, seen] of Object.entries(facts)) {
     const files: Record<string, string> = {}
     const add = async (rel: string) => {
-      const text = await readIfChanged<string>($, texts, path, rel, t => t)
+      const text = await readIfChanged<string>($, texts, path, rel, 'text', t => t)
       if (text !== null) files[rel] = text
     }
     for (const rel of [STATE, '.delix/card', '.delix/report.md']) await add(rel)
@@ -264,19 +294,19 @@ export async function readSnapshot($: EngineInterface, top: string, cache: Cache
   const root = seen.root ?? top
   const main = trees[0]?.path ?? root
   const delix = join(root, 'docs/delix')
-  const state = await readIfChanged<ParsedState | null>($, cache, root, STATE, parseState)
+  const state = await readIfChanged<ParsedState | null>($, cache, root, STATE, 'state', parseState)
   const taskEntries = await $.fs.list(join(delix, 'tasks')).catch(() => [])
   const cardFiles = taskEntries.filter(f => f.kind === 'file' && /^T\d{3}-.*\.md$/.test(f.name))
   if (state === null && cardFiles.length === 0) return emptySnapshot(root)
 
   // Cards of an earlier spec keep their files; their record is in the archived STATE `previous` names.
-  const previous = state?.previous ? await readIfChanged<ParsedState | null>($, cache, root, state.previous, parseState) : null
-  const metrics = (await readIfChanged($, cache, root, 'docs/delix/metrics.md', parseMetrics)) ?? ({} as Record<string, MetricRow>)
+  const previous = state?.previous ? await readIfChanged<ParsedState | null>($, cache, root, state.previous, 'state', parseState) : null
+  const metrics = (await readIfChanged($, cache, root, 'docs/delix/metrics.md', 'metrics', parseMetrics)) ?? ({} as Record<string, MetricRow>)
   const parsedCards: Record<string, ParsedCard & { file: string }> = {}
   for (const f of cardFiles) {
     const id = f.name.slice(0, 4)
     const path = join(delix, 'tasks', f.name)
-    const card = await readIfChanged($, cache, root, `docs/delix/tasks/${f.name}`, parseCard)
+    const card = await readIfChanged($, cache, root, `docs/delix/tasks/${f.name}`, 'card', parseCard)
     if (card) parsedCards[id] = { ...card, file: path }
   }
 
@@ -288,7 +318,7 @@ export async function readSnapshot($: EngineInterface, top: string, cache: Cache
     let id: string | null = null
     const cardEntry = byName.get('card')
     if (cardEntry) {
-      const text = await readIfChanged($, cache, tree.path, '.delix/card', t => t)
+      const text = await readIfChanged($, cache, tree.path, '.delix/card', 'text', t => t)
       id = /(T\d{3})/.exec(text ?? '')?.[1] ?? null
     }
     id ??= /(T\d{3})/.exec(tree.branch || basename(tree.path))?.[1] ?? null
@@ -298,8 +328,8 @@ export async function readSnapshot($: EngineInterface, top: string, cache: Cache
     reports[id] = {
       path: tree.path,
       branch: tree.branch,
-      report: reportEntry ? await readIfChanged($, cache, tree.path, '.delix/report.md', parseReport) : null,
-      test: testEntry ? await readIfChanged($, cache, tree.path, '.delix/test-result.txt', parseTestResult) : null,
+      report: reportEntry ? await readIfChanged($, cache, tree.path, '.delix/report.md', 'report', parseReport) : null,
+      test: testEntry ? await readIfChanged($, cache, tree.path, '.delix/test-result.txt', 'test', parseTestResult) : null,
     }
   }
 
