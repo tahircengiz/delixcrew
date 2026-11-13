@@ -4,8 +4,10 @@
 |---|---|---|---|---|---|
 | T044 | M | 3 | backend | 15 | open |
 
+**🔐 Approved:** 2026-11-13 tahircengiz
+
 > 🔐 Tier 3: `scripts/bash_gate.py` is a protected path (`docs/delix/delix.json:11`; `scripts/common.py` `matches` returns that entry for it). `tests/ref_gate_tests.sh` matches `test_paths` (`tests/**`) and no protected entry, and it is a new file.
-> - The lead writes the 🔐 Approved line (the bold form the other Tier 3 cards use: date, then the user's name) right after this table, only after the user's item-specific yes in chat, and commits it before dispatch; the session branches from that commit. This card has no such line yet, so it is not dispatchable.
+> - The 🔐 Approved line above records the user's item-specific yes in chat on 2026-11-13 ("Evet, T044 için onay veriyorum", said in the card-writing session). The lead commits it to main before dispatch; the session branches from that commit.
 > - The session is interactive and the user opens it, as for T041.
 > - It closes the part of spec §6 "Kalan risk" that K296 names: a card session rewriting the local tracking refs that the board trusts. The lead session has no `.delix/card`, so the lead's own `git remote set-head origin -a` (spec §6) keeps working.
 > - It is defence in depth, not a boundary: the rule is a check on the command's words (see Out of scope).
