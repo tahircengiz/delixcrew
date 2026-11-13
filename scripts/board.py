@@ -215,6 +215,19 @@ def _add_file(w, wt, rel):
         w["files"][rel] = text
 
 
+def _card_present(wt):
+    """K293: <wt>/.delix/card exists in any form (regular file, link incl. a dangling one, directory, FIFO, a file
+    that cannot be read). lstat follows no final link; only "not found" and "not a directory" count as absent, any
+    other error as present (call 5 then does not run: fail closed)."""
+    try:
+        os.lstat(os.path.join(wt, ".delix", "card"))
+    except (FileNotFoundError, NotADirectoryError):
+        return False
+    except (OSError, ValueError):
+        return True
+    return True
+
+
 def _add_lead_files(w, wt):
     """A Leads row's STATE.json, the spec it names and the card file of each open Tier 3 card (rules G)."""
     _add_file(w, wt, STATE_REL)
@@ -231,7 +244,7 @@ def git_raw(root):
     root = os.path.realpath(root)
     cfg = read_json(os.path.join(root, "docs", "delix", "delix.json"))
     default = cfg.get("default_branch") if isinstance(cfg, dict) else None
-    raw = {"default_branch": default if isinstance(default, str) and default else "main",
+    raw = {"default_branch": default if _ok(BRANCH_RE, default) else "main",
            "now": int(time.time()), "self": root, "source": root, "common_dir": None,
            "fetch_head_mtimes": {}, "trusted_state": None, "worktree_list": "", "for_each_ref": "", "worktrees": {}}
     common = _out(["git", "rev-parse", "--git-common-dir"], root)
@@ -264,12 +277,12 @@ def git_raw(root):
         p = b["path"]
         w = wts.setdefault(p, {"status": None, "state_diff_exit": None, "state_log_ct": None,
                                "state_mtime": None, "files": {}})
-        w["status"] = _out(["git", "status", "--porcelain"], p)
+        w["status"] = _out(["git", "--no-lazy-fetch", "status", "--porcelain"], p)
         _add_file(w, p, ".delix/card")
         _add_file(w, p, ".delix/report.md")
-        if _card_id(w) is None and not _state_dirty(w["status"]):
-            r = _git(["git", "diff", "--no-ext-diff", "--quiet", "origin/%s...HEAD" % raw["default_branch"], "--",
-                      STATE_REL], p, codes=(0, 1))
+        if not _card_present(p) and not _state_dirty(w["status"]):
+            r = _git(["git", "--no-lazy-fetch", "diff", "--no-ext-diff", "--quiet",
+                      "origin/%s...HEAD" % raw["default_branch"], "--", STATE_REL], p, codes=(0, 1))
             w["state_diff_exit"] = None if r is None else r[0]
     # the source STATE decides the roles (R4, R5c), so it is read even when the source is not a Leads row
     src = wts.setdefault(root, {"status": None, "state_diff_exit": None, "state_log_ct": None,
@@ -284,9 +297,9 @@ def git_raw(root):
         if _state_dirty(w["status"]):
             w["state_mtime"] = _mtime(os.path.join(p, STATE_REL))
         else:
-            # §4 call 6 (K277): runs no signature program from log.showSignature + gpg.program
-            w["state_log_ct"] = _num((_out(["git", "log", "-1", "--no-show-signature", "--format=%ct", "--",
-                                            STATE_REL], p) or "").strip())
+            # §4 call 6 (K277, K294): runs no signature program from log.showSignature + gpg.program, fetches nothing
+            w["state_log_ct"] = _num((_out(["git", "--no-lazy-fetch", "log", "-1", "--no-show-signature",
+                                            "--format=%ct", "--", STATE_REL], p) or "").strip())
     # §4 call 7 (R1, K262, K276, K277): the origin/HEAD STATE, the only one that may make a card ready to merge;
     # refs/replace objects do not change the blob it reads
     raw["trusted_state"] = _out(["git", "--no-lazy-fetch", "--no-replace-objects", "cat-file", "blob",
@@ -447,6 +460,15 @@ def _review(c):
     return r, last, (qa[-1] if qa else None), (sec[-1] if sec else None)
 
 
+def _ledger(c):
+    """K291 (R6): (opened_by, last_round) of one STATE card, as the Agents rows and the queue entries carry them."""
+    impl = _implementers(c)
+    n, last = _review(c)[:2]
+    return (impl[-1]["by"] if impl and isinstance(impl[-1].get("by"), str) else None,
+            ["%s r%d @%s %s · by %s" % (a["role"], n, _str(a.get("sha"))[:7] or "-", _str(a.get("verdict")) or "-",
+                                             _str(a.get("by")) or "-") for a in last])
+
+
 def _pr(v):
     """R7: a positive int, or a string matching ^#?[0-9]+$ → int; else None (`merge <sha>` → None)."""
     n = _int(v)
@@ -486,6 +508,7 @@ def _queue(s, files, refs, card_wt, tr=None, default=""):
         if not isinstance(c, dict):
             continue
         f = _facts(cid, c, refs, card_wt)
+        opened_by, last_round = _ledger(c)  # K291
         st = _str(c.get("status"))
         qa, sec = _review(c)[2:]
         sha = qa.get("sha") if qa else None
@@ -496,7 +519,8 @@ def _queue(s, files, refs, card_wt, tr=None, default=""):
         reasons = []
         if reviewed and same_tip and (tr is None or (cid, f["pr"], sha) in tr):
             reasons.append("ready to merge")
-            ready.append({"card": cid, "pr": f["pr"], "sha": sha})
+            ready.append({"card": cid, "pr": f["pr"], "sha": sha, "opened_by": opened_by,
+                          "last_round": list(last_round)})
         elif reviewed and same_tip:
             reasons.append("review not on origin/%s" % default)
         if st == "open" and f["tier"] == 3:
@@ -511,12 +535,14 @@ def _queue(s, files, refs, card_wt, tr=None, default=""):
             reasons.append("changed after review")
         if st == "in_review" and f["pr"] is not None and not _list(c.get("agents")):
             reasons.append("no review record")
-        waiting += [{"card": cid, "verification": None, "reason": r} for r in reasons]
+        waiting += [{"card": cid, "verification": None, "reason": r, "opened_by": opened_by,
+                     "last_round": list(last_round)} for r in reasons]
         if st == "accepted":
             done.append({"card": cid, "pr": f["pr"]})
     for v in _list(s.get("verifications")):
         if isinstance(v, dict) and _str(v.get("verdict")).startswith("FIX") and not _str(v.get("resolution")):
-            waiting.append({"card": None, "verification": v.get("name"), "reason": "verification FIX"})
+            waiting.append({"card": None, "verification": v.get("name"), "reason": "verification FIX",
+                            "opened_by": None, "last_round": []})
     return {"waiting": waiting, "ready": ready, "done": done}
 
 
@@ -571,16 +597,10 @@ def derive(raw):
             lands = "pushed: " + _short(f[2])
         else:
             lands = "local only"
-        impl = _implementers(c)
-        last_round = []
-        if cid and isinstance(src_cards.get(cid), dict):
-            n, last = _review(c)[:2]
-            last_round = ["%s r%d @%s %s · by %s" % (a["role"], n, _str(a.get("sha"))[:7] or "-",
-                                                      _str(a.get("verdict")) or "-", _str(a.get("by")) or "-")
-                          for a in last]
+        opened_by, last_round = _ledger(c)
         agents.append({"path": b["path"], "branch": b["branch"], "main": r["i"] == 0, "role": r["role"], "card": cid,
                        "upstream": r["upstream"], "uncommitted": r["uncommitted"], "lands": lands,
-                       "opened_by": impl[-1]["by"] if impl and isinstance(impl[-1].get("by"), str) else None,
+                       "opened_by": opened_by,
                        "last_round": last_round})
     rank = {"lead": 0, "implementer": 1}
     agents.sort(key=lambda a: (rank.get(a["role"].split(" ")[0], 2), a["path"]))
@@ -666,6 +686,9 @@ def git_sections(data):
     def item(x):  # a value inside a "- " list line: never 4 leading spaces, which open a code block
         return one_line(cell(x)).strip()
 
+    def ledger(x):  # K291; % formatting: no backslash inside an f-string expression on Python 3.9
+        return " · opened by %s · last round %s" % (item(x["opened_by"] or "—"), item("; ".join(x["last_round"]) or "—"))
+
     leads = data.get("leads") or []
     source = next((l["path"] for l in leads if l["source"]), data.get("project"))
     fetched = data.get("fetched_at")
@@ -689,11 +712,11 @@ def git_sections(data):
                    f"{cell('; '.join(a['last_round']) or '—')} |")
     queue = data.get("queue") or {}
     out += ["", "## Waiting on you"]
-    out += [f"- {item(x['card'])} · {item(x['reason'])}" if x["card"] is not None
+    out += [f"- {item(x['card'])} · {item(x['reason'])}" + ledger(x) if x["card"] is not None
             else f"- {item(x['verification'])} (verification) · {item(x['reason'])}"
             for x in queue.get("waiting") or []] or ["none"]
     out += ["", "## Ready to merge"]
-    out += [f"- {item(x['card'])} · PR #{item(x['pr'])} · reviewed {item(str(x['sha'])[:7])}"
+    out += [f"- {item(x['card'])} · PR #{item(x['pr'])} · reviewed {item(str(x['sha'])[:7])}" + ledger(x)
             for x in queue.get("ready") or []] or ["none"]
     out += ["", "## Git actions", "You run these with Desktop's Run button; the lead never runs them."]
     actions = data.get("actions") or []

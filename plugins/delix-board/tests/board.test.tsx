@@ -436,10 +436,10 @@ test('derive follows the T029 edge rules: no branch and no detached line, a null
   ])
   expect(d.queue).toEqual({
     waiting: [
-      { card: 'T001', verification: null, reason: 'changed after review' },
-      { card: 'T002', verification: null, reason: 'ready to merge' },
+      { card: 'T001', verification: null, reason: 'changed after review', opened_by: 'claude/x', last_round: ['qa r1 @- ACCEPT · by -'] },
+      { card: 'T002', verification: null, reason: 'ready to merge', opened_by: null, last_round: ['qa r1 @5555555 ACCEPT · by -'] },
     ],
-    ready: [{ card: 'T002', pr: 8, sha: sha('5') }],
+    ready: [{ card: 'T002', pr: 8, sha: sha('5'), opened_by: null, last_round: ['qa r1 @5555555 ACCEPT · by -'] }],
     done: [],
   })
   expect(d.actions).toEqual([
@@ -681,8 +681,8 @@ test('one look: at most 4 + 3N git calls, each with the K263 flags first; worktr
   for (const argv of argvs) expect(argv.slice(0, 4)).toEqual(K263)
   expect(look.filter(a => a.includes('cat-file'))).toEqual([[...K263, '--no-lazy-fetch', '--no-replace-objects', 'cat-file', 'blob', 'refs/remotes/origin/HEAD:docs/delix/STATE.json']])
   expect(look.some(a => a.includes('diff'))).toBe(true)
-  expect(look.filter(a => a.includes('diff')).every(a => a[4] === 'diff' && a[5] === '--no-ext-diff')).toBe(true)
-  expect(argvs.filter(a => a.includes('--no-lazy-fetch')).every(a => a.includes('cat-file'))).toBe(true)
+  expect(look.filter(a => a.includes('diff')).every(a => a[4] === '--no-lazy-fetch' && a[5] === 'diff' && a[6] === '--no-ext-diff')).toBe(true)
+  expect(argvs.filter(a => a.includes('--no-lazy-fetch')).every(a => a[4] === '--no-lazy-fetch' && ['status', 'diff', 'log', 'cat-file'].some(c => a.includes(c)))).toBe(true)
   expect(look.filter(a => a.includes('worktree'))).toEqual([[...K263, 'worktree', 'list', '--porcelain', '-z']])
 })
 
@@ -743,7 +743,7 @@ test('one look: every log call is `log -1 --no-show-signature --format=%ct -- do
   const logs = argvs.filter(a => a.includes('log'))
   expect(logs.length).toBeGreaterThan(0)
   expect(logs.every(a => a.includes('--no-show-signature'))).toBe(true)
-  for (const argv of logs) expect(argv).toEqual([...K263, 'log', '-1', '--no-show-signature', '--format=%ct', '--', 'docs/delix/STATE.json'])
+  for (const argv of logs) expect(argv).toEqual([...K263, '--no-lazy-fetch', 'log', '-1', '--no-show-signature', '--format=%ct', '--', 'docs/delix/STATE.json'])
 })
 
 test('a spec under a directory that is a link is not read: every path part is checked (S1, K277)', async ($, on) => {
@@ -800,8 +800,147 @@ test('a linked root STATE, a card over 1 MiB and a test result that is not a reg
   gitWorld(recorded, raw)
   await $.session.start({ cwd: raw.self, surface: 'desktop', isInteractive: true })
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect(await ui.find({ type: 'Button', key: 'card-T037' })).toBeDefined()
+  expect(await ui.find({ type: 'Button', key: 'card-T028' })).toBeDefined()
   await ui.unmount()
   expect(reads.length).toBeGreaterThan(0)
   expect(reads.filter(p => p === state || p === card || p === result)).toEqual([])
+})
+
+// T043: queue entries name who opened a card and its last round (K291), dim captions (K290), raw-input rules (K293),
+// `--no-lazy-fetch` on calls 4-6 (K294), and the T038 notes (R-T a, b, c).
+const W = '/r/.claude/worktrees'
+
+type Over = Record<string, { exists?: unknown; stat?: unknown; list?: unknown; read?: unknown }>
+
+/** `on` for a world whose handlers stay as they are: records each process.run as `{ argv, cwd }`; fs.exists, fs.stat, fs.list and fs.read of a path in `over` answer from it first (`'throw'` throws). */
+function rawSpy(on: On, over: Over = {}) {
+  const runs: { argv: string[]; cwd: string }[] = []
+  type Handler = (x: unknown, e: { argv?: string[]; path?: string; init?: { cwd?: string } }, ...rest: unknown[]) => unknown
+  const register = on as unknown as (name: string, handler: Handler) => unknown
+  const kinds: Record<string, 'exists' | 'stat' | 'list' | 'read'> = { 'fs.exists': 'exists', 'fs.stat': 'stat', 'fs.list': 'list', 'fs.read': 'read' }
+  const wrapped = (name: string, handler: Handler) =>
+    register(name, (x, e, ...rest) => {
+      if (name === 'process.run') runs.push({ argv: [...(e.argv ?? [])], cwd: e.init?.cwd ?? '' })
+      const kind = kinds[name]
+      const answer = kind === undefined ? undefined : over[e.path ?? '']?.[kind]
+      if (answer === 'throw') throw new Error(`ENOENT: ${e.path ?? ''}`)
+      if (answer !== undefined) return { value: answer }
+      return handler(x, e, ...rest)
+    })
+  return { on: wrapped as unknown as On, runs }
+}
+
+const treeFiles = (raw: RawWorld, name: string): Record<string, string> => {
+  const tree = raw.worktrees[`${W}/${name}`]
+  if (tree === undefined) throw new Error(`no worktree ${name}`)
+  return tree.files
+}
+
+for (const [value, want] of [['-x', 'main'], ['a b', 'main'], ['a//b', 'main'], ['a/', 'main'], ['a/-b', 'main'], ['release/1.2', 'release/1.2']] as const) {
+  test(`default_branch ${JSON.stringify(value)} compares with origin/${want}; call 5 skips every .delix/card form; calls 4-6 carry --no-lazy-fetch (K293, K294)`, async ($, on) => {
+    const raw = JSON.parse(JSON.stringify(PARITY.raw)) as RawWorld
+    treeFiles(raw, 'lead-c')['docs/delix/delix.json'] = JSON.stringify({ default_branch: value })
+    treeFiles(raw, 'fresh')['.delix/card'] = 'no card id\n'
+    treeFiles(raw, 'old')['.delix/card'] = 'docs/delix/tasks/T001-x.md\n'
+    treeFiles(raw, 'flag-f')['.delix/card/x'] = ''
+    treeFiles(raw, 'x_fix')['.delix/card'] = 'docs/delix/tasks/T001-x.md\n'
+    const { on: recorded, runs } = rawSpy(on, {
+      [`${W}/old/.delix/card`]: { stat: { kind: 'file', size: 27, mtimeMs: 1, isLink: true } },
+      [`${W}/x_fix/.delix/card`]: { read: 'throw' },
+      [`${W}/det/.delix`]: { list: [{ name: 'card', kind: 'file', size: 0, mtimeMs: 1, isLink: true }] },
+      [`${W}/det/.delix/card`]: { exists: false, stat: 'throw', read: 'throw' },
+    })
+    const { now } = gitWorld(recorded, raw)
+    await $.session.start({ cwd: raw.self, surface: 'desktop', isInteractive: true })
+    const before = runs.length
+    await now.advance(20_100)
+    const look = runs.slice(before)
+    const diffs = look.filter(r => r.argv.includes('diff'))
+    expect(diffs.map(r => r.cwd).sort()).toEqual(['gone', 'lead-b', 'lead-c', 'mirror', 'semi'].map(n => `${W}/${n}`))
+    for (const r of diffs) expect(r.argv).toEqual([...K263, '--no-lazy-fetch', 'diff', '--no-ext-diff', '--quiet', `origin/${want}...HEAD`, '--', 'docs/delix/STATE.json'])
+    const status = look.filter(r => r.argv.includes('status'))
+    expect(status).toHaveLength(16)
+    for (const r of status) expect(r.argv).toEqual([...K263, '--no-lazy-fetch', 'status', '--porcelain'])
+    const logs = look.filter(r => r.argv.includes('log'))
+    expect(logs.length).toBeGreaterThan(0)
+    for (const r of logs) expect(r.argv).toEqual([...K263, '--no-lazy-fetch', 'log', '-1', '--no-show-signature', '--format=%ct', '--', 'docs/delix/STATE.json'])
+    expect(runs.filter(r => ['rev-parse', 'worktree', 'for-each-ref'].some(c => r.argv.includes(c)) && r.argv.includes('--no-lazy-fetch'))).toEqual([])
+  })
+}
+
+test("a previous that names delix.json is parsed as a STATE, not handed defaultBranch's cached value (R-T a)", async ($, on) => {
+  const state = JSON.parse(FILES[`${ROOT}/docs/delix/STATE.json`] ?? '{}') as Record<string, unknown>
+  world(on, {
+    ...FILES,
+    [`${ROOT}/docs/delix/STATE.json`]: JSON.stringify({ ...state, previous: 'docs/delix/delix.json' }),
+    [`${ROOT}/docs/delix/delix.json`]: '{"default_branch":"main"}',
+  })
+  await $.session.start({ cwd: ROOT, surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(await ui.find({ type: 'Button', key: 'card-T002' })).toBeDefined()
+  await ui.unmount()
+})
+
+test('a STATE that is a link is not a source candidate (R-T b)', async ($, on) => {
+  const { on: linked } = spy(on, (path, value) => (path === `${ORCH}/docs/delix/STATE.json` ? { ...value, isLink: true } : value))
+  world(linked, LAYOUT, { top: ORCH, common: `${MAIN}/.git`, trees: LAYOUT_TREES, commits: LAYOUT_COMMITS })
+  await $.session.start({ cwd: ORCH, surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(await ui.find({ type: 'Button', key: 'card-T001' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /kaynak: orch/ })).toBeUndefined()
+  await ui.unmount()
+})
+
+test('the 1 MiB limit counts UTF-8 bytes, not UTF-16 units (R-T c)', async ($, on) => {
+  expect(dataHooks.utf8Bytes('a')).toBe(1)
+  expect(dataHooks.utf8Bytes('é')).toBe(2)
+  expect(dataHooks.utf8Bytes('€')).toBe(3)
+  expect(dataHooks.utf8Bytes('\u{1F510}')).toBe(4)
+  expect(dataHooks.utf8Bytes('\ud800')).toBe(3)
+  expect(dataHooks.utf8Bytes('é'.repeat(524288))).toBe(1048576)
+  const raw = JSON.parse(JSON.stringify(PARITY.raw)) as RawWorld
+  const lead = raw.worktrees[`${W}/lead-c`]
+  if (lead) {
+    lead.state_log_ct = 1762299999
+    lead.files['docs/delix/specs/C-board-visibility.md'] = `# Wide spec title\n${'é'.repeat(600000)}\n`
+  }
+  gitWorld(on, raw)
+  await $.session.start({ cwd: raw.self, surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(await ui.find({ type: 'Text', text: /Wide spec title/ })).toBeUndefined()
+  expect(await ui.find({ type: 'Text', text: / · claude\/lead-c · - · açık 7/ })).toBeDefined()
+  await ui.unmount()
+})
+
+test('dim captions: when each lead STATE changed, and who opened a card with its last round under Ajanlar and the queue (K290, K291)', async ($, on) => {
+  const raw = JSON.parse(JSON.stringify(PARITY.raw)) as RawWorld
+  const lead = raw.worktrees[`${W}/lead-c`]
+  if (lead) lead.state_log_ct = 1762299999
+  gitWorld(on, raw)
+  await $.session.start({ cwd: raw.self, surface: 'desktop', isInteractive: true })
+  const ledger = /açan claude\/lead-c · son tur qa r2 @d2d2d2d ACCEPT · by claude\/lead-c; security r2 @d2d2d2d CLEAN · by claude\/lead-c/
+  for (const surface of SURFACES) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    expect(await ui.find({ type: 'Text', text: /STATE değişti: 2025-11-04 23:46 UTC/ })).toBeDefined()
+    expect(await ui.findAll({ type: 'Text', text: ledger })).toHaveLength(3)
+    expect(await ui.find({ type: 'Text', text: /açan — · son tur —/ })).toBeDefined()
+    await ui.unmount()
+  }
+})
+
+test('a ready card with no worktree shows who opened it and both last-round records in the queue (REQ-2, K291)', async ($, on) => {
+  const raw = JSON.parse(JSON.stringify(PARITY.raw).replace(/ACCEPT_WITH_NOTES/g, 'ACCEPT')) as RawWorld
+  const leadB = raw.worktrees[`${W}/lead-b`]
+  if (leadB) leadB.state_log_ct = 1762299999
+  const lines = ['qa r1 @2828282 ACCEPT · by claude/lead-b', 'security r1 @2828282 \u{1F510} HUMAN_APPROVAL · by claude/lead-b']
+  expect(derive({ ...(raw as unknown as Raw), source: `${W}/lead-b` }).queue.ready).toEqual([
+    { card: 'T028', pr: 58, sha: '28'.repeat(20), opened_by: 'claude/lead-b', last_round: lines },
+  ])
+  gitWorld(on, raw)
+  await $.session.start({ cwd: raw.self, surface: 'desktop', isInteractive: true })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(await ui.find({ type: 'Text', text: /kaynak: lead-b/ })).toBeDefined()
+  const ledger = /açan claude\/lead-b · son tur qa r1 @2828282 ACCEPT · by claude\/lead-b; security r1 @2828282 ◈ HUMAN_APPROVAL · by claude\/lead-b/
+  expect(await ui.findAll({ type: 'Text', text: ledger })).toHaveLength(2)
+  await ui.unmount()
 })

@@ -409,7 +409,7 @@ export type Derived = {
 const STATE_PATH = 'docs/delix/STATE.json'
 const WEEK = 604800
 const LOCK = '\u{1F510}'
-const BRANCH_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*(\/[A-Za-z0-9][A-Za-z0-9._-]*)*$/
+export const BRANCH_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*(\/[A-Za-z0-9][A-Za-z0-9._-]*)*$/
 const PATH_RE = /^\/[A-Za-z0-9_./-]+$/
 const SHA_RE = /^[0-9a-f]{40}$/
 const ROLE_ORDER = ['lead', 'implementer', 'other']
@@ -577,6 +577,15 @@ function deriveUnsafe(raw: Raw): Derived {
     return rounds.length === 0 ? null : Math.max(...rounds)
   }
 
+  // R6 (K291): who opened a card and the lines of its latest qa/security round, for the Agents rows and the queue
+  const roundLine = (r: Json) =>
+    `${textOf(r.role) ?? '-'} r${String(r.round)} @${filled(r.sha)?.slice(0, 7) ?? '-'} ${filled(r.verdict) ?? '-'} · by ${filled(r.by) ?? '-'}`
+  const openedBy = (card: Json): string | null => textOf(lastOf(records(card), 'implementer')?.by)
+  const roundLines = (card: Json): string[] => {
+    const r = lastRound(card)
+    return r === null ? [] : records(card).filter(x => (x.role === 'qa' || x.role === 'security') && x.round === r).map(roundLine)
+  }
+
   // R8, R8' (K262): `trusted` = TR, the (card, pr, sha) R8 marks Ready on T with no files and the same refs; null while TR is built
   const readyKey = (card: string, pr: number | null, sha: string | null) => `${card}\t${String(pr)}\t${String(sha)}`
   const queueOf = (state: Json | null, statePath: string | null, trusted: Set<string> | null): Queue => {
@@ -615,15 +624,17 @@ function deriveUnsafe(raw: Raw): Derived {
       if (status === 'escalated') reasons.push('escalated')
       if (isReviewed && !meetsReady) reasons.push('changed after review')
       if (status === 'in_review' && pr !== null && (!Array.isArray(card.agents) || card.agents.length === 0)) reasons.push('no review record')
-      for (const reason of reasons) q.waiting.push({ card: id, verification: null, reason })
+      const by = openedBy(card)
+      const rounds = roundLines(card)
+      for (const reason of reasons) q.waiting.push({ card: id, verification: null, reason, opened_by: by, last_round: [...rounds] })
       if (reasons.length > 0) q.reasons.set(id, reasons)
-      if (isReady && pr !== null) q.ready.push({ card: id, pr, sha: qaSha })
+      if (isReady && pr !== null) q.ready.push({ card: id, pr, sha: qaSha, opened_by: by, last_round: [...rounds] })
       if (status === 'accepted') q.done.push({ card: id, pr })
     }
     const verifications = state !== null && Array.isArray(state.verifications) ? state.verifications.filter(isObject) : []
     for (const v of verifications) {
       if (typeof v.verdict === 'string' && v.verdict.startsWith('FIX') && filled(v.resolution) === null) {
-        q.waiting.push({ card: null, verification: textOf(v.name), reason: 'verification FIX' })
+        q.waiting.push({ card: null, verification: textOf(v.name), reason: 'verification FIX', opened_by: null, last_round: [] })
       }
     }
     return q
@@ -643,9 +654,6 @@ function deriveUnsafe(raw: Raw): Derived {
   const trustedCards = cardsOf(trustedState)
   const trustedReady = new Set(queueOf(trustedState, null, null).ready.map(r => readyKey(r.card, r.pr, r.sha)))
 
-  // R6
-  const roundLine = (r: Json) =>
-    `${textOf(r.role) ?? '-'} r${String(r.round)} @${filled(r.sha)?.slice(0, 7) ?? '-'} ${filled(r.verdict) ?? '-'} · by ${filled(r.by) ?? '-'}`
   const agents: AgentRow[] = trees.map(t => {
     const role = roleOf(t)
     const card = cardOf(t.path)
@@ -653,7 +661,6 @@ function deriveUnsafe(raw: Raw): Derived {
     const source = card === null ? null : sourceCards[card]
     const sourceCard = isObject(source) ? source : null
     const pr = card === null ? null : prOf(card, sourceCard ?? {})
-    const r = sourceCard === null ? null : lastRound(sourceCard)
     return {
       path: t.path,
       branch: t.branch,
@@ -663,13 +670,8 @@ function deriveUnsafe(raw: Raw): Derived {
       upstream: upstreamText(t),
       uncommitted: lines === null ? '?' : lines.length,
       lands: pr !== null ? `PR #${pr} → ${def}` : hasUpstream(t) ? `pushed: ${shortUpstream(t)}` : 'local only',
-      opened_by: sourceCard === null ? null : textOf(lastOf(records(sourceCard), 'implementer')?.by),
-      last_round:
-        sourceCard === null || r === null
-          ? []
-          : records(sourceCard)
-              .filter(x => (x.role === 'qa' || x.role === 'security') && x.round === r)
-              .map(roundLine),
+      opened_by: sourceCard === null ? null : openedBy(sourceCard),
+      last_round: sourceCard === null ? [] : roundLines(sourceCard),
     }
   })
   const rank = (role: string) => ROLE_ORDER.indexOf(role.split(' ')[0] ?? '')

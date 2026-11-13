@@ -243,8 +243,8 @@ a = json.load(open(os.path.join(H, "out1a.json"), encoding="utf-8"))
 b = json.load(open(os.path.join(H, "out1b.json"), encoding="utf-8"))
 assert a["queue"]["ready"] == [], a["queue"]
 assert not [x for x in a["actions"] if x["kind"] == "merge"], a["actions"]
-assert {"card": "T001", "verification": None, "reason": "review not on origin/main"} in a["queue"]["waiting"], a["queue"]
-assert b["queue"]["ready"] == [{"card": "T001", "pr": 7, "sha": tip}], b["queue"]
+assert {"card": "T001", "verification": None, "reason": "review not on origin/main", "opened_by": "claude/f", "last_round": ["qa r1 @%s ACCEPT · by claude/f" % tip[:7]]} in a["queue"]["waiting"], a["queue"]
+assert b["queue"]["ready"] == [{"card": "T001", "pr": 7, "sha": tip, "opened_by": "claude/f", "last_round": ["qa r1 @%s ACCEPT · by claude/f" % tip[:7]]}], b["queue"]
 assert "gh pr merge 7 --squash --match-head-commit %s" % tip in [x["command"] for x in b["actions"]], b["actions"]
 PYS
 # T037 B) K277 R8'': without refs/remotes/origin/HEAD, a branch named refs/remotes/origin/HEAD is not trusted
@@ -257,7 +257,7 @@ import json, sys
 d = json.load(open(sys.argv[1], encoding="utf-8"))
 assert d["queue"]["ready"] == [], d["queue"]
 assert not [x for x in d["actions"] if x["kind"] == "merge"], d["actions"]
-assert {"card": "T001", "verification": None, "reason": "review not on origin/main"} in d["queue"]["waiting"], d["queue"]
+assert [x for x in d["queue"]["waiting"] if (x["card"], x["verification"], x["reason"], x["opened_by"]) == ("T001", None, "review not on origin/main", "claude/f")], d["queue"]
 PYS
 # T034 5) the spec is read only as a regular file inside the worktree and up to 1 MiB; a FIFO card file is never opened
 t5(){ python3 - "$S" "$H/f" <<'PYS'
@@ -312,7 +312,7 @@ raw = copy.deepcopy(f["raw"]); raw["trusted_state"] = '{"cards":{}}'
 got = board.derive(raw)
 assert got["actions"] == f["expected"]["actions"][0:6], json.dumps(got["actions"], ensure_ascii=False)
 assert got["queue"]["ready"] == [], got["queue"]
-want = [dict(x, reason="review not on origin/main") if x == {"card": "T029", "verification": None, "reason": "ready to merge"} else x
+want = [dict(x, reason="review not on origin/main") if (x["card"], x["reason"]) == ("T029", "ready to merge") else x
         for x in f["expected"]["queue"]["waiting"]]
 assert got["queue"]["waiting"] == want, got["queue"]["waiting"]
 ready = {l["path"]: l["ready"] for l in got["leads"]}
@@ -330,7 +330,7 @@ raw["trusted_state"] = json.dumps(t)
 d = board.derive(raw)
 assert d["queue"]["ready"] == [], d["queue"]["ready"]
 assert not [a for a in d["actions"] if a["kind"] == "merge"], d["actions"]
-assert {"card": "T029", "verification": None, "reason": "review not on origin/main"} in d["queue"]["waiting"], d["queue"]["waiting"]
+assert {"card": "T029", "verification": None, "reason": "review not on origin/main", "opened_by": "claude/lead-c", "last_round": ["qa r2 @d2d2d2d ACCEPT · by claude/lead-c", "security r2 @d2d2d2d CLEAN · by claude/lead-c"]} in d["queue"]["waiting"], d["queue"]["waiting"]
 PYS
 
 # T037 D1, D2) pure R8'': call 3 without refs/remotes/origin/HEAD (line removed, or only a branch of that name) trusts nothing
@@ -351,7 +351,7 @@ raw["for_each_ref"] = "\n".join(lines)
 got = board.derive(raw)
 assert got["actions"] == f["expected"]["actions"][0:6], json.dumps(got["actions"], ensure_ascii=False)
 assert got["queue"]["ready"] == [], got["queue"]
-want = [dict(x, reason="review not on origin/main") if x == {"card": "T029", "verification": None, "reason": "ready to merge"} else x
+want = [dict(x, reason="review not on origin/main") if (x["card"], x["reason"]) == ("T029", "ready to merge") else x
         for x in f["expected"]["queue"]["waiting"]]
 assert got["queue"]["waiting"] == want, got["queue"]["waiting"]
 ready = {l["path"]: l["ready"] for l in got["leads"]}
@@ -396,6 +396,84 @@ try:
     assert len(os.listdir("/dev/fd")) == fds, "an fd was left open"
 finally:
     shutil.rmtree(d)
+PYS
+
+# T043 B1) K293/K294 raw input: default_branch takes the REQ-4 pattern or main; call 5 skips every .delix/card form; calls 4-6 carry --no-lazy-fetch
+R="$(mktemp -d)"; R="$(cd "$R" && pwd -P)"
+git init -q -b main "$R/r"
+mkdir -p "$R/r/docs/delix"; printf '{"spec":"docs/delix/SPEC.md","cards":{}}\n' > "$R/r/docs/delix/STATE.json"
+gc -C "$R/r" add -A && gc -C "$R/r" commit -q -m init
+echo ".delix/" >> "$R/r/.git/info/exclude"
+for n in plain idless link dangling dir fifo unreadable; do git -C "$R/r" worktree add -q -b "w-$n" "$R/$n" >/dev/null 2>&1; done
+for n in idless link dangling dir fifo unreadable; do mkdir -p "$R/$n/.delix"; done
+printf 'no card id\n' > "$R/idless/.delix/card"
+printf 'docs/delix/tasks/T001-x.md\n' > "$R/target"; ln -s "$R/target" "$R/link/.delix/card"
+ln -s "$R/missing" "$R/dangling/.delix/card"
+mkdir "$R/dir/.delix/card"
+mkfifo "$R/fifo/.delix/card"
+printf 'x\n' > "$R/unreadable/.delix/card"; chmod 000 "$R/unreadable/.delix/card"
+python3 - "$S" "$R" <<'PYS' && ok "T043 K293/K294: default_branch pattern, call 5 only without .delix/card in any form, --no-lazy-fetch on calls 4-6" || bad "T043 K293/K294: raw input rules"
+import json, os, signal, sys
+sys.path.insert(0, sys.argv[1])
+import board
+signal.alarm(60)
+R = sys.argv[2]
+K263 = ["git", "--no-optional-locks", "-c", "core.fsmonitor=false"]
+STATE = ["--", "docs/delix/STATE.json"]
+calls = []
+real = board.subprocess.run
+def run(argv, *a, **kw):
+    calls.append((list(argv), kw.get("cwd")))
+    return real(argv, *a, **kw)
+board.subprocess.run = run
+for value, want in (("-x", "main"), ("a b", "main"), ("a//b", "main"), ("a/", "main"), ("", "main"), (7, "main"),
+                    ("trunk", "trunk"), ("release/1.2", "release/1.2")):
+    with open(os.path.join(R, "r", "docs", "delix", "delix.json"), "w") as f:
+        json.dump({"default_branch": value}, f)
+    del calls[:]
+    raw = board.git_raw(os.path.join(R, "r"))
+    assert raw["default_branch"] == want, (value, raw["default_branch"])
+    diffs = [(a, c) for a, c in calls if "diff" in a]
+    assert sorted(c for a, c in diffs) == [os.path.join(R, "plain"), os.path.join(R, "r")], (value, diffs)
+    status = [a for a, c in calls if "status" in a]
+    assert len(status) == 8 and all(a == K263 + ["--no-lazy-fetch", "status", "--porcelain"] for a in status), (value, status)
+    want_diff = K263 + ["--no-lazy-fetch", "diff", "--no-ext-diff", "--quiet", "origin/%s...HEAD" % want] + STATE
+    assert all(a == want_diff for a, c in diffs), (value, diffs)
+    logs = [a for a, c in calls if "log" in a]
+    want_log = K263 + ["--no-lazy-fetch", "log", "-1", "--no-show-signature", "--format=%ct"] + STATE
+    assert logs and all(a == want_log for a in logs), (value, logs)
+    assert not [a for a, c in calls if {"rev-parse", "worktree", "for-each-ref"} & set(a) and "--no-lazy-fetch" in a], calls
+PYS
+chmod 600 "$R/unreadable/.delix/card"; rm -rf "$R"
+
+# T043 B2) REQ-2, K291: a ready card with no worktree carries opened_by and its last round in the queue and the Markdown
+python3 - "$S" "$J" <<'PYS' && ok "T043 REQ-2: a worktree-less ready card shows opened_by and both last-round records" || bad "T043 REQ-2: worktree-less ready card"
+import json, sys
+sys.path.insert(0, sys.argv[1])
+import board
+f = json.load(open(sys.argv[2], encoding="utf-8"))
+raw = json.loads(json.dumps(f["raw"]).replace("ACCEPT_WITH_NOTES", "ACCEPT"))
+raw["source"] = "/r/.claude/worktrees/lead-b"
+lines = ["qa r1 @2828282 ACCEPT · by claude/lead-b", "security r1 @2828282 \U0001F510 HUMAN_APPROVAL · by claude/lead-b"]
+d = board.derive(raw)
+assert d["queue"]["ready"] == [{"card": "T028", "pr": 58, "sha": "28" * 20, "opened_by": "claude/lead-b", "last_round": lines}], d["queue"]
+assert {"card": "T028", "verification": None, "reason": "ready to merge", "opened_by": "claude/lead-b", "last_round": lines} in d["queue"]["waiting"], d["queue"]
+md = board.git_sections(dict(d, project="/r"))
+assert "- T028 · PR #58 · reviewed 2828282 · opened by claude/lead-b · last round " + "; ".join(lines) in md, md
+assert "- T028 · ready to merge · opened by claude/lead-b · last round " + "; ".join(lines) in md, md
+PYS
+
+# T043 B3) K291 Markdown from the fixture as is: queue lines carry opened by and last round; a verification line does not
+python3 - "$S" "$J" <<'PYS' && ok "T043 K291: Waiting on you and Ready to merge lines carry opened by and last round" || bad "T043 K291: queue Markdown lines"
+import json, sys
+sys.path.insert(0, sys.argv[1])
+import board
+f = json.load(open(sys.argv[2], encoding="utf-8"))
+md = board.git_sections(dict(board.derive(f["raw"]), project="/r"))
+tail = " · opened by claude/lead-c · last round qa r2 @d2d2d2d ACCEPT · by claude/lead-c; security r2 @d2d2d2d CLEAN · by claude/lead-c"
+for line in ("- T029 · ready to merge" + tail, "- T029 · PR #60 · reviewed d2d2d2d" + tail,
+             "- T036 · no review record · opened by — · last round —", "- v-fix (verification) · verification FIX"):
+    assert line in md, (line, md)
 PYS
 
 cd /; rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
