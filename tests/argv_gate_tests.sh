@@ -68,7 +68,7 @@ deny "29 substitution in a redirection target"    "$W" "echo hi > \"\$($G -c 'a 
 deny "30 backticks in double quotes"              "$W" "echo \"\`$G -c 'a b' $U x y\`\""              "$REF_DENY"
 deny "31 heredoc body, ref update"                "$W" "bash <<'EOF'${NL}$G -c \"a b\" $U x y${NL}EOF" "$REF_DENY"
 # R-W3: a quote that is never closed (deny), and what must pass (allow)
-deny "32 comment with a quote, then a command"    "$W" "echo x # it's${NL}$G -c \"a b\" $P origin HEAD:main" "$QUOTE_DENY"
+deny "32 comment with a quote, then a command"    "$W" "echo x # it's${NL}$G -c \"a b\" $P origin HEAD:main" "$PUSH_DENY"
 deny "33 heredoc body with a quote, then $G"      "$W" "bash <<'EOF'${NL}echo don't${NL}$G -c \"a b\" $U x y${NL}EOF" "$QUOTE_DENY"
 deny "34 quote, then $G on the line (known false positive)" "$W" "echo don't; $G status"              "$QUOTE_DENY"
 allow "35 quote with no $G word after it"         "$W" "echo don't >> notes.txt"
@@ -127,14 +127,33 @@ allow "67 no card: quote, then $G"                "$L" "echo don't; $G status"
 $G -C "$W" config alias.lz "$R${NL}$UR origin /tmp/x"
 deny "68 alias with a newline between $R and $UR"   "$W" "$G lz"                                       "$REF_DENY"
 $G -C "$W" config --unset alias.lz
-deny "69 comment quote, then a quoted command word" "$W" "echo x # it's${NL}g\"\"it -c \"user.name=A B\" $U x y" "$QUOTE_DENY"
-deny "70 comment quote, then an escaped command word" "$W" "echo x # it's${NL}g\\it -c \"user.name=A B\" $U x y" "$QUOTE_DENY"
-deny "71 comment quote, then a command word glued to >" "$W" "echo x # it's${NL}$G>f -c \"user.name=A B\" $P origin HEAD:main" "$QUOTE_DENY"
+deny "69 comment quote, then a quoted command word" "$W" "echo x # it's${NL}g\"\"it -c \"user.name=A B\" $U x y" "$REF_DENY"
+deny "70 comment quote, then an escaped command word" "$W" "echo x # it's${NL}g\\it -c \"user.name=A B\" $U x y" "$REF_DENY"
+deny "71 comment quote, then a command word glued to >" "$W" "echo x # it's${NL}$G>f -c \"user.name=A B\" $P origin HEAD:main" "$PUSH_DENY"
 deny "72 vertical tab in a -c value, ref update"    "$W" "$G -c user.name=A${VT}B $U x y"              "$REF_DENY"
 deny "73 carriage return in a -c value, send to main" "$W" "$G -c user.name=A${CR}B $P origin HEAD:main" "$PUSH_DENY"
 deny "74 no-break space in a -c value, ref update"  "$W" "$G -c user.name=A${NB}B $U x y"              "$REF_DENY"
 deny "75 form feed in a -c value, $R url"           "$W" "$G -c user.name=A${FF}B $R $UR origin /tmp/x" "$REF_DENY"
 allow "76 vertical tab in a -c value, status"       "$W" "$G -c user.name=A${VT}B status"
+
+# Review round 2 (T047): `{` `}` inside a word, comments, a backslash-newline after a quote that is never closed
+deny "77 -c value with {, send to main"            "$W" "$G -c x.y={b $P origin HEAD:main"            "$PUSH_DENY"
+deny "78 -c value with }, ref update"              "$W" "$G -c x.y=} $U x y"                          "$REF_DENY"
+deny "79 { } group around a -c value with {"       "$W" "{ $G -c x.y={b $P origin HEAD:main; }"       "$PUSH_DENY"
+deny "80 comment quote, then a single-quoted value" "$W" "echo x # it's${NL}$G -c 'user.name=A B' $U x y" "$REF_DENY"
+deny "81 comment line with a quote, then a send"   "$W" "# don't do this${NL}$G -c 'user.name=A B' $P origin HEAD:main" "$PUSH_DENY"
+deny "82 comment quote, then g'i't"                "$W" "echo x # it's${NL}g'i't -c \"user.name=A B\" $U x y" "$REF_DENY"
+deny "83 sh -c: comment quote, then a send"         "$W" "sh -c \"echo x # it's${NL}$G -c 'user.name=A B' $P origin HEAD:main\"" "$PUSH_DENY"
+deny "84 comment quote, then gi backslash-newline t" "$W" "echo x # it's${NL}gi\\${NL}t -c \"user.name=A B\" $U x y" "$REF_DENY"
+deny "85 heredoc quote, then gi backslash-newline t" "$W" "cat <<'EOF'${NL}don't${NL}EOF${NL}gi\\${NL}t -c \"user.name=A B\" $U x y" "$QUOTE_DENY"
+deny "86 comment inside backticks, then a value"   "$W" "\`#x\`$G -c 'user.name=A B' $U x y"          "$REF_DENY"
+deny "87 # after a quote is a word character"      "$W" "$G -c 'x.y=a b'#c $U x y"                    "$REF_DENY"
+deny "88 # after an escaped blank is a word character" "$W" "$G -c x.y=a\\ #b $U x y"                  "$REF_DENY"
+allow "89 comment quote, then status"              "$W" "echo x # it's${NL}$G status"
+allow "90 { } group around status"                 "$W" "{ $G status; }"
+allow "91 log --format with braces"                "$W" "$G log -1 --format='{%H}'"
+allow "92 -c value with {, status"                 "$W" "$G -c x.y={b status"
+allow "93 sh -c: comment quote, then status"        "$W" "sh -c \"echo x # it's${NL}$G status\""
 
 # Growth (repo hook rule): the least of 3 runs per size; t(40000) < 3 s and t(40000)/t(5000) < 20
 python3 - "$S/bash_gate.py" "$W" "$G" <<'PYT' || FAIL=1
@@ -145,7 +164,9 @@ cases = [("comma values", lambda k: (g + " -c a,b status; ") * k),
          ("sh -c strings", lambda k: ("sh -c \"" + g + " -c 'a b' status\"; ") * k),
          ("backslash-newlines", lambda k: g + " " + ("\\\n" * k) + " status"),
          ("redirections", lambda k: (g + " status 2>&1; ") * k),
-         ("one quote never closed", lambda k: "'" + (g + " status; ") * k)]
+         ("one quote never closed", lambda k: "'" + (g + " status; ") * k),
+         ("comments with a quote", lambda k: ("echo x # it's\n" * k) + g + " status"),
+         ("braces in values", lambda k: (g + " -c x.y={b status; ") * k)]
 bad = 0
 for name, make in cases:
     t = {}

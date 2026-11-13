@@ -149,11 +149,12 @@ PUSH_PEERS = {"add", "commit", "status", "diff", "log", "show"}  # R-P3b: git co
 CONFIG_READS = {"--get", "--get-all", "--get-regexp", "--get-urlmatch", "--list", "-l", "get", "list"}
 
 
-_MARKS = re.compile(r"['\"\\,\[\]<>]|[^\S \t\n]")  # R-W1: where the quote-blind view and bash's argv can differ
+_MARKS = re.compile(r"['\"\\,\[\]<>{}]|[^\S \t\n]")  # R-W1: where the quote-blind view and bash's argv can differ
 _SPLIT = re.compile(r"[\s;&|(){}`'\"\\,\[\]<>]+")
-_TOK = re.compile(r"(?P<sp>[ \t]+)|(?P<op>&>>?|[<>]+(?:&-?|\|)?)|(?P<sep>[;&|(){}\n`]+)|\\(?P<esc>.)|(?P<end>\\)"
-                  r"|'(?P<sq>[^']*)'|\"(?P<dq>(?:[^\"\\]|\\.)*)\"|(?P<run>[^ \t;&|(){}\n`'\"\\<>]+)"
-                  r"|(?P<bad>['\"])", re.S)
+_TOK = re.compile(r"(?P<sp>[ \t]+)|(?P<op>&>>?|[<>]+(?:&-?|\|)?)|(?P<sep>[;&|()\n`]+)|\\(?P<esc>.)|(?P<end>\\)"
+                  r"|'(?P<sq>[^']*)'|\"(?P<dq>(?:[^\"\\]|\\.)*)\"|(?P<run>[^ \t;&|()\n`'\"\\<>#][^ \t;&|()\n`'\"\\<>]*)"
+                  r"|(?P<cm>#)|(?P<bad>['\"])", re.S)
+_CMEND = re.compile(r"[\n`]")  # R-W1: a comment ends at a newline, or at the backtick that closes `...`
 _DQ = re.compile(r"\\([\\\"$`]|\n)")  # inside double quotes a backslash escapes only these
 _CODE = re.compile(r"[ \t;&|(){}\n\r`'\"\\]")  # a quoted token with one of these may be code (`sh -c "..."`, `$(...)`)
 
@@ -174,8 +175,9 @@ def lead(toks):
 
 def bash_argv(text, depth=0):
     """R-W1: the argv bash builds from `text`, as segments of tokens. A quote pairs with the next one of its kind and
-    its text stays in one token; a backslash escapes one character; a backslash-newline vanishes; `,` `[` `]` are word
-    characters; an unquoted `<` or `>` ends the word and starts a redirection (operator, file descriptor number and
+    its text stays in one token; a backslash escapes one character; a backslash-newline vanishes; `,` `[` `]` `{` `}`
+    are word characters; an unquoted `#` that starts a word starts a comment, which ends at a newline or a backtick;
+    an unquoted `<` or `>` ends the word and starts a redirection (operator, file descriptor number and
     target word are no arguments), a quoted or escaped one is an argument. R-W2: a quoted token that holds a blank,
     a separator or a quote is read again the same way (`sh -c "..."`, `"$(...)"`); each such token is shorter than
     its text, so the recursion ends. Returns (segments, tail): the tail is the text from a quote that is never
@@ -199,7 +201,12 @@ def bash_argv(text, depth=0):
             segs.append(toks[:])
             toks.clear()
 
-    for m in _TOK.finditer(text):
+    pos = 0
+    while True:
+        m = _TOK.search(text, pos)
+        if not m:
+            break
+        pos = m.end()
         k = m.lastgroup
         v = m.group(k)
         if k == "sp":
@@ -209,6 +216,12 @@ def bash_argv(text, depth=0):
             skip = not v.endswith("-")  # the word after an operator is its target, except after `>&-`
         elif k == "sep":
             flush(True)
+        elif k == "cm":
+            if parts:  # `a'b'#c`, `a\ #b`: inside a word `#` is a character
+                parts.append((False, v))
+            else:  # R-W1: a `#` that starts a word starts a comment; bash does not read it
+                e = _CMEND.search(text, pos)
+                pos = e.start() if e else len(text)
         elif k == "bad":
             if depth == 0:
                 rest = text[m.start():]
@@ -223,8 +236,9 @@ def bash_argv(text, depth=0):
 
 def words(text, top=False):
     """R-P1: one token list per segment. Quotes and backslashes removed; a redirection token is dropped, and when it
-    is only the operator, the next token too. R-W1: when the text holds a quote, a backslash, `,`, `[`, `]`, `<` or
-    `>`, the segments of `bash_argv` follow, so a rule reads both views. R-W3: `top` is the command itself."""
+    is only the operator, the next token too. R-W1: when the text holds a quote, a backslash, `,`, `[`, `]`, `{`,
+    `}`, `<` or `>`, the segments of `bash_argv` follow, so a rule reads both views. R-W3: `top` is the command
+    itself."""
     segs = []
     for seg in re.split(r"[;&|(){}\n\r`]", text.translate({34: None, 39: None, 92: None})):
         toks, skip = [], False
@@ -243,7 +257,8 @@ def words(text, top=False):
     if _MARKS.search(text):
         more, rest = bash_argv(text)
         segs += more
-        if top and any(gitword(t) for t in _SPLIT.split(rest.translate({34: None, 39: None, 92: None}))):
+        tail = rest.replace("\\\n", "").translate({34: None, 39: None, 92: None})  # a backslash-newline vanishes
+        if top and any(gitword(t) for t in _SPLIT.split(tail)):
             deny(QUOTE_DENY)  # R-W3: bash fails on a quote that is never closed, except in a heredoc body or a comment
     return segs
 
