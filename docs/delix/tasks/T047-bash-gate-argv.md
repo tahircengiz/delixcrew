@@ -438,3 +438,34 @@ For T046. K298 moves the README and site sentences out of this card. Copy the wo
     `bash_gate.py` against main: 6 removed and 98 added non-blank lines, no added line over 121 characters or
     outside ASCII. For T046 H3: the false-positive clause keeps the heredoc and drops the comment (an apostrophe in a
     comment no longer denies); name the heredoc form and the alias split forms above as Known limits until T048.
+- Round 3 (PR #75, head `1d4a5fec564971b7c723e45f291fdad21165ec8b`, 2026-11-13): qa `ACCEPT_WITH_NOTES` (0 P0,
+  0 P1, 0 P2), security `🔐 HUMAN_APPROVAL` (2 Medium). The head equals the lead's round-3 prototype byte for byte
+  (`diff -rq` of the `git archive` tree and the prototype tree: no difference), so the prototype runs are the head's:
+  15 suites exit 0 on Python 3.9.6 and 3.13.13; `argv_gate_tests.sh` 101 `✔`; D9 and the comment and brace
+  generator 56,000 cases, 0 mismatches. The Stop gate output has exit 0 for both commands; CI `check` and `test` are
+  green. The lead reproduced the findings with real git 2.54 and bash 3.2.57:
+  - Medium (security): a regression of round 3 against round 2 (main allows these too). F7 skips text that bash
+    runs. A `#` inside double quotes or in an unquoted heredoc body is no comment, but R-W2 reads a double-quoted
+    token again as code, and there F7 skips from the `#`. Affected: `echo "# $(git -c 'user.name=A B' update-ref
+    ...)"`, `echo "x # $(git ... push origin HEAD:main)"` and `cat <<EOF⏎# $(git ...)⏎EOF`. Each writes the ref or
+    pushes `main`; 5206098 denied all of them. Fix F8: the skipped comment is read once more as code with the comment
+    rule off (`cm=False`). Its quotes still do not pair with later text, and a `$(...)` in it is read. With the rule
+    off there is no nesting per `#`.
+  - Medium (security): the rest of the round-2 Medium (round 2 and main allow it too). A comment ends at any
+    backtick, so in ``# run `make` first, it's needed⏎git -c 'user.name=A B' push origin HEAD:main`` the apostrophe
+    pairs with line 2. Fix F9: a comment ends at a backtick only inside `` `...` ``, decided by the parity of the
+    unquoted backticks at its level.
+  - qa unsure, checked: on bash 3.2.57, `echo $(echo x #c) ; git -c 'user.name=A B' push origin HEAD:main` is a
+    syntax error (the comment takes the `)`). Nothing runs, and the hook allows it, as on main, so this is no gap.
+    After F8 the hook denies it, a false positive in the safe direction.
+  - Notes (qa, no fix): the report header still has the round-1 counts (its round-3 block is right). Every round note
+    supersedes the card's Verification counts.
+  - Correction to K302: `rounds` counts fix rounds (T041 had 3 fix rounds and a qa round 4), so round 3 was not the
+    last. Fix round 4 (rounds 3 of 3) is the last.
+  - Fix round 4: F8 and F9, cases 94 to 100 and two growth lines. Prototyped by the lead on the head: 110 `✔`
+    (100 cases, 10 growth lines). The new tests give 6 `✘` on the round-3 head. Growth ratios up to 6.1 (at most
+    1.4 s). D9 32,000 cases and the comment and brace generator 24,000 flat plus 8,000 inside `sh -c`: 0 mismatches.
+    The 15 suites exit 0 on 3.9.6 and 3.13.13. The security round-3 forms (A1 to A5, B1, B2) deny. Every earlier
+    probe keeps its result. Open, for T048: `$(...)` nesting, heredoc apostrophe, alias split and variables.
+    `bash_gate.py` against main: 6 removed and 102 added non-blank lines, with no added line over 121 characters or
+    outside ASCII.

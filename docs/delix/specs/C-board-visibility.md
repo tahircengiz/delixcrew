@@ -2,7 +2,7 @@
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
 > işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279; rev 9 (2026-11-12): T041 tur 1, K280–K281; rev 10: T041 tur 2, K282; rev 11: T041 tur 3, K283; rev 12 (2026-11-13): kapanış drift kontrolü, grill K290–K293
-> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300; rev 14: T047 tur 2, K302. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
+> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300; rev 14: T047 tur 2, K302; rev 15: T047 tur 3, K303. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
 > yazma kartı, 🔐 Tier 3, K279)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
 > K244–K261, K263 ve K273–K277. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
@@ -451,3 +451,15 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
   kurulmuş alias ister, R-P5 alias yazmayı reddeder), alias'ı `git config -z` ile okumak (iki satırlık değer) ve
   çift tırnak içindeki `$(...)` (K301). T046'nın H3'ü: sahte pozitif maddesinden yorum çıkar (yorumdaki kesme
   işareti artık reddettirmez), heredoc kalır; T048'in biçimleri Bilinen sınır olarak eklenir.
+- **K303** (lead, 2026-11-13, geri alınır) T047 tur 3 (#75, uç 1d4a5fe, lead prototipiyle bayt bayt aynı): qa
+  `ACCEPT_WITH_NOTES` (0 P0, 0 P1, 0 P2), security `🔐 HUMAN_APPROVAL` (2 Medium). Birincisi tur 3'ün tur 2'ye göre
+  gerilemesi (main'de de geçer). F7 (K302) çift tırnak içindeki ve tırnaksız heredoc gövdesindeki `#`'i de yorum
+  sayıyordu, oysa bash orada `$(...)`'ı çalıştırır. Bu yüzden `echo "# $(git -c 'user.name=A B' update-ref …)"`
+  ve `push origin HEAD:main` biçimleri geçiyordu; lead gerçek git 2.54 ile üretti, 5206098 hepsini reddediyordu.
+  İkincisi yorumun her ters tırnakta bitmesi (tur 2'nin Medium'undan kalan). Düzeltme turu 4 (`rounds` 3/3, son
+  tur): atlanan yorum metni, yorum kuralı kapalıyken bir kez daha kod olarak okunur (F8); yorum ters tırnakta yalnız
+  `` `...` `` içindeyse biter (F9). Lead prototipte 110 ✔, 64.000 fuzz durumunda 0 uyuşmazlık ölçtü; tur 3
+  ucunda yeni testlerden 6'sı kırmızı. Lead kararı: F7'yi geri almak yerine ileri düzeltme. Gerekçe: geri alma,
+  yorumdaki kesme işaretinden sonra main'e push biçimini (`# don't …`) yeniden açar. Düzeltme aynı dosyada ve aynı
+  kuralın (R-W1) içinde. Düzeltme: K302'deki "son tur" yanlıştı, `rounds` düzeltme turlarını sayar (T041'de 3 tur,
+  qa turu 4). Tur 4 incelemesi temiz değilse kart `escalated` olur ve seçenekler kullanıcıya gider.
