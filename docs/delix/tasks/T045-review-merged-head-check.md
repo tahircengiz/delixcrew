@@ -116,4 +116,11 @@ Line numbers are from that commit. Match the quoted content before you edit. If 
 Read only this card and spec REQ-2, §4 and K297.
 
 ## Review findings (filled by the lead)
-- Round 1: …
+- Round 1 (PR #72, head `2eda625a54db8bed5c82771614f3c902a2eb505c`, 2026-11-13): qa `ACCEPT` (0 P0, 0 P1), security
+  `CLEAN` (1 Low). Lead gates on the clean `git archive` of the head: the 13 shell suites exit 0 on Python 3.9.6,
+  `tests/ledger_tests.sh` gives 23 `✔`; no test line removed (11 added); CI `check` and `test` green. No fix round.
+  - Low (security, no fix under review §3): `skills/review/SKILL.md:44` names only the diff, the report and card text
+    from the branch as data; the two evidence files and the PR title and body are written by the implementer too.
+    Follow-up candidate (skill text).
+  - Note (implementer report, security unsure): `scripts/board.py:622-627` still offers `remove_worktree` through the
+    7-day aged rule for an `escalated` card, which the new review text rules out; old code, out of this card's scope.

@@ -485,4 +485,14 @@ Append after line 807 (the last line). Use `W = '/r/.claude/worktrees'`.
 Read only this card and spec REQ-2, REQ-6, §4 (queue row, git row) and §6.
 
 ## Review findings (filled by the lead)
-- Round 1: …
+- Round 1 (PR #73, head `de9981b1bb0fc4d584f58ce683e4a008ebf57ea5`, 2026-11-13): qa `ACCEPT` (0 P0, 0 P1), security
+  `CLEAN` (no finding). Lead gates on the clean `git archive` of the head: the 13 shell suites exit 0 on Python
+  3.9.6 and 3.13.13, `tests/board_tests.sh` gives 46 `✔`, `claude plugin test plugins/delix-board` gives 48 pass
+  and 0 fail; the removed test lines are exactly the 13 named ones, and the 8 fixture lines match the card byte for
+  byte in both copies (ASCII; the TS copy is the prefix plus the JSON bytes); CI `check` and `test` green. No fix round.
+  - P2 (security unsure, lead confirmed in the head): `plain()` (`plugins/delix-board/hooks/parse.ts:814`) does not
+    strip `\p{Cc}` / `\p{Cf}`, so the new `ledgerCaption` (`views.tsx`) draws STATE `by`, `role` and `verdict` text
+    as is; the existing `cut()` fields behave the same. The source is the trusted STATE on `origin/HEAD`, which only
+    the lead writes. Follow-up candidate.
+  - Residual (card Review Focus, named in the report): an x-only `.delix` with no `card` counts as holding one in the
+    panel (stat fallback, fail closed).
