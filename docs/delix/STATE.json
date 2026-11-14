@@ -993,9 +993,9 @@
       "file": "docs/delix/tasks/T046-docs-site-rev12.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_progress",
-      "pr": null,
-      "rounds": 0,
+      "status": "fixing",
+      "pr": 77,
+      "rounds": 1,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
       "agents": [
@@ -1008,6 +1008,22 @@
           "at": "2026-11-14T07:06:47Z",
           "branch": "claude/great-kapitsa-0c3299",
           "session": "delix-t046-docs"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 1,
+          "sha": "2ccdc65e46b25393205e380af1384767a2285a55",
+          "verdict": "ACCEPT",
+          "at": "2026-11-14T07:33:29Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 1,
+          "sha": "2ccdc65e46b25393205e380af1384767a2285a55",
+          "verdict": "FIX",
+          "at": "2026-11-14T07:41:31Z"
         }
       ]
     },

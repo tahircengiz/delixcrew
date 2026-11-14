@@ -228,7 +228,7 @@ The Source / Kaynak lines stay. They already name README.md (Flow, Known limits)
 - "Use no network" becomes "run no `git fetch` and no `gh`". The text claims only what K284/K294 support.
 - TR/EN parity: README and README.tr; usage and tr/usage; index and tr/index.
 - Known limits: the lead is not hook-bound for `gh pr merge` or the Git actions commands. Nothing contradicts `README.md:127` (the implementer deny) or the composed H1/H2.
-- The composed H1 to H3 (Inputs, K311) match the three handovers word for word, apart from the dropped "and"s and the Turkish case endings that Inputs names.
+- The composed H1 to H3 (Inputs, K311) match the three handovers word for word, apart from the dropped "and"s and the Turkish case endings that Inputs names, and the round-1 fixes F1 to F4 (K312, Review findings).
 - Labels follow the dispatch line. The root version, the `data-version` marks and `CHANGELOG.md` are unchanged.
 - `index.html:63` and `usage.html:98` keep "the lead never runs `gh pr merge`" (a rule statement sourced to review §4). The card does not change that phrase.
 
@@ -251,4 +251,54 @@ The Source / Kaynak lines stay. They already name README.md (Flow, Known limits)
 Read only this card, spec §3–§6 and §9 K290–K297, K305, K306, K309 and K311, the Docs handovers of T044, T047 and T048, and the merged files named in Interfaces.
 
 ## Review findings (filled by the lead)
-- Round 1: …
+- Round 1 (PR #77, head `2ccdc65e46b25393205e380af1384767a2285a55`, 2026-11-14): qa `ACCEPT` (0 P0, 0 P1), security
+  `FIX` (1 Medium, 1 Low, 2 unsure notes). Lead gates on the clean `git archive` of the head: exactly the 9 Files; 16
+  suites exit 0 with no `✘`; `claude plugin validate` passes for the root and delix-board; `claude plugin test
+  plugins/delix-board` 48 pass; the Stop gate gives `[exit 0]` twice; CI `check` and `test` green. The lead's content
+  check (108 items) passes: every Verification count, and every handover sentence (T044 H1/H2, T047 H1/H2, T048
+  H1/H2) and the composed H3 inserts appear in README, README.tr and the site, after joining wrapped lines.
+  - Medium (security): the docs overstate the ref and remote rule. H1's "so a card session does not rewrite refs or
+    remotes" and the removal of the `origin` URL item from the four push-rule lists say more than the hook does. Lead
+    repro with real git and bash 3.2.57 on temp repos (no network), hook from the head, which equals main's
+    `bash_gate.py`: a `printf … >>` of `pushurl`, of `url.*.insteadOf`, or a `sed -i` of `url` into the git config
+    file passes the hook, the own-branch push that follows passes too, and the branch lands in the other repository
+    (3 of 3); `git config remote.origin.pushurl …` and `git remote set-url …` deny. Fix F1, F2.
+  - Low (security): on the index pages the closing sentence "This is a check on the command's words, an allowlist
+    that fails closed" reads as if it covered the whole Implementer cell; the ref rule denies one command name. Fix F3
+    (same line as F1, so it costs nothing).
+  - Note (security unsure): T048 H1 says the hook reads `$'…'` "as bash does"; it reads it to its end and decodes only
+    a backslash before a backslash, a quote or `?` (`bash_gate.py` `_ESC`). Fix F4 (same sentences as F1).
+  - Notes (security unsure, no change): `site/usage.html:226` scopes `--no-lazy-fetch` to "their object reads", which
+    holds; a gitleaks hit in `evals/secret-refusal/prompt.md:7` is an eval fixture outside the diff.
+  - Fix round 1 (K312): the lead's wording, prototyped on a copy of the head (each old text matches once, 26 counts
+    hold, `site_tests.sh` exit 0). Old → new; the README matches ignore line breaks; on the site backticks are `<code>`:
+    - F1 EN (README.md, site/index.html): `so a card session does not rewrite refs or remotes (T044, K296)` →
+      `so a card session does not rewrite refs or remotes with those commands (T044, K296)`. TR (README.tr.md,
+      site/tr/index.html): `kart oturumu ref ya da remote yazmaz (T044, K296)` → `kart oturumu bu komutlarla ref ya da
+      remote yazmaz (T044, K296)`.
+    - F2 EN (README.md, site/usage.html): ``a `gh` alias for `pr merge`, `gh api` ref`` → ``a `gh` alias for `pr
+      merge`, a URL for `origin` (`url`, `pushurl` or `url.*.insteadOf`) that a command other than git writes into the
+      git config file, in the same or an earlier call (the own-branch push then goes to that URL), `gh api` ref``. TR
+      (README.tr.md, site/tr/usage.html): ``` `pr merge` için bir `gh` alias'ı, delixcrew'un ``` → ``` `pr merge` için
+      bir `gh` alias'ı, git dışı bir komutun aynı ya da önceki bir çağrıda git ayar dosyasına yazdığı bir `origin`
+      URL'si (`url`, `pushurl` ya da `url.*.insteadOf`; kendi dalının push'u o adrese gider), delixcrew'un ```.
+    - F3 (site/index.html, site/tr/index.html): `This is a check on the command's words, an allowlist that fails
+      closed` → `The push rule is a check on the command's words, an allowlist that fails closed`; `Bu, komutun
+      kelimeleri üzerinde fail closed çalışan bir izin listesi denetimidir` → `Push kuralı, komutun kelimeleri üzerinde
+      fail closed çalışan bir izin listesi denetimidir`.
+    - F4 EN (README.md, site/index.html): ``ends a heredoc body at its delimiter, and reads `$'…'` and brace groups as
+      bash does;`` → ``ends a heredoc body at its delimiter, reads brace groups as bash does, and reads `$'…'` to its
+      end without decoding escapes such as `\x67`;``. TR (README.tr.md, site/tr/index.html): ``` heredoc gövdesini
+      sınırlayıcısında bitirir, `$'…'`'yu ve süslü parantez gruplarını bash gibi okur; ``` → ``` heredoc gövdesini
+      sınırlayıcısında bitirir, süslü parantez gruplarını bash gibi okur, `$'…'`'yu da sonuna kadar okur ama `\x67`
+      gibi kaçışları çözmez; ```.
+    - Checks (each `grep -cF`, a line count): `does not rewrite refs or remotes with those commands` 1 in README.md and
+      site/index.html; `kart oturumu bu komutlarla ref ya da remote yazmaz` 1 in README.tr.md and site/tr/index.html
+      (it replaces the dispatch's TR H1 phrase `kart oturumu ref ya da remote yazmaz`); `that a command other than git
+      writes into the git config file` 1 in README.md and site/usage.html; `git ayar dosyasına yazdığı bir` 1 in
+      README.tr.md and site/tr/usage.html; `The push rule is a check on the command` 1 and `This is a check on the
+      command` 0 in site/index.html; `Push kuralı, komutun kelimeleri` 1 and `Bu, komutun kelimeleri` 0 in
+      site/tr/index.html; `without decoding escapes such as` 1 in README.md and site/index.html; `kaçışları çözmez` 1
+      in README.tr.md and site/tr/index.html. Every earlier Verification count stays as it is (site `^+ ` lines 10,
+      unlabelled 0).
+  - Evidence: `rev77/` files in the lead's scratchpad (not in the repo).
