@@ -1110,7 +1110,7 @@
       "file": "docs/delix/tasks/T048-bash-gate-parser.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 76,
       "rounds": 0,
       "cost_usd": null,
@@ -1150,7 +1150,12 @@
           "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
           "at": "2026-11-13T20:16:32Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "12b3d264096f6bbd3807d1f1d181e4525eca5331",
+        "head": "75b12de2c71608b4e7d6e9d4855f214ceb81b010",
+        "at": "2026-11-14T06:57:30Z"
+      }
     }
   },
   "status_values": [
