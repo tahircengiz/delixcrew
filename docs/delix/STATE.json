@@ -96,7 +96,7 @@
       "cards": [
         "T046"
       ],
-      "note": "Docs and site for rev 12 (README/README.tr, four site pages, delix-board README and spec), delix-board 0.1.5 -> 0.1.6; root version unchanged. K309 (user): after T048, before the release card T042. Dispatch when T043, T044, T045, T047 and T048 are merged; one docs pass with T044's H1-H3, T047's H0-H4 and T048's H0-H3 (H0 branches 'merged first'). The lead rewrites the anchors and writes 'labels: on' in T046.dispatch.md; T042 removes the labels."
+      "note": "Docs and site for rev 12 (README/README.tr, four site pages, delix-board README and spec), delix-board 0.1.5 -> 0.1.6; root version unchanged. K309 (user): after T048, before the release card T042. Dispatch when T043, T044, T045, T047 and T048 are merged; one docs pass with T044's H1-H3, T047's H0-H4 and T048's H0-H3 (H0 branches 'merged first'). The lead rewrites the anchors and writes 'labels: on' in T046.dispatch.md; T042 removes the labels. Dispatched 2026-11-14 on 8e8fedd (K311): the 9 files unchanged since 1da4990, sources re-pointed, the three handovers composed in the card's Inputs, labels: on."
     },
     {
       "wave": 17,

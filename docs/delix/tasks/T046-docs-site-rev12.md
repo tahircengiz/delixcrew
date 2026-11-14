@@ -6,26 +6,40 @@
 
 > Tier 2: no protected path. `plugins/delix-board/.claude-plugin/plugin.json` does not match `.claude-plugin/**`. `scripts/common.py:210–212` matches that entry only from the repo root (`fnmatch` on the relative path, or the prefix `.claude-plugin/`) or on the basename `plugin.json`, as T032 found for 0.1.5. T042 and `/delixcrew:close` own the root `.claude-plugin/plugin.json`, the site's `data-version` marks, the release labels it removes, and `CHANGELOG.md` (K285). The card is Tier 2 because it makes public claims on the site. It changes text only: no new element, class or style, so there is no design-token step.
 
-> **Dispatch precondition (lead):** T042, T043, T044 and T045 are merged. The lead:
+> **Dispatch precondition (lead):** T043, T044, T045, T047 and T048 are merged; the release card T042 comes after this card (K309). The lead:
 > - rewrites every anchor below at the dispatch base (line + content, like T032);
 > - writes `labels: on` or `labels: off` in `docs/delix/tasks/T046.dispatch.md`;
-> - checks that T044's merged card has `## Docs handover (T046)`.
+> - checks that the merged T044, T047 and T048 cards have `## Docs handover (T046)`.
 >
-> The anchors are written at base 1da4990. Re-check each one; if the quoted content is not at your base, stop with `NEEDS_CONTEXT`.
+> The anchors are written at base 1da4990. Lead, 2026-11-14: the 9 files are unchanged from 1da4990 to 8e8fedd (`git diff --stat` over them is empty), so every anchor holds as written; the merged-code line numbers in Sources and Interfaces are re-pointed to 8e8fedd (they were `base :…`). Re-check each anchor; if the quoted content is not at your base, stop with `NEEDS_CONTEXT`.
 
-**Goal (1 sentence):** README, README.tr, the four site pages and delix-board's README and tech spec describe the wave-15 behaviour, fix the stale lines from the closing drift check, and delix-board becomes 0.1.6 while the root version stays as T042 left it. The wave-15 behaviour is: T043's `--no-lazy-fetch` and raw-input rules, queue rows and the pane's second line; T044's ref-write rule; T045's escalation. · **Spec:** `docs/delix/specs/C-board-visibility.md#REQ-2`, `#REQ-5`, `#REQ-6`; §6; K259, K290, K291, K293, K294, K296, K297
+**Goal (1 sentence):** README, README.tr, the four site pages and delix-board's README and tech spec describe the wave-15 behaviour, fix the stale lines from the closing drift check, and delix-board becomes 0.1.6 while the root version stays as it is (T042 releases after this card, K309). The wave-15 behaviour is: T043's `--no-lazy-fetch` and raw-input rules, queue rows and the pane's second line; T044's ref-write rule; T045's escalation; with it the `bash_gate` reading of T047 (wave 17) and T048 (wave 18). · **Spec:** `docs/delix/specs/C-board-visibility.md#REQ-2`, `#REQ-5`, `#REQ-6`; §6; K259, K290, K291, K293, K294, K296, K297, K305, K306, K309, K311
 
 **Docs/site:** this card is the update. CLAUDE.md "Site (GitHub Pages)" covers a hook rule and new board behaviour (README Flow and Known limits).
 
 ## Inputs (merged; read, do not edit)
-- **T044 `## Docs handover (T046)`** (in its card, or the same section in PR body of T044):
-  - H1: the implementer rule sentence, EN and TR;
-  - H2: the Known-limits sentence(s), EN and TR;
-  - H3: the items T044 closed in, or added to, the push-rule out-of-reach list.
+- **`## Docs handover (T046)` of three merged cards:**
+  - `docs/delix/tasks/T044-bash-gate-ref-writes.md`: H1 (the implementer rule sentence), H2 (the Known-limits sentences), H3 (the push-rule out-of-reach list), EN and TR;
+  - `docs/delix/tasks/T047-bash-gate-argv.md`: H0 to H4;
+  - `docs/delix/tasks/T048-bash-gate-parser.md`: H0 to H3.
 
-  If the section, a part or a language is missing, stop with `NEEDS_CONTEXT`. Do not write these texts yourself. Copy the words as given and HTML-escape `<`, `>`, `&` on the site.
+  T047 and T048 are merged, so take the "merged first" branch of each H0 (the lead confirmed both merges: T047 `5914313`, T048 `12b3d26`). If a section, a part or a language is missing, stop with `NEEDS_CONTEXT`. Do not write these texts yourself. Copy the words as given and HTML-escape `<`, `>`, `&` on the site; a backticked word is a `<code>` element there.
+- **Composition (lead, K311).** Below, "H1", "H2" and "H3" in the anchors mean these composed texts:
+  - **H1** = T044 H1, then T047 H1, then T048 H1, as one run of sentences in that order (README Bash paragraph, site index bash_gate Implementer cell).
+  - **H2** = T044 H2 with T047 H2's parenthetical in place of T044's: `(such as `git symbolic-ref`, `git fast-import`, `git fetch` with a refspec into `refs/remotes/`, or `git branch -f`)` / `(`git symbolic-ref`, `git fast-import`, `refs/remotes/` içine refspec'li `git fetch` ya da `git branch -f` gibi)`.
+  - **H3**, three changes to the push-rule list; every other item stays. In the README each quoted phrase below may wrap over two lines:
+    1. Remove T044 H3's `git remote` URL item (T047 H4 confirms it), with its comma.
+    2. The variables item becomes T048 H2:
+       - README EN: `words built from variables, `eval`, globs or ANSI-C quoting (`$'...'`),` → `words built from <T048 H2 EN>,`;
+       - README TR: `değişken, `eval`, glob ya da ANSI-C tırnağı (`$'...'`) ile kurulan kelimeler` → `<T048 H2 TR> ile kurulan kelimeler`;
+       - site EN: `words built from variables, <code>eval</code>, globs or ANSI-C quoting,` → `words built from <T048 H2 EN>,`;
+       - site TR: `değişken, <code>eval</code>, glob ya da ANSI-C tırnağıyla kurulan kelimeler` → `<T048 H2 TR> ile kurulan kelimeler`.
+    3. The false-positive clause: after `an `echo` or a commit message,` (TR `tek satırındaki `git` ve `push` kelimelerini`) insert the text below; the clause's existing last item (the push in a command that also has `cd` …) stays last. T044's and T048's "and" are dropped and the Turkish objects take the accusative so the list reads as one series:
+       - EN: ` the words `git` and `update-ref` on one line there, a `git remote` form outside its read forms (run `git fetch` to refresh refs), a quote that is never closed in front of a `git` word, also in a heredoc body (close the quote or put the text in a file), a command nested too deep for the hook to read,` (README and site; the README's `, and a push in a command` keeps its `and`).
+       - TR: `, aynı satırda `git` ve `update-ref` kelimelerini, okuma biçimleri dışındaki bir `git remote` biçimini (ref'leri tazelemek için `git fetch` çalıştır), bir `git` kelimesinin önünde, heredoc gövdesinde de, hiç kapanmayan tırnağı (tırnağı kapat ya da metni bir dosyaya yaz), hook'un okuyamayacağı kadar derin iç içe bir komutu` (README and site, before ` ve `cd` ya da`).
+  - T048 H0: the forms T048 closes are not added as Known limits. Nothing about the brace-group false positive is written (T048 H3's last line).
 - **Labels:** `{L}` is ` (coming in the next release)` (EN) / ` (sonraki sürümle gelecek)` (TR) with `labels: on`, and empty with `labels: off`.
-  - It goes before the final full stop of each new or changed site sentence.
+  - It goes once at the end of each inserted or changed site block, before its final full stop, as anchor 8 shows: the H1 run of sentences gets one `{L}`, not one per sentence.
   - A sentence that already ends with a label keeps it and gets no second one.
   - README and docs get no labels.
   - No `labels:` line in the dispatch → `NEEDS_CONTEXT`.
@@ -68,7 +82,7 @@
        `git remote set-head origin -a` onu kurar. `tool.call` hook'ları çağrıyı değiştirmez, reddetmez (gating hook yok).
        Ağ yok: `git fetch` ve `gh` yok; uzak bilgi son fetch anının hâlidir.
      ```
-     Sources: merged `plugins/delix-board/hooks/data.ts` (status, diff and log argv at base `:168`, `:173`, `:177`; `<default>` `:128–139`; card check `:164`; budget `:142`), `scripts/board.py` (base `:233–234`, `:267–288`); spec §6 (K284, K294).
+     Sources: merged `plugins/delix-board/hooks/data.ts` at 8e8fedd (`cat-file` `:190`; status, diff and log argv `:198`, `:203`, `:207`; `<default>` `:148–159`; card check `:161–168`; budget `:171–175`), `scripts/board.py` (`<default>` `:246–247`; status, diff, log, `cat-file` `:280`, `:284–285`, `:301`, `:305`); spec §6 (K284, K294).
    - **Lines 99–104, replace** (from `Spec C bölümleri (`views.tsx` `agentSections`)` to `` `fetch yok`. ``) with:
      ```text
      Spec C bölümleri (`views.tsx` `agentSections`), "Bekleyen kapılar" kutusundan sonra, wave gruplarından önce:
@@ -81,7 +95,7 @@
      `fetch yok`. `last_round` girdisi `<rol> r<tur> @<sha7> <verdict> · by <lead dalı>` biçimindedir; doğrulama
      girdisinde `opened_by` ve `last_round` yoktur (Spec C K290, K291).
      ```
-     Sources: merged `views.tsx` `agentSections` (base `:160–231`); spec §4 `queue` row. Take the condition for the second line (every row or only rows with a card) from merged `views.tsx`.
+     Sources: merged `views.tsx` `agentSections` (`:167–248`, caption `:159–163`); spec §4 `queue` row. The condition for the second line, from merged `views.tsx`: Ajanlar and Seni bekliyor rows that have a card (`:203`, `:218`), every Merge'e hazır row (`:232`); the text above says "kartta" for Seni bekliyor, and for Ajanlar write `kartı olan satırda altında ikinci, soluk bir satırda` in place of `altında ikinci, soluk bir satırda`.
    - **Lines 96–97, replace.** Line 96 is `blocked rapordan). Bir satıra basmak kart ayrıntısını açar. Altta "Bekleyen kapılar" kutusu (yoksa "Bekleyen kapı yok"),`. Line 97 is `` `env_owner` doluysa ortak test ortamı kilidi, verifications özeti (ad · verdict · maliyet).``
      ```text
      blocked rapordan). Bir satıra basmak kart ayrıntısını açar. Özet şeridinin hemen altında, Spec C bölümlerinden ve
@@ -89,7 +103,7 @@
      doluysa kutunun içinde ortak test ortamı kilidi. En altta, wave gruplarından sonra verifications özeti
      ("Doğrulamalar (kartsız)": ad · tarih · verdict · maliyet).
      ```
-     Sources: `views.tsx:255–316` (box `:275–289`, `env_owner` `:288`, sections `:291`, waves `:293–298`, verifications `:300–315`).
+     Sources: `views.tsx` at 8e8fedd (box `:294–308`, empty text `:300`, `env_owner` `:307`, sections `:310`, waves `:312–317`, verifications `:319–334`).
    - **Lines 48–49, two substrings:** `` (`git status --porcelain` `` → `` (`git --no-lazy-fetch status --porcelain` ``, and `` (`git log -1 --no-show-signature `` → `` (`git --no-lazy-fetch log -1 --no-show-signature ``.
    - **Line 40, replace the whole row** (it starts `| worktree başına `git status --porcelain`;`) with:
      `| worktree başına `git --no-lazy-fetch status --porcelain`; `.delix/card`'ı hiçbir biçimde (dosya, bağlantı, dizin, okunamayan dosya) olmayan ve STATE'i commit'lenmemiş olmayan worktree'de `git --no-lazy-fetch diff --no-ext-diff --quiet origin/<default>...HEAD -- docs/delix/STATE.json` | commit'lenmemiş dosya sayısı; lead tespiti (çıkış 1 = dal STATE'i değiştirmiş) | Üç noktalı, merge-base'e göre (Spec C REQ-1); `--no-ext-diff` dış diff yardımcısını çalıştırmaz (K275); `--no-lazy-fetch` kısmi klonda eksik nesneyi çekmez (K284, K294); kart kuralı K293 |`
@@ -124,7 +138,7 @@
    - **Line 74, two edits.**
      - After `Ready to merge and Git actions;` insert ` Agents, Waiting on you and Ready to merge name who opened each card and its last review round;`.
      - Replace `You run them; the lead never does.` with `You run them; the status skill tells the lead never to run them, and no hook enforces that (see [Known limits](#known-limits)).`
-     - Sources: merged `scripts/board.py` `## Waiting on you` / `## Ready to merge` rows (base `:691–697`); `skills/status/SKILL.md:27`.
+     - Sources: merged `scripts/board.py` `## Waiting on you` / `## Ready to merge` rows (`:714–720`, ledger text `_ledger` `:463–469`); `skills/status/SKILL.md:27`.
    - **Line 71, append** before the final ` |`: ` After your merge the lead records it: the card becomes `accepted`, or `escalated` when the merged head is not the commit the reviewers saw (K297).` Source: merged `skills/review/SKILL.md` §4.
 5. **`README.tr.md`**
    - **After line 403, append H2 (TR).** Line 403 is `için kural yalnız review ve status skill metnindedir.`
@@ -154,12 +168,13 @@ The Source / Kaynak lines stay. They already name README.md (Flow, Known limits)
 
 ## Interfaces
 - Consumed (merged; quote exactly; base line numbers, re-pointed by the lead):
-  - T043: the `status`, `diff` and `log` argv with `--no-lazy-fetch` in `data.ts` (base `:168`, `:173`, `:177`) and `scripts/board.py` (base `:267`, `:271`, `:288`).
-  - T043: the `default_branch` rule (`data.ts:128–139`; `board.py:233–234`) and the call-5 card rule (`data.ts:164`).
-  - T043: `views.tsx` `agentSections` (Leads `changed_at`, Ajanlar second line, Seni bekliyor / Merge'e hazır `opened_by` and `last_round`), and board.py `## Waiting on you` / `## Ready to merge` rows.
-  - T044: `## Docs handover (T046)` (H1–H3).
-  - T045: `skills/review/SKILL.md` §4 and `skills/close/SKILL.md` §1 (`escalated`, "an unreviewed head was merged").
+  - T043: the `status`, `diff` and `log` argv with `--no-lazy-fetch` in `data.ts` (`:198`, `:203`, `:207`) and `scripts/board.py` (`:280`, `:284–285`, `:301`); the `cat-file` read (`data.ts:190`, `board.py:305`).
+  - T043: the `default_branch` rule (`data.ts:148–159`; `board.py:246–247`) and the call-5 card rule (`data.ts:161–168`).
+  - T043: `views.tsx` `agentSections` (`:167–248`: Leads `changed_at`, Ajanlar second line, Seni bekliyor / Merge'e hazır `opened_by` and `last_round`), and board.py `## Waiting on you` / `## Ready to merge` rows (`:714–720`).
+  - T044, T047, T048: `## Docs handover (T046)` (T044 H1–H3, T047 H0–H4, T048 H0–H3), composed as in Inputs; the rules they describe are in merged `scripts/bash_gate.py`.
+  - T045: `skills/review/SKILL.md` §4 (`:84–85`) and `skills/close/SKILL.md` §1 (`:16`) (`escalated`, "an unreviewed head was merged").
   - T042: root version and labels, read only.
+  - All line numbers are at 8e8fedd.
 - Produced: no code interface.
 
 ## Global Constraints (verbatim from the spec and CLAUDE.md)
@@ -172,7 +187,7 @@ The Source / Kaynak lines stay. They already name README.md (Flow, Known limits)
 - HTML-escape `<`, `>`, `&` inside site text. Write invisible characters only as `\uXXXX`, never raw.
 
 ## Steps
-1. Read the dispatch (`labels:`) and T044's Docs handover. If either is missing, stop with `NEEDS_CONTEXT`.
+1. Read the dispatch (`labels:`) and the Docs handovers of T044, T047 and T048. If one is missing, stop with `NEEDS_CONTEXT`.
 2. Red: these Verification checks each fail at your base: `0.1.6`, `an allowlist that fails closed`, the argv loop, `merged head is not the commit the reviewers saw`.
 3. Read the merged sources named in Interfaces.
 4. Edit the 9 files per the anchors, each file bottom-up.
@@ -203,6 +218,8 @@ The Source / Kaynak lines stay. They already name README.md (Flow, Known limits)
   - `labels: on`: `git diff -U0 origin/main -- site | grep '^+ ' | grep -cvF -e 'coming in the next release' -e 'sonraki sürümle gelecek'` → `0`
   - `labels: off`: `git diff -U0 origin/main -- site | grep '^+ ' | grep -cF -e 'coming in the next release' -e 'sonraki sürümle gelecek'` → `0`
 - One `grep -cF` per H1/H2 sentence (the lead lists them in the dispatch) → `1` in each target file
+- H3: `grep -cF 'another URL for' README.md site/usage.html` → `0` each; `grep -cF 'verilen başka bir URL' README.tr.md site/tr/usage.html` → `0` each
+- H3: `for s in 'brace expansion' 'a command whose output spells a word' 'to refresh refs)' 'also in a heredoc body'; do for f in README.md site/usage.html; do [ "$(grep -cF -e "$s" "$f")" = 1 ] || echo "not once in $f: $s"; done; done` → no output; the same with `'süslü parantez genişletme' 'çıktısı bir kelimeyi yazan komut' 'tazelemek için' 'heredoc gövdesinde de'` over `README.tr.md site/tr/usage.html` → no output
 - `python3 -c "import re,sys;[print(f) for f in sys.argv[1:] if re.search('[\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]', open(f,encoding='utf-8').read())]" docs/spec/delix-board.md plugins/delix-board/README.md README.md README.tr.md site/usage.html site/tr/usage.html site/index.html site/tr/index.html` → no output
 - `git diff --stat origin/main` → only the 9 files
 
@@ -210,7 +227,8 @@ The Source / Kaynak lines stay. They already name README.md (Flow, Known limits)
 - Every argv, flag and heading matches the merged code byte for byte: `--no-lazy-fetch` comes after the prefix on `status`, `diff` and `log`. No text claims the flag for calls 1–3.
 - "Use no network" becomes "run no `git fetch` and no `gh`". The text claims only what K284/K294 support.
 - TR/EN parity: README and README.tr; usage and tr/usage; index and tr/index.
-- Known limits: the lead is not hook-bound for `gh pr merge` or the Git actions commands. Nothing contradicts `README.md:127` (the implementer deny) or T044's H1/H2.
+- Known limits: the lead is not hook-bound for `gh pr merge` or the Git actions commands. Nothing contradicts `README.md:127` (the implementer deny) or the composed H1/H2.
+- The composed H1 to H3 (Inputs, K311) match the three handovers word for word, apart from the dropped "and"s and the Turkish case endings that Inputs names.
 - Labels follow the dispatch line. The root version, the `data-version` marks and `CHANGELOG.md` are unchanged.
 - `index.html:63` and `usage.html:98` keep "the lead never runs `gh pr merge`" (a rule statement sourced to review §4). The card does not change that phrase.
 
@@ -230,7 +248,7 @@ The Source / Kaynak lines stay. They already name README.md (Flow, Known limits)
 - every wording you took from merged code instead of this card;
 - assumptions.
 
-Read only this card, spec §3–§6 and §9 K290–K297, T044's Docs handover, and the merged files named in Interfaces.
+Read only this card, spec §3–§6 and §9 K290–K297, K305, K306, K309 and K311, the Docs handovers of T044, T047 and T048, and the merged files named in Interfaces.
 
 ## Review findings (filled by the lead)
 - Round 1: …

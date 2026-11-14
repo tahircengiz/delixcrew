@@ -2,7 +2,7 @@
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
 > işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279; rev 9 (2026-11-12): T041 tur 1, K280–K281; rev 10: T041 tur 2, K282; rev 11: T041 tur 3, K283; rev 12 (2026-11-13): kapanış drift kontrolü, grill K290–K293
-> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300; rev 14: T047 tur 2, K302; rev 15: T047 tur 3, K303; rev 16: T047 tur 4, K304; rev 17: T047 merge, K305; rev 18: T048 kartı, K306–K310. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
+> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300; rev 14: T047 tur 2, K302; rev 15: T047 tur 3, K303; rev 16: T047 tur 4, K304; rev 17: T047 merge, K305; rev 18: T048 kartı, K306–K310; rev 19: T048 merge, T046 dağıtımı, K311. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
 > yazma kartı, 🔐 Tier 3, K279)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
 > K244–K261, K263 ve K273–K277. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
@@ -528,3 +528,16 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
   - **Yolda çıktı:** `scripts/board.py:528` ve `plugins/delix-board/hooks/parse.ts:620` `**🔐 Approved:**` önekiyle
     başlayan her satırı onaylı sayar; `scripts/write_gate.py:52` tarih ister. T048 kartında onaydan önce yer tutucu
     satır yoktu. Board'un tarihli deseni kullanması ayrı takip kartıdır.
+- **K311** (lead, 2026-11-14, geri alınır) T046 dağıtımı (dalga 16, T048'den sonra, K309).
+  - **Taban:** T048 #76 merge edildi (`12b3d26`; uç `75b12de` son qa kaydıyla aynı, `accepted`). Kartın 9 doküman
+    dosyası 1da4990'dan 8e8fedd'ye değişmedi: çapalar geçerli; Sources ve Interfaces satır numaraları 8e8fedd'ye
+    işaretlendi.
+  - **Bileşim:** H1 = T044 H1, T047 H1, T048 H1 bu sırayla. H2 = T044 H2, parantezi T047 H2'ninki (`git fast-import`).
+    H3: `git remote` URL maddesi çıkar (T044 H3, T047 H4); değişken maddesi T048 H2 olur; yanlış pozitif cümlesine
+    T044'ün eki ve T048 H3 tek seri olarak girer (bağlaçlar düşer, Türkçe nesneler belirtme hâlinde). T048'in
+    kapattığı biçimler Bilinen sınır olarak yazılmaz (T048 H0).
+  - **Etiket:** `labels: on`; `{L}` eklenen ya da değişen her site bloğunda bir kez. T042 sürümde kaldırır.
+  - **Kart düzeltmesi:** Ajanlar ve Seni bekliyor'un ikinci satırı yalnız kartlı satırda, Merge'e hazır'da her satırda
+    (`views.tsx:203`, `:218`, `:232`); delix-board belgesinin Ajanlar metnine "kartı olan satırda" girer.
+  - **T048 notları:** security'nin Low'u (iç içe heredoc, ~2,5 MB'ta 60 sn zaman aşımı, hook kapalı kalır) doküman
+    metnine girmez; T048 kartının Review findings'inde durur.
