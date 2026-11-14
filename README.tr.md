@@ -68,10 +68,10 @@ claude plugin install delix-board@delixcrew
 | 2 | `/delixcrew:spec` | Grill (tek soru, önerili) → `docs/delix/SPEC.md` (SHALL + WHEN/THEN); `architect` (+ Tier 3'te `security`) inceler; L'de EGM. Yalnız UI işinde bir design system adımı: spec `DESIGN.md`'ye (ya da repodaki token dosyasına) bağlanır, ikisi de yoksa `DESIGN.md` üretilir. **Kapı 1.** |
 | 3 | `/delixcrew:dispatch` | `architect` kartları ve wave planını yazar; çakışma kontrolü; dispatch prompt'ları; uygulayıcı oturumları (en çok 3 paralel). Her repoda bir kez, ilk oturumdan önce, Stop gate komutlarını ana checkout'ta kendi terminalinizden onaylarsınız: `python3 <plugin dir>/scripts/trust.py allow`, sonra `TRUST <hash>` yazarak (bkz. [Bu plugin makinende ne yapar](#bu-plugin-makinende-ne-yapar)). |
 | 4 | `/delixcrew:implement <kart>` | Uygulayıcı oturumda: test-first, yalnız kartın dosyaları, PR, `.delix/report.md`. |
-| 5 | `/delixcrew:review <kart>` | Deterministik kapılar → `qa` (+ `security`) sıfır bağlamla → ≤ 3 düzeltme turu → **Kapı 2 (merge, insan).** |
+| 5 | `/delixcrew:review <kart>` | Deterministik kapılar → `qa` (+ `security`) sıfır bağlamla → ≤ 3 düzeltme turu → **Kapı 2 (merge, insan).** Merge'den sonra lead bunu kaydeder: kart `accepted` olur; merge edilen uç inceleyicilerin gördüğü commit değilse `escalated` (K297). |
 | 6 | `/delixcrew:close` | STATUS/CHANGELOG, ölçüm (maliyet, tur), drift kontrolü, onaylı bellek yazımı, worktree temizliği. |
 | kısa yol | `/delixcrew:verify <dal\|commit\|dizin>` | Kartsız yapılmış işi (tek oturum ya da sen) **yalnız doğrular** (K43): gitleaks, yerel test, uzak **izole** birim testi (ayrı dizin + ayrı imaj, canlı stack'e dokunmaz), istenirse `--full`; `qa` (+ `security`) **tek geçiş**, düzeltme turu yok → `docs/delix/verifications/<tarih>-<ad>.md` raporu (ACCEPT / FIX, 🔐) ve `STATE.json.verifications`. S/M + iyi tarif + Tier ≤ 2 işte `/delixcrew:start` bunu önerir; tam akış Tier 3 / paralel kart / belirsiz spec'e. |
-| her an | `/delixcrew:status` | Salt-okunur pano: wave · kart · rol · tier · status · tur · PR · maliyet · son rapor · bekleyen kapı (🔐, merge) tablosu sohbete; istenirse (`--write`) `docs/delix/BOARD.md`'ye (git'e girmez). Altında Leads, Agents, Waiting on you, Ready to merge ve Git actions bölümleri; her push / merge / temizlik komutu Desktop'un Run düğmesi için kendi tek satırlık `bash` bloğunda. Komutları sen çalıştırırsın; lead hiç çalıştırmaz. |
+| her an | `/delixcrew:status` | Salt-okunur pano: wave · kart · rol · tier · status · tur · PR · maliyet · son rapor · bekleyen kapı (🔐, merge) tablosu sohbete; istenirse (`--write`) `docs/delix/BOARD.md`'ye (git'e girmez). Altında Leads, Agents, Waiting on you, Ready to merge ve Git actions bölümleri; Agents, Waiting on you ve Ready to merge her kartı kimin açtığını ve son inceleme turunu gösterir; her push / merge / temizlik komutu Desktop'un Run düğmesi için kendi tek satırlık `bash` bloğunda. Komutları sen çalıştırırsın; status skill'i lead'e onları hiç çalıştırmamasını söyler, bunu bir hook zorlamaz (bkz. [Bilinen sınırlar](#bilinen-sınırlar)). |
 | issue'lar | `/delixcrew:triage [#n]` | delixcrew reposunda: gelen issue'ları temizlenmiş okur, salt-okunur `architect` her birini kontrol edip bir karar önerir; sohbette `<karar> #<n>` yazınca kaydeder ve yayınlanacak yorumu aynen gösterir; yayını siz kendi terminalinizden yaparsınız. Bkz. [Triage](#triage). |
 
 ## Roller
@@ -125,6 +125,17 @@ bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
   dışında bir git komutu yokken çalışır; dal adı biçimi ayrıca dalın upstream'inin olmamasını ya da dalın kendisi
   olmasını ister. Git'in kendi listesinde olmayan bir git genel seçeneği de, `help.autocorrect` açıkken git'in
   listelemediği bir komut adı da orada reddedilir. `gh pr merge` orada reddedilir: kapı 2 kullanıcınındır (T041, K279).
+  Ayrıca `git update-ref`'i ve düz `git remote`, `-v` / `--verbose`, `show` ve `get-url` dışındaki her `git remote`
+  biçimini reddeder; kart oturumu ref ya da remote yazmaz (T044, K296). JSON nesnesi olmayan bir `docs/delix/delix.json`
+  ya da kuralın okuduğu bir git ayarındaki UTF-8 olmayan bayt,
+  komutun hata vermek yerine bir mesajla reddedilmesini sağlar. Kurallar bir komutu hem gevşek kelime taramasıyla hem de
+  bash'in kurduğu argv gibi okur; bu yüzden tırnak içindeki boşluk, virgüllü ya da köşeli parantezli bir seçenek değeri,
+  satır sonundan önceki ters bölü, bir yönlendirme ve bir `sh -c` dizgesinin metni alt komutu gizlemez, `-c` gibi bir
+  genel seçenekle başlayan alias da komutuna kadar izlenir. Bir `git` kelimesinin önünde
+  hiç kapanmayan tırnak mesajla reddedilir (T047). bash görünümü bir komutu bash gibi tek geçişte okur: komut ikamesini
+  çift tırnak içinde, heredoc gövdesinde ve bir kelimeye bitişikken de izler, `#`'i yalnız kelime başında yorum sayar,
+  heredoc gövdesini sınırlayıcısında bitirir, `$'…'`'yu ve süslü parantez gruplarını bash gibi okur; alias değeri git'in
+  böldüğü gibi bölünür. Hook'un okuyamayacağı kadar derin iç içe bir komut mesajla reddedilir (T048).
 - `Stop`, [`scripts/stop_gate.py`](scripts/stop_gate.py)'yi yalnız uygulayıcı worktree'sinde çalıştırır: projenin
   `docs/delix/delix.json` dosyasındaki `test_command` ve `extra_checks` komutlarını kabukta çalıştırır; bunlar geçene
   dek tur bitmez. Bu komutlar plugin'in değil, projenizin komutlarıdır. Onları yalnız o listeyi bu repo için (repo
@@ -379,15 +390,19 @@ penceresini kabul ettiğinizde yine kod çalıştırabilir; onay yalnız `delix.
 denylist'i bir sınır değil, sürtünmedir: bölünmüş tırnak, değişken ya da glob ile kurulan komutlar ondan geçer;
 `cd` sonrası göreli yol, `//`, `/./` ya da sembolik bağlantılı bir dizinle yazılan kayıt yolu da geçer, çünkü o kural
 bir alt dize eşleşmesidir (K220); sınır Claude Code'un Bash izin istemidir (K77). Uygulayıcının push kuralı (T041, K279)
-da kelimeler üzerinde bir kalıp denetimidir, derinlemesine savunmadır, GitHub sınırı değildir: değişken, `eval`, glob ya
-da ANSI-C tırnağı (`$'...'`) ile kurulan kelimeler, ortamdan (`GIT_DIR`, `GIT_CONFIG_*`) verilen ya da aynı satırda
-başka bir komutun (`>>` yönlendirmesi gibi) bir git ayar dosyasına yazdığı git ayarları, bir betik dosyası ya da başka
-bir programın kendi git çağrıları (`gh pr checkout` gibi), `pr merge` için bir `gh` alias'ı, `git remote` ile
-`origin`'e verilen başka bir URL, delixcrew'un kendi reposu dışındaki her repoda `gh api` ile ref ya da merge yazmak,
-`.delix/card`'ı silmek, worktree kökünün altındaki bir cwd ve `main-review` ruleset'indeki repo sahibi bypass'ı onun
-erişimi dışındadır; yanlış pozitif olarak bir heredoc gövdesinin, bir `echo`'nun ya da commit mesajının tek satırındaki
-`git` ve `push` kelimelerini ve `cd` ya da `add`, `commit`, `status`, `diff`, `log`, `show` dışında bir git komutu da
-içeren bir komuttaki push'u reddeder. İzin verilen tek `cat` heredoc'u,
+da kelimeler üzerinde, fail closed çalışan bir izin listesi denetimidir, derinlemesine savunmadır, GitHub sınırı
+değildir: değişkenler, `eval`, glob'lar, `$'\x67it'` gibi ANSI-C kaçışları, çıktısı bir kelimeyi yazan komut
+(`$(echo gi)t`) ve süslü parantez genişletme (`git {push,origin,HEAD:main}` bir push olarak çalışır) ile kurulan
+kelimeler, ortamdan (`GIT_DIR`, `GIT_CONFIG_*`) verilen ya da aynı satırda başka bir komutun (`>>` yönlendirmesi gibi)
+bir git ayar dosyasına yazdığı git ayarları, bir betik dosyası ya da başka bir programın kendi git çağrıları
+(`gh pr checkout` gibi), `pr merge` için bir `gh` alias'ı, delixcrew'un kendi reposu dışındaki her repoda `gh api` ile
+ref ya da merge yazmak, `.delix/card`'ı silmek, worktree kökünün altındaki bir cwd ve `main-review` ruleset'indeki repo
+sahibi bypass'ı onun erişimi dışındadır; yanlış pozitif olarak bir heredoc gövdesinin, bir `echo`'nun ya da commit
+mesajının tek satırındaki `git` ve `push` kelimelerini, aynı satırda `git` ve `update-ref` kelimelerini, okuma biçimleri
+dışındaki bir `git remote` biçimini (ref'leri tazelemek için `git fetch` çalıştır), bir `git` kelimesinin önünde,
+heredoc gövdesinde de, hiç kapanmayan tırnağı (tırnağı kapat ya da metni bir dosyaya yaz), hook'un okuyamayacağı kadar
+derin iç içe bir komutu ve `cd` ya da `add`, `commit`, `status`, `diff`, `log`, `show` dışında bir git komutu da içeren
+bir komuttaki push'u reddeder. İzin verilen tek `cat` heredoc'u,
 Write aracının zaten yazamayacağı hiçbir şeyi yazmaz. 2.44'ten eski git ile promisor (kısmi klon) bir repoda eksik bir
 nesne, hook'lar index'i okurken uzak depodan yine çekilebilir (K225).
 
@@ -396,11 +411,18 @@ yüzden uzak dal bilgisi son fetch anının hâlidir (başlık zamanını göste
 `refs/remotes/origin/HEAD`'in gösterdiği STATE (uzak deponun varsayılan dalı; lead kayıtlarını oraya push eder) aynı
 kartı, PR'ı ve incelenen SHA'yı taşıyınca görünür; o zamana dek `review not on origin/<default>` notuyla bekler.
 `origin/HEAD` yoksa (`git clone` yerine `git init` ve `git remote add` ile kurulan depoda olduğu gibi) hiçbir kart
-Ready to merge altında görünmez; `git remote set-head origin -a` onu kurar. 2.44'ten eski git'te de görünmez, çünkü bu
-okuma `--no-lazy-fetch` kullanır. Bastıkları merge komutu `--match-head-commit <sha>` taşır; bayat bir görünüm
-kimsenin incelemediği bir ucu merge edemez. Lead'in `gh pr merge`'ü ya da bir Git actions komutunu kendisinin
+Ready to merge altında görünmez; `git remote set-head origin -a` onu kurar. 2.44'ten eski git'te de görünmez: STATE
+okuması ve her worktree'deki `status`, `diff` ve `log` çağrıları `--no-lazy-fetch` kullanır (kısmi klonda bu çağrılar
+için eksik nesne çekilmez, K284); o git bayrağı reddeder, bu yüzden bu çağrılar hata verir, alanları `?` gösterir ve o
+worktree'ler Git actions komutu almaz (K294). Bastıkları merge komutu `--match-head-commit <sha>` taşır; bayat bir
+görünüm kimsenin incelemediği bir ucu merge edemez. Lead'in `gh pr merge`'ü ya da bir Git actions komutunu kendisinin
 çalıştırmasını bir hook engellemez: T041 push kuralı `gh pr merge`'ü yalnız uygulayıcı worktree'sinde reddeder; lead
 için kural yalnız review ve status skill metnindedir.
+Ref yazma kuralı (T044, K296) da komutun kelimeleri üzerinde bir denetimdir. Başka bir komutun yazdığı ref'i
+(`git symbolic-ref`, `git fast-import`, `refs/remotes/` içine refspec'li `git fetch` ya da `git branch -f` gibi),
+git dizininin altına yazılan bir dosyayı ve bir betiğin ya da başka bir programın çalıştırdığı komutu görmez.
+delix-board güvenilir durumunu `refs/remotes/origin/HEAD`'ten okur; bu yüzden bir kart oturumu
+o yollarla board'a bir kartı merge'e hazır gösterebilir; merge tıklaması (kapı 2) yine senindir.
 
 ## Lisans
 
