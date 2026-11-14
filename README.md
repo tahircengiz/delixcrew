@@ -126,16 +126,17 @@ What runs locally, what it writes and when it uses the network. What a feedback 
   or the branch itself. A git global option outside git's own list is denied there, and so is a command name git
   does not list while `help.autocorrect` is on. `gh pr merge` is denied there: gate 2 is the user's (T041, K279). It
   also denies `git update-ref` and every `git remote` form except plain `git remote`, `-v` / `--verbose`, `show` and
-  `get-url`, so a card session does not rewrite refs or remotes (T044, K296). A `docs/delix/delix.json` that is not a
-  JSON object, or a byte that is not UTF-8 in a git setting the rule reads,
+  `get-url`, so a card session does not rewrite refs or remotes with those commands (T044, K296). A
+  `docs/delix/delix.json` that is not a JSON object, or a byte that is not UTF-8 in a git setting the rule reads,
   makes it deny the command with a message instead of failing. The rules read a command both by the loose word scan and
   the way bash builds its argv, so a quoted blank, an option value with a comma or a bracket, a backslash-newline, a
   redirection and the text of an `sh -c` string do not hide the subcommand, and an alias that starts with a global
   option such as `-c` is followed to its command. A quote that is never closed in front of a `git` word
   is denied with a message (T047). The bash view reads a command in one pass the way bash does: it follows command
   substitutions in double quotes, in heredoc bodies and glued to a word, takes a `#` as a comment only at the start of a
-  word, ends a heredoc body at its delimiter, and reads `$'…'` and brace groups as bash does; an alias value is split
-  the way git splits it. A command nested too deep for the hook to read is denied with a message (T048).
+  word, ends a heredoc body at its delimiter, reads brace groups as bash does, and reads `$'…'` to its end
+  without decoding escapes such as `\x67`; an alias value is split the way git splits it. A command nested too deep for
+  the hook to read is denied with a message (T048).
 - `Stop` runs [`scripts/stop_gate.py`](scripts/stop_gate.py), only in an implementer worktree: it runs `test_command`
   and `extra_checks` from the project's `docs/delix/delix.json` through the shell, and the turn does not end until they
   pass. These are your project's commands, not the plugin's. It runs them only when you approved that exact list for
@@ -394,13 +395,15 @@ from variables, `eval`, globs, ANSI-C escapes such as `$'\x67it'`, a command who
 and brace expansion (`git {push,origin,HEAD:main}` runs as a push), git settings given through the environment
 (`GIT_DIR`, `GIT_CONFIG_*`) or written into a git config file by another command on the same line (such as a `>>`
 redirection), a script file or another program's own git calls (such as `gh pr checkout`), a `gh` alias for `pr merge`,
-`gh api` ref or merge writes in any repository other than delixcrew's own, deleting `.delix/card`, a cwd below the
-worktree root and the repository owner's bypass on the `main-review` ruleset are out of its reach; as a false positive
-it denies the words `git` and `push` on one line of a heredoc body, an `echo` or a commit message, the words `git` and
-`update-ref` on one line there, a `git remote` form outside its read forms (run `git fetch` to refresh refs), a quote
-that is never closed in front of a `git` word, also in a heredoc body (close the quote or put the text in a file), a
-command nested too deep for the hook to read, and a push in a command that also has `cd` or a git command other than
-`add`, `commit`, `status`, `diff`, `log` or `show`. The one
+a URL for `origin` (`url`, `pushurl` or `url.*.insteadOf`)
+that a command other than git writes into the git config file, in the same or an earlier call (the own-branch push then
+goes to that URL), `gh api` ref or merge writes in any repository other than delixcrew's own, deleting `.delix/card`, a
+cwd below the worktree root and the repository owner's bypass on the `main-review` ruleset are out of its reach; as a
+false positive it denies the words `git` and `push` on one line of a heredoc body, an `echo` or a commit message, the
+words `git` and `update-ref` on one line there, a `git remote` form outside its read forms (run `git fetch`
+to refresh refs), a quote that is never closed in front of a `git` word, also in a heredoc body (close the quote or put
+the text in a file), a command nested too deep for the hook to read, and a push in a command that also has `cd` or a git
+command other than `add`, `commit`, `status`, `diff`, `log` or `show`. The one
 allowed `cat` heredoc
 writes nothing the Write tool could not already write. With git older than 2.44, a missing object in a promisor
 (partial clone) repository can still be fetched from its remote while the hooks read the index (K225).
