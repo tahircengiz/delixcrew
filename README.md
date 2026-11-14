@@ -68,10 +68,10 @@ claude plugin install delix-board@delixcrew
 | 2 | `/delixcrew:spec` | Grill (one question at a time, with a pick) → `docs/delix/SPEC.md` (SHALL + WHEN/THEN); `architect` (+ `security` at Tier 3) reviews; EGM at size L. For UI work only, a design-system step: the spec links `DESIGN.md` (or the repo's token file), and produces `DESIGN.md` when neither exists. **Gate 1.** |
 | 3 | `/delixcrew:dispatch` | `architect` writes the cards and the wave plan; conflict check; dispatch prompts; implementer sessions (at most 3 in parallel). Once per repository, before the first session, you approve the Stop gate commands in the main checkout from your own terminal: `python3 <plugin dir>/scripts/trust.py allow`, typing `TRUST <hash>` (see [What this plugin does on your machine](#what-this-plugin-does-on-your-machine)). |
 | 4 | `/delixcrew:implement <card>` | In the implementer session: test-first, only the card's files, a PR, `.delix/report.md`. |
-| 5 | `/delixcrew:review <card>` | Deterministic gates → `qa` (+ `security`) with zero context → ≤ 3 fix rounds → **Gate 2 (merge, human).** |
+| 5 | `/delixcrew:review <card>` | Deterministic gates → `qa` (+ `security`) with zero context → ≤ 3 fix rounds → **Gate 2 (merge, human).** After your merge the lead records it: the card becomes `accepted`, or `escalated` when the merged head is not the commit the reviewers saw (K297). |
 | 6 | `/delixcrew:close` | STATUS/CHANGELOG, metrics (cost, rounds), drift check, approved memory writes, worktree cleanup. |
 | shortcut | `/delixcrew:verify <branch\|commit\|dir>` | **Only verifies** work done without a card (a single session or you) (K43): gitleaks, local tests, a remote **isolated** unit test (separate directory + separate image, never touches the live stack), `--full` on request; `qa` (+ `security`) in a **single pass**, no fix rounds → a `docs/delix/verifications/<date>-<name>.md` report (ACCEPT / FIX, 🔐) and `STATE.json.verifications`. For S/M + well-described + Tier ≤ 2 work, `/delixcrew:start` proposes this; the full flow is for Tier 3 / parallel cards / an unclear spec. |
-| any time | `/delixcrew:status` | Read-only board: wave · card · role · tier · status · rounds · PR · cost · last report · pending gate (🔐, merge) table in the chat; on request (`--write`) to `docs/delix/BOARD.md` (not committed). Below it: Leads, Agents, Waiting on you, Ready to merge and Git actions; each push / merge / cleanup command in its own one-line `bash` block for Desktop's Run button. You run them; the lead never does. |
+| any time | `/delixcrew:status` | Read-only board: wave · card · role · tier · status · rounds · PR · cost · last report · pending gate (🔐, merge) table in the chat; on request (`--write`) to `docs/delix/BOARD.md` (not committed). Below it: Leads, Agents, Waiting on you, Ready to merge and Git actions; Agents, Waiting on you and Ready to merge name who opened each card and its last review round; each push / merge / cleanup command in its own one-line `bash` block for Desktop's Run button. You run them; the status skill tells the lead never to run them, and no hook enforces that (see [Known limits](#known-limits)). |
 | issues | `/delixcrew:triage [#n]` | In the delixcrew repo: reads incoming issues cleaned, the read-only `architect` checks each one and proposes a decision; after your `<decision> #<n>` in chat it records it and shows the exact comment; you publish it from your own terminal. See [Triage](#triage). |
 
 ## Roles
@@ -124,7 +124,19 @@ What runs locally, what it writes and when it uses the network. What a feedback 
   default branch, with no `remote.origin.push`, and with no `cd` and no git command other than `add`, `commit`,
   `status`, `diff`, `log` or `show` in the same command; the branch name form also needs the branch's upstream unset
   or the branch itself. A git global option outside git's own list is denied there, and so is a command name git
-  does not list while `help.autocorrect` is on. `gh pr merge` is denied there: gate 2 is the user's (T041, K279).
+  does not list while `help.autocorrect` is on. `gh pr merge` is denied there: gate 2 is the user's (T041, K279). It
+  also denies `git update-ref` and every `git remote` form except plain `git remote`, `-v` / `--verbose`, `show` and
+  `get-url`, so a card session does not rewrite refs or remotes with those commands (T044, K296). A
+  `docs/delix/delix.json` that is not a JSON object, or a byte that is not UTF-8 in a git setting the rule reads,
+  makes it deny the command with a message instead of failing. The rules read a command both by the loose word scan and
+  the way bash builds its argv, so a quoted blank, an option value with a comma or a bracket, a backslash-newline, a
+  redirection and the text of an `sh -c` string do not hide the subcommand, and an alias that starts with a global
+  option such as `-c` is followed to its command. A quote that is never closed in front of a `git` word
+  is denied with a message (T047). The bash view reads a command in one pass the way bash does: it follows command
+  substitutions in double quotes, in heredoc bodies and glued to a word, takes a `#` as a comment only at the start of a
+  word, ends a heredoc body at its delimiter, reads brace groups as bash does, and reads `$'…'` to its end
+  without decoding escapes such as `\x67`; an alias value is split the way git splits it. A command nested too deep for
+  the hook to read is denied with a message (T048).
 - `Stop` runs [`scripts/stop_gate.py`](scripts/stop_gate.py), only in an implementer worktree: it runs `test_command`
   and `extra_checks` from the project's `docs/delix/delix.json` through the shell, and the turn does not end until they
   pass. These are your project's commands, not the plugin's. It runs them only when you approved that exact list for
@@ -378,14 +390,20 @@ folder trust dialog; the approval closes only the `delix.json` channel. The Bash
 boundary: commands built from split quotes, variables or globs get past it, and so does a path to the trust record
 written as a relative path after `cd`, with `//` or `/./`, or through a symlinked directory, because that rule is a
 substring match (K220); the boundary is Claude Code's Bash permission prompt (K77). The implementer push rule (T041,
-K279) is a pattern check on words too, defence in depth and not a GitHub boundary: words built from variables, `eval`,
-globs or ANSI-C quoting (`$'...'`), git settings given through the environment (`GIT_DIR`, `GIT_CONFIG_*`) or written
-into a git config file by another command on the same line (such as a `>>` redirection), a script file or another
-program's own git calls (such as `gh pr checkout`), a `gh` alias for `pr merge`, another URL for `origin` set with
-`git remote`, `gh api` ref or merge writes in any repository other than delixcrew's own, deleting `.delix/card`, a cwd
-below the worktree root and the repository owner's bypass on the `main-review` ruleset are out of its reach; as a false
-positive it denies the words `git` and `push` on one line of a heredoc body, an `echo` or a commit message, and a push
-in a command that also has `cd` or a git command other than `add`, `commit`, `status`, `diff`, `log` or `show`. The one
+K279) is a check on words too, an allowlist that fails closed, defence in depth and not a GitHub boundary: words built
+from variables, `eval`, globs, ANSI-C escapes such as `$'\x67it'`, a command whose output spells a word (`$(echo gi)t`),
+and brace expansion (`git {push,origin,HEAD:main}` runs as a push), git settings given through the environment
+(`GIT_DIR`, `GIT_CONFIG_*`) or written into a git config file by another command on the same line (such as a `>>`
+redirection), a script file or another program's own git calls (such as `gh pr checkout`), a `gh` alias for `pr merge`,
+a URL for `origin` (`url`, `pushurl` or `url.*.insteadOf`)
+written into the git config file in the same or an earlier call (the own-branch push then
+goes to that URL), `gh api` ref or merge writes in any repository other than delixcrew's own, deleting `.delix/card`, a
+cwd below the worktree root and the repository owner's bypass on the `main-review` ruleset are out of its reach; as a
+false positive it denies the words `git` and `push` on one line of a heredoc body, an `echo` or a commit message, the
+words `git` and `update-ref` on one line there, a `git remote` form outside its read forms (run `git fetch`
+to refresh refs), a quote that is never closed in front of a `git` word, also in a heredoc body (close the quote or put
+the text in a file), a command nested too deep for the hook to read, and a push in a command that also has `cd` or a git
+command other than `add`, `commit`, `status`, `diff`, `log` or `show`. The one
 allowed `cat` heredoc
 writes nothing the Write tool could not already write. With git older than 2.44, a missing object in a promisor
 (partial clone) repository can still be fetched from its remote while the hooks read the index (K225).
@@ -395,11 +413,18 @@ remote branch data is as of your last fetch (the header shows its time). A card 
 the STATE that `refs/remotes/origin/HEAD` points at (the remote's default branch, where the lead pushes its records)
 holds the same card, PR and reviewed SHA; until then it waits as `review not on origin/<default>`. When `origin/HEAD`
 is missing, as in a repository set up with `git init` and `git remote add` instead of `git clone`, nothing shows as
-Ready to merge; `git remote set-head origin -a` sets it. With git older than 2.44 nothing does either, because that
-read uses `--no-lazy-fetch`. The merge command they print carries `--match-head-commit <sha>`, so a stale view cannot
-merge a head nobody reviewed. No hook stops the lead from running `gh pr merge` or a Git actions command itself: the
-T041 push rule denies `gh pr merge` only in an implementer worktree, and for the lead the rule lives in the review and
-status skill text only.
+Ready to merge; `git remote set-head origin -a` sets it. With git older than 2.44 nothing does either: the STATE read
+and, in each worktree, the `status`, `diff` and `log` calls use `--no-lazy-fetch` (so a partial clone fetches no missing
+object for them, K284); that git rejects the flag, so those calls fail, their fields show `?` and those worktrees
+get no Git actions command (K294). The merge command they print carries `--match-head-commit <sha>`, so a stale view
+cannot merge a head nobody reviewed. No hook stops the lead from running `gh pr merge` or a Git actions command itself:
+the T041 push rule denies `gh pr merge` only in an implementer worktree, and for the lead the rule lives in the review
+and status skill text only.
+The ref-write rule (T044, K296) is a check on the command's words too. It does not see a ref written by another command
+(such as `git symbolic-ref`, `git fast-import`, `git fetch` with a refspec into `refs/remotes/`, or `git branch -f`),
+a file written under the git directory, or a command that a script or another program runs. delix-board reads its
+trusted state from `refs/remotes/origin/HEAD`, so a card session can still make the board show a card as ready to merge
+by those routes; the merge click (gate 2) stays yours.
 
 ## License
 

@@ -16,10 +16,14 @@ Beside the files it runs only read-only local git, every call as `git --no-optio
 `rev-parse --show-toplevel`; every 20 seconds `rev-parse --git-common-dir`, `worktree list --porcelain -z`,
 `for-each-ref refs/heads refs/remotes --format=%(refname)%09%(objectname)%09%(upstream)%09%(upstream:track,nobracket)%09%(committerdate:unix)`
 and `--no-lazy-fetch --no-replace-objects cat-file blob refs/remotes/origin/HEAD:docs/delix/STATE.json`, then in each
-worktree `status --porcelain` and, where there is no `.delix/card` and `STATE.json` has no uncommitted change,
-`diff --no-ext-diff --quiet origin/<default>...HEAD -- docs/delix/STATE.json` (`<default>`: `default_branch` in
-`docs/delix/delix.json`, else `main`) and, if it holds a `STATE.json`,
-`log -1 --no-show-signature --format=%ct -- docs/delix/STATE.json`: at most 4 + 3N calls per look for N worktrees.
+worktree `--no-lazy-fetch status --porcelain` and, where `.delix/card` does not exist in any form (file, link,
+directory) and `STATE.json` has no uncommitted change,
+`--no-lazy-fetch diff --no-ext-diff --quiet origin/<default>...HEAD -- docs/delix/STATE.json` (`<default>`:
+`default_branch` in `docs/delix/delix.json` when it is a plain branch name, else `main`) and, if it holds a
+`STATE.json`, `--no-lazy-fetch log -1 --no-show-signature --format=%ct -- docs/delix/STATE.json`: at most 4 + 3N calls
+per look for N worktrees. `--no-lazy-fetch` keeps a partial clone from fetching a missing object for these reads; git
+older than 2.44 rejects it, so those calls fail, their fields show `?`, no card is ready to merge and those worktrees
+get no git action command.
 There is no `git fetch` and no `gh`, so remote data is as of the last fetch, whose time the header shows. A card is
 ready to merge only when the STATE at `refs/remotes/origin/HEAD` shows the same card, PR and reviewed SHA; when
 `origin/HEAD` is missing no card is, and `git remote set-head origin -a` sets it.
@@ -46,7 +50,7 @@ Switch views with the tabs, the keys `1`–`4`, or the command:
 
 | Command | View | Shows |
 |---|---|---|
-| `/delix-board` or `/delix-board pano` | Pano (board) | card count, rounds, cost, a status bar, pending gates (Tier 3 approval, merge, escalation), the Spec C sections Leads, Ajanlar (agents: role, worktree, branch, upstream, where the changes land, uncommitted files), Seni bekliyor (waiting on you), Merge'e hazır (ready to merge) and Git işleri (git actions: each command as text; the pane never runs it), cards by wave, cards of the previous spec, verifications |
+| `/delix-board` or `/delix-board pano` | Pano (board) | card count, rounds, cost, a status bar, pending gates (Tier 3 approval, merge, escalation), the Spec C sections Leads (with the time each lead's STATE last changed), Ajanlar (agents: role, worktree, branch, upstream, where the changes land, uncommitted files; below it, a dimmed second line with who opened the card and its last review round), Seni bekliyor (waiting on you) and Merge'e hazır (ready to merge), both with who opened each card and its last review round, and Git işleri (git actions: each command as text; the pane never runs it), cards by wave, cards of the previous spec, verifications |
 | `/delix-board bekleme` | Bekleme (wait) | tracked long runs: elapsed time, suites and PASS/FAIL counts, the last output lines, the expected duration from earlier runs |
 | `/delix-board kart T010` | Kart (card) | one card: header, review verdicts, Files list, the worktree report and test result, review rounds with finding severities; Kayıt: the card's `agents` ledger (who opened it, every qa / security record) |
 | `/delix-board olcum` | Ölçüm (metrics) | cost, rounds, duration and gates per card as bars, with totals; unmeasured values are marked, never guessed |
