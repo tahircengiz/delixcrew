@@ -145,7 +145,7 @@ deny "81 comment line with a quote, then a send"   "$W" "# don't do this${NL}$G 
 deny "82 comment quote, then g'i't"                "$W" "echo x # it's${NL}g'i't -c \"user.name=A B\" $U x y" "$REF_DENY"
 deny "83 sh -c: comment quote, then a send"         "$W" "sh -c \"echo x # it's${NL}$G -c 'user.name=A B' $P origin HEAD:main\"" "$PUSH_DENY"
 deny "84 comment quote, then gi backslash-newline t" "$W" "echo x # it's${NL}gi\\${NL}t -c \"user.name=A B\" $U x y" "$REF_DENY"
-deny "85 heredoc quote, then gi backslash-newline t" "$W" "cat <<'EOF'${NL}don't${NL}EOF${NL}gi\\${NL}t -c \"user.name=A B\" $U x y" "$QUOTE_DENY"
+deny "85 heredoc quote, then gi backslash-newline t" "$W" "cat <<'EOF'${NL}don't${NL}EOF${NL}gi\\${NL}t -c \"user.name=A B\" $U x y" "$REF_DENY"
 deny "86 comment inside backticks, then a value"   "$W" "\`#x\`$G -c 'user.name=A B' $U x y"          "$REF_DENY"
 deny "87 # after a quote is a word character"      "$W" "$G -c 'x.y=a b'#c $U x y"                    "$REF_DENY"
 deny "88 # after an escaped blank is a word character" "$W" "$G -c x.y=a\\ #b $U x y"                  "$REF_DENY"
