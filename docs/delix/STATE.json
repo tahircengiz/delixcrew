@@ -993,11 +993,23 @@
       "file": "docs/delix/tasks/T046-docs-site-rev12.md",
       "role": "docs",
       "tier": 2,
-      "status": "open",
+      "status": "in_progress",
       "pr": null,
       "rounds": 0,
       "cost_usd": null,
-      "spec": "docs/delix/specs/C-board-visibility.md"
+      "spec": "docs/delix/specs/C-board-visibility.md",
+      "agents": [
+        {
+          "role": "implementer",
+          "by": "main",
+          "round": 0,
+          "sha": null,
+          "verdict": null,
+          "at": "2026-11-14T07:06:47Z",
+          "branch": "claude/great-kapitsa-0c3299",
+          "session": "delix-t046-docs"
+        }
+      ]
     },
     "T047": {
       "file": "docs/delix/tasks/T047-bash-gate-argv.md",
