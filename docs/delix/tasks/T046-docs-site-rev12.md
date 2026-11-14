@@ -328,3 +328,18 @@ Read only this card, spec §3–§6 and §9 K290–K297, K305, K306, K309 and K3
       dosyasına yazdığı bir` 0 and `git ayar dosyasına yazılan bir` 1 in README.tr.md and site/tr/usage.html. They
       replace round 1's F2 checks; every other count stays as it is.
   - Evidence: `rev77/r2/` files in the lead's scratchpad (not in the repo).
+- Round 3 (PR #77, head `9e3f384c9ead44fc091aa00069ab5773f5191d3a`, 2026-11-14, the last round): qa `ACCEPT` (0 P0,
+  0 P1), security `CLEAN` (2 unsure notes). The head equals the lead's round-2 prototype byte for byte. Lead gates on
+  the clean `git archive` of the head: exactly the 9 Files; 16 suites exit 0 with no `✘`; `claude plugin validate`
+  passes for the root and delix-board; `claude plugin test plugins/delix-board` 48 pass; the Stop gate gives `[exit 0]`
+  twice; CI `check` and `test` green; the lead's content check (130 items, round 2's F5 checks included) passes.
+  - Low (security unsure, reproduced by the lead, no fix here, K315): the F5 item names `url`, `pushurl` and
+    `url.*.insteadOf` and "the git config file"; `url.*.pushInsteadOf`, and a URL that a command other than git writes
+    into the global git config file, redirect the own-branch push the same way (3 of 3 with real git, no network;
+    `git config --global url.….insteadOf …` denies). Same class as round 1 (K312); the wider wording goes into
+    T049's Docs handover.
+  - Note (security unsure, no change): `filter.<driver>.clean` is not among the hook's config keys; Spec C already
+    records the board side as unverified.
+  - The validator's plugin-directory warning on README's `http://127.1/` example is on main too (README.md:231), not
+    from this PR.
+  - Evidence: `rev77/r3/` files in the lead's scratchpad (not in the repo).

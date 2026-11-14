@@ -993,7 +993,7 @@
       "file": "docs/delix/tasks/T046-docs-site-rev12.md",
       "role": "docs",
       "tier": 2,
-      "status": "fixing",
+      "status": "in_review",
       "pr": 77,
       "rounds": 2,
       "cost_usd": null,
@@ -1040,6 +1040,22 @@
           "sha": "76fcc0a58f96c79224c218c8a3ef3bd8072ddb6d",
           "verdict": "FIX",
           "at": "2026-11-14T08:08:49Z"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 3,
+          "sha": "9e3f384c9ead44fc091aa00069ab5773f5191d3a",
+          "verdict": "ACCEPT",
+          "at": "2026-11-14T08:46:42Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 3,
+          "sha": "9e3f384c9ead44fc091aa00069ab5773f5191d3a",
+          "verdict": "CLEAN",
+          "at": "2026-11-14T08:51:03Z"
         }
       ]
     },

@@ -2,7 +2,7 @@
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
 > işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279; rev 9 (2026-11-12): T041 tur 1, K280–K281; rev 10: T041 tur 2, K282; rev 11: T041 tur 3, K283; rev 12 (2026-11-13): kapanış drift kontrolü, grill K290–K293
-> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300; rev 14: T047 tur 2, K302; rev 15: T047 tur 3, K303; rev 16: T047 tur 4, K304; rev 17: T047 merge, K305; rev 18: T048 kartı, K306–K310; rev 19: T048 merge, T046 dağıtımı, K311; rev 20: T046 tur 1, K312; rev 21: T046 tur 2, K313; T049 sırası, K314. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
+> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300; rev 14: T047 tur 2, K302; rev 15: T047 tur 3, K303; rev 16: T047 tur 4, K304; rev 17: T047 merge, K305; rev 18: T048 kartı, K306–K310; rev 19: T048 merge, T046 dağıtımı, K311; rev 20: T046 tur 1, K312; rev 21: T046 tur 2, K313; T049 sırası, K314; rev 22: T046 tur 3, K315. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
 > yazma kartı, 🔐 Tier 3, K279)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
 > K244–K261, K263 ve K273–K277. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
@@ -571,3 +571,11 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
   T042, T049. Lead'in gerekçesi: R-P5 bu sürümle gelir, 0.6.3'te bu yol hiç kapalı değildi ve belge sınırı doğru
   anlatır (K313). Kartı ayrı bir kart yazarı oturumu yazar; lead çapaları dispatch'te sürüm sonrası main'e işaretler.
   Dispatch'ten önce kullanıcının bu işe özel "evet"i ve Approved satırı gerekir.
+- **K315** (lead, 2026-11-14, geri alınır) T046 tur 3 (#77, uç `9e3f384`): qa ACCEPT, security CLEAN; kapı 2.
+  - **Low, lead'de üretildi:** F5 maddesi `url`, `pushurl`, `url.*.insteadOf` ve "git ayar dosyası" der.
+    `url.*.pushInsteadOf` ve git dışı bir komutun global git ayar dosyasına yazdığı URL de kendi dal push'unu başka
+    repoya götürür (3/3, gerçek git, ağ yok). `git config --global` biçimi reddedilir. Sınıf K312 ile aynıdır.
+  - **Karar:** tur sınırı (3) doldu ve bulgu Low olduğu için T046'da düzeltme yok. Geniş metin T049'un Docs
+    handover'ına girer: "(`url`, `pushurl`, `url.*.insteadOf` ya da `url.*.pushInsteadOf`) bir git ayar dosyasına
+    (reponun, global ya da include edilen) yazılan".
+  - **T049 numarası:** kartın taslak K kaydı dispatch'te K316 olur.
