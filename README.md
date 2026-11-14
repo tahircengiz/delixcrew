@@ -396,7 +396,7 @@ and brace expansion (`git {push,origin,HEAD:main}` runs as a push), git settings
 (`GIT_DIR`, `GIT_CONFIG_*`) or written into a git config file by another command on the same line (such as a `>>`
 redirection), a script file or another program's own git calls (such as `gh pr checkout`), a `gh` alias for `pr merge`,
 a URL for `origin` (`url`, `pushurl` or `url.*.insteadOf`)
-that a command other than git writes into the git config file, in the same or an earlier call (the own-branch push then
+written into the git config file in the same or an earlier call (the own-branch push then
 goes to that URL), `gh api` ref or merge writes in any repository other than delixcrew's own, deleting `.delix/card`, a
 cwd below the worktree root and the repository owner's bypass on the `main-review` ruleset are out of its reach; as a
 false positive it denies the words `git` and `push` on one line of a heredoc body, an `echo` or a commit message, the

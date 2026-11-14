@@ -396,8 +396,8 @@ değildir: değişkenler, `eval`, glob'lar, `$'\x67it'` gibi ANSI-C kaçışlar�
 (`$(echo gi)t`) ve süslü parantez genişletme (`git {push,origin,HEAD:main}` bir push olarak çalışır) ile kurulan
 kelimeler, ortamdan (`GIT_DIR`, `GIT_CONFIG_*`) verilen ya da aynı satırda başka bir komutun (`>>` yönlendirmesi gibi)
 bir git ayar dosyasına yazdığı git ayarları, bir betik dosyası ya da başka bir programın kendi git çağrıları
-(`gh pr checkout` gibi), `pr merge` için bir `gh` alias'ı, git dışı bir komutun aynı ya da önceki bir çağrıda
-git ayar dosyasına yazdığı bir `origin` URL'si (`url`, `pushurl` ya da `url.*.insteadOf`; kendi dalının push'u o adrese
+(`gh pr checkout` gibi), `pr merge` için bir `gh` alias'ı, aynı ya da önceki bir çağrıda
+git ayar dosyasına yazılan bir `origin` URL'si (`url`, `pushurl` ya da `url.*.insteadOf`; kendi dalının push'u o adrese
 gider), delixcrew'un kendi reposu dışındaki her repoda `gh api` ile ref ya da merge yazmak, `.delix/card`'ı silmek,
 worktree kökünün altındaki bir cwd ve `main-review` ruleset'indeki repo sahibi bypass'ı onun erişimi dışındadır; yanlış
 pozitif olarak bir heredoc gövdesinin, bir `echo`'nun ya da commit mesajının tek satırındaki `git` ve `push`
