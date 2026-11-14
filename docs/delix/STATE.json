@@ -995,7 +995,7 @@
       "tier": 2,
       "status": "fixing",
       "pr": 77,
-      "rounds": 1,
+      "rounds": 2,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
       "agents": [
@@ -1024,6 +1024,22 @@
           "sha": "2ccdc65e46b25393205e380af1384767a2285a55",
           "verdict": "FIX",
           "at": "2026-11-14T07:41:31Z"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 2,
+          "sha": "76fcc0a58f96c79224c218c8a3ef3bd8072ddb6d",
+          "verdict": "ACCEPT",
+          "at": "2026-11-14T08:02:10Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 2,
+          "sha": "76fcc0a58f96c79224c218c8a3ef3bd8072ddb6d",
+          "verdict": "FIX",
+          "at": "2026-11-14T08:08:49Z"
         }
       ]
     },

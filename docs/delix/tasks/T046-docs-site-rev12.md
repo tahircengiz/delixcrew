@@ -302,3 +302,29 @@ Read only this card, spec §3–§6 and §9 K290–K297, K305, K306, K309 and K3
       in README.tr.md and site/tr/index.html. Every earlier Verification count stays as it is (site `^+ ` lines 10,
       unlabelled 0).
   - Evidence: `rev77/` files in the lead's scratchpad (not in the repo).
+- Round 2 (PR #77, head `76fcc0a58f96c79224c218c8a3ef3bd8072ddb6d`, 2026-11-14): qa `ACCEPT` (0 P0, 0 P1), security
+  `FIX` (1 Medium, 3 unsure notes). Lead gates on the clean `git archive` of the head: exactly the 9 Files; 16 suites
+  exit 0 with no `✘`; `claude plugin validate` passes for the root and delix-board; `claude plugin test
+  plugins/delix-board` 48 pass; the Stop gate gives `[exit 0]` twice; CI `check` and `test` green; the lead's content
+  check (124 items) passes. Security checked F1, F3 and F4 against the merged code; they hold.
+  - Medium (security): F2's "that a command other than git writes" still says more than the hook does: some `git
+    config` writes of the same keys pass the hook too. Lead repro with real git 2.54 and bash 3.2.57 on temp repos (no
+    network), hook from the head, which equals main's `bash_gate.py`: 4 of 4 forms pass, the own-branch push that
+    follows passes and the branch lands in the other repository; plain `git config remote.origin.pushurl …` denies.
+    The forms stay out of this card and the docs (K313); the code gap goes to a separate 🔐 Tier 3 card. Fix F5.
+  - Notes (security unsure, no change): `docs/spec/delix-board.md:171` "Nesne okuyan dört çağrı" and
+    `site/usage.html:226` "their object reads" are loose, since `for-each-ref` also reads commit objects (local in a
+    `blob:none` or `tree:0` clone); with a forged `origin/HEAD` STATE the printed `--match-head-commit` block carries
+    the SHA that STATE names, while the merge click stays the user's.
+  - Fix round 2 (K313): the lead's wording, prototyped on a copy of the head (each old text matches once, the 120
+    other checks of the content check hold, `site_tests.sh` exit 0; 4 files, 5 lines). Old → new; the README matches
+    ignore line breaks, and the README line break stays where it is:
+    - F5 EN (README.md, site/usage.html): `that a command other than git writes into the git config file, in the same
+      or an earlier call` → `written into the git config file in the same or an earlier call`. TR (README.tr.md,
+      site/tr/usage.html): `git dışı bir komutun aynı ya da önceki bir çağrıda git ayar dosyasına yazdığı bir` → `aynı
+      ya da önceki bir çağrıda git ayar dosyasına yazılan bir`.
+    - Checks (each `grep -cF`, a line count): `that a command other than git` 0 and `written into the git config file
+      in the same or an earlier call` 1 in README.md and site/usage.html; `git dışı bir komutun` 0, `git ayar
+      dosyasına yazdığı bir` 0 and `git ayar dosyasına yazılan bir` 1 in README.tr.md and site/tr/usage.html. They
+      replace round 1's F2 checks; every other count stays as it is.
+  - Evidence: `rev77/r2/` files in the lead's scratchpad (not in the repo).
