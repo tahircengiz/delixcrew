@@ -124,7 +124,10 @@ What runs locally, what it writes and when it uses the network. What a feedback 
   default branch, with no `remote.origin.push`, and with no `cd` and no git command other than `add`, `commit`,
   `status`, `diff`, `log` or `show` in the same command; the branch name form also needs the branch's upstream unset
   or the branch itself. A git global option outside git's own list is denied there, and so is a command name git
-  does not list while `help.autocorrect` is on. `gh pr merge` is denied there: gate 2 is the user's (T041, K279). It
+  does not list while `help.autocorrect` is on. A `git config` call that names an `alias.`, `remote.`, `push.`, `url.`,
+  `include` or `help.` key is denied there unless git reads it as a read: `get` or `list` as its first argument, or a
+  read option such as `--get` among the options before the key; a word after the key and a comment do not count (T049).
+  `gh pr merge` is denied there: gate 2 is the user's (T041, K279). It
   also denies `git update-ref` and every `git remote` form except plain `git remote`, `-v` / `--verbose`, `show` and
   `get-url`, so a card session does not rewrite refs or remotes with those commands (T044, K296). A
   `docs/delix/delix.json` that is not a JSON object, or a byte that is not UTF-8 in a git setting the rule reads,
@@ -136,7 +139,8 @@ What runs locally, what it writes and when it uses the network. What a feedback 
   substitutions in double quotes, in heredoc bodies and glued to a word, takes a `#` as a comment only at the start of a
   word, ends a heredoc body at its delimiter, reads brace groups as bash does, and reads `$'…'` to its end
   without decoding escapes such as `\x67`; an alias value is split the way git splits it. A command nested too deep for
-  the hook to read is denied with a message (T048).
+  the hook to read is denied with a message (T048). A command that holds a `#`, a `(` or a backtick is read by the bash
+  view as well (T049).
 - `Stop` runs [`scripts/stop_gate.py`](scripts/stop_gate.py), only in an implementer worktree: it runs `test_command`
   and `extra_checks` from the project's `docs/delix/delix.json` through the shell, and the turn does not end until they
   pass. These are your project's commands, not the plugin's. It runs them only when you approved that exact list for
@@ -395,13 +399,15 @@ from variables, `eval`, globs, ANSI-C escapes such as `$'\x67it'`, a command who
 and brace expansion (`git {push,origin,HEAD:main}` runs as a push), git settings given through the environment
 (`GIT_DIR`, `GIT_CONFIG_*`) or written into a git config file by another command on the same line (such as a `>>`
 redirection), a script file or another program's own git calls (such as `gh pr checkout`), a `gh` alias for `pr merge`,
-a URL for `origin` (`url`, `pushurl` or `url.*.insteadOf`)
-written into the git config file in the same or an earlier call (the own-branch push then
+a URL for `origin` (`url`, `pushurl`, `url.*.insteadOf` or `url.*.pushInsteadOf`) written into a git config file (the
+repository's, the global one or an included one) in the same or an earlier call (the own-branch push then
 goes to that URL), `gh api` ref or merge writes in any repository other than delixcrew's own, deleting `.delix/card`, a
 cwd below the worktree root and the repository owner's bypass on the `main-review` ruleset are out of its reach; as a
 false positive it denies the words `git` and `push` on one line of a heredoc body, an `echo` or a commit message, the
 words `git` and `update-ref` on one line there, a `git remote` form outside its read forms (run `git fetch`
-to refresh refs), a quote that is never closed in front of a `git` word, also in a heredoc body (close the quote or put
+to refresh refs), a `git config` read of an `alias.`, `remote.`, `push.`, `url.`, `include` or `help.` key with another
+option before the read option (use `--file=<file>` or `git remote get-url origin`), a quote that is never closed in
+front of a `git` word, also in a heredoc body (close the quote or put
 the text in a file), a command nested too deep for the hook to read, and a push in a command that also has `cd` or a git
 command other than `add`, `commit`, `status`, `diff`, `log` or `show`. The one
 allowed `cat` heredoc
