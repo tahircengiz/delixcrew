@@ -476,4 +476,72 @@ for line in ("- T029 · ready to merge" + tail, "- T029 · PR #60 · reviewed d2
     assert line in md, (line, md)
 PYS
 
+# T051 A) K297: on the 7-day idle path an escalated card's worktree gets no remove_worktree and the card stays under Waiting on you; an in_review one still gets it
+python3 - "$S" "$J" <<'PYS' && ok "T051 K297: an idle escalated worktree gets no remove_worktree, an idle in_review one does" || bad "T051 K297: escalated worktree on the idle path"
+import json, sys
+sys.path.insert(0, sys.argv[1])
+import board
+raw = json.load(open(sys.argv[2], encoding="utf-8"))["raw"]
+raw["now"] += 30 * 86400
+W = "/r/.claude/worktrees/"
+rm = lambda d: {a["target"] for a in d["actions"] if a["kind"] == "remove_worktree"}
+assert {W + "impl-30", W + "impl-39"} <= rm(board.derive(raw)), rm(board.derive(raw))
+st = json.loads(raw["trusted_state"]); st["cards"]["T039"]["status"] = "escalated"; raw["trusted_state"] = json.dumps(st)
+d = board.derive(raw)
+assert W + "impl-30" in rm(d) and W + "impl-39" not in rm(d), rm(d)
+lead = raw["worktrees"][W + "lead-c"]["files"]  # the lead's own STATE carries the same status (Waiting on you reads it)
+st = json.loads(lead["docs/delix/STATE.json"]); st["cards"]["T039"]["status"] = "escalated"; lead["docs/delix/STATE.json"] = json.dumps(st)
+d = board.derive(raw)
+assert W + "impl-39" not in rm(d), rm(d)
+assert any(e["card"] == "T039" and e["reason"] == "escalated" for e in d["queue"]["waiting"]), d["queue"]["waiting"]
+PYS
+
+# T051 B) K310: a tier 3 open card counts as approved only with write_gate's dated line, in the header before the first "\n## "
+python3 - "$S" "$J" <<'PYS' && ok "T051 K310: only a dated Approved line in the header clears tier 3 approval" || bad "T051 K310: Approved line form"
+import json, sys
+sys.path.insert(0, sys.argv[1])
+import board
+raw = json.load(open(sys.argv[2], encoding="utf-8"))["raw"]
+files = raw["worktrees"]["/r/.claude/worktrees/lead-c"]["files"]
+L = "# T038 - ci\n\n**\U0001F510 Approved:** "
+def waits(text):
+    files["docs/delix/tasks/T038-ci.md"] = text
+    return any(e["card"] == "T038" and e["reason"] == "tier 3 approval" for e in board.derive(raw)["queue"]["waiting"])
+assert not waits(L + "2026-11-04 user\n") and not waits(L + "2026-11-04 \u00c7a\u011fr\u0131\n## Scope\n")
+for text in (L + "user\n", L + "2026-11-04\n", L + "2026-11-04 \n", L + "2026-11-04 \u3000user\n", L + "2026-11-04 \ufeffuser\n",
+             L + "2026-11-04 \x1cuser\n", L + "\u0662\u0660\u0662\u0666-11-04 user\n",
+             "# T038 - ci\n\n## Scope\n**\U0001F510 Approved:** 2026-11-04 user\n",
+             "# T038 - ci\nx\r**\U0001F510 Approved:** 2026-11-04 user\n", "# T038 - ci\nx\u2028**\U0001F510 Approved:** 2026-11-04 user\n"):
+    assert waits(text), repr(text)
+PYS
+
+# T051 C) K293: board.py takes the panel's rule; a .delix that cannot be listed but is a directory holds a card (call 5 skipped)
+R="$(mktemp -d)"; R="$(cd "$R" && pwd -P)"
+git init -q -b main "$R/r"
+mkdir -p "$R/r/docs/delix"; printf '{"spec":"docs/delix/SPEC.md","cards":{}}\n' > "$R/r/docs/delix/STATE.json"
+gc -C "$R/r" add -A && gc -C "$R/r" commit -q -m init
+echo ".delix/" >> "$R/r/.git/info/exclude"
+for n in none empty execonly file; do git -C "$R/r" worktree add -q -b "w-$n" "$R/$n" >/dev/null 2>&1; done
+mkdir "$R/empty/.delix" "$R/execonly/.delix"; printf 'x\n' > "$R/file/.delix"; chmod 100 "$R/execonly/.delix"
+python3 - "$S" "$R" <<'PYS' && ok "T051 K293: an exec-only .delix holds a card, an empty or file .delix none; call 5 follows" || bad "T051 K293: .delix listing rule"
+import os, signal, sys
+sys.path.insert(0, sys.argv[1])
+import board
+signal.alarm(60)
+R = sys.argv[2]
+root = os.geteuid() == 0  # root lists an exec-only directory
+want = {"none": False, "empty": False, "execonly": not root, "file": False}
+assert {n: board._card_present(os.path.join(R, n)) for n in want} == want
+calls = []
+real = board.subprocess.run
+def run(argv, *a, **kw):
+    calls.append((list(argv), kw.get("cwd")))
+    return real(argv, *a, **kw)
+board.subprocess.run = run
+board.git_raw(os.path.join(R, "r"))
+diffs = sorted(c for a, c in calls if "diff" in a)
+assert diffs == sorted(os.path.join(R, n) for n in ["r"] + [n for n, v in want.items() if not v]), diffs
+PYS
+chmod 700 "$R/execonly/.delix"; rm -rf "$R"
+
 cd /; rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

@@ -5,6 +5,7 @@ import { cut, minutes, parseCard, parseMetrics, parseState, runProgress } from '
 import { FILES, IMPL, LAYOUT, LAYOUT_COMMITS, LAYOUT_TREES, MAIN, MAIN_TREE, ORCH, ROOT, RUN_ALL, TEMPLATE_STATE, TIE, WORKTREES } from './fixtures'
 import { derive, type Raw } from '../hooks/parse'
 import { PARITY } from './board_parity'
+import { plain } from '../hooks/parse'
 
 const SURFACES = ['terminal', 'desktop'] as const
 
@@ -943,4 +944,50 @@ test('a ready card with no worktree shows who opened it and both last-round reco
   const ledger = /açan claude\/lead-b · son tur qa r1 @2828282 ACCEPT · by claude\/lead-b; security r1 @2828282 ◈ HUMAN_APPROVAL · by claude\/lead-b/
   expect(await ui.findAll({ type: 'Text', text: ledger })).toHaveLength(2)
   await ui.unmount()
+})
+
+const t051Raw = () => JSON.parse(JSON.stringify(PARITY.raw)) as Raw & { now: number; trusted_state: string; worktrees: Record<string, { files: Record<string, string> }> }
+
+test('T051 K297: on the 7-day idle path an escalated card keeps its worktree and waits; an in_review one gets remove_worktree', () => {
+  const raw = t051Raw()
+  raw.now += 30 * 86400
+  const W = '/r/.claude/worktrees/'
+  const rm = (r: Raw) => derive(r).actions.filter(a => a.kind === 'remove_worktree').map(a => a.target)
+  expect([rm(raw).includes(`${W}impl-30`), rm(raw).includes(`${W}impl-39`)]).toEqual([true, true])
+  const st = JSON.parse(raw.trusted_state) as { cards: Record<string, { status: string }> }
+  const t039 = st.cards.T039
+  if (t039) t039.status = 'escalated'
+  raw.trusted_state = JSON.stringify(st)
+  expect([rm(raw).includes(`${W}impl-30`), rm(raw).includes(`${W}impl-39`)]).toEqual([true, false])
+  const lead = raw.worktrees[`${W}lead-c`]?.files ?? {}
+  const own = JSON.parse(lead['docs/delix/STATE.json'] ?? '{}') as { cards: Record<string, { status: string }> }
+  const own039 = own.cards.T039
+  if (own039) own039.status = 'escalated'
+  lead['docs/delix/STATE.json'] = JSON.stringify(own)
+  expect(rm(raw).includes(`${W}impl-39`)).toBe(false)
+  expect(derive(raw).queue.waiting.some(e => e.card === 'T039' && e.reason === 'escalated')).toBe(true)
+})
+
+test("T051 K310: a tier 3 open card counts as approved only with write_gate's dated line in the header", () => {
+  const raw = t051Raw()
+  const files = raw.worktrees['/r/.claude/worktrees/lead-c']?.files ?? {}
+  const L = '# T038 - ci\n\n**\u{1F510} Approved:** '
+  const waits = (text: string) => {
+    files['docs/delix/tasks/T038-ci.md'] = text
+    return derive(raw).queue.waiting.some(e => e.card === 'T038' && e.reason === 'tier 3 approval')
+  }
+  expect(waits(`${L}2026-11-04 user\n`)).toBe(false)
+  expect(waits(`${L}2026-11-04 \u00c7a\u011fr\u0131\n## Scope\n`)).toBe(false)
+  for (const text of [`${L}user\n`, `${L}2026-11-04\n`, `${L}2026-11-04 \n`, `${L}2026-11-04 \u3000user\n`, `${L}2026-11-04 \ufeffuser\n`,
+    `${L}2026-11-04 \x1cuser\n`, `${L}\u0662\u0660\u0662\u0666-11-04 user\n`,
+    '# T038 - ci\n\n## Scope\n**\u{1F510} Approved:** 2026-11-04 user\n',
+    '# T038 - ci\nx\r**\u{1F510} Approved:** 2026-11-04 user\n', '# T038 - ci\nx\u2028**\u{1F510} Approved:** 2026-11-04 user\n']) {
+    expect([JSON.stringify(text), waits(text)]).toEqual([JSON.stringify(text), true])
+  }
+})
+
+test("T043 P2: plain turns control, line and paragraph separator characters into spaces like board.py's one_line", () => {
+  expect(plain('qa r1\n@abc\rACCEPT\u2028by\u2029x\ty\u0007z\u0085w\u200bv')).toBe('qa r1 @abc ACCEPT by x y z w v')
+  expect(plain('security\u001b[2J \u{1F510} HUMAN_APPROVAL\u0000')).toBe('security [2J \u25c8 HUMAN_APPROVAL ')
+  expect(cut('a\nb\u2028c', 10)).toBe('a b c')
 })
