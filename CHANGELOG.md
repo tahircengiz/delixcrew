@@ -23,8 +23,8 @@ Earlier versions: git history and the [v0.2.0 release](https://github.com/tahirc
   a push only from the card's own branch, which is not the default branch, and denies `gh pr merge`: gate 2 is yours.
   It also denies a git global option outside git's own list, and a command name git does not list while
   `help.autocorrect` is on. The README's Known limits name what the hook cannot see.
-- **Desktop session titles carry the role**: when `/delixcrew:dispatch` opens card sessions in Claude Desktop, the lead
-  renames itself `<project> | lead · <topic>` and titles each card session `<project> | impl · T<nnn> <topic>`, so the
+- **The lead's Desktop title says Lead**: when `/delixcrew:dispatch` opens card sessions in Claude Desktop, the lead
+  renames itself `<project> | Lead • <topic>` and titles each card session `<project> | T<nnn> <topic>`, so the
   sidebar tells them apart. `<project>` comes from the lead's own title; a lead started by another session keeps its
   title.
 

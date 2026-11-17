@@ -44,13 +44,14 @@ One line per card for the user: card, role, tier, how to open it.
   `initiation: own_initiative`: a card the user starts with one click. For Tier 3 cards always the card, the user opens
   the session (under their eyes). Desktop names the worktree branch itself (e.g. `claude/<random>`), not
   `worktree-delix-T<nnn>`: take the branch from the implementer's report and do not look it up by name.
-- **Session titles (Desktop):** a role tag after the project prefix tells the lead from its card sessions in the
-  sidebar: `<project> | lead · <topic>` and `<project> | impl · T<nnn> <topic>`. `<project>` is the part of your own
-  title before ` | ` (`get_session` with `self`), or the repository folder name when there is none. Before the first
-  `start_session`, when `get_session` shows no `parentSessionId` and your title does not start with
-  `<project> | lead · `, rename this session with `set_session_title` (`self`) to `<project> | lead · <rest of the
-  title>`. Every implementer session gets the `title` `<project> | impl · T<nnn> <a few words of the card title>`,
-  under 60 characters, no emoji. Without these tools (terminal), skip this.
+- **Session titles (Desktop):** a `Lead • ` tag after the project prefix tells the lead from its card sessions in
+  the sidebar: `<project> | Lead • <topic>` for the lead, `<project> | T<nnn> <topic>` for a card session. `<project>`
+  is the part of your own title before ` | ` (`get_session` with `self`), or the repository folder name when there is
+  none. Before the first `start_session`, when `get_session` shows no `parentSessionId` and your title does not start
+  with `<project> | Lead • `, rename this session with `set_session_title` (`self`) to
+  `<project> | Lead • <rest of the title>`. Every implementer session gets the `title`
+  `<project> | T<nnn> <a few words of the card title>`, under 60 characters, no emoji. Without these tools (terminal),
+  skip this.
 - **Terminal:** Tier 1–2:
   `claude -p --worktree delix-T<nnn> --plugin-dir <plugin root> --permission-mode auto --max-turns 60 --max-budget-usd <budget> "$(cat docs/delix/tasks/T<nnn>.dispatch.md)"`;
   Tier 3: `claude -w delix-T<nnn> --plugin-dir <plugin root> --permission-mode auto` interactively. `--plugin-dir` is
