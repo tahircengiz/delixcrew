@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/C-board-visibility.md",
   "size": "M",
-  "updated": "2026-11-17T16:49:30Z",
+  "updated": "2026-11-17T16:50:44Z",
   "env_owner": null,
   "waves": [
     {
@@ -1283,12 +1283,23 @@
       "file": "docs/delix/tasks/T050-bash-gate-dashed-config.md",
       "role": "backend",
       "tier": 3,
-      "status": "open",
+      "status": "in_progress",
       "pr": null,
       "rounds": 0,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
-      "agents": []
+      "agents": [
+        {
+          "role": "implementer",
+          "by": "main",
+          "round": 0,
+          "sha": null,
+          "verdict": null,
+          "at": "2026-11-17T16:50:44Z",
+          "branch": "claude/t050-bash-gate-902cd5",
+          "session": "delix-t050-impl"
+        }
+      ]
     }
   },
   "status_values": [
