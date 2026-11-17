@@ -1233,8 +1233,8 @@
       "file": "docs/delix/tasks/T049-bash-gate-config-read.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_progress",
-      "pr": null,
+      "status": "in_review",
+      "pr": 78,
       "rounds": 0,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
@@ -1248,6 +1248,22 @@
           "at": "2026-11-17T06:09:58Z",
           "branch": "claude/t049-bash-gate-5fb29f",
           "session": "delix-t049-impl"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 1,
+          "sha": "ef0860668718cba0ab28cb0a70b14fb167f79b8a",
+          "verdict": "ACCEPT",
+          "at": "2026-11-17T06:46:16Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 1,
+          "sha": "ef0860668718cba0ab28cb0a70b14fb167f79b8a",
+          "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
+          "at": "2026-11-17T06:55:05Z"
         }
       ]
     }

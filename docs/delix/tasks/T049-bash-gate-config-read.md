@@ -309,3 +309,20 @@ The false-positive clause adds:
 - TR: `bu anahtarlardan birini okuyan ve okuma seçeneğinden önce başka bir seçenek taşıyan `git config` çağrısı (`--file=<dosya>` ya da `git remote get-url origin` kullan)`
 
 ## Review findings (filled by the lead)
+- Round 1 (PR #78, head `ef0860668718cba0ab28cb0a70b14fb167f79b8a`, 2026-11-17): qa `ACCEPT` (0 P0, 0 P1), security
+  `🔐 HUMAN_APPROVAL` (1 Low, already on main; 2 unsure notes). Lead gates on the clean `git archive` of the head:
+  both files equal the lead's prototype byte for byte and carry the card's sha256s; exactly the 2 Files, 0 removed
+  and 51 added test lines; 16 suites exit 0 with no `✘` on Python 3.9.6 and 3.13.13; `tests/push_gate_tests.sh` 160
+  `✔`, 8 growth lines pass; `claude plugin validate .` passes; the Stop gate gives `[exit 0]` twice; CI `check` and
+  `test` green. Acceptance (K317): `probe.sh` with `forms1.txt`, main against the head, real git 2.54 and bash
+  3.2.57 on temp repos (no network): the 17 forms that pass main deny on the head, the 7 reads pass on both, the
+  controls deny on both; `daily.py` 0 of 24 verdicts changed.
+  - Low (security, reproduced by the lead, already on main, no fix here, K318): a name of git's config command
+    that R-P5 does not read (the class T044 closed for `update-ref` and `remote`) still writes `origin`'s URL keys
+    on main and on the head, and the own-branch push lands in the other repository. The diff does not add it; the
+    card's Don'ts keep the fix out. Details with the lead; follow-up card.
+  - Note (security unsure, reproduced by the lead, no change): an option value built from a variable or from
+    command output can still hide a write in front of a read option, on main and on the head. Out of scope O2
+    (variables, command output), a Known limit.
+  - Note (P2, no change): the `words()` docstring still lists the old marks.
+  - Evidence: `rev78/` files in the lead's scratchpad (not in the repo).
