@@ -165,3 +165,19 @@ Read only this card and spec K313, K318, K319 and K320.
 ```
 
 ## Review findings (filled by the lead)
+- Round 1 (PR #79, head `992751b605153362bcda1cbe74dc639732ad9bf2`, 2026-11-17): qa `ACCEPT` (0 P0, 0 P1), security
+  `🔐 HUMAN_APPROVAL` (no finding; 2 unsure notes). Lead gates on the clean `git archive` of the head: both files
+  equal the lead's prototype byte for byte and carry the card's sha256s; exactly the 2 Files, 1 removed and 1 added
+  line in `scripts/bash_gate.py`, 0 removed and 8 added test lines; 16 suites exit 0 with no `✘` on Python 3.9.6 and
+  3.13.13; `tests/push_gate_tests.sh` 167 `✔`; the Stop gate gives `[exit 0]` twice; CI `check` and `test` green.
+  Acceptance (K320): `probe.sh` with `forms3.txt`, main against the head, real git 2.54 and bash 3.2.57 on temp repos
+  (no network): the 6 forms that pass main deny on the head, the 3 dashed reads pass on both, the control denies on
+  both; `daily.py` 0 of 24 verdicts changed.
+  - Note (security unsure, reproduced by the lead, no change): a glob in the dashed name passes on main and on the
+    head; globs are a Known limit of every rule (README).
+  - Note (security unsure, reproduced by the lead): the dashed name given as the program name by the shell passes
+    main and denies on the head; this card closes it too.
+  - Note (implementer): the session's own hook was the installed plugin; one quoted search text that held the
+    dashed names denied (the loose view reads words inside quotes, fail closed). The worktree folder reused an
+    older card's name; the lead reviewed the branch commit, not the folder.
+  - Evidence: `rev79/` files in the lead's scratchpad (not in the repo).
