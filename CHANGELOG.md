@@ -4,8 +4,15 @@ Earlier versions: git history and the [v0.2.0 release](https://github.com/tahirc
 
 ## Unreleased
 
+- **The lead's Desktop title says Lead**: when `/delixcrew:dispatch` opens card sessions in Claude Desktop, the lead
+  renames itself `<project> | Lead • <topic>` and titles each card session `<project> | T<nnn> <topic>`, so the
+  sidebar tells them apart. `<project>` comes from the lead's own title; a lead started by another session keeps its
+  title.
+
+## 0.7.0 — 2026-11-17
+
 - **The board shows agents, the review ledger and what waits on you** (Spec C; #59, #60, #62, #71): below the card
-  table, `/delixcrew:status` and the delix-board pane (0.1.5) show Leads, Agents, Waiting on you, Ready to merge and
+  table, `/delixcrew:status` and the delix-board pane (0.1.6) show Leads, Agents, Waiting on you, Ready to merge and
   Git actions. The lead skills append every implementer, qa and security run to `STATE.json.cards.<T>.agents` (who
   sent it, round, reviewed SHA, verdict). Each push, merge or cleanup command comes in its own one-line `bash` block
   for Desktop's Run button; you run it, the board does not.
@@ -23,10 +30,35 @@ Earlier versions: git history and the [v0.2.0 release](https://github.com/tahirc
   a push only from the card's own branch, which is not the default branch, and denies `gh pr merge`: gate 2 is yours.
   It also denies a git global option outside git's own list, and a command name git does not list while
   `help.autocorrect` is on. The README's Known limits name what the hook cannot see.
-- **The lead's Desktop title says Lead**: when `/delixcrew:dispatch` opens card sessions in Claude Desktop, the lead
-  renames itself `<project> | Lead • <topic>` and titles each card session `<project> | T<nnn> <topic>`, so the
-  sidebar tells them apart. `<project>` comes from the lead's own title; a lead started by another session keeps its
-  title.
+- **The board names who opened each card and its last review round** (K290, K291, K293, K294; #73): Agents, Waiting on
+  you and Ready to merge carry who opened each card and its last review round on both surfaces; the pane shows them in a
+  dimmed second line, and Leads shows when each lead's STATE last changed. The `status`, `diff` and `log` calls carry
+  `--no-lazy-fetch` like the STATE read, so a partial clone fetches no missing object; git older than 2.44 rejects the
+  flag, so those fields show `?` and nothing shows as ready to merge. Both surfaces read `default_branch` and
+  `.delix/card` by one rule.
+- **An implementer session is denied `git update-ref` and `git remote` writes** (🔐 K296, K312, K313; #74): in an
+  implementer worktree the Bash hook denies `git update-ref` and every `git remote` form except plain `git remote`, `-v`
+  / `--verbose`, `show` and `get-url`, also through an alias or the dashed name. A `docs/delix/delix.json` that is not a
+  JSON object, or a byte that is not UTF-8 in a git setting the rule reads, denies with a message instead of failing.
+- **An unreviewed merged head escalates** (K297; #72): after your merge the lead writes `accepted` only when the merged
+  head is the commit the last qa round reviewed; otherwise it still records `merged`, sets `escalated` and tells you "an
+  unreviewed head was merged".
+- **The Bash hook reads a command the way bash builds its argv** (🔐 K300–K305; #75): the push, ref and remote rules read
+  a command both by the loose word scan and as bash's argv, so a quoted blank, an option value with a comma or a
+  bracket, a backslash-newline, a redirection and the text of an `sh -c` string no longer hide the subcommand. An alias
+  that starts with a global option is followed to its command, and a quote never closed in front of a `git` word denies
+  with a message.
+- **The Bash hook reads a command in one pass the way bash does** (🔐 K306–K310; #76): the bash view follows command
+  substitutions in double quotes, in heredoc bodies and glued to a word, takes a `#` as a comment only at the start of a
+  word, ends a heredoc body at its delimiter, reads brace groups as bash does, and reads `$'…'` to its end without
+  decoding escapes such as `\x67` (K312); an alias value is split the way git splits it. A command nested too deep for
+  the hook to read denies with a message. Variables, `eval`, globs, ANSI-C escapes, command output that spells a word
+  and brace expansion stay out of its reach (Known limits).
+- **A `git config` read counts only where git reads one** (🔐 K317, K320; #78, #79): in an implementer worktree a
+  `git config` call that names an `alias.`, `remote.`, `push.`, `url.`, `include` or `help.` key is denied unless git
+  reads it as a read (`get` or `list` as its first argument, or a read option such as `--get` before the key), also
+  through the dashed name; a word after the key and a comment do not count. A command that holds a `#`, a `(` or a
+  backtick is read by the bash view as well.
 
 ## 0.6.3 — 2026-11-04
 

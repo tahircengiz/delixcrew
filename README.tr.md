@@ -124,7 +124,10 @@ bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
   dalından, `remote.origin.push` yokken, aynı komutta `cd` ve `add`, `commit`, `status`, `diff`, `log`, `show`
   dışında bir git komutu yokken çalışır; dal adı biçimi ayrıca dalın upstream'inin olmamasını ya da dalın kendisi
   olmasını ister. Git'in kendi listesinde olmayan bir git genel seçeneği de, `help.autocorrect` açıkken git'in
-  listelemediği bir komut adı da orada reddedilir. `gh pr merge` orada reddedilir: kapı 2 kullanıcınındır (T041, K279).
+  listelemediği bir komut adı da orada reddedilir. Orada `alias.`, `remote.`, `push.`, `url.`, `include` ya da `help.`
+  anahtarını anan bir `git config` çağrısı, git onu okuma olarak okumuyorsa reddedilir: ilk argümanı `get` ya da `list`
+  olmalı ya da anahtardan önceki seçeneklerde `--get` gibi bir okuma seçeneği bulunmalı; anahtardan sonraki kelime ve
+  yorum sayılmaz (T049). `gh pr merge` orada reddedilir: kapı 2 kullanıcınındır (T041, K279).
   Ayrıca `git update-ref`'i ve düz `git remote`, `-v` / `--verbose`, `show` ve `get-url` dışındaki her `git remote`
   biçimini reddeder; kart oturumu bu komutlarla ref ya da remote yazmaz (T044, K296). JSON nesnesi olmayan bir
   `docs/delix/delix.json` ya da kuralın okuduğu bir git ayarındaki UTF-8 olmayan bayt,
@@ -136,7 +139,8 @@ bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
   çift tırnak içinde, heredoc gövdesinde ve bir kelimeye bitişikken de izler, `#`'i yalnız kelime başında yorum sayar,
   heredoc gövdesini sınırlayıcısında bitirir, süslü parantez gruplarını bash gibi okur, `$'…'`'yu da sonuna kadar okur
   ama `\x67` gibi kaçışları çözmez; alias değeri git'in böldüğü gibi bölünür. Hook'un okuyamayacağı
-  kadar derin iç içe bir komut mesajla reddedilir (T048).
+  kadar derin iç içe bir komut mesajla reddedilir (T048). İçinde `#`, `(` ya da ters tırnak geçen bir komutu bash
+  görünümü de okur (T049).
 - `Stop`, [`scripts/stop_gate.py`](scripts/stop_gate.py)'yi yalnız uygulayıcı worktree'sinde çalıştırır: projenin
   `docs/delix/delix.json` dosyasındaki `test_command` ve `extra_checks` komutlarını kabukta çalıştırır; bunlar geçene
   dek tur bitmez. Bu komutlar plugin'in değil, projenizin komutlarıdır. Onları yalnız o listeyi bu repo için (repo
@@ -396,13 +400,16 @@ değildir: değişkenler, `eval`, glob'lar, `$'\x67it'` gibi ANSI-C kaçışlar�
 (`$(echo gi)t`) ve süslü parantez genişletme (`git {push,origin,HEAD:main}` bir push olarak çalışır) ile kurulan
 kelimeler, ortamdan (`GIT_DIR`, `GIT_CONFIG_*`) verilen ya da aynı satırda başka bir komutun (`>>` yönlendirmesi gibi)
 bir git ayar dosyasına yazdığı git ayarları, bir betik dosyası ya da başka bir programın kendi git çağrıları
-(`gh pr checkout` gibi), `pr merge` için bir `gh` alias'ı, aynı ya da önceki bir çağrıda
-git ayar dosyasına yazılan bir `origin` URL'si (`url`, `pushurl` ya da `url.*.insteadOf`; kendi dalının push'u o adrese
+(`gh pr checkout` gibi), `pr merge` için bir `gh` alias'ı, aynı ya da önceki bir çağrıda bir git ayar dosyasına
+(reponun, global ya da include edilen) yazılan bir `origin` URL'si (`url`, `pushurl`, `url.*.insteadOf` ya da
+`url.*.pushInsteadOf`; kendi dalının push'u o adrese
 gider), delixcrew'un kendi reposu dışındaki her repoda `gh api` ile ref ya da merge yazmak, `.delix/card`'ı silmek,
 worktree kökünün altındaki bir cwd ve `main-review` ruleset'indeki repo sahibi bypass'ı onun erişimi dışındadır; yanlış
 pozitif olarak bir heredoc gövdesinin, bir `echo`'nun ya da commit mesajının tek satırındaki `git` ve `push`
 kelimelerini, aynı satırda `git` ve `update-ref` kelimelerini, okuma biçimleri dışındaki bir `git remote` biçimini
-(ref'leri tazelemek için `git fetch` çalıştır), bir `git` kelimesinin önünde, heredoc gövdesinde de, hiç kapanmayan
+(ref'leri tazelemek için `git fetch` çalıştır), `alias.`, `remote.`, `push.`, `url.`, `include` ya da `help.` anahtarını
+okuyan ve okuma seçeneğinden önce başka bir seçenek taşıyan `git config` çağrısını (`--file=<dosya>` ya da
+`git remote get-url origin` kullan), bir `git` kelimesinin önünde, heredoc gövdesinde de, hiç kapanmayan
 tırnağı (tırnağı kapat ya da metni bir dosyaya yaz), hook'un okuyamayacağı kadar derin iç içe bir komutu ve `cd` ya da
 `add`, `commit`, `status`, `diff`, `log`, `show` dışında bir git komutu da içeren bir komuttaki push'u reddeder.
 İzin verilen tek `cat` heredoc'u,

@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/C-board-visibility.md",
   "size": "M",
-  "updated": "2026-11-17T17:35:26Z",
+  "updated": "2026-11-17T19:07:56Z",
   "env_owner": null,
   "waves": [
     {
@@ -125,6 +125,13 @@
         "T050"
       ],
       "note": "T050 \ud83d\udd10 Tier 3 (scripts/bash_gate.py one line, tests/push_gate_tests.sh one insertion after line 153): R-D1, the dashed git-config name follows R-P5 and R-C1 (closes the K318 Low). Card by the lead; anchors give both files byte for byte on the merge of #78 (bbb9ff2); red 5/162, green 167; 16 suites on Python 3.9.6 and 3.13.13. K319 (user): before the release card T042. K320 the card's decisions. Approved 2026-11-17 tahircengiz (the user's item-specific yes in the lead chat)."
+    },
+    {
+      "wave": 21,
+      "cards": [
+        "T042"
+      ],
+      "note": "T042 \ud83d\udd10 Tier 3 (.claude-plugin/plugin.json version only; CHANGELOG, README, README.tr, 4 site pages): release 0.7.0 of Spec C (#72-#79) with T049's Docs handover. Card from the card-writer session; the lead applied its 40 anchors to 279a8c9 with an independent applier (8 sha256s match), site test 23, 16 suites on Python 3.9.6 and 3.13.13. K322 the card and D1-D8, K323 the reused worktree, K324 D9. Approved 2026-11-17 tahircengiz (the user's item-specific yes in the lead chat)."
     }
   ],
   "cards": {
@@ -1320,6 +1327,49 @@
         "sha": "b9dc48828c230ba6b963a206ede59f4a27c5d8f2",
         "head": "992751b605153362bcda1cbe74dc639732ad9bf2",
         "at": "2026-11-17T17:35:26Z"
+      }
+    },
+    "T042": {
+      "file": "docs/delix/tasks/T042-release-0-7-0.md",
+      "role": "docs",
+      "tier": 3,
+      "status": "accepted",
+      "pr": 81,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md",
+      "agents": [
+        {
+          "role": "implementer",
+          "by": "main",
+          "round": 0,
+          "sha": null,
+          "verdict": null,
+          "at": "2026-11-17T18:32:17Z",
+          "branch": "claude/t042-release-f1c9fa",
+          "session": "delix-t042-impl"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 1,
+          "sha": "328f837d12e1771e66dd60402bef564aaf70cefb",
+          "verdict": "ACCEPT",
+          "at": "2026-11-17T18:59:10Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 1,
+          "sha": "328f837d12e1771e66dd60402bef564aaf70cefb",
+          "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
+          "at": "2026-11-17T19:01:45Z"
+        }
+      ],
+      "merged": {
+        "sha": "0e6cb892f588995842ec51a7372da8b1703b070a",
+        "head": "328f837d12e1771e66dd60402bef564aaf70cefb",
+        "at": "2026-11-17T19:07:56Z"
       }
     }
   },
