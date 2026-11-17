@@ -149,9 +149,12 @@ CONFIG_KEYS = ("alias.", "remote.", "push.", "url.", "include", "help.")  # R-P5
 AUTOCORRECT_OFF = {"0", "false", "off", "no", "show", "never"}  # R-P4a: help.autocorrect values that run nothing
 PUSH_PEERS = {"add", "commit", "status", "diff", "log", "show"}  # R-P3b: git commands a push may share a line with
 CONFIG_READS = {"--get", "--get-all", "--get-regexp", "--get-urlmatch", "--list", "-l", "get", "list"}
+CONFIG_FLAGS = {"--global", "--system", "--local", "--worktree", "--includes", "--no-includes", "-z", "--null",
+                "--name-only", "--show-origin", "--show-scope", "--show-names", "--bool", "--int", "--bool-or-int",
+                "--bool-or-str", "--path", "--expiry-date", "--fixed-value"}  # R-C1: git config options with no value
 
 
-_MARKS = re.compile(r"['\"\\,\[\]<>{}]|[^\S \t\n]")  # R-W1: where the quote-blind view and bash's argv can differ
+_MARKS = re.compile(r"['\"\\,\[\]<>{}`(#]|[^\S \t\n]")  # R-W1: where the quote-blind view and bash's argv can differ
 _SPLIT = re.compile(r"[\s;&|(){}`'\"\\,\[\]<>]+")
 _RUN = re.compile(r"[^ \t\n;&|()<>'\"\\`$#]+")  # R-W1: characters bash adds to a word as they are
 _DQRUN = re.compile(r"[^\"\\$`]+")  # the same inside double quotes
@@ -459,6 +462,24 @@ def remote_writes(toks, k, n):
     return k < n and toks[k].casefold() not in ("show", "get-url")
 
 
+def config_read(toks, k):
+    """R-C1 (T049): True when the `git config` call whose first argument is toks[k] only reads. git 2.54 takes a
+    subcommand only as that first argument and stops reading options at the first argument that is not an option, so
+    a read counts only there: `get` or `list` at toks[k], or a CONFIG_READS option among the options from toks[k] on
+    when each of the others is in CONFIG_FLAGS or is one `--name=value` token. Any other option may take the next
+    argument as its value (`--comment --get`) or write, so it ends the exemption (fail closed)."""
+    if toks[k:k + 1] in (["get"], ["list"]):
+        return True
+    read = False
+    while k < len(toks) and toks[k].startswith("-"):
+        if toks[k] in CONFIG_READS:
+            read = True
+        elif toks[k] not in CONFIG_FLAGS and not (toks[k].startswith("--") and "=" in toks[k]):
+            return False
+        k += 1
+    return read
+
+
 def git_split(v):
     """R-A1: the argv git builds from an alias value (split_cmdline in alias.c; measured with git 2.54): a run of
     space, tab, newline or carriage return ends an argument (leading or trailing, it gives an empty one); a quote pairs
@@ -624,7 +645,7 @@ for toks in segs:
                 deny(MERGE_DENY)
         else:
             i += 1
-    reads = keys = None  # R-P5: does the rest of the segment from index x hold a read flag / a config key
+    keys = None  # R-P5: does the rest of the segment from index x hold a config key
     i = 0
     while i < n:  # R-P2: one left-to-right pass
         t = toks[i].casefold()
@@ -669,13 +690,12 @@ for toks in segs:
         alias_check(sub)
         autocorrect_check(sub)
         if sub == "config":
-            if reads is None:
-                reads, keys = [False] * (n + 1), [False] * (n + 1)
+            if keys is None:
+                keys = [False] * (n + 1)
                 for x in range(n - 1, -1, -1):
-                    reads[x] = reads[x + 1] or toks[x] in CONFIG_READS
                     keys[x] = keys[x + 1] or toks[x].casefold().startswith(CONFIG_KEYS)
-            if keys[j + 1] and not reads[j + 1]:
-                deny(PUSH_DENY)
+            if keys[j + 1] and not config_read(toks, j + 1):
+                deny(PUSH_DENY)  # R-C1: a read counts only at git config's action position, from each view
         i = j + 1
 
 if pushed and other:  # R-P3b: another git command on the line may move HEAD or the upstream before the push runs

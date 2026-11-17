@@ -100,6 +100,57 @@ deny "-c includeIf (letter case)"           "$W" "$G -c IncludeIf.x.path=y statu
 deny "config --global remote."              "$W" "$G config --global remote.origin.url x"
 deny "config set push."                     "$W" "$G config set push.default current"
 deny "config include.path"                  "$W" "$G config include.path /tmp/x"
+# T049 R-C1: a read word counts only at git config's action position; the bash view also reads `#`, `(`, backticks
+TAB=$'\t'
+deny "config <push>url, then # get"         "$W" "$G config remote.origin.${P}url /tmp/x # get"
+deny "config insteadOf, then # get"         "$W" "$G config url./tmp/x.insteadOf $W.git # get"
+deny "config <push>url, value-pattern get"  "$W" "$G config remote.origin.${P}url /tmp/x get"
+deny "config url, then # --list"            "$W" "$G config remote.origin.url /tmp/x # --list"
+deny "config url, --get after the key"      "$W" "$G config remote.origin.url /tmp/x --get"
+deny "config url, -l after the key"         "$W" "$G config remote.origin.url /tmp/x -l"
+deny "--comment takes --get as its value"   "$W" "$G config --comment --get remote.origin.url /tmp/x"
+deny "--com (abbreviation) takes --get"     "$W" "$G config --com --get remote.origin.url /tmp/x"
+deny "config set, then # get"               "$W" "$G config set remote.origin.url /tmp/x # get"
+deny "config --add, then # --get"           "$W" "$G config --add remote.origin.${P}url /tmp/x # --get"
+deny "config <push>url, tab, # get"         "$W" "$G config remote.origin.${P}url /tmp/x${TAB}# get"
+deny "config, substitution, <push>url"      "$W" "$G config \$(true) remote.origin.${P}url /tmp/x"
+deny "config, backticks, <push>url"         "$W" "$G config \`true\` remote.origin.${P}url /tmp/x"
+deny "substitution before the <push>, main" "$W" "$G \$(true) $P origin HEAD:main"
+deny "backticks before the <push>, main"    "$W" "$G \`true\` $P origin HEAD:main"
+deny "config <push>url; a later --get"      "$W" "$G config remote.origin.${P}url /tmp/x; $G config --get user.name"
+allow "config --local --get"                "$W" "$G config --local --get remote.origin.url"
+allow "config --show-origin --get"          "$W" "$G config --show-origin --get $P.default"
+allow "config --type=bool --get"            "$W" "$G config --type=bool --get $P.autoSetupRemote"
+allow "config get, then a comment"          "$W" "$G config get remote.origin.url # read"
+allow "config --get-all, 2>/dev/null"       "$W" "$G config --get-all remote.origin.$P 2>/dev/null"
+allow "log, then a comment"                 "$W" "$G log -1 # last"
+allow "rev-parse in backticks"              "$W" "echo \`$G rev-parse HEAD\`"
+# T049 growth: config_read walks the options once; `#`, `(` and backticks now send the text to the bash view
+python3 - "$S/bash_gate.py" "$W" "$G" <<'PYC' || FAIL=1
+import json, subprocess, sys, time
+hook, w, g = sys.argv[1:4]
+cases = [("config options", lambda k: g + " config" + " -z" * k + " --get remote.origin.url"),
+         ("config reads", lambda k: (g + " config --get remote.origin.url; ") * k),
+         ("comments", lambda k: (g + " status # x\n") * k),
+         ("substitutions", lambda k: "echo `true` $(true); " * k + g + " status")]
+bad = 0
+for name, make in cases:
+    t = {}
+    for k in (5000, 40000):
+        data = json.dumps({"tool_name": "Bash", "cwd": w, "tool_input": {"command": make(k)}})
+        runs = []
+        for _ in range(3):
+            s = time.perf_counter()
+            subprocess.run([sys.executable, hook], input=data, capture_output=True, text=True, timeout=60)
+            runs.append(time.perf_counter() - s)
+        t[k] = min(runs)
+    ratio = t[40000] / t[5000]
+    ok = t[40000] < 3 and ratio < 20
+    bad |= not ok
+    print(chr(0x2714 if ok else 0x2718) + " growth %s: t(5000)=%.3fs t(40000)=%.3fs ratio=%.2f"
+          % (name, t[5000], t[40000], ratio))
+sys.exit(1 if bad else 0)
+PYC
 # Deny: gh merge (R-P6)
 deny "gh merge"                             "$W" "gh pr $M 7 --squash" "$MERGE_DENY"
 deny "/usr/bin/gh merge"                    "$W" "/usr/bin/gh pr $M 7" "$MERGE_DENY"
