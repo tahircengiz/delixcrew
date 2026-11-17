@@ -2,6 +2,13 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## Unreleased
+
+- **The lead's Desktop title says Lead**: when `/delixcrew:dispatch` opens card sessions in Claude Desktop, the lead
+  renames itself `<project> | Lead • <topic>` and titles each card session `<project> | T<nnn> <topic>`, so the
+  sidebar tells them apart. `<project>` comes from the lead's own title; a lead started by another session keeps its
+  title.
+
 ## 0.7.0 — 2026-11-17
 
 - **The board shows agents, the review ledger and what waits on you** (Spec C; #59, #60, #62, #71): below the card
