@@ -2,7 +2,7 @@
 
 > Size: **M** · Tier: 2 · Date: 2026-11-04 · Status: **approved (gate 1, 2026-11-04)** (rev 3: architect FIX
 > işlendi, P0×2 P1×3 P2×2; yeniden kontrolde kalan P1 rol tespiti üç noktalı diff'e çevrildi; rev 4: job B, K260–K261; rev 5 (2026-11-11): K262 güvenilir ledger, kullanıcı seçimi A; K263 git sertleştirmesi; rev 6 (2026-11-12): wave 9 tur 1, K273–K276; rev 7: tur 2 notları, K277; rev 8 (2026-11-12): K277 takip kartları T037–T041, çağrı 6/7 bayrakları ve R8'', K278–K279; rev 9 (2026-11-12): T041 tur 1, K280–K281; rev 10: T041 tur 2, K282; rev 11: T041 tur 3, K283; rev 12 (2026-11-13): kapanış drift kontrolü, grill K290–K293
-> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300; rev 14: T047 tur 2, K302; rev 15: T047 tur 3, K303; rev 16: T047 tur 4, K304; rev 17: T047 merge, K305; rev 18: T048 kartı, K306–K310; rev 19: T048 merge, T046 dağıtımı, K311; rev 20: T046 tur 1, K312; rev 21: T046 tur 2, K313; T049 sırası, K314; rev 22: T046 tur 3, K315; rev 23: T049 sürümden önce, K316; rev 24: T049 dağıtımı (🔐 onaylı), K317; rev 25: T049 tur 1, K318. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
+> (kullanıcı), K294–K299 (lead), takip kartları; rev 13 (2026-11-13): T047 kartı, K300; rev 14: T047 tur 2, K302; rev 15: T047 tur 3, K303; rev 16: T047 tur 4, K304; rev 17: T047 merge, K305; rev 18: T048 kartı, K306–K310; rev 19: T048 merge, T046 dağıtımı, K311; rev 20: T046 tur 1, K312; rev 21: T046 tur 2, K313; T049 sırası, K314; rev 22: T046 tur 3, K315; rev 23: T049 sürümden önce, K316; rev 24: T049 dağıtımı (🔐 onaylı), K317; rev 25: T049 tur 1, K318; rev 26: T049 merge, T050 kartı (🔐 onaylı), K319, K320. Tier 2; istisna `scripts/bash_gate.py` kartları T041 ve rev 12'nin ref
 > yazma kartı, 🔐 Tier 3, K279)
 > Source: kullanıcı isteği (sohbet, 2026-11-04, dört madde); grill kararları K240–K243 ve K262 (kullanıcı), lead kararları
 > K244–K261, K263 ve K273–K277. Spec B (#17) aynı anda başka bir lead oturumunda açık olduğu için bu dosya `docs/delix/SPEC.md` yerine
@@ -619,3 +619,19 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
   - **Not (değişiklik yok):** değişken ya da komut çıktısıyla kurulan bir seçenek değeri, okuma seçeneğinin önünde
     bir yazımı main'de ve uçta saklayabilir; O2 sınıfı, Bilinen sınır.
   - **Not (P2):** `words()` docstring'i eski işaretleri sayar.
+- **K319** (kullanıcı, 2026-11-17) T050, 0.7.0 sürümünden (T042) önce gelir; sıra T046, T049, T050, T042.
+  - **Onay:** "Evet, T050 onaylı" (işe özel 🔐, lead sohbeti); Approved 2026-11-17 tahircengiz. Dağıtım
+    PR #78 merge'ünden (`bbb9ff2`) sonra; çapalar T049'lu main'de.
+- **K320** (lead, 2026-11-17, geri alınır) T050 kartı (🔐 Tier 3, `scripts/bash_gate.py`; lead yazdı).
+  - **R-D1:** R-P2 döngüsü son yol parçası (küçük harfe çevrilmiş) `git-config` olan bir kelimeyi, T041 ve T044'ün
+    dört tireli adı gibi, global seçeneksiz `git config` sayar; R-P5 ve R-C1 iki görünümde değişmeden uygulanır.
+    Kapanan: K318'deki Low.
+  - **Kapsam:** yalnız `git-config`; R-P5 anahtarlarını reponun kendisinde `git config` ve `git remote` yazar,
+    `git-remote`'u R-U2 zaten okur. Git'in başka adla (bağlantı ya da kopya) çalışması Bilinen sınır (O1; lead
+    git 2.54'te ölçtü).
+  - **Ölçüm:** 6 biçim main'den (T049 ile) geçip `origin`'in URL anahtarlarını yazar, kendi dal push'u başka repoya
+    gider; prototip 6'sını reddeder. 3 tireli okuma ve 24 günlük komut iki tarafta aynı sonucu verir. Yeni test
+    tabanda 5 ✘ / 162 ✔, prototipte 167 ✔; 16 test dosyası Python 3.9.6 ve 3.13'te geçer.
+  - **Belge:** README ve site tireli adları anmaz; yeni cümle yok. T042'nin T049 CHANGELOG maddesine "also through
+    the dashed name (T050)" eklenir.
+  - **Yayın:** geçen biçimler yalnız kartta ve testte durur (K313); kart main'e dispatch'te girer.

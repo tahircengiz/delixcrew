@@ -118,6 +118,13 @@
         "T049"
       ],
       "note": "T049 \ud83d\udd10 Tier 3 (scripts/bash_gate.py, tests/push_gate_tests.sh one insertion after line 102): R-C1, a git config read counts only at its action position (closes the R-P5 gap of K313); _MARKS adds the backtick, ( and # so the bash view also reads them (D4). Card from the card-writer session; the lead checked it on bdde464 (anchors give both files byte for byte; red 15/145, green 160; 16 suites on Python 3.9.6 and 3.13.13). K316 (user): before the release card T042; T042 carries the Docs handover and K315's wider text. K317 the card's decisions. Approved 2026-11-17 tahircengiz (the user's item-specific yes in the lead chat)."
+    },
+    {
+      "wave": 20,
+      "cards": [
+        "T050"
+      ],
+      "note": "T050 \ud83d\udd10 Tier 3 (scripts/bash_gate.py one line, tests/push_gate_tests.sh one insertion after line 153): R-D1, the dashed git-config name follows R-P5 and R-C1 (closes the K318 Low). Card by the lead; anchors give both files byte for byte on the merge of #78 (bbb9ff2); red 5/162, green 167; 16 suites on Python 3.9.6 and 3.13.13. K319 (user): before the release card T042. K320 the card's decisions. Approved 2026-11-17 tahircengiz (the user's item-specific yes in the lead chat)."
     }
   ],
   "cards": {
@@ -1271,6 +1278,17 @@
         "head": "ef0860668718cba0ab28cb0a70b14fb167f79b8a",
         "at": "2026-11-17T16:49:30Z"
       }
+    },
+    "T050": {
+      "file": "docs/delix/tasks/T050-bash-gate-dashed-config.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md",
+      "agents": []
     }
   },
   "status_values": [
