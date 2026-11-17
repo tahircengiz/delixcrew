@@ -1000,7 +1000,7 @@
       "file": "docs/delix/tasks/T046-docs-site-rev12.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 77,
       "rounds": 2,
       "cost_usd": null,
@@ -1064,7 +1064,12 @@
           "verdict": "CLEAN",
           "at": "2026-11-14T08:51:03Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "e2864f69fe336e2d30ab8df6b397468517fafd22",
+        "head": "9e3f384c9ead44fc091aa00069ab5773f5191d3a",
+        "at": "2026-11-17T06:14:09Z"
+      }
     },
     "T047": {
       "file": "docs/delix/tasks/T047-bash-gate-argv.md",
