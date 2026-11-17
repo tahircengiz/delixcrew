@@ -539,3 +539,17 @@ Merge sonrası (kullanıcı):
 Read only this card and, in the spec, K309, K313, K315, K316, K319 and K320.
 
 ## Review findings (filled by the lead)
+- Round 1 (PR #81, head `328f837d12e1771e66dd60402bef564aaf70cefb`, 2026-11-17): qa `ACCEPT` (0 P0, 0 P1), security
+  `🔐 HUMAN_APPROVAL` (no finding; Tier 3, `plugin.json` changes only its version). Lead gates on the clean
+  `git archive` of the head: exactly the 8 Files, numstat 1/1, 31/2, 11/5, 12/5, 3/3, 3/3, 6/6, 6/6 (73 insertions,
+  31 deletions); the 8 sha256s equal the card's "after" values (the lead's own application of the anchors gave the
+  same); 16 suites exit 0 with no `✘` on Python 3.9.6 and 3.13.13 (`site_tests.sh` 23 `✔`); the Stop gate gives
+  `[exit 0]` for both commands; CI `check` and `test` green; screenshots show `delixcrew 0.7.0` and 2026-11-17.
+  - P2 (security unsure, reproduced by the lead, no fix): the Known limits false-positive clause "with another option
+    before the read option" / its TR twin is broader than the code. On the head, `--local`, `--file=<file>`,
+    `--show-origin` and `--includes` before `--get` pass; `-f <file>` before `--get` is denied; the write control
+    denies. The text errs toward deny and its workaround works; a later wording can name the two-word option form.
+  - Note (qa unsure, checked by the lead): the PR body's `## Merge sonrası` block equals the card's (tag, plugin
+    update, no Stop gate step per D7).
+  - Note (implementer): the impeccable hook flags pre-existing 11.5 px site text outside this card; unchanged.
+  - Evidence: `rev81/` files in the lead's scratchpad (not in the repo).
