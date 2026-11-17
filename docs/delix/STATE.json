@@ -111,6 +111,13 @@
         "T048"
       ],
       "note": "T048 \ud83d\udd10 Tier 3 (scripts/bash_gate.py, new tests/parse_gate_tests.sh, tests/argv_gate_tests.sh line 148 only): bash_argv reads a command in one pass the way bash reads it; closes the T047 round-4 Medium and the forms K304/K305 send here. Card from the card-writer session (Opus); the lead checked it on 408d166 (anchors give the prototype byte for byte, option B equal to the card writer's file; 16 suites green on Python 3.9.6 and 3.13.13 for A and B; red 37/35, green 72). K306 brace expansion stays a Known limit; K307 the lead runs the acceptance fuzz on the PR head; K308 wave 18; K309 order T048, T046, T042; K310 option B and the one test-line exception. Approved 2026-11-13 tahircengiz (the user's item-specific yes in the lead chat); interactive session the user opens."
+    },
+    {
+      "wave": 19,
+      "cards": [
+        "T049"
+      ],
+      "note": "T049 \ud83d\udd10 Tier 3 (scripts/bash_gate.py, tests/push_gate_tests.sh one insertion after line 102): R-C1, a git config read counts only at its action position (closes the R-P5 gap of K313); _MARKS adds the backtick, ( and # so the bash view also reads them (D4). Card from the card-writer session; the lead checked it on bdde464 (anchors give both files byte for byte; red 15/145, green 160; 16 suites on Python 3.9.6 and 3.13.13). K316 (user): before the release card T042; T042 carries the Docs handover and K315's wider text. K317 the card's decisions. Approved 2026-11-17 tahircengiz (the user's item-specific yes in the lead chat)."
     }
   ],
   "cards": {
@@ -1216,6 +1223,16 @@
         "head": "75b12de2c71608b4e7d6e9d4855f214ceb81b010",
         "at": "2026-11-14T06:57:30Z"
       }
+    },
+    "T049": {
+      "file": "docs/delix/tasks/T049-bash-gate-config-read.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md"
     }
   },
   "status_values": [
