@@ -151,6 +151,14 @@ for name, make in cases:
           % (name, t[5000], t[40000], ratio))
 sys.exit(1 if bad else 0)
 PYC
+# T050: the dashed git-config name follows R-P5 and R-C1 like `git config` (T044's class of dashed names)
+deny "dashed config, <push>url"             "$W" "$G-config remote.origin.${P}url /tmp/x"
+deny "dashed config with a path, url"       "$W" "/x/$G-config remote.origin.url /tmp/x"
+deny "dashed config, insteadOf"             "$W" "$G-config url./tmp/x.insteadOf $W.git"
+deny "exec-path, dashed config, <push>url"  "$W" "\$($G --exec-path)/$G-config remote.origin.${P}url /tmp/x"
+deny "dashed config, alias"                 "$W" "$G-config alias.p $P"
+allow "dashed config --get"                 "$W" "$G-config --get remote.origin.url"
+allow "dashed config, user.name"            "$W" "$G-config user.name t"
 # Deny: gh merge (R-P6)
 deny "gh merge"                             "$W" "gh pr $M 7 --squash" "$MERGE_DENY"
 deny "/usr/bin/gh merge"                    "$W" "/usr/bin/gh pr $M 7" "$MERGE_DENY"

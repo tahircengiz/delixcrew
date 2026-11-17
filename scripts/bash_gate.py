@@ -666,7 +666,7 @@ for toks in segs:
             if j >= n:
                 break
             sub = toks[j].casefold()
-        elif t.rsplit("/", 1)[-1] in ("git-push", "git-send-pack", "git-update-ref", "git-remote"):
+        elif t.rsplit("/", 1)[-1] in ("git-push", "git-send-pack", "git-update-ref", "git-remote", "git-config"):
             j, gopt, sub = i, False, t.rsplit("/", 1)[-1][len("git-"):]
         else:
             i += 1
