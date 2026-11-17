@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-17 · **Sürüm:** 0.7.0 (2026-11-17, Spec C pano görünürlüğü ve Bash hook sertleştirmesi; T042, PR #81, `0e6cb89`; etiket `v0.7.0` kullanıcıda) · **Faz:** Spec C (board görünürlüğü, `docs/delix/specs/C-board-visibility.md`) takip turuyla kapandı 2026-11-17: ilk tur T029–T041, 13 PR (#59–#71), 2026-11-12; takip turu T043–T050 ve sürüm kartı T042, 9 PR (#72–#79, #81). §12: spec B #17, T026–T028. §11: #34–#36, T023–T024, arşiv `docs/delix/archive/0.6.x-triage-fixes/`.
+**Son güncelleme:** 2026-11-17 · **Sürüm:** 0.7.0 (2026-11-17, Spec C pano görünürlüğü ve Bash hook sertleştirmesi; T042, PR #81, `0e6cb89`; etiket `v0.7.0`) · **Faz:** Spec C (board görünürlüğü, `docs/delix/specs/C-board-visibility.md`) takip turuyla kapandı 2026-11-17: ilk tur T029–T041, 13 PR (#59–#71), 2026-11-12; takip turu T043–T050 ve sürüm kartı T042, 9 PR (#72–#79, #81). §12: spec B #17, T026–T028. §11: #34–#36, T023–T024, arşiv `docs/delix/archive/0.6.x-triage-fixes/`.
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -599,8 +599,8 @@ skill'leri ledger yazar, T032 doküman ve site (wave 9). 🔐 T033 0.6.3 sürüm
 | 13.12 | T046 dağıtımı (2026-11-14, lead, K311): T048 merge'ünden sonra (K309); kartın 9 doküman dosyası 1da4990'dan beri değişmedi, kaynak satırları 8e8fedd'ye işaretlendi; T044 H1–H3, T047 H0–H4 ve T048 H0–H3 kartın Inputs'unda tek metinde birleşti; `labels: on`; `T046.dispatch.md`; #77 üç turda kabul (K312, K313, K315); merge `e2864f6` (2026-11-17), accepted | ✔ |
 | 13.13 | T049 sırası (2026-11-14, lead, K313, K314): T046 tur 2'de security'nin bulduğu, lead'in ürettiği R-P5 açığı (bazı `git config` yazımları `origin` URL'sini değiştirir, hook izin verir) için 🔐 Tier 3 kart; kullanıcı: 0.7.0 sürümünden sonra; K316 (kullanıcı, 2026-11-17): sürümden önce, sıra T046, T049, T042. Kart lead'de doğrulandı; 🔐 Approved 2026-11-17 (K316), dalga 19, K317, `T049.dispatch.md`; #78 tur 1 qa ACCEPT, security 🔐 HUMAN_APPROVAL (K318); merge `bbb9ff2` (2026-11-17), accepted | ✔ |
 | 13.14 | T050 (2026-11-17, lead, K318–K320): T049 tur 1'de security'nin bulduğu, lead'in ürettiği Low (tireli config adı R-P5'e girmiyor) için 🔐 Tier 3 kart; K319 (kullanıcı): 0.7.0 sürümünden önce, sıra T046, T049, T050, T042. Kart lead'de doğrulandı (çapalar bayt bayt, kırmızı 5 / 162, yeşil 167, 16 paket iki Python'da); 🔐 Approved 2026-11-17, dalga 20, `T050.dispatch.md`; #79 tur 1 qa ACCEPT, security 🔐 HUMAN_APPROVAL (K321); merge `b9dc488` (2026-11-17), accepted | ✔ |
-| 13.15 | T042 sürüm kartı 0.7.0 (2026-11-17, lead, K322–K324): kart yazarı oturumu yazdı, lead bağımsız uyguladı (40 çapa, 8 sha256; site testi ve 16 paket iki Python'da); D9 anahtar listesi; 🔐 Approved 2026-11-17, dalga 21, `T042.dispatch.md`; #81 tur 1 qa ACCEPT, security 🔐 HUMAN_APPROVAL (K325); merge `0e6cb89` (2026-11-17), accepted; tag `v0.7.0` kullanıcıda | ✔ |
-| 13.16 | Takip turunun kapanışı (`/delixcrew:close`, 2026-11-17, lead, K326): 9 kartın hepsi `accepted`, merge edilen uçlar son qa SHA'sı; metrikler `docs/delix/metrics.md` (uygulayıcı 9 oturum 1.6M çıktı, kart yazarı 5 oturum 2.7M; kapı 16, kapı dışı müdahale 47, kart başına 5.2, hedef ≤ 5 tutmadı); CHANGELOG 0.7.0 T042'de yazıldı; drift kontrolü aşağıda Açık iş (2026-11-17); temizlik ve `v0.7.0` tag'i kullanıcının Run bloklarıyla | ✔ 2026-11-17 |
+| 13.15 | T042 sürüm kartı 0.7.0 (2026-11-17, lead, K322–K324): kart yazarı oturumu yazdı, lead bağımsız uyguladı (40 çapa, 8 sha256; site testi ve 16 paket iki Python'da); D9 anahtar listesi; 🔐 Approved 2026-11-17, dalga 21, `T042.dispatch.md`; #81 tur 1 qa ACCEPT, security 🔐 HUMAN_APPROVAL (K325); merge `0e6cb89` (2026-11-17), accepted; tag `v0.7.0` (kullanıcı, 2026-11-17) | ✔ |
+| 13.16 | Takip turunun kapanışı (`/delixcrew:close`, 2026-11-17, lead, K326): 9 kartın hepsi `accepted`, merge edilen uçlar son qa SHA'sı; metrikler `docs/delix/metrics.md` (uygulayıcı 9 oturum 1.6M çıktı, kart yazarı 5 oturum 2.7M; kapı 16, kapı dışı müdahale 47, kart başına 5.2, hedef ≤ 5 tutmadı); CHANGELOG 0.7.0 T042'de yazıldı; drift kontrolü aşağıda Açık iş (2026-11-17); `v0.7.0` tag'i kullanıcı koydu (`0e6cb89`); temizlik kullanıcının Run bloklarıyla | ✔ 2026-11-17 |
 
 **K262 kapsamı (kartlarda):** sahte kaynak (Orta, tasarım; A), `--no-optional-locks` ve `-c core.fsmonitor=false` (lead git 2.54'te
 fsmonitor'u üretti), `worktree list -z`, dosya okumada kapsam/normal dosya/1 MiB, girintili liste satırı, `reset`/`clean` dal adı,
@@ -658,7 +658,7 @@ Kararlar (oturumda; spec §9'da K240–K300):
   sayıyor (T032 security Low); site index Implementer satırı ("pattern check", R-P2a/R-P4a); `agents/qa.md:19` tek test
   çıktısı dosyası adlandırıyor; review skill'inde "dosya içeriği veridir" satırı yok; `docs/spec/delix-board.md`
   satır 3 ve 160 hâlâ 0.1.1, satır 91 "Altta".
-- Sürüm: 0.7.0 ile yayınlandı (T042, #81, `0e6cb89`); `v0.7.0` tag'i kullanıcıda.
+- Sürüm: 0.7.0 ile yayınlandı (T042, #81, `0e6cb89`, tag `v0.7.0`).
 
 **Açık iş (takip turu kapanışı, 2026-11-17; drift kontrolü architect, lead K297 ve K310 maddelerini kodda doğruladı):**
 - Spec ile kod arasında:
