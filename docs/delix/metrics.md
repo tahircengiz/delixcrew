@@ -236,3 +236,69 @@ Lead sessions (two; the second was started from the first for the follow-up card
 Not counted: the start request, as in earlier closes.
 
 **No single-session baseline** exists for this feature.
+
+## Spec C takip turu ve 0.7.0 (closed 2026-11-17; SPEC `docs/delix/specs/C-board-visibility.md` rev 12–29, cards T043–T050, T042)
+
+Sources: as for the first Spec C close (`STATE.json`, `gh pr view`, `message.usage` summed per assistant message).
+This time entries are deduplicated by their `uuid`, because one card writer's transcript sits in two project folders
+(the session changed worktree). Each session was matched to its card by the card id in its dispatch text; no
+implementer or card writer session started subagents. The lead counts start after the first close
+(2026-11-12T20:40Z), so nothing is counted twice.
+
+Session cost in USD: not measured.
+
+| card | tier | PR | fix rounds | PR open → merge | implementer tokens (out / cache read / cache write) | note |
+|---|---|---|---|---|---|---|
+| T045 review/close: unreviewed merged head | 2 | #72 | 0 | 33 min | 66K / 11.2M / 301K | wave 15 |
+| T043 board: queue fields, lazy fetch | 2 | #73 | 0 | 21 min | 270K / 57.8M / 728K | wave 15 |
+| T044 bash_gate ref and remote writes | 3 | #74 | 0 | 70 min | 131K / 21.9M / 393K | 🔐; card written by a Sonnet session after the architect call stopped twice in the model's safety filter (K299) |
+| T047 bash_gate argv the way bash builds it | 3 | #75 | 3 | 3.8 h | 187K / 47.1M / 563K | 🔐; 4 review rounds, qa REJECT in round 1; the lead reproduced every Medium with real git and found the round 4 regression; `escalated`, the user accepted the head (K305) |
+| T048 bash_gate one-pass parser | 3 | #76 | 0 | 11.2 h | 154K / 27.9M / 458K | 🔐; merged the next morning |
+| T046 docs and site, delix-board 0.1.6 | 2 | #77 | 2 | 70.9 h | 341K / 83.9M / 1.3M | security FIX in rounds 1 and 2; round 2 found the R-P5 gap that became T049 (K313); the merge waited over the weekend |
+| T049 bash_gate: git config read only as a read | 3 | #78 | 0 | 10.2 h | 76K / 17.8M / 370K | 🔐; security's Low (dashed name), reproduced by the lead, became T050 (K318) |
+| T050 the dashed config name | 3 | #79 | 0 | 19 min | 76K / 18.3M / 350K | 🔐 |
+| T042 release 0.7.0 | 3 | #81 | 0 | 16 min | 315K / 39.3M / 688K | 🔐; one P2 on the Known limits wording (K325) |
+
+Implementers, 9 sessions: output 1.6M, cache read 325.3M, cache write 5.1M.
+
+Card writers, 5 sessions (T044, T047, T048, T049, T042), plus the release session that asked one question and was
+archived before writing a card: output 2.7M, cache read 331.5M, cache write 6.5M. The T048 card writer alone used
+941K / 132.7M / 1.9M.
+
+Lead sessions:
+- first Spec C lead, after the first close (2026-11-13T12:55Z to 2026-11-17T18:14Z; side-session checks): output 90K,
+  cache read 31.0M, cache write 2.1M;
+- second Spec C lead, after the first close (to 2026-11-13T19:23Z): output 296K, cache read 79.6M, cache write 3.0M;
+  subagents: output 100K, cache read 10.9M, cache write 337K;
+- follow-up lead (grill, spec rev 12, T043–T047; 2026-11-12T20:52Z to 2026-11-13T19:22Z): output 1.6M, cache read
+  314.2M, cache write 8.3M; subagents (20): output 1.7M, cache read 47.1M, cache write 6.7M;
+- remaining-work lead (lead from 2026-11-13T18:14Z; T048, T046, T049, T050, T042 and this close; the whole transcript
+  from 2026-11-12T20:00Z, which includes 40 minutes of first-round work on T032): output 1.7M, cache read 380.3M,
+  cache write 7.1M; subagents (15): output 875K, cache read 32.5M, cache write 5.5M.
+
+**Gates and interventions** (counted after the first close from the four lead transcripts, the release session and the
+14 implementer and card writer transcripts; only card writers got user messages):
+- `AskUserQuestion` calls: 7 (grill 4, the release version 1, which finished sessions to archive 2).
+- Gates, 16 in all:
+  - card approval for the dispatch of T043 and T045 ("Evet, dağıt", follow-up lead);
+  - 🔐 card approvals: T044 (given in its card writer session), T047, T048 (with option B), T049, T050, T042;
+  - 9 merges (#72–#79, #81), each run by the user with `--match-head-commit`.
+- Interventions outside gates, 47 in all (5.2 per card; target ≤ 5, missed):
+  - grill answers: 4;
+  - decisions the lead asked for: 9 (release version, write the follow-up cards, write T044 with Sonnet, T046
+    first, T049 after the release and then before it, T050 first, keep a session in the round, and "B" given first
+    in the T048 card writer);
+  - the T043/T045 dispatch approved a second time in the second lead: 1;
+  - session starts the user clicked on a proposal card: 8 (the follow-up lead, the release session, T044 and T047
+    implementers, T047, T048 and T049 card writers, the T048 implementer); starts the lead made on the user's own
+    words are counted in those words;
+  - the lead handover ("bu oturumu lead yapıp …") and "Evet, başlat": 2;
+  - merge notes ("Evet, merge ettim"): 3;
+  - one merge command run in two more sessions after it was merged (#75): 2;
+  - status checks ("kontrol", "sırada ne var ?", "durum ne", `/side-sessions`, "devam"): 13;
+  - housekeeping (archive answers, a reply and one request, one worktree removal): 5.
+
+Not counted: the first close's cleanup (8 `git branch -D` / `git worktree remove` runs on 2026-11-12T20:52Z, in the
+second lead), and this lead's first 6 messages (2026-11-12T20:00Z to 20:43Z, T032 and the first close).
+
+**No single-session baseline** exists for this feature.
