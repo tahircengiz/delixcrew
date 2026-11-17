@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/C-board-visibility.md",
   "size": "M",
-  "updated": "2026-11-13T19:54:39Z",
+  "updated": "2026-11-17T16:49:30Z",
   "env_owner": null,
   "waves": [
     {
@@ -1233,7 +1233,7 @@
       "file": "docs/delix/tasks/T049-bash-gate-config-read.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 78,
       "rounds": 0,
       "cost_usd": null,
@@ -1265,7 +1265,12 @@
           "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
           "at": "2026-11-17T06:55:05Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "bbb9ff235b6b837d6043ec273b102c70f39a9dab",
+        "head": "ef0860668718cba0ab28cb0a70b14fb167f79b8a",
+        "at": "2026-11-17T16:49:30Z"
+      }
     }
   },
   "status_values": [
