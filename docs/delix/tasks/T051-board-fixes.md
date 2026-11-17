@@ -434,3 +434,22 @@ Read only this card and spec REQ-4, REQ-6, K293, K297, K310 and K327.
 ```
 
 ## Review findings (filled by the lead)
+- Round 1 (PR #82, head `aefa44c7b285a293ea7a76c3b06919305cb50993`, base `66cbeae`, 2026-11-17): qa `ACCEPT` (0 P0,
+  0 P1), security `CLEAN` (no finding). Lead gates on the clean `git archive` of the head: exactly the 4 Files, numstat
+  13/11, 7/4, 68/0, 47/0; the 4 sha256s equal the card's "after" values and the lead's prototype; 16 suites exit 0 with
+  no `✘` on Python 3.9.6 and 3.13.13 (`board_tests.sh` 49 `✔`); `claude plugin test plugins/delix-board` 51 pass,
+  0 fail; `claude plugin validate .` passes (the warnings main has); the Stop gate gives `[exit 0]` twice; CI `check`
+  and `test` green.
+  - P2 (the lead's card text, reproduced by the lead, no fix): D4 says board.py changes only for a `.delix` that
+    cannot be listed. Two more cases go from "card present" to "no card": a readable `.delix` that cannot be searched
+    (mode 400) with no `card` entry, and a `.delix` link that loops. Both are the panel's answer (K293 parity); call 5
+    then runs, which a worktree with no `.delix` gets anyway (security).
+  - Note (qa unsure, checked by the lead): `plain` now turns the ZWJ (Cf) of an emoji sequence into a space, so
+    `a<man><ZWJ><woman>b` draws `a b`; before, an invisible ZWJ stayed between `a` and `b`. This follows R-P.
+  - Note (security unsure): `_card_present` now lists `.delix`, so its cost grows with the entries there; the panel
+    lists the same way. Not measured. Whether every data string in `views.tsx` goes through `plain` or `cut` predates
+    this card.
+  - Note (implementer): the Edit tool turned some escapes of the test strings into raw characters (sha256 mismatch);
+    the implementer applied the anchors with a script instead and got the card's sha256s. The lead met the same tool
+    behaviour when writing the card.
+  - Evidence: `rev82/` files in the lead's scratchpad (not in the repo).
