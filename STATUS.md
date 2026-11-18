@@ -603,6 +603,7 @@ skill'leri ledger yazar, T032 doküman ve site (wave 9). 🔐 T033 0.6.3 sürüm
 | 13.16 | Takip turunun kapanışı (`/delixcrew:close`, 2026-11-17, lead, K326): 9 kartın hepsi `accepted`, merge edilen uçlar son qa SHA'sı; metrikler `docs/delix/metrics.md` (uygulayıcı 9 oturum 1.6M çıktı, kart yazarı 5 oturum 2.7M; kapı 16, kapı dışı müdahale 47, kart başına 5.2, hedef ≤ 5 tutmadı); CHANGELOG 0.7.0 T042'de yazıldı; drift kontrolü aşağıda Açık iş (2026-11-17); `v0.7.0` tag'i kullanıcı koydu (`0e6cb89`); temizlik kullanıcının Run bloklarıyla | ✔ 2026-11-17 |
 | 13.17 | T051 board düzeltmeleri kartı (2026-11-17, lead, K327): `escalated` kart boşta yolda worktree'sini korur (K297), tarihli Approved satırı başlıkta (K310), `board.py` panelin `.delix` kuralını alır (K293), panel `plain()` kontrol karakterlerini boşluğa çevirir (T043 P2); kartı lead prototipten yazdı, dalga 22, `T051.dispatch.md`; #82 tur 1 qa ACCEPT, security CLEAN (K328); kullanıcı merge etti (`69dec3d`, uç son qa SHA'sı, `accepted`, K329) | ✔ 2026-11-18 |
 | 13.18 | K292 panel ekran görüntüsü (2026-11-18, lead, K330): kullanıcı Desktop'ta aldı; başlık, toplamlar, Leads, Ajanlar, Seni bekliyor, Merge'e hazır ve Git işleri `board.py` ile aynı satırlar; Spec C DoD maddesi kapandı; `docs/delix/verifications/2026-11-18-k292-panel.md`. Desktop'un T051 öncesi önbellek kopyasını mı repoyu mu yüklediği doğrulanmadı | ✔ 2026-11-18 |
+| 13.19 | T052 push satırı izin listesi kartı (2026-11-18, lead, K331): kart worktree'sinde push satırı yalnız push, git eşleri (`add`, `commit`, `status`, `diff`, `log`, `show`), `gh pr create` ve borudan okuyan `tail`/`head` taşır, yönlendirme yalnız `/dev/null` (R-L1); main'den geçen 4 biçim reddedilir, 308 gerçek satırın 303'ü aynı; 17 paket iki Python'da; 🔐 Approved 2026-11-18, dalga 23, `T052.dispatch.md` | ◐ |
 
 **K262 kapsamı (kartlarda):** sahte kaynak (Orta, tasarım; A), `--no-optional-locks` ve `-c core.fsmonitor=false` (lead git 2.54'te
 fsmonitor'u üretti), `worktree list -z`, dosya okumada kapsam/normal dosya/1 MiB, girintili liste satırı, `reset`/`clean` dal adı,
@@ -670,7 +671,7 @@ Kararlar (oturumda; spec §9'da K240–K300):
   - (✔ T051) K310: board ve panel Approved satırını tarihsiz kabul ediyor (`scripts/board.py:528`, `parse.ts:620`); write_gate
     tarih ister.
   - (✔ T051) K293: `.delix` yalnız çalıştırma izinliyse ve içinde `card` yoksa panel çağrı 5'i atlıyor, `board.py` koşuyor.
-  - K296: push satırının tamamına izin listesi uygulanmadı, kartı yok (T044 O2).
+  - K296: push satırının tamamına izin listesi: T052 kartı (dalga 23, 🔐 onaylı 2026-11-18, K331).
   - (✔ K330) K292: panelin Desktop ekran görüntüsü yok; delix-board 0.1.6 bu Mac'e kurulunca alınır.
 - Spec metni eskidi: §2 ve §6 korunan yol işini yalnız T041 ve ref yazma kartıyla anlatıyor, `plugin.json` artışını
   kapsam dışı sayıyor; T047–T050 ve T042 yalnız K300–K325'te ve kartlarda. §6 "kalan açıkları ref yazma kartı
