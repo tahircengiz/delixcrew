@@ -27,6 +27,7 @@ $G -C "$W" symbolic-ref "refs/${R}s/origin/HEAD" "refs/${R}s/origin/main"
 PUSH_DENY="delixcrew: an implementer session pushes only its own card branch ($G $P [-u] origin <branch>); the default branch and every other $P run from the user's own terminal"
 REF_DENY="delixcrew: an implementer session does not write $G refs or change ${R}s ($U, $R set-head, $UR, add, remove); those run from the user's own terminal"
 QUOTE_DENY="delixcrew: a quote that is never closed stands in front of a $G command, which this hook cannot read; close the quote or put the text in a file, then run the command again"
+LINE_DENY="delixcrew: in an implementer session a $P shares its line only with $G add, commit, status, diff, log, show and gh pr create, pipes only into tail or head and redirects only to /dev/null; run every other command in a separate call"
 js(){ python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2"; }
 run(){ js "$1" "$2" | python3 "$S/bash_gate.py"; }
 # allow = exit 0 and no deny; deny = exit 0, the deny decision and the exact message. A hook that raises exits 1.
@@ -111,8 +112,8 @@ allow "54 log --grep with double quotes"          "$W" "$G log --grep 'say \"hi\
 allow "55 backslash-newline before status"        "$W" "$G \\${NL}status"
 allow "56 backslash-newline inside status args"   "$W" "$G status \\${NL}-s"
 allow "57 own branch send, 2>&1"                  "$W" "$G $P origin claude/t1 2>&1"
-allow "58 own branch send, >f"                    "$W" "$G $P origin claude/t1 >f"
-allow "59 own branch send, &>f"                   "$W" "$G $P origin claude/t1 &>f"
+deny "58 own branch send, >f"                     "$W" "$G $P origin claude/t1 >f" "$LINE_DENY"
+deny "59 own branch send, &>f"                    "$W" "$G $P origin claude/t1 &>f" "$LINE_DENY"
 allow "60 own branch send, quoted name"           "$W" "$G $P origin \"claude/t1\""
 allow "61 -C dir with a blank, $R show"           "$W" "$G -C \"$W/a b\" $R show origin"
 allow "62 substitution in double quotes, status"  "$W" "echo \"\$($G status)\""

@@ -138,6 +138,9 @@ QUOTE_DENY = ("delixcrew: a quote that is never closed stands in front of a git 
               "close the quote or put the text in a file, then run the command again")
 DEEP_DENY = ("delixcrew: the command nests quotes or substitutions deeper than this hook reads; split it or put the "
              "text in a file, then run the command again")
+LINE_DENY = ("delixcrew: in an implementer session a push shares its line only with git add, commit, status, diff, "
+             "log, show and gh pr create, pipes only into tail or head and redirects only to /dev/null; run every "
+             "other command in a separate call")
 GIT_ARG_OPTS = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--config-env", "--attr-source",
                 "--shallow-file"}  # R-P2: take the next token
 GIT_FLAG_OPTS = {"-v", "--version", "-h", "--help", "-p", "--paginate", "-P", "--no-pager", "--no-replace-objects",
@@ -148,6 +151,11 @@ PUSH_OPTS = {"-u", "--set-upstream", "--force-with-lease"}
 CONFIG_KEYS = ("alias.", "remote.", "push.", "url.", "include", "help.")  # R-P5, casefold prefixes
 AUTOCORRECT_OFF = {"0", "false", "off", "no", "show", "never"}  # R-P4a: help.autocorrect values that run nothing
 PUSH_PEERS = {"add", "commit", "status", "diff", "log", "show"}  # R-P3b: git commands a push may share a line with
+LINE_REDIRS = (">/dev/null", "> /dev/null", "1>/dev/null", "2>/dev/null", "2> /dev/null", "&>/dev/null", "2>&1",
+               "1>&2", ">&2")  # R-L1: the only redirections a push line may hold
+_PLAIN = re.compile(r"[A-Za-z0-9_./:@%+=,-]+")  # R-L1: characters neither bash nor zsh expands in an unquoted word
+_DQPLAIN = re.compile(r'"[^"$`\\]*"')  # R-L1: double quotes with no `$`, backtick or backslash: no expansion
+_HDWORD = re.compile(r"[A-Za-z_][A-Za-z0-9_.-]*")  # R-L1: the quoted delimiter word of a heredoc on a push line
 CONFIG_READS = {"--get", "--get-all", "--get-regexp", "--get-urlmatch", "--list", "-l", "get", "list"}
 CONFIG_FLAGS = {"--global", "--system", "--local", "--worktree", "--includes", "--no-includes", "-z", "--null",
                 "--name-only", "--show-origin", "--show-scope", "--show-names", "--bool", "--int", "--bool-or-int",
@@ -629,6 +637,98 @@ def autocorrect_check(name):
         deny(PUSH_DENY)
 
 
+def line_ok(c, piped):
+    """R-L1: one command of a push line, its leading `{` words removed: `git push ...`, nothing, a `}`,
+    `gh pr create ...`, a PUSH_PEERS git command with no `--output` word (`log`, `diff` and `show` write a file with
+    it), or `tail` / `head` read from a pipe."""
+    if c[:2] == ["git", "push"] and not piped:
+        return True
+    if piped:
+        return c[:1] in (["tail"], ["head"])
+    if not c or c == ["}"] or c[:3] == ["gh", "pr", "create"]:
+        return True
+    return c[:1] == ["git"] and c[1:2] != [] and c[1] in PUSH_PEERS and not any(w.startswith("--output") for w in c)
+
+
+def simple_line(s):
+    """R-L1 (K331): True when every command of `s` passes `line_ok`. Commands are joined by `&&`, `||`, `;`, a
+    newline or a pipe `|`; a word is unquoted runs of _PLAIN characters (not starting with `=`, zsh's EQUALS),
+    '...', and "..." with no `$`, backtick or backslash, so neither bash nor zsh expands it; `{` and `}` alone are
+    words. Any command may hold the redirections of LINE_REDIRS and a heredoc whose delimiter is one quoted word
+    (its body is data on stdin, ending at the line equal to the delimiter). One left-to-right pass; anything else is
+    not simple (fail closed): a substitution, `&`, a subshell, a function, an assignment, `export`, `cd`, a script,
+    an unquoted or `<<-` heredoc, a redirection to a file (even the push's own: truncating a git file before the
+    push runs can send it to another repository), a comment, a glob."""
+    cmds, cur, piped, pend, i, n = [], [], False, [], 0, len(s)
+    while i < n:
+        c = s[i]
+        if c in " \t":
+            i += 1
+        elif c in ";\n|" or s.startswith("&&", i):
+            cmds.append((cur, piped))
+            two = s.startswith(("&&", "||"), i)
+            cur, piped = [], c == "|" and not two
+            i += 2 if two else 1
+            if c == "\n":
+                for d in pend:  # the heredoc bodies, in order, after this newline
+                    while True:
+                        e = s.find("\n", i)
+                        line, i = (s[i:], n) if e < 0 else (s[i:e], e + 1)
+                        if line == d:
+                            break
+                        if e < 0:
+                            return False
+                pend = []
+        elif s.startswith("<<", i):
+            i += 2
+            while i < n and s[i] in " \t":
+                i += 1
+            j = s.find(s[i], i + 1) if i < n and s[i] in "'\"" else -1
+            if j < 0 or not _HDWORD.fullmatch(s, i + 1, j) or (j + 1 < n and s[j + 1] not in " \t;\n&|"):
+                return False  # `<<-`, `<<<`, an unquoted or unusual delimiter
+            pend.append(s[i + 1:j])
+            i = j + 1
+        else:
+            r = [x for x in LINE_REDIRS if s.startswith(x, i) and (i + len(x) == n or s[i + len(x)] in " \t;\n&|")]
+            if r:
+                i += len(r[0])
+                continue
+            if c in "{}" and (i + 1 == n or s[i + 1] in " \t;\n&|"):  # a group word, or a plain argument
+                cur.append(c)
+                i += 1
+                continue
+            w = []
+            while i < n and s[i] not in " \t;\n&|":
+                if s[i] == "'":
+                    j = s.find("'", i + 1)
+                    if j < 0:
+                        return False
+                    w.append(s[i + 1:j])
+                    i = j + 1
+                    continue
+                m = _DQPLAIN.match(s, i) or _PLAIN.match(s, i)
+                if not m or (not w and s[i] == "="):
+                    return False
+                w.append(m.group()[1:-1] if s[i] == '"' else m.group())
+                i = m.end()
+            if not w:
+                return False  # a lone `&`: a background job
+            cur.append("".join(w))
+    cmds.append((cur, piped))
+    if pend:
+        return False  # a heredoc with no body
+    for c, piped in cmds:
+        k = 0
+        while k < len(c) and c[k] == "{":  # bash's and zsh's group word: runs the list in this shell
+            k += 1
+        c = c[k:]
+        if c != ["}"] and ("{" in c or "}" in c):  # zsh closes a group at any `}`: `{ a } always { b }` runs b
+            return False
+        if not line_ok(c, piped):
+            return False
+    return True
+
+
 segs = words(cmd, True)
 moved = any(t.casefold() in ("cd", "pushd", "popd") for toks in segs for t in toks)
 pushed = other = False  # R-P3b
@@ -700,6 +800,8 @@ for toks in segs:
 
 if pushed and other:  # R-P3b: another git command on the line may move HEAD or the upstream before the push runs
     deny(PUSH_DENY)
+if pushed and not simple_line(cmd):  # R-L1 (K331): another command or a redirection may move HEAD or the git dir
+    deny(LINE_DENY)
 
 if re.search(r"\bgit\s+commit\b", cmd):
     gl = shutil.which("gitleaks")
