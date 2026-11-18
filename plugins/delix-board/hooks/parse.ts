@@ -409,6 +409,8 @@ export type Derived = {
 const STATE_PATH = 'docs/delix/STATE.json'
 const WEEK = 604800
 const LOCK = '\u{1F510}'
+/** K310: board.py's APPROVED, one line at a time (no `m` flag: it would also start a line after `\r`, U+2028 and U+2029). */
+const APPROVED_RE = new RegExp(`^\\*\\*${LOCK} Approved:\\*\\* [0-9]{4}-[0-9]{2}-[0-9]{2} [^\\s\\x1c-\\x1f\\x85\\ufeff]`, 'u')
 export const BRANCH_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*(\/[A-Za-z0-9][A-Za-z0-9._-]*)*$/
 const PATH_RE = /^\/[A-Za-z0-9_./-]+$/
 const SHA_RE = /^[0-9a-f]{40}$/
@@ -617,7 +619,7 @@ function deriveUnsafe(raw: Raw): Derived {
       if (status === 'open' && tier === 3) {
         const file = textOf(card.file)
         const text = file === null || statePath === null ? null : fileOf(statePath, file)
-        if (text === null || !text.split('\n').some(l => l.startsWith(`**${LOCK} Approved:**`))) reasons.push('tier 3 approval')
+        if (text === null || !(text.split('\n## ')[0] ?? '').split('\n').some(l => APPROVED_RE.test(l))) reasons.push('tier 3 approval')
       }
       const report = reportStatus(id)
       if ((report === 'NEEDS_CONTEXT' || report === 'BLOCKED') && status !== null && OPEN_STATUSES.includes(status)) reasons.push(report.toLowerCase())
@@ -729,8 +731,9 @@ function deriveUnsafe(raw: Raw): Derived {
     }
     const trusted = card === null ? null : trustedCards[card]
     const isMergedCard = isObject(trusted) && trusted.status === 'accepted' && isObject(trusted.merged)
+    const isEscalated = isObject(trusted) && trusted.status === 'escalated' // K297: stays under Waiting on you
     const isIdle = isOld(lastActivity(t, row?.role === 'lead')) && hasUpstream(t) && (up === 'in sync' || /^\d+ behind$/.test(up))
-    if (isMergedCard || isIdle) guarded('remove_worktree', t.path, card, PATH_RE.test(t.path), `git worktree remove ${t.path}`, uncommitted)
+    if (isMergedCard || (isIdle && !isEscalated)) guarded('remove_worktree', t.path, card, PATH_RE.test(t.path), `git worktree remove ${t.path}`, uncommitted)
   }
   for (const r of queue.ready) {
     guarded('merge', `#${r.pr}`, r.card, r.pr > 0 && SHA_RE.test(r.sha ?? ''), `gh pr merge ${r.pr} --squash --match-head-commit ${r.sha}`)
@@ -810,8 +813,8 @@ export const clock = (ms: number) => {
 
 export const usd = (n: number | null) => (n === null ? 'ölçülmedi' : `$${n.toFixed(2)}`)
 
-/** Data text as drawn: the lock emoji the records use becomes the board's own single-width lock, other emoji go (a double-width glyph shifts a terminal row). */
-export const plain = (s: string) => s.replace(/\u{1F510}\uFE0F?/gu, '◈').replace(/\p{Extended_Pictographic}\uFE0F?/gu, '').replace(/ {2,}/g, ' ')
+/** Data text as drawn: control (C*), line and paragraph separator characters become spaces as in board.py's `one_line` (T043 P2), the lock emoji the records use becomes the board's own single-width lock, other emoji go (a double-width glyph shifts a terminal row). */
+export const plain = (s: string) => s.replace(/[\p{C}\u2028\u2029]/gu, ' ').replace(/\u{1F510}\uFE0F?/gu, '\u25c8').replace(/\p{Extended_Pictographic}\uFE0F?/gu, '').replace(/ {2,}/g, ' ')
 
 export const cut = (raw: string, n: number) => {
   const s = plain(raw)

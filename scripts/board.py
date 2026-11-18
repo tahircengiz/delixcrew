@@ -126,7 +126,9 @@ CARD_ID_RE = re.compile(r"T[0-9]{3}")
 REPORT_PR_RE = re.compile(r"\*\*PR:\*\* #([0-9]+)")
 PR_TEXT_RE = re.compile(r"^#?[0-9]+$")
 DIGITS_RE = re.compile(r"[0-9]+")
-APPROVED = "**🔐 Approved:**"
+# K310: write_gate's Approved form (searched in the header only); ASCII digits, and the character after the date
+# is whitespace neither in Python nor in JavaScript, so the panel's APPROVED_RE accepts the same lines
+APPROVED = re.compile(r"^\*\*\U0001F510 Approved:\*\* [0-9]{4}-[0-9]{2}-[0-9]{2} [^\s\x1c-\x1f\x85\ufeff]", re.M)
 MAX_READ = 1048576  # §6: a spec or card file is read only up to 1 MiB
 UNSAFE_BRANCHES = ("reset", "clean")  # REQ-4: never a command token
 
@@ -216,16 +218,15 @@ def _add_file(w, wt, rel):
 
 
 def _card_present(wt):
-    """K293: <wt>/.delix/card exists in any form (regular file, link incl. a dangling one, directory, FIFO, a file
-    that cannot be read). lstat follows no final link; only "not found" and "not a directory" count as absent, any
-    other error as present (call 5 then does not run: fail closed)."""
+    """K293, the panel's rule: <wt>/.delix/card is there in any form when the listing of .delix names an entry `card`,
+    whatever its kind (a link is listed, not followed, a dangling one too). A .delix that cannot be listed but is a
+    directory counts as holding one (call 5 then does not run: fail closed); one that neither lists nor is a
+    directory holds none."""
+    dot = os.path.join(wt, ".delix")
     try:
-        os.lstat(os.path.join(wt, ".delix", "card"))
-    except (FileNotFoundError, NotADirectoryError):
-        return False
+        return "card" in os.listdir(dot)
     except (OSError, ValueError):
-        return True
-    return True
+        return os.path.isdir(dot)
 
 
 def _add_lead_files(w, wt):
@@ -525,7 +526,7 @@ def _queue(s, files, refs, card_wt, tr=None, default=""):
             reasons.append("review not on origin/%s" % default)
         if st == "open" and f["tier"] == 3:
             text = files.get(c.get("file")) if isinstance(c.get("file"), str) else None
-            if not isinstance(text, str) or not any(line.startswith(APPROVED) for line in text.split("\n")):
+            if not isinstance(text, str) or not APPROVED.search(text.split("\n## ", 1)[0]):
                 reasons.append("tier 3 approval")
         if f["report_status"] in ("NEEDS_CONTEXT", "BLOCKED") and st in OPEN_STATUSES:
             reasons.append(f["report_status"].lower())
@@ -639,10 +640,11 @@ def derive(raw):
                                    _branch_ok(br) and _ok(PATH_RE, path), r["uncommitted"]))
         c = t_cards.get(cid) if cid else None  # R10': `merged` only from T
         merged = isinstance(c, dict) and c.get("status") == "accepted" and isinstance(c.get("merged"), dict)
+        escalated = isinstance(c, dict) and c.get("status") == "escalated"  # K297: stays under Waiting on you
         last = _latest(r["ctime"], _changed_at(r["w"])) if r["role"] == "lead" else r["ctime"]
         aged = (last is not None and now is not None and now - last > WEEK and bool(f and f[2])
                 and (up == "in sync" or re.fullmatch(r"[0-9]+ behind", up) is not None))
-        if merged or aged:
+        if merged or (aged and not escalated):
             actions.append(_action("remove_worktree", path, cid, "git worktree remove %s" % path,
                                    _ok(PATH_RE, path), r["uncommitted"]))
     for x in queue["ready"]:
