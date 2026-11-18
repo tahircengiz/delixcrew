@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/C-board-visibility.md",
   "size": "M",
-  "updated": "2026-11-18T09:26:37Z",
+  "updated": "2026-11-18T09:37:38Z",
   "env_owner": null,
   "waves": [
     {
@@ -1499,7 +1499,7 @@
       "file": "docs/delix/tasks/T053-release-0-7-1.md",
       "role": "docs",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 84,
       "rounds": 1,
       "cost_usd": null,
@@ -1531,7 +1531,12 @@
           "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
           "at": "2026-11-18T09:26:37Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "7ea54f7eb16234fae733bd4b5ef2d62a810b375c",
+        "head": "f38f441cbdd536863685926c0cdf66f212f021ff",
+        "at": "2026-11-18T09:37:38Z"
+      }
     }
   },
   "status_values": [

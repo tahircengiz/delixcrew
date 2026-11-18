@@ -439,3 +439,7 @@ Read only this card and, in the spec, K298, K305, K313, K329, K331, K334 and K33
     `plugins/delix-board/hooks/hooks.json` match no `protected_paths` entry (the lead ran `common.matches`), so a card
     that changes them is not Tier 3 by path. A `protected_paths` change is itself protected (🔐); the user decides.
   - Note (qa unsure): the screenshots are not in the archive; the lead looked at them.
+- Gate 2 (the user, 2026-11-18): merge as it is; the Low goes to a follow-up card (T054) that adds the spaced
+  forms to `LINE_REDIRS`. Merged (K337): the user merged head `f38f441cbdd536863685926c0cdf66f212f021ff` as it is (merge
+  commit `7ea54f7eb16234fae733bd4b5ef2d62a810b375c`, 2026-11-18T09:37:38Z). The merge commit changes only the 10 Files, and they equal
+  the reviewed head byte for byte. Status `accepted`.
