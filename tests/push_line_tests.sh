@@ -74,6 +74,8 @@ deny "glob"                                 "$W" "$G add *.py && $G $P origin HE
 deny "zsh EQUALS word"                      "$W" "$G add =x && $G $P origin HEAD"
 deny "subshell"                             "$W" "($G status) && $G $P origin HEAD"
 deny "group redirected to a file"           "$W" "{ $G log -1; } > .git/HEAD; $G $P origin HEAD"
+deny "zsh always block"                     "$W" "{ $G status } always { export GIT_DIR=/tmp/x/.git }; $G $P origin HEAD"
+deny "zsh close brace inside a command"     "$W" "{ $G status }; $G $P origin HEAD"
 deny "function"                             "$W" "f() { $G status; }; f; $G $P origin HEAD"
 deny "heredoc into cat"                     "$W" "cat > .git/HEAD <<'E'${NL}ref: refs/heads/main${NL}E${NL}$G $P origin HEAD"
 deny "unquoted heredoc"                     "$W" "$G commit -F - <<E${NL}x${NL}E${NL}$G $P origin HEAD"

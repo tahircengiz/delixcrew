@@ -721,7 +721,10 @@ def simple_line(s):
         k = 0
         while k < len(c) and c[k] == "{":  # bash's and zsh's group word: runs the list in this shell
             k += 1
-        if not line_ok(c[k:], piped):
+        c = c[k:]
+        if c != ["}"] and ("{" in c or "}" in c):  # zsh closes a group at any `}`: `{ a } always { b }` runs b
+            return False
+        if not line_ok(c, piped):
             return False
     return True
 
