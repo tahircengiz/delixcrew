@@ -786,4 +786,4 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
     değiştirir; onu incelenen uçla bayt bayt aynı.
   - **Kapı 2 kararı:** kullanıcı "Merge, takip kartı" dedi: K336'daki Low (boşluklu `1> /dev/null`, `&> /dev/null`)
     belge turuyla değil, bu biçimleri `LINE_REDIRS`'e ekleyen 🔐 takip kartıyla (T054) kapanır.
-  - **Açık iş:** `v0.7.1` etiketi ve eklenti güncellemesi kullanıcıda.
+  - **Etiket:** kullanıcı `v0.7.1`'i `7ea54f7`'ye koydu ve push etti (2026-11-18); eklenti güncellemesi kullanıcıda.

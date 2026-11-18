@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-18 · **Sürüm:** 0.7.1 (2026-11-18, pano düzeltmeleri ve push komutu izin listesi; T053, PR #84, `7ea54f7`; etiket `v0.7.1` kullanıcıda) · önceki 0.7.0 (2026-11-17, T042, PR #81, `0e6cb89`, `v0.7.0`) · **Faz:** Spec C (board görünürlüğü, `docs/delix/specs/C-board-visibility.md`) takip turuyla kapandı 2026-11-17: ilk tur T029–T041, 13 PR (#59–#71), 2026-11-12; takip turu T043–T050 ve sürüm kartı T042, 9 PR (#72–#79, #81). §12: spec B #17, T026–T028. §11: #34–#36, T023–T024, arşiv `docs/delix/archive/0.6.x-triage-fixes/`.
+**Son güncelleme:** 2026-11-18 · **Sürüm:** 0.7.1 (2026-11-18, pano düzeltmeleri ve push komutu izin listesi; T053, PR #84, `7ea54f7`; etiket `v0.7.1`) · önceki 0.7.0 (2026-11-17, T042, PR #81, `0e6cb89`, `v0.7.0`) · **Faz:** Spec C (board görünürlüğü, `docs/delix/specs/C-board-visibility.md`) takip turuyla kapandı 2026-11-17: ilk tur T029–T041, 13 PR (#59–#71), 2026-11-12; takip turu T043–T050 ve sürüm kartı T042, 9 PR (#72–#79, #81). §12: spec B #17, T026–T028. §11: #34–#36, T023–T024, arşiv `docs/delix/archive/0.6.x-triage-fixes/`.
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
