@@ -122,7 +122,10 @@ bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
   yazmasını reddeder ve her `git commit`'ten önce `gitleaks protect --staged` çalıştırır. Orada push yalnız
   `git push [-u|--set-upstream] [--force-with-lease] origin <HEAD|dal>` biçiminde, kartın varsayılan dal olmayan kendi
   dalından, `remote.origin.push` yokken, aynı komutta `cd` ve `add`, `commit`, `status`, `diff`, `log`, `show`
-  dışında bir git komutu yokken çalışır; dal adı biçimi ayrıca dalın upstream'inin olmamasını ya da dalın kendisi
+  dışında bir git komutu yokken çalışır; o komutta bunlardan başka yalnız `gh pr create`, `tail` ya da `head`'e bir
+  pipe, `/dev/null`'a ya da bir tanımlayıcıya (`2>&1`) bir yönlendirme ve sınırlayıcısı tırnaklı bir heredoc
+  bulunur, kabuğun genişlettiği bir kelime bulunmaz (T052). Dal adı biçimi ayrıca dalın upstream'inin olmamasını ya
+  da dalın kendisi
   olmasını ister. Git'in kendi listesinde olmayan bir git genel seçeneği de, `help.autocorrect` açıkken git'in
   listelemediği bir komut adı da orada reddedilir. Orada `alias.`, `remote.`, `push.`, `url.`, `include` ya da `help.`
   anahtarını anan bir `git config` çağrısı, git onu okuma olarak okumuyorsa reddedilir: ilk argümanı `get` ya da `list`
@@ -245,7 +248,7 @@ yanında `_` ile (`10.1.2.3_`) yazılsa da redakte edilir.
 
 URL'ler önce denetlenir (`şema://…`, `//…`, `host/…`, `ad:port/…` ve `:` ya da `\`'dan hemen sonra gelen noktalı
 `host/…`). Bir URL yalnız şunların hepsi tutarsa kalır: şeması yok, `http` ya da `https`; host'u yukarıdaki izinli
-listede ya da loopback veya belge aralığında bir IP (IPv4 yalnız kanonik noktalı biçimiyle; `http://127.1/` silinir);
+listede ya da loopback veya belge aralığında bir IP (IPv4 yalnız kanonik noktalı biçimiyle; `127.1`'li URL silinir);
 kullanıcı kısmı (`user@`) yok; yolu ile sorgusu yalnız harf, rakam ve `._~-/` (`?` ya da `#` sonrası `=&+`) taşıyor;
 hiçbir yol parçası `.` ya da `..` değil; yolun ya da sorgunun noktalı her parçasında ilk etiketten sonraki her etiket
 dosya uzantısı ya da sayı (`a.tar.gz`, `v0.6.1`); yolda host adı, IP ya da MAC adresi yok; URL'nin hiçbir yerinde, şema
@@ -398,8 +401,8 @@ bir alt dize eşleşmesidir (K220); sınır Claude Code'un Bash izin istemidir (
 da kelimeler üzerinde, fail closed çalışan bir izin listesi denetimidir, derinlemesine savunmadır, GitHub sınırı
 değildir: değişkenler, `eval`, glob'lar, `$'\x67it'` gibi ANSI-C kaçışları, çıktısı bir kelimeyi yazan komut
 (`$(echo gi)t`) ve süslü parantez genişletme (`git {push,origin,HEAD:main}` bir push olarak çalışır) ile kurulan
-kelimeler, ortamdan (`GIT_DIR`, `GIT_CONFIG_*`) verilen ya da aynı satırda başka bir komutun (`>>` yönlendirmesi gibi)
-bir git ayar dosyasına yazdığı git ayarları, bir betik dosyası ya da başka bir programın kendi git çağrıları
+kelimeler, ortamdan (`GIT_DIR`, `GIT_CONFIG_*`) verilen git ayarları, bir betik dosyası ya da başka bir programın
+kendi git çağrıları
 (`gh pr checkout` gibi), `pr merge` için bir `gh` alias'ı, aynı ya da önceki bir çağrıda bir git ayar dosyasına
 (reponun, global ya da include edilen) yazılan bir `origin` URL'si (`url`, `pushurl`, `url.*.insteadOf` ya da
 `url.*.pushInsteadOf`; kendi dalının push'u o adrese
@@ -410,8 +413,13 @@ kelimelerini, aynı satırda `git` ve `update-ref` kelimelerini, okuma biçimler
 (ref'leri tazelemek için `git fetch` çalıştır), `alias.`, `remote.`, `push.`, `url.`, `include` ya da `help.` anahtarını
 okuyan ve okuma seçeneğinden önce başka bir seçenek taşıyan `git config` çağrısını (`--file=<dosya>` ya da
 `git remote get-url origin` kullan), bir `git` kelimesinin önünde, heredoc gövdesinde de, hiç kapanmayan
-tırnağı (tırnağı kapat ya da metni bir dosyaya yaz), hook'un okuyamayacağı kadar derin iç içe bir komutu ve `cd` ya da
-`add`, `commit`, `status`, `diff`, `log`, `show` dışında bir git komutu da içeren bir komuttaki push'u reddeder.
+tırnağı (tırnağı kapat ya da metni bir dosyaya yaz), hook'un okuyamayacağı kadar derin iç içe bir komutu, `cd` ya da
+`add`, `commit`, `status`, `diff`, `log`, `show` dışında bir git komutu da içeren bir komuttaki push'u ve
+`gh pr create` ile `tail` ya da `head`'e bir pipe dışında başka bir komut, bir `--output` seçeneği, `/dev/null`'a
+`>`, `1>`, `2>` ya da `&>` ve `2>&1`, `1>&2`, `>&2` dışında bir yönlendirme, sınırlayıcısı tırnaksız bir heredoc,
+`<<-` ya da `<<<`, tek tırnak dışında bir `$`, ters tırnak ya da ters eğik çizgi, tırnak dışında bir glob, `~`, `!`,
+tek başına bir `&` ya da `(` ya da bir komutun adından sonra bir `{` ya da `}` kelimesi de içeren bir komuttaki
+push'u reddeder (T052; öteki komutu ayrı bir çağrıda çalıştır).
 İzin verilen tek `cat` heredoc'u,
 Write aracının zaten yazamayacağı hiçbir şeyi yazmaz. 2.44'ten eski git ile promisor (kısmi klon) bir repoda eksik bir
 nesne, hook'lar index'i okurken uzak depodan yine çekilebilir (K225).

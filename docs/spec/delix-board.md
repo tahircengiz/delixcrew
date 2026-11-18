@@ -1,6 +1,6 @@
 # delix-board — tech spec ve mimari
 
-Tarih: 2026-11-02 · Durum: **onaylandı** (2026-11-02, "Onayla, kodla") · Sürüm: delix-board 0.1.6 (ilk onay 0.1.1;
+Tarih: 2026-11-02 · Durum: **onaylandı** (2026-11-02, "Onayla, kodla") · Sürüm: delix-board 0.1.7 (ilk onay 0.1.1;
 kök plugin sürümünü bu belge değiştirmez)
 
 ## 1. Amaç
@@ -192,7 +192,7 @@ düğmesi. `hasSurvey` iken çekilir. delix projesi değilse ve koşu yoksa hiç
 
 ```
 plugins/delix-board/
-  .claude-plugin/plugin.json      name delix-board, version 0.1.6, types ./types/index.d.ts, userConfig.extraPatterns
+  .claude-plugin/plugin.json      name delix-board, version 0.1.7, types ./types/index.d.ts, userConfig.extraPatterns
   hooks/hooks.json                { "modules": ["./register.tsx"] }
   hooks/register.tsx              bağlama: session.start, command, timers, tool.call, session.append, ui.render
   hooks/parse.ts                  saf ayrıştırıcılar (I/O yok): state, kart md, report, test-result, metrics, run çıktısı

@@ -2,12 +2,22 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
-## Unreleased
+## 0.7.1 — 2026-11-18
 
-- **The lead's Desktop title says Lead**: when `/delixcrew:dispatch` opens card sessions in Claude Desktop, the lead
-  renames itself `<project> | Lead • <topic>` and titles each card session `<project> | T<nnn> <topic>`, so the
+- **The lead's Desktop title says Lead** (#80): when `/delixcrew:dispatch` opens card sessions in Claude Desktop, the
+  lead renames itself `<project> | Lead • <topic>` and titles each card session `<project> | T<nnn> <topic>`, so the
   sidebar tells them apart. `<project>` comes from the lead's own title; a lead started by another session keeps its
   title.
+- **A push shares its command only with its git peers** (🔐 K331–K334; #83): in an implementer worktree a command that
+  pushes may hold, besides the push, only `git add`, `commit`, `status`, `diff`, `log` or `show` (with no `--output`),
+  `gh pr create`, a pipe into `tail` or `head`, a redirection to `/dev/null` or a descriptor (`2>&1`) and a heredoc
+  with a quoted delimiter, and no word a shell expands. Anything else denies with a message that says to run the other
+  command in a separate call. The README's Known limits list the forms it denies.
+- **The board keeps an escalated card's worktree and reads the dated Approved line** (K293, K297, K310; #82): a card
+  whose status is `escalated` gets no `git worktree remove` after a week idle, so it stays under Waiting on you. An open
+  tier 3 card shows `tier 3 approval` until its header holds the `**🔐 Approved:** <YYYY-MM-DD> <who>` line, the form
+  write_gate reads. `/delixcrew:status` tells whether a worktree has a `.delix/card` by the pane's rule, and the
+  delix-board pane (0.1.7) draws control, line and paragraph separator characters in its data text as spaces.
 
 ## 0.7.0 — 2026-11-17
 
