@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/C-board-visibility.md",
   "size": "M",
-  "updated": "2026-11-18T07:51:18Z",
+  "updated": "2026-11-18T08:22:05Z",
   "env_owner": null,
   "waves": [
     {
@@ -1433,7 +1433,7 @@
       "file": "docs/delix/tasks/T052-push-line-allowlist.md",
       "role": "backend",
       "tier": 3,
-      "status": "fixing",
+      "status": "in_review",
       "pr": 83,
       "rounds": 1,
       "cost_usd": null,
@@ -1464,6 +1464,22 @@
           "sha": "901c88eb41c359cfed50a7a93f6553de29dac1f6",
           "verdict": "FIX",
           "at": "2026-11-18T07:40:01Z"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 2,
+          "sha": "3e385a524d0d41555abde95403bad22ca54e26e9",
+          "verdict": "ACCEPT",
+          "at": "2026-11-18T08:12:34Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 2,
+          "sha": "3e385a524d0d41555abde95403bad22ca54e26e9",
+          "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
+          "at": "2026-11-18T08:21:45Z"
         }
       ]
     }

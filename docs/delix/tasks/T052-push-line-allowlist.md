@@ -415,3 +415,18 @@ Read only this card and spec K283, K296, K313 and K331.
   - Note (implementer): the session's own hook was the installed plugin from the main checkout (the base
     `bash_gate.py`); the write gate refused two Write calls to the session scratchpad, so helper files went to
     `.delix/`.
+- Round 2 (PR #83, head `3e385a524d0d41555abde95403bad22ca54e26e9`, base `b9b3906`, 2026-11-18): qa `ACCEPT` (0 P0,
+  0 P1), security `🔐 HUMAN_APPROVAL` (no finding). Lead gates on the clean `git archive` of the head: exactly the 4
+  Files, numstat 102/0, 3/2, 3/2, 94/0 against the base; the 4 files equal the lead's round-2 prototype byte for byte
+  (`scripts/bash_gate.py` `3aac7c26614524a8fc847ceeb323f3e95893a7ae6a3e28cce650830ed3373f3e`, 821 lines;
+  `tests/push_line_tests.sh` `c7a1aa2538600c900e05fd7924f2473c8ac31f009e6a2d990e1b5e029a1617c4`, 94 lines; the two
+  other test files as in round 1); 17 suites exit 0 with no `✘` on Python 3.9.6 and 3.13.13 (`push_line_tests.sh` 53
+  `✔`); the round-1 zsh lines deny on the head and pass main; the real-use comparison gives 303 same and 5 allow to
+  deny; the Stop gate gives `[exit 0]` twice; CI `check` and `test` green. Round 1's High is closed.
+  - Note (qa and security): the card's Edit anchors and Verification values are round 1's (`99 0`, `6ee900ff...`,
+    51 `✔`); this record and round 1's fix line hold round 2's.
+  - Note (security unsure, checked by the lead): zsh options outside the defaults (`MAGIC_EQUAL_SUBST`, `RC_QUOTES`,
+    `IGNORE_BRACES`, `IGNORE_CLOSE_BRACES`) change how words are read; the tool shell sets none of them (`setopt`, 0
+    hits); a shell snapshot that sets them is the O3 class.
+  - Note (security, pre-existing, not in this PR): `claude plugin validate .` warns about a loopback
+    `documentationUrl` it reads from README text; for the release card, which touches README.
