@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-17 · **Sürüm:** 0.7.0 (2026-11-17, Spec C pano görünürlüğü ve Bash hook sertleştirmesi; T042, PR #81, `0e6cb89`; etiket `v0.7.0`) · **Faz:** Spec C (board görünürlüğü, `docs/delix/specs/C-board-visibility.md`) takip turuyla kapandı 2026-11-17: ilk tur T029–T041, 13 PR (#59–#71), 2026-11-12; takip turu T043–T050 ve sürüm kartı T042, 9 PR (#72–#79, #81). §12: spec B #17, T026–T028. §11: #34–#36, T023–T024, arşiv `docs/delix/archive/0.6.x-triage-fixes/`.
+**Son güncelleme:** 2026-11-18 · **Sürüm:** 0.7.0 (2026-11-17, Spec C pano görünürlüğü ve Bash hook sertleştirmesi; T042, PR #81, `0e6cb89`; etiket `v0.7.0`) · **Faz:** Spec C (board görünürlüğü, `docs/delix/specs/C-board-visibility.md`) takip turuyla kapandı 2026-11-17: ilk tur T029–T041, 13 PR (#59–#71), 2026-11-12; takip turu T043–T050 ve sürüm kartı T042, 9 PR (#72–#79, #81). §12: spec B #17, T026–T028. §11: #34–#36, T023–T024, arşiv `docs/delix/archive/0.6.x-triage-fixes/`.
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -601,7 +601,7 @@ skill'leri ledger yazar, T032 doküman ve site (wave 9). 🔐 T033 0.6.3 sürüm
 | 13.14 | T050 (2026-11-17, lead, K318–K320): T049 tur 1'de security'nin bulduğu, lead'in ürettiği Low (tireli config adı R-P5'e girmiyor) için 🔐 Tier 3 kart; K319 (kullanıcı): 0.7.0 sürümünden önce, sıra T046, T049, T050, T042. Kart lead'de doğrulandı (çapalar bayt bayt, kırmızı 5 / 162, yeşil 167, 16 paket iki Python'da); 🔐 Approved 2026-11-17, dalga 20, `T050.dispatch.md`; #79 tur 1 qa ACCEPT, security 🔐 HUMAN_APPROVAL (K321); merge `b9dc488` (2026-11-17), accepted | ✔ |
 | 13.15 | T042 sürüm kartı 0.7.0 (2026-11-17, lead, K322–K324): kart yazarı oturumu yazdı, lead bağımsız uyguladı (40 çapa, 8 sha256; site testi ve 16 paket iki Python'da); D9 anahtar listesi; 🔐 Approved 2026-11-17, dalga 21, `T042.dispatch.md`; #81 tur 1 qa ACCEPT, security 🔐 HUMAN_APPROVAL (K325); merge `0e6cb89` (2026-11-17), accepted; tag `v0.7.0` (kullanıcı, 2026-11-17) | ✔ |
 | 13.16 | Takip turunun kapanışı (`/delixcrew:close`, 2026-11-17, lead, K326): 9 kartın hepsi `accepted`, merge edilen uçlar son qa SHA'sı; metrikler `docs/delix/metrics.md` (uygulayıcı 9 oturum 1.6M çıktı, kart yazarı 5 oturum 2.7M; kapı 16, kapı dışı müdahale 47, kart başına 5.2, hedef ≤ 5 tutmadı); CHANGELOG 0.7.0 T042'de yazıldı; drift kontrolü aşağıda Açık iş (2026-11-17); `v0.7.0` tag'i kullanıcı koydu (`0e6cb89`); temizlik kullanıcının Run bloklarıyla | ✔ 2026-11-17 |
-| 13.17 | T051 board düzeltmeleri kartı (2026-11-17, lead, K327): `escalated` kart boşta yolda worktree'sini korur (K297), tarihli Approved satırı başlıkta (K310), `board.py` panelin `.delix` kuralını alır (K293), panel `plain()` kontrol karakterlerini boşluğa çevirir (T043 P2); kartı lead prototipten yazdı, dalga 22, `T051.dispatch.md`; #82 tur 1 qa ACCEPT, security CLEAN (K328), kapı 2 | ◐ |
+| 13.17 | T051 board düzeltmeleri kartı (2026-11-17, lead, K327): `escalated` kart boşta yolda worktree'sini korur (K297), tarihli Approved satırı başlıkta (K310), `board.py` panelin `.delix` kuralını alır (K293), panel `plain()` kontrol karakterlerini boşluğa çevirir (T043 P2); kartı lead prototipten yazdı, dalga 22, `T051.dispatch.md`; #82 tur 1 qa ACCEPT, security CLEAN (K328); kullanıcı merge etti (`69dec3d`, uç son qa SHA'sı, `accepted`, K329) | ✔ 2026-11-18 |
 
 **K262 kapsamı (kartlarda):** sahte kaynak (Orta, tasarım; A), `--no-optional-locks` ve `-c core.fsmonitor=false` (lead git 2.54'te
 fsmonitor'u üretti), `worktree list -z`, dosya okumada kapsam/normal dosya/1 MiB, girintili liste satırı, `reset`/`clean` dal adı,
@@ -663,19 +663,19 @@ Kararlar (oturumda; spec §9'da K240–K300):
 
 **Açık iş (takip turu kapanışı, 2026-11-17; drift kontrolü architect, lead K297 ve K310 maddelerini kodda doğruladı):**
 - Spec ile kod arasında:
-  - (T051) K297: `escalated` kartın worktree'si 7 günden eskiyse ve upstream'i güncelse yine `remove_worktree` alıyor
+  - (✔ T051) K297: `escalated` kartın worktree'si 7 günden eskiyse ve upstream'i güncelse yine `remove_worktree` alıyor
     (`scripts/board.py:642-647`, panel `parse.ts:732-733`). REQ-4 boşta kalan her worktree'ye izin veriyor, K297 ve
     review skill'i vermiyor; spec ya da kod tek karara inmeli.
-  - (T051) K310: board ve panel Approved satırını tarihsiz kabul ediyor (`scripts/board.py:528`, `parse.ts:620`); write_gate
+  - (✔ T051) K310: board ve panel Approved satırını tarihsiz kabul ediyor (`scripts/board.py:528`, `parse.ts:620`); write_gate
     tarih ister.
-  - (T051) K293: `.delix` yalnız çalıştırma izinliyse ve içinde `card` yoksa panel çağrı 5'i atlıyor, `board.py` koşuyor.
+  - (✔ T051) K293: `.delix` yalnız çalıştırma izinliyse ve içinde `card` yoksa panel çağrı 5'i atlıyor, `board.py` koşuyor.
   - K296: push satırının tamamına izin listesi uygulanmadı, kartı yok (T044 O2).
   - K292: panelin Desktop ekran görüntüsü yok; delix-board 0.1.6 bu Mac'e kurulunca alınır.
 - Spec metni eskidi: §2 ve §6 korunan yol işini yalnız T041 ve ref yazma kartıyla anlatıyor, `plugin.json` artışını
   kapsam dışı sayıyor; T047–T050 ve T042 yalnız K300–K325'te ve kartlarda. §6 "kalan açıkları ref yazma kartı
   kapatır" diyor; O1–O4 README'de Bilinen sınır.
 - İnceleme notları (kartlarda, düzeltme turu açılmadı):
-  - (T051) T043 P2: panel ledger metnindeki kontrol karakterlerini temizlemiyor, `board.py` temizliyor.
+  - (✔ T051) T043 P2: panel ledger metnindeki kontrol karakterlerini temizlemiyor, `board.py` temizliyor.
   - T045 Low: review skill'i iki kanıt dosyasını, PR başlığını ve gövdesini "veri" diye adlandırmıyor.
   - T046: "nesne okuyan dört çağrı" gevşek (`for-each-ref` de okur); sahte `origin/HEAD` STATE'inde merge bloğu o
     SHA'yı taşır (K313); `filter.<driver>.clean` hook'un R-P5 anahtarlarında yok;

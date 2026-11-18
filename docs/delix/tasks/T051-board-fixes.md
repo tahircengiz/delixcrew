@@ -453,3 +453,6 @@ Read only this card and spec REQ-4, REQ-6, K293, K297, K310 and K327.
     the implementer applied the anchors with a script instead and got the card's sha256s. The lead met the same tool
     behaviour when writing the card.
   - Evidence: `rev82/` files in the lead's scratchpad (not in the repo).
+- Merged (K329): the user merged head `aefa44c7b285a293ea7a76c3b06919305cb50993` as it is (merge commit
+  `69dec3d943bc17566145bd4b2f952c5aa59f49af`, 2026-11-18T05:38:37Z). The merge commit changes only the 4 Files, and
+  they equal the reviewed head byte for byte (the card's "after" sha256s). Status `accepted`.
