@@ -157,3 +157,13 @@ Read only this card and spec K313, K331, K336, K337 and K338.
 ```
 
 ## Review findings (filled by the lead)
+- Round 1 (PR #85, head `f68d43a4585a9a4f35a120254bb8c96f9b275c3c`, 2026-11-18): qa `ACCEPT` (0 P0, 0 P1, 0 P2), security
+  `🔐 HUMAN_APPROVAL` (Tier 3, no finding; gitleaks on the diff: no leaks). Lead gates on the clean `git archive` of the
+  head: exactly the 2 Files, numstat 2/2 and 5/0; both files equal the lead's prototype byte for byte (the card's
+  "after" sha256s); the Stop gate gives `[exit 0]` for both commands, no `✘`; CI `check` and `test` green; 17 suites exit 0 on Python 3.9.6 and 3.13.13 on the archive (1436 `✔` each, 0 `✘`); the
+  real-use comparison gives 308 the same; the 11 edge probes give the card's D1 verdicts (4 deny to allow, 7 deny on
+  both).
+  - Note (security unsure): under a POSIX `sh` (dash) `&> /dev/null` reads as a background `&` and an empty
+    redirection, the same as the existing `&>/dev/null`; it writes no file. Claude Code runs zsh on this Mac.
+  - Note (qa unsure): the Stop gate output has 16 `ALL PASSED` lines for 17 files; `site_tests.sh` prints no summary
+    line (the lead checked).
