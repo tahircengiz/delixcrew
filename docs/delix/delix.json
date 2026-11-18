@@ -14,6 +14,8 @@
     "scripts/trust.py",
     ".gitleaks.toml",
     ".claude-plugin/**",
+    "plugins/*/.claude-plugin/**",
+    "plugins/*/hooks/hooks.json",
     "docs/delix/delix.json"
   ],
   "test_paths": [
