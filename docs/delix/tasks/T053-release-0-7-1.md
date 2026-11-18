@@ -422,3 +422,20 @@ Merge sonrası (kullanıcı):
 Read only this card and, in the spec, K298, K305, K313, K329, K331, K334 and K335.
 
 ## Review findings (filled by the lead)
+- Round 1 (PR #84, head `f38f441cbdd536863685926c0cdf66f212f021ff`, 2026-11-18): qa `ACCEPT` (0 P0, 0 P1), security
+  `🔐 HUMAN_APPROVAL` (Tier 3; `plugin.json` changes only its version). Lead gates on the clean `git archive` of the
+  head: exactly the 10 Files, the card's numstat (53 insertions, 29 deletions); the 10 files equal the lead's prototype
+  byte for byte (the card's "after" sha256s); the Stop gate gives `[exit 0]` for both commands; CI `check` and `test`
+  green; `claude plugin validate .` on the archive: 1 warning and 1 plugin directory warning, no `LISTING_URL_SCHEME`;
+  17 suites on Python 3.9.6 and 3.13.13 on the archive, 1431 ✔ each, 0 ✘; the screenshots show `delixcrew 0.7.1` and 2026-11-18.
+  - Low (security, reproduced by the lead on the head): the redirection list in the false-positive clause and the
+    Hooks sentence is looser than `LINE_REDIRS`. `1> /dev/null` and `&> /dev/null` with a space deny (the glued forms,
+    `> /dev/null` and `2> /dev/null` pass), and so do descriptor forms other than `2>&1`, `1>&2` and `>&2` (`3>&1`,
+    `2>&-`). The text errs toward allow; the deny message names the rule. Gate 2 decides: a docs fix round or a
+    follow-up.
+  - Note (security unsure, checked by the lead): a `{ … }` group around the push and its peers passes; the CHANGELOG's
+    "Anything else denies" does not name it. A group runs in the same shell, and a `}` word inside a command denies.
+  - Note (security, pre-existing, not in this PR): `plugins/delix-board/.claude-plugin/plugin.json` and
+    `plugins/delix-board/hooks/hooks.json` match no `protected_paths` entry (the lead ran `common.matches`), so a card
+    that changes them is not Tier 3 by path. A `protected_paths` change is itself protected (🔐); the user decides.
+  - Note (qa unsure): the screenshots are not in the archive; the lead looked at them.
