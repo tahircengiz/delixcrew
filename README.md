@@ -122,7 +122,9 @@ What runs locally, what it writes and when it uses the network. What a feedback 
   `gitleaks protect --staged` before every `git commit`. There a push runs only as
   `git push [-u|--set-upstream] [--force-with-lease] origin <HEAD|branch>` from the card's own branch, which is not the
   default branch, with no `remote.origin.push`, and with no `cd` and no git command other than `add`, `commit`,
-  `status`, `diff`, `log` or `show` in the same command; the branch name form also needs the branch's upstream unset
+  `status`, `diff`, `log` or `show` in the same command; that command holds nothing else but `gh pr create`, a pipe
+  into `tail` or `head`, a redirection to `/dev/null` or a descriptor (`2>&1`) and a heredoc with a quoted
+  delimiter, with no word a shell expands (T052). The branch name form also needs the branch's upstream unset
   or the branch itself. A git global option outside git's own list is denied there, and so is a command name git
   does not list while `help.autocorrect` is on. A `git config` call that names an `alias.`, `remote.`, `push.`, `url.`,
   `include` or `help.` key is denied there unless git reads it as a read: `get` or `list` as its first argument, or a
@@ -244,7 +246,7 @@ or with a `_` next to it (`10.1.2.3_`).
 
 URLs are checked first (`scheme://…`, `//…`, `host/…`, `name:port/…`, and a dotted `host/…` right after `:` or `\`). A
 URL stays only if all of these hold: its scheme is empty, `http` or `https`; its host is on the allowlist above or is a
-loopback or documentation IP (IPv4 only in its canonical dotted form, so `http://127.1/` is removed); it has no user
+loopback or documentation IP (IPv4 only in its canonical dotted form, so a URL to `127.1` is removed); it has no user
 part (`user@`); its path and query hold only letters, digits and `._~-/` (`=&+` after `?` or `#`); no path segment is
 `.` or `..`; in every dotted part of the path or query, each label after the first is a file extension or a number
 (`a.tar.gz`, `v0.6.1`); the path holds no host name, IP or MAC address; no term appears anywhere in the URL, scheme and
@@ -397,8 +399,8 @@ substring match (K220); the boundary is Claude Code's Bash permission prompt (K7
 K279) is a check on words too, an allowlist that fails closed, defence in depth and not a GitHub boundary: words built
 from variables, `eval`, globs, ANSI-C escapes such as `$'\x67it'`, a command whose output spells a word (`$(echo gi)t`),
 and brace expansion (`git {push,origin,HEAD:main}` runs as a push), git settings given through the environment
-(`GIT_DIR`, `GIT_CONFIG_*`) or written into a git config file by another command on the same line (such as a `>>`
-redirection), a script file or another program's own git calls (such as `gh pr checkout`), a `gh` alias for `pr merge`,
+(`GIT_DIR`, `GIT_CONFIG_*`), a script file or another program's own git calls (such as `gh pr checkout`), a `gh` alias
+for `pr merge`,
 a URL for `origin` (`url`, `pushurl`, `url.*.insteadOf` or `url.*.pushInsteadOf`) written into a git config file (the
 repository's, the global one or an included one) in the same or an earlier call (the own-branch push then
 goes to that URL), `gh api` ref or merge writes in any repository other than delixcrew's own, deleting `.delix/card`, a
@@ -408,8 +410,12 @@ words `git` and `update-ref` on one line there, a `git remote` form outside its 
 to refresh refs), a `git config` read of an `alias.`, `remote.`, `push.`, `url.`, `include` or `help.` key with another
 option before the read option (use `--file=<file>` or `git remote get-url origin`), a quote that is never closed in
 front of a `git` word, also in a heredoc body (close the quote or put
-the text in a file), a command nested too deep for the hook to read, and a push in a command that also has `cd` or a git
-command other than `add`, `commit`, `status`, `diff`, `log` or `show`. The one
+the text in a file), a command nested too deep for the hook to read, a push in a command that also has `cd` or a git
+command other than `add`, `commit`, `status`, `diff`, `log` or `show`, and a push in a command that also has any other
+command except `gh pr create` and a pipe into `tail` or `head`, a `--output` option, a redirection other than `>`,
+`1>`, `2>` or `&>` to `/dev/null`, `2>&1`, `1>&2` or `>&2`, a heredoc with an unquoted delimiter, `<<-` or `<<<`, a
+`$`, backtick or backslash outside single quotes, a glob, `~`, `!`, a lone `&` or `(` outside quotes, or a `{` or `}`
+word after a command's name (T052; run the other command in a separate call). The one
 allowed `cat` heredoc
 writes nothing the Write tool could not already write. With git older than 2.44, a missing object in a promisor
 (partial clone) repository can still be fetched from its remote while the hooks read the index (K225).
