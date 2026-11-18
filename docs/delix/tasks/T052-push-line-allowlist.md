@@ -394,3 +394,24 @@ Read only this card and spec K283, K296, K313 and K331.
 ```
 
 ## Review findings (filled by the lead)
+- Round 1 (PR #83, head `901c88eb41c359cfed50a7a93f6553de29dac1f6`, base `b9b3906`, 2026-11-18): qa `ACCEPT` (0 P0,
+  0 P1), security `FIX` (1 High). Lead gates on the clean `git archive` of the head: exactly the 4 Files, numstat 99/0,
+  3/2, 3/2, 92/0; the 4 sha256s equal the card's "after" values and the lead's prototype; 17 suites exit 0 with no `✘`
+  on Python 3.9.6 and 3.13.13 (`push_line_tests.sh` 51 `✔`); the real-use comparison gives 303 same and 5 allow to
+  deny; the Stop gate gives `[exit 0]`; CI `check` and `test` green.
+  - High (security, reproduced by the lead): zsh, the Bash tool's shell, ends a brace group at a `}` anywhere on the
+    command line and runs `{ list } always { list }`; `simple_line` took the `}`, `always` and `{` as words of one peer
+    command. `{ git status } always { export GIT_DIR=<main checkout>/.git }; git push origin HEAD` passes main and the
+    head; in zsh 5.9 (no brace option set, no global alias) the push moved the remote's `main` to the main checkout's
+    local commit. Not a regression against main (D1 form 1 passes there), but it breaks R-L1 and D5.
+    Fix (round 2): after a command's leading `{` words, a `{` or `}` word denies unless the command is a lone `}`; two
+    deny cases in `tests/push_line_tests.sh`. Known false positives (fail closed): zsh's `{ git status }` with no `;`
+    before the `}`, and a peer argument that is exactly `{` or `}`, quoted too. Lead prototype: the head with the two
+    cases gives 51 `✔` / 2 `✘`, the fix 53 `✔`; 17 suites exit 0 with no `✘` on Python 3.9.6 and 3.13.13, and the real-use comparison is unchanged
+    (303 same, 5 allow to deny).
+  - Note (security unsure, checked by the lead): zsh global aliases would expand any plain word; the tool shell has
+    none (`alias -g` lists 0); a shell snapshot that defines them is the O3 class.
+  - Note (security unsure, no change): `gh pr create` before the push may run git itself; out of scope like O2.
+  - Note (implementer): the session's own hook was the installed plugin from the main checkout (the base
+    `bash_gate.py`); the write gate refused two Write calls to the session scratchpad, so helper files went to
+    `.delix/`.
