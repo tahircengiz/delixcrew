@@ -430,3 +430,6 @@ Read only this card and spec K283, K296, K313 and K331.
     hits); a shell snapshot that sets them is the O3 class.
   - Note (security, pre-existing, not in this PR): `claude plugin validate .` warns about a loopback
     `documentationUrl` it reads from README text; for the release card, which touches README.
+- Merged (K334): the user merged head `3e385a524d0d41555abde95403bad22ca54e26e9` as it is (merge commit
+  `64c1325562601884c03e1b06520c636952150584`, 2026-11-18T08:26:11Z). The merge commit changes only the 4 Files, and
+  they equal the reviewed head byte for byte (round 2's sha256s). Status `accepted`.
