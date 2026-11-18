@@ -28,6 +28,7 @@ PUSH_DENY="delixcrew: an implementer session pushes only its own card branch ($G
 REF_DENY="delixcrew: an implementer session does not write $G refs or change ${R}s ($U, $R set-head, $UR, add, remove); those run from the user's own terminal"
 QUOTE_DENY="delixcrew: a quote that is never closed stands in front of a $G command, which this hook cannot read; close the quote or put the text in a file, then run the command again"
 DEEP_DENY="delixcrew: the command nests quotes or substitutions deeper than this hook reads; split it or put the text in a file, then run the command again"
+LINE_DENY="delixcrew: in an implementer session a $P shares its line only with $G add, commit, status, diff, log, show and gh pr create, pipes only into tail or head and redirects only to /dev/null; run every other command in a separate call"
 nest(){ python3 -c 'import sys; k = int(sys.argv[2]); print("echo " + "\"$(" * k + sys.argv[1] + " status" + ")\"" * k)' "$G" "$1"; }
 DEEP="$(nest 3000)"; NEST="$(nest 100)"
 js(){ python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2"; }
@@ -73,7 +74,7 @@ deny "29 ansi-c quote, then ref update"              "$W" "echo \$'\\''; $G $Q $
 # R-W9: { and } are reserved words at the start of a command
 allow "30 brace group, own branch send"              "$W" "{ $G $P origin HEAD; }"
 allow "31 brace group, own branch send with -u"      "$W" "{ $G $P -u origin claude/t1; }"
-allow "32 function body, own branch send"            "$W" "f() { $G $P origin HEAD; }; f"
+deny "32 function body, own branch send"             "$W" "f() { $G $P origin HEAD; }; f" "$LINE_DENY"
 allow "33 brace group, status, redirection"          "$W" "{ $G status; } 2>&1"
 deny "34 brace group, send to main"                  "$W" "{ $G $P origin HEAD:main; }"                                 "$PUSH_DENY"
 deny "35 brace group, ref update"                    "$W" "{ $G $Q $U x y; }"                                           "$REF_DENY"
@@ -106,7 +107,7 @@ for a in sa sb sc sd se sq oa ob oc od; do $G -C "$W" config --unset "alias.$a";
 
 # Allow (cwd W): everyday commands the one pass must keep passing
 allow "48 heredoc commit message with an apostrophe" "$W" "$G commit -q --allow-empty -F - <<'EOF'${NL}it's done${NL}EOF"
-allow "49 own branch send after a heredoc file write" "$W" "cat > /dev/null <<'EOF'${NL}note${NL}EOF${NL}$G $P origin HEAD"
+deny "49 own branch send after a heredoc file write"  "$W" "cat > /dev/null <<'EOF'${NL}note${NL}EOF${NL}$G $P origin HEAD" "$LINE_DENY"
 allow "50 commit -m it's in dq, then status"         "$W" "$G commit -q --allow-empty -m \"it's\" && $G status -s"
 allow "51 own branch send, 2>&1 | tail"              "$W" "$G $P origin HEAD 2>&1 | tail -1"
 allow "52 substitution in dq, rev-parse"             "$W" "echo \"\$($G rev-parse HEAD)\""
