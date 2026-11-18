@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/C-board-visibility.md",
   "size": "M",
-  "updated": "2026-11-18T09:37:38Z",
+  "updated": "2026-11-18T19:58:43Z",
   "env_owner": null,
   "waves": [
     {
@@ -153,6 +153,13 @@
         "T053"
       ],
       "note": "T053 \ud83d\udd10 Tier 3 (.claude-plugin/plugin.json): release 0.7.1 of #80, T051 (#82) and T052 (#83); 10 files, 27 anchors: both versions (delixcrew 0.7.1, delix-board 0.1.7) and the pane spec's two version lines, CHANGELOG, T052's Hooks sentence and Known limits text in README, README.tr and both usage pages, the README sanitizer example behind validate's documentationUrl warning, 8 site version marks and 4 footer dates. Card by the lead from its prototype on bdeec99; an independent applier of the card gives the 10 after sha256s; site_tests 23 and 17 suites on Python 3.9.6 and 3.13. K335. Approved 2026-11-18 tahircengiz (the user's item-specific yes in the lead chat)."
+    },
+    {
+      "wave": 25,
+      "cards": [
+        "T054"
+      ],
+      "note": "T054 \ud83d\udd10 Tier 3 (scripts/bash_gate.py): R-L1's LINE_REDIRS gains the spaced 1> /dev/null and &> /dev/null (security Low on #84, K336; gate 2 'Merge, takip kart\u0131', K337); 2 files, 3 anchors, 5 new test cases. The lead adds plugins/*/.claude-plugin/** and plugins/*/hooks/hooks.json to delix.json protected_paths in its own commit (D3, 3728ea8 precedent). Card by the lead from its prototype on 6d174dc; an independent applier gives the 2 after sha256s; red 56/2, green 58; 17 suites on Python 3.9.6 and 3.13; 308 real lines the same. K338. Approved 2026-11-18 tahircengiz (the user's item-specific yes in the lead chat)."
     }
   ],
   "cards": {
@@ -1537,6 +1544,17 @@
         "head": "f38f441cbdd536863685926c0cdf66f212f021ff",
         "at": "2026-11-18T09:37:38Z"
       }
+    },
+    "T054": {
+      "file": "docs/delix/tasks/T054-push-line-spaced-redirs.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/C-board-visibility.md",
+      "agents": []
     }
   },
   "status_values": [
