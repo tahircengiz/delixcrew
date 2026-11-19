@@ -8,7 +8,7 @@
 set -u
 unset DELIXCREW_FEEDBACK_DIR DELIXCREW_TRIAGE_DIR
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; S="$ROOT/scripts"; FAIL=0
-G=gi; G="${G}t"; U=update; U="${U}-ref"; R=rem; R="${R}ote"; GU=$(echo "$G" | tr a-z A-Z)
+G=gi; G="${G}t"; P=pu; P="${P}sh"; U=update; U="${U}-ref"; R=rem; R="${R}ote"; GU=$(echo "$G" | tr a-z A-Z)
 OK=$'\342\234\224'; NO=$'\342\234\230'; LOCK=$(printf '\360\237\224\220'); BS=$(printf '\134')
 $G --version
 T="$(mktemp -d)"; W="$T/w"; SRC="$T/s"; DJ="$W/docs/delix/delix.json"
@@ -244,5 +244,16 @@ env -u "${GU}_NO_LAZY_FETCH" $G -C "$C" cat-file blob "refs/${R}s/origin/HEAD:do
 p2=$(packs)
 if [ "$p0" = "$p1" ]; then ok "23 no pack added by the hook ($p0 -> $p1)"; else ko "23 no pack added by the hook" "$p0 -> $p1"; fi
 if [ "$p2" -gt "$p1" ]; then ok "23 control: a lazy read adds a pack ($p1 -> $p2)"; else ko "23 control: a lazy read adds a pack" "$p1 -> $p2"; fi
+
+# ---- Fix round 1 (live marker, valid config)
+# F2: the path is folded before relpath, so a letter-case difference in the worktree part still counts. On a
+# case-sensitive file system this is another directory; the fold treats it as the worktree (fail closed).
+WU="$(dirname "$W")/$(basename "$W" | tr a-z A-Z)"
+deny "24 Bash echo x > <parent>/W/scripts/x.py" bash_gate.py "$(hj Bash "$W" "echo x > $WU/scripts/x.py")" "$BPROT"
+# F1: a symlink chain too deep to resolve (RecursionError in realpath on Python 3.9) matches, fail closed. Python 3.13
+# resolves the chain, and the own-branch rule denies HEAD:main; either deny counts.
+mkdir "$W/c1100"; i=1099; while [ $i -ge 0 ]; do ln -s "c$((i + 1))" "$W/c$i"; i=$((i - 1)); done
+deny "25 Bash redirect through 1100 links, then HEAD:main to origin" bash_gate.py "$(hj Bash "$W" "echo > c0/x; $G $P origin HEAD:main")" "delixcrew: "
+i=0; while [ $i -le 1099 ]; do rm "$W/c$i"; i=$((i + 1)); done; rmdir "$W/c1100"
 
 rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }

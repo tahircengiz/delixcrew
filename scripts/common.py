@@ -306,11 +306,15 @@ def _fold_text(s):
 
 
 def _rel_forms(path, cwd):
-    """Spec D REQ-5 (K355): (given, real) relative paths, '/' separated and folded. given: against cwd as written;
-    real: realpath of the target against realpath(cwd)."""
-    given = os.path.relpath(os.path.abspath(os.path.join(cwd, path)), cwd)
-    real = os.path.relpath(os.path.realpath(os.path.join(cwd, path)), os.path.realpath(cwd))
-    return _fold_text(given.replace(os.sep, "/")), _fold_text(real.replace(os.sep, "/"))
+    """Spec D REQ-5 (K355, K356): (given, real) relative paths, '/' separated, folded before relpath so that a case
+    difference in the cwd part counts too. given: against cwd as written; real: realpath of the target against
+    realpath(cwd). None when a form cannot be computed (a symlink chain too deep, a bad character)."""
+    try:
+        given = os.path.relpath(_fold_text(os.path.abspath(os.path.join(cwd, path))), _fold_text(os.path.abspath(cwd)))
+        real = os.path.relpath(_fold_text(os.path.realpath(os.path.join(cwd, path))), _fold_text(os.path.realpath(cwd)))
+    except (OSError, ValueError, RecursionError):
+        return None
+    return given.replace(os.sep, "/"), real.replace(os.sep, "/")
 
 
 def _match_one(rel, patterns):
@@ -329,8 +333,10 @@ def matches(path, patterns, cwd):
     Spec D REQ-5: the folded given path first, then the folded real path; either one matching is a match."""
     if not path:
         return None
-    given, real = _rel_forms(path, cwd)
-    return _match_one(given, patterns) or _match_one(real, patterns)
+    forms = _rel_forms(path, cwd)
+    if forms is None:  # fail closed: a path the hook cannot resolve matches the first pattern
+        return patterns[0] if patterns else None
+    return _match_one(forms[0], patterns) or _match_one(forms[1], patterns)
 
 
 def matches_both(path, patterns, cwd):
@@ -338,6 +344,8 @@ def matches_both(path, patterns, cwd):
     otherwise None. For the rule that opens the gate (the card's Files list)."""
     if not path:
         return None
-    given, real = _rel_forms(path, cwd)
-    d = _match_one(given, patterns)
-    return d if d and _match_one(real, patterns) else None
+    forms = _rel_forms(path, cwd)
+    if forms is None:  # fail closed: a path the hook cannot resolve is not listed
+        return None
+    d = _match_one(forms[0], patterns)
+    return d if d and _match_one(forms[1], patterns) else None
