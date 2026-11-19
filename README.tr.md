@@ -133,9 +133,11 @@ bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
   olmalı ya da anahtardan önceki seçeneklerde `--get` gibi bir okuma seçeneği bulunmalı; anahtardan sonraki kelime ve
   yorum sayılmaz (T049). `gh pr merge` orada reddedilir: kapı 2 kullanıcınındır (T041, K279).
   Ayrıca `git update-ref`'i ve düz `git remote`, `-v` / `--verbose`, `show` ve `get-url` dışındaki her `git remote`
-  biçimini reddeder; kart oturumu bu komutlarla ref ya da remote yazmaz (T044, K296). JSON nesnesi olmayan bir
-  `docs/delix/delix.json` ya da kuralın okuduğu bir git ayarındaki UTF-8 olmayan bayt,
-  komutun hata vermek yerine bir mesajla reddedilmesini sağlar. Kurallar bir komutu hem gevşek kelime taramasıyla hem de
+  biçimini reddeder; kart oturumu bu komutlarla ref ya da remote yazmaz (T044, K296). Kuralın okuduğu bir git
+  ayarındaki UTF-8 olmayan bayt, komutun hata vermek yerine bir mesajla reddedilmesini sağlar. Kart worktree'sinde
+  `docs/delix/delix.json` yoksa, geçerli bir JSON ya da JSON nesnesi değilse ya da `protected_paths` veya
+  `test_paths` metin listesi değilse iki `PreToolUse` hook'u da tek bir mesajla reddeder; yazma hook'u `.delix/`
+  altına yazıma yine izin verir (T056). Kurallar bir komutu hem gevşek kelime taramasıyla hem de
   bash'in kurduğu argv gibi okur; bu yüzden tırnak içindeki boşluk, virgüllü ya da köşeli parantezli bir seçenek değeri,
   satır sonundan önceki ters bölü, bir yönlendirme ve bir `sh -c` dizgesinin metni alt komutu gizlemez, `-c` gibi bir
   genel seçenekle başlayan alias da komutuna kadar izlenir. Bir `git` kelimesinin önünde
@@ -162,9 +164,13 @@ bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
   Onaylandığında ya da zaten onaylıysa 0, onaylanmadığında (terminal yok, yanlış metin) 6, ön koşul tutmadığında
   (git checkout'u ya da worktree kökünde değil, `.git` sembolik bağlantı, metin olmayan bir komut, kayıt yazılamıyor)
   7 ile çıkar. 6 ve 7'de hiçbir şey onaylanmaz.
-- Uygulayıcı worktree'si, work tree kökünde yerel ve git'in izlemediği bir `.delix/card` bulunan worktree'dir
-  ([`scripts/common.py`](scripts/common.py)). `python3` yoksa iki `PreToolUse` hook'u da engeller (bkz.
-  [Gereksinimler](#gereksinimler)).
+- Uygulayıcı worktree'si, work tree kökünde yerel ve git'in izlemediği bir `.delix/card` bulunan ve kartı bitmemiş
+  worktree'dir ([`scripts/common.py`](scripts/common.py)). `refs/remotes/origin/HEAD`'teki STATE
+  (`--no-lazy-fetch --no-replace-objects` ile en çok 1 MiB okunur, worktree'deki kopya hiç okunmaz) ya da onun
+  listelediği bir arşiv STATE'i kartı (aynı kimlik, aynı `file`) `accepted` ya da bir `merged` kaydıyla taşıyorsa
+  kart bitmiştir; o zaman üç hook etkin olmaz ve stderr'e bir satır yazar (T056). Her okuma hatası onları etkin
+  bırakır. Kart bitmemişken yazma hook'u `.delix/card`'ı değiştiren bir Write'ı ve ona dokunan başka her aracı
+  reddeder. `python3` yoksa iki `PreToolUse` hook'u da engeller (bkz. [Gereksinimler](#gereksinimler)).
 
 **Yazdığı dosyalar**
 - Projenizde: `docs/delix/` (spec, kartlar, `cost_usd` alanlarıyla `STATE.json`, doğrulama raporları); ekip lideri
@@ -440,8 +446,11 @@ için kural yalnız review ve status skill metnindedir.
 Ref yazma kuralı (T044, K296) da komutun kelimeleri üzerinde bir denetimdir. Başka bir komutun yazdığı ref'i
 (`git symbolic-ref`, `git fast-import`, `refs/remotes/` içine refspec'li `git fetch` ya da `git branch -f` gibi),
 git dizininin altına yazılan bir dosyayı ve bir betiğin ya da başka bir programın çalıştırdığı komutu görmez.
-delix-board güvenilir durumunu `refs/remotes/origin/HEAD`'ten okur; bu yüzden bir kart oturumu
-o yollarla board'a bir kartı merge'e hazır gösterebilir; merge tıklaması (kapı 2) yine senindir.
+delix-board ve kart worktree'sinin hook'ları güvenilir durumu `refs/remotes/origin/HEAD`'ten okur (T056); bu yüzden
+bir kart oturumu o yollarla ya da refspec'li `git pull` ile board'a bir kartı merge'e hazır gösterebilir ve kartını
+orada bitmiş göstererek kendi hook'larını kapatabilir (K351). Bu, `.delix/card`'ı silmekle aynıdır (yukarıdaki push
+kuralı), yalnız fark edilmesi daha zordur. Bir `refs/replace/` nesnesi ve `refs/remotes/origin/HEAD` adlı bir tag ya
+da dal hook'ların okuduğunu değiştirmez. Merge tıklaması (kapı 2) yine senindir.
 
 ## Lisans
 

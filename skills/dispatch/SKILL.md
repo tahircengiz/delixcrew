@@ -24,6 +24,8 @@ task card production". Write every card in the output to `docs/delix/tasks/T<nnn
   (an exact path, not a glob). For Tier 3 cards the line `**🔐 Approved:** <YYYY-MM-DD> <who>` after the header table
   is written only after the user's explicit "yes" in chat and committed to main (the worktree branches from that
   commit); on an unapproved card the hook rejects the protected path.
+- A card whose Files list holds a `docs/delix/**` path: move that change to a lead step in the wave plan (the write
+  gate denies `docs/delix/**` to the implementer); the card keeps the rest of its Files.
 - At most `max_parallel` (default 3) cards per wave; the rest go to the next wave.
 
 ## 3. Dispatch prompts
@@ -74,7 +76,8 @@ list if missing)
 re-dispatch appends a new record.
 
 ## 5. Wait and collect
-When an implementer session finishes, `.delix/report.md` and a PR arrive; `STATE.json` status → `in_review`, fill
+When an implementer session finishes, `.delix/report.md` and a PR arrive; `STATE.json` status → `in_review`, `pr`
+from the report's `**PR:**` line (the implementer writes no STATE), fill
 `branch` (from `gh pr view <n> --json headRefName`, not from the report) and `session` in the last implementer record,
 then `/delixcrew:review`. While waiting the lead **writes no code and does not do the card itself** (it pollutes the
 context and skips the review).

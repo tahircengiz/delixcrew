@@ -2,6 +2,30 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## Unreleased
+
+- **A finished card's `.delix/card` no longer switches the hooks on** (🔐 K344, K345, K348, K352, K353):
+  when the STATE at `refs/remotes/origin/HEAD`, or an archive STATE it lists, holds the card that `.delix/card`
+  names (same id and `file`) as `accepted` or with a `merged` record, the write, Bash and Stop hooks stay inactive
+  and say so in one stderr line. Any read error keeps them active. While the card is not finished, the write hook
+  denies a Write that changes `.delix/card` and every other tool on it. A `refs/replace/` object or a tag or branch
+  named like `refs/remotes/origin/HEAD` does not change the read; commands that move `origin/HEAD` are a known
+  limit (K351).
+- **A `delix.json` the hooks cannot read blocks the card worktree** (🔐 K346): when
+  `docs/delix/delix.json` is missing, not valid JSON, not a JSON object, or has a `protected_paths` or `test_paths`
+  that is not a list of strings, the write and Bash hooks deny in a card worktree with one message instead of
+  reading no protected path or failing. The write hook still allows `.delix/` (the report). The Stop gate is
+  unchanged.
+- **Protected and test paths match through a symlink and in any letter case** (🔐 K355, K356, K357):
+  both hooks match a path and its real path inside the worktree, after folding letter case and Unicode
+  normalization, so `lnk/x.py` with `lnk -> scripts`, or `Scripts/x.py`, no longer passes a `scripts/x.py` rule.
+  The card's Files list allows a write only when the given path and its real path are both listed.
+- **The implementer leaves `STATE.json` and `docs/delix` to the lead** (K347, K348):
+  it puts the PR number in the report's PR line and the lead records `in_review` and `pr`. A session that finds
+  another card's `.delix/card` moves the old files to `.delix/previous/<id>/`, or writes nothing and ends with
+  `BLOCKED` while that card is not finished. The architect and dispatch keep `docs/delix/**` out of a card's Files
+  list.
+
 ## 0.7.2 — 2026-11-19
 
 - **A push command may redirect to `/dev/null` with a space** (🔐 K336, K338; #85): in an implementer worktree
