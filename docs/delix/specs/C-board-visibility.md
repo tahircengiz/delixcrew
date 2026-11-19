@@ -836,4 +836,4 @@ kod çalıştırır (lead üretti), bu yüzden board'daki bu sertleştirmeler de
     (`gh pr merge 86 --squash --match-head-commit …`). Merge commit `f54c9aa`, saat 11:15:18Z.
   - **Doğrulama:** merge edilen uç son qa kaydının SHA'sı (K297), T055 `accepted`. Merge commit yalnız 8 dosyayı
     değiştirir; onu incelenen uçla bayt bayt aynı.
-  - **Açık iş:** `v0.7.2` etiketi ve eklenti güncellemesi kullanıcıda.
+  - **Etiket:** kullanıcı `v0.7.2`'yi `f54c9aa`'ya koydu ve push etti (2026-11-19); eklenti güncellemesi kullanıcıda.
