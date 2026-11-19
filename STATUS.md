@@ -690,12 +690,27 @@ Kararlar (oturumda; spec §9'da K240–K300):
   - T049 P2: `words()` docstring'i eski işaretleri sayıyor.
   - T042 P2 (K325): Bilinen sınırdaki yanlış pozitif cümlesi koddan geniş.
 - Önceki listeden açık kalan: O5 (ayrışmayan `delix.json` `{}` okunuyor), O6 (`write_gate.py` nesne olmayan
-  `delix.json`'da çöküyor).
+  `delix.json`'da çöküyor). Spec D'ye alındı (REQ-2, K346; §14).
 - Temizlik (K323): yeniden kullanılan `delix-t043-9935f0` worktree'sinde bayat `.delix/` ve `.t042-draft/`.
 - Bekleyen öneri: insan kapılarında HTML karar sayfası
   ([docs/proposals/2026-11-03-html-kapi-sayfalari.md](docs/proposals/2026-11-03-html-kapi-sayfalari.md), 2026-11-19'da
-  dalından main'e alındı); S1–S7 kabul, kod yok. Ölçüm sıradaki M spec'in kapı 1'inde, onaydan önce elle üretilen
-  sayfayla; Spec C'nin kapı 1'i sayfasız geçti.
+  dalından main'e alındı); S1–S7 kabul, kod yok. S6'nın iki ölçümünden ilki Spec D'nin kapı 1'inde yapıldı (§14.2,
+  öneri §11); ikincisi sıradaki M spec'te.
+
+## 14. Spec D: bayat kart işareti, `delix.json` fail closed, `docs/delix` sahipliği (2026-11-19, `docs/delix/specs/D-stale-card-config.md`)
+
+Kaynak: kullanıcı isteği (sohbet, 2026-11-19, "Takip spec'i başlat"): yeniden kullanılan worktree'de bayat `.delix/card`
+(F012, F023, F026, F030, F032), uygulayıcıya verilen `docs/delix` adımı (F005, F007, F014, F017, F024), O5 ve O6.
+Size M · Tier 3.
+
+| # | Adım | Durum |
+|---|---|---|
+| 14.1 | Grill (K344, K351, K355 kullanıcı) ve spec rev 1–5: architect job A ve security (Tier 3) sıfır bağlamla; rev 1 FIX (P1×4 P2×3, Medium×5 Low×2), rev 2 ve rev 3 yeniden kontrolde birer yeni bulgu, rev 4 architect READY, rev 5 security Medium'u işlendi (yeniden incelenmedi, T056 kart incelemesinde); lead her güvenlik bulgusunu geçici depoda üretti, iki önceden var olan açık dahil (klasör symlink'i ve APFS harf farkı korunan yolu geçiyor; K355, K356). Kapı 1: kullanıcı onayladı (2026-11-19 19:02Z), değişiklik 0 | ✔ 2026-11-19 |
+| 14.2 | HTML karar sayfası ölçümü 1 (öneri S6, §7): sayfa S2 yöntemiyle (lead verisi, stdlib betik) üretildi, dosya `docs/delix/views/` (git dışı) ve özel Artifact; kullanıcı: "Sayfa daha kolaydı"; kapı 1 süresi ≈ 5,5 dk (yayın → onay); maliyet payı lead'in spec fazının %25–32'si (27/85 çağrı; çıkış %31, cache okuma %32, cache yazma %25; üst sınır, betik yeniden yazıldı, alt ajanlar paydada yok), S6 eşiği %10; USD hesaplanmadı | ✔ 2026-11-19 |
+| 14.3 | Dispatch: T056 🔐 hook kodu ve testi (REQ-1, REQ-2, REQ-5), T057 skill/ajan/şablon/README/site/CHANGELOG, T058 🔐 sürüm 0.7.3 | ◻ |
+| 14.4 | Dalga 1: T056 ve T057 paralel | ◻ |
+| 14.5 | Dalga 2: T058 | ◻ |
+| 14.6 | Kapanış (`/delixcrew:close`) | ◻ |
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.

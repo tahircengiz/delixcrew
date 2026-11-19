@@ -1,10 +1,10 @@
 # Öneri — insan kapılarında HTML karar sayfası
 
 > Durum: **öneri, beklemede** (2026-11-19) · S1–S7 önerileri kabul edildi (kullanıcı, 2026-11-03: "öneri") · S1
-> prototipi yapıldı (§10) · Plugin kodu yok. 0.6.0 kapandı; ondan sonraki M spec (Spec C, kapı 1 2026-11-04) sayfasız
-> geçti, S6'nın iki ölçümünden biri böylece kaçtı. Sıradaki adım: bir sonraki M spec'in kapı 1'inde, onaydan önce, sayfa
-> S1 yöntemiyle elle üretilir ve §7 ölçülür (§10'daki "anlamlı ölçüm"). Plugin'e alma (`/delixcrew:start` → grill →
-> spec) bu ölçümden sonra kararlaştırılır. Bu not bir spec değildir; K numarası almaz, kararlar aşağıda S1–S7.
+> prototipi yapıldı (§10) · Plugin kodu yok. Spec C'nin kapı 1'i (2026-11-04) sayfasız geçti. S6'nın iki ölçümünden ilki
+> Spec D'nin kapı 1'inde, onaydan önce yapıldı (§11, 2026-11-19); ikincisi sıradaki M spec'te. Plugin'e alma
+> (`/delixcrew:start` → grill → spec) ikinci ölçümden sonra kararlaştırılır. Bu not bir spec değildir; K numarası almaz,
+> kararlar aşağıda S1–S7.
 
 ## 1. Neden, neden şimdi değil
 
@@ -212,3 +212,32 @@ Dersler:
   n = 1. Sayfanın Markdown'dan daha kolay okunup okunmadığı sorulmadı. Anlamlı ölçüm, sıradaki gerçek M spec'te onaydan
   **önce** yapılacak (S6: iki spec).
 
+
+## 11. Pilot ölçümü 1: Spec D kapı 1 (2026-11-19)
+
+Sayfa, onaylanmamış Spec D rev 5'ten (sha `e48a1246bb23`) onaydan önce üretildi. Yöntem S2: lead veriyi JSON olarak
+yazdı (15 karar değişme ihtimaline göre sıralı, alternatifler grill bağlamından, 5 REQ, akış şeması düğüm ve kenar
+listesi, riskler), stdlib bir betik sabit şablona kaçışlı bastı. §10'daki betik worktree'yle silindiği için betik
+yeniden yazıldı. Betik ve veri git dışında, oturumun scratchpad'inde kaldı; sayfa
+`docs/delix/views/gate1-e48a1246bb23.html` (`.git/info/exclude`) ve özel Artifact (S3).
+
+| Ölçü (§7) | Sonuç |
+|---|---|
+| Sayfa başına maliyet | Lead'in spec fazındaki 85 API çağrısının 27'si sayfa adımı. Pay: çıkış 39,0K / 127,6K (%31), cache okuma 6,64M / 20,5M (%32), cache yazma 51,6K / 207K (%25). Fiyat ne olursa olsun pay %25–32 arasında. Üst sınır: betiği ilk kez yazmayı, fixture kontrolünü, tarayıcı ve telefon kontrollerini ve dört rev güncellemesini içerir; alt ajanlar (architect, security) paydada yok, eklenirse pay düşer. USD hesaplanmadı (fiyat bu oturumda birincil kaynaktan doğrulanmadı). |
+| Kapı 1'de istenen değişiklik | 0 (ilk soruda "Onaylıyorum"). Spec rev 1–5'teki değişiklikler inceleyicilerden geldi, kapıdan değil. |
+| Kapı 1 süresi | Sayfanın yayını (18:57:20Z) → onay (19:02:48Z): ≈ 5,5 dk. Spec fazı (istek → onay): ≈ 30 dk. |
+| Sayfa kullanıldı mı | Kullanıcının beyanı: "Sayfa daha kolaydı" (Markdown'a göre). Export metni yapıştırılmadı (değişiklik yoktu). |
+| Kapı 2'de spec kaynaklı bulgu | Kartlar merge edilince sayılır. |
+
+Kontroller ve dersler:
+- Kaçış (§5): kötü niyetli fixture'da ham `<img` 0, `http(s)://` 0 (metindeki şema ayırıcısı `:&#47;&#47;` ve JSON'da
+  `\u002f` olarak basılıyor), `<script src` 0, ham yön karakteri 0, `innerHTML` 0; JSON bloğu ayrışıyor. §10'da
+  denenmeyen JSON veri bloğu bu kez kullanıldı.
+- Telefon: 375 px'te sayfa taşmadı, ama şemanın yazısı ≈ 6 px'e küçüldü; şema yatay kayan bir kutuya alındı
+  (`min-width: 560px`), sayfa 375 = 375 kaldı.
+- Yazma aracı betikteki `\u2028` ve yön karakteri kaçışlarını ham karaktere çevirdi; görünmez karakter taramasıyla
+  bulundu ve kaçışa geri çevrildi. Şablon plugin'e girerse bu tarama testte olmalı.
+- Seçim ve not export metnine giriyor, sayaç doğru (tarayıcı paneli, yerel dosya); Artifact içinde kopyalama tıklanarak
+  denenmedi.
+- Maliyetin büyük kısmı inceleme turları arasında veriyi dört kez güncellemekti; sayfa yalnız son rev'de üretilseydi
+  pay düşerdi (ölçülmedi). S6'nın %10 eşiği bu ölçümde aşıldı; karar ikinci ölçümden sonra.
