@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/C-board-visibility.md",
   "size": "M",
-  "updated": "2026-11-19T07:10:16Z",
+  "updated": "2026-11-19T07:31:51Z",
   "env_owner": null,
   "waves": [
     {
@@ -1599,12 +1599,39 @@
       "file": "docs/delix/tasks/T055-release-0-7-2.md",
       "role": "docs",
       "tier": 3,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
+      "status": "in_review",
+      "pr": 86,
+      "rounds": 1,
       "cost_usd": null,
       "spec": "docs/delix/specs/C-board-visibility.md",
-      "agents": []
+      "agents": [
+        {
+          "role": "implementer",
+          "by": "main",
+          "round": 0,
+          "sha": null,
+          "verdict": null,
+          "at": "2026-11-19T07:11:47Z",
+          "branch": "claude/t055-release-edae18",
+          "session": "t055-release"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 1,
+          "sha": "bf44eff878f46e0824198f5578db262bf53b4b44",
+          "verdict": "ACCEPT",
+          "at": "2026-11-19T07:30:16Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 1,
+          "sha": "bf44eff878f46e0824198f5578db262bf53b4b44",
+          "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
+          "at": "2026-11-19T07:31:51Z"
+        }
+      ]
     }
   },
   "status_values": [

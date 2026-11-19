@@ -299,3 +299,16 @@ Merge sonrası (kullanıcı):
 Read only this card and, in the spec, K298, K305, K313, K336, K338, K340 and K341.
 
 ## Review findings (filled by the lead)
+- Round 1 (PR #86, 2026-11-19): qa `ACCEPT`, security `🔐 HUMAN_APPROVAL`, both on head
+  `bf44eff878f46e0824198f5578db262bf53b4b44`. Lead gates on the clean `git archive` of the head: exactly the 8 Files,
+  numstat 1/1, 7/0, 6/5, 7/6, 2/2, 2/2, 3/3, 3/3; the 8 files equal the lead's prototype byte for byte (the card's
+  "after" sha256s); the Stop gate gives `[exit 0]` for both commands, no `✘`; CI `check` and `test` green; 17 suites
+  exit 0 on Python 3.9.6 and 3.13.13 on the archive (1436 `✔` each, 0 `✘`); the screenshots show `delixcrew 0.7.2`,
+  2026-11-19 and the new Known limits words.
+  - Note (implementer): the Edit tool trimmed the trailing space of A12's "Replace with"; a second Edit that took the
+    next `<code>` gave the card's sha256. Later cards keep anchors free of edge spaces.
+  - qa "unsure": it did not run `scripts/bash_gate.py` on the D1 forms. The lead ran them on the head tree in a
+    throwaway implementer worktree: the 11 named redirections allow, and two forms with two spaces, `3>&1`, `2>&-`,
+    `>&1` and two file targets deny; 18 of 18 as D1 says.
+  - security: no finding; gitleaks on the diff finds nothing. The 🔐 is `.claude-plugin/plugin.json` (the version
+    line only), approved on the card's line 7.
