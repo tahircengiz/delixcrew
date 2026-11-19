@@ -1657,9 +1657,9 @@
       "file": "docs/delix/tasks/T056-hooks-stale-card-config.md",
       "role": "backend",
       "tier": 3,
-      "status": "fixing",
+      "status": "in_review",
       "pr": 88,
-      "rounds": 1,
+      "rounds": 2,
       "cost_usd": null,
       "spec": "docs/delix/specs/D-stale-card-config.md",
       "agents": [
@@ -1688,6 +1688,22 @@
           "sha": "5a58b4fe755ac95608d28978ede534e741f70bd8",
           "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
           "at": "2026-11-19T20:24:32Z"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 2,
+          "sha": "0f09664dd045603c9428a1bb5b65a8a653507a03",
+          "verdict": "ACCEPT_WITH_NOTES",
+          "at": "2026-11-19T21:02:28Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 2,
+          "sha": "0f09664dd045603c9428a1bb5b65a8a653507a03",
+          "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
+          "at": "2026-11-19T21:02:28Z"
         }
       ]
     },

@@ -407,3 +407,16 @@ Do not write STATE.json. Read only this card and spec §1–§7, K344–K357.
     then fails with ELOOP; a Write of junk to the worktree's `.git` file switches all three hooks off on main and on
     the branch (pre-existing, Write tool only; lead follow-up); hard links (pre-existing, needs Bash); the 1 MiB check
     runs after the blob is read (card design).
+- Round 2 (PR #88 @ `0f09664dd045603c9428a1bb5b65a8a653507a03`): the F1 and F2 fix in `scripts/common.py` is byte for
+  byte the lead's prototype; cases 24 and 25 are added. Deterministic gate green (Stop gate both commands `[exit 0]`;
+  CI `test` and `check` pass; the lead's own run from the commit: 18 files, 0 `✘` on Python 3.9.6 and 3.13.13; the new
+  test file on 5a58b4f: 2 `✘` on 3.9.6 (24, 25 with a traceback), 1 `✘` on 3.13.13 (24)). qa **ACCEPT_WITH_NOTES**
+  (P0 0, P1 0). security **🔐 HUMAN_APPROVAL** (no Critical, High or Medium). The lead's runs, main against the branch:
+  - F2 repro: main **allow**, branch **deny**. F1 repro: main and branch **deny**, exit 0.
+  - **P2 (qa, no fix):** case 25 reaches the F1 fallback only where `realpath` raises (Python 3.9.6; 3.12 in CI not
+    checked); on 3.13 the own-branch rule denies first.
+  - **Low (security, pre-existing; lead follow-up):** the Bash write rule does not check that the target is inside the
+    worktree. A redirect to another checkout's protected path, relative (`../src/scripts/x.py`) or absolute, is allowed
+    on main and on the branch; the Write tool denies it (A13).
+  - Hook time in a live card worktree (20 calls, median): bash gate 55 to 75 ms, write gate 66 to 70 ms.
+  - Unsure, not reproduced: whether the host blocks on exit 1 (`onFailure`); code points that HFS+ ignores.
