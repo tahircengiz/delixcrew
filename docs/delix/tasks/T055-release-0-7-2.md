@@ -312,3 +312,6 @@ Read only this card and, in the spec, K298, K305, K313, K336, K338, K340 and K34
     `>&1` and two file targets deny; 18 of 18 as D1 says.
   - security: no finding; gitleaks on the diff finds nothing. The 🔐 is `.claude-plugin/plugin.json` (the version
     line only), approved on the card's line 7.
+- Gate 2 (the user, 2026-11-19): merged (K343). The user merged head `bf44eff878f46e0824198f5578db262bf53b4b44` as it
+  is (merge commit `f54c9aa1dda4ef860e86b8a5bf4cb228e1a1b0ed`, 2026-11-19T11:15:18Z). The merge commit changes only
+  the 8 Files, and they equal the reviewed head byte for byte. Status `accepted`.
