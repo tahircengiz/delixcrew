@@ -348,4 +348,12 @@ With:
 Do not write STATE.json. Read only this card and spec REQ-3, REQ-4, K347–K351.
 
 ## Review findings (filled by the lead)
-- Round 1: …
+- Round 1 (PR #87 @ `b13a18f5ba4dc70482e6bc3dfd8ac89545ec5d26`): deterministic gate green (the 11 files equal the lead's prototype
+  byte for byte; CI `test` and `check` pass; Stop gate and Verification `[exit 0]`; both index boxes fit, seen in the
+  screenshots). qa **ACCEPT** (P0 0, P1 0). security **CLEAN**:
+  - Low (merge order, no text change): the README, site and implement-skill text describe T056's behaviour, and the
+    site publishes on every push to main. Merge T057 after T056 or with it; if T056's behaviour changes, review A1, A4,
+    A7, A9 and A14 again first.
+  - P2, noted (no fix): the published Known limits name deleting `.delix/card` but not overwriting it through Bash
+    (spec §6 known limit); the lead copies `pr` from the implementer's report, the same trust as before, bounded by
+    the K297 head check after merge.

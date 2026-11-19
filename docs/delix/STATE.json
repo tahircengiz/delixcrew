@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/D-stale-card-config.md",
   "size": "M",
-  "updated": "2026-11-19T19:42:41Z",
+  "updated": "2026-11-19T20:05:15Z",
   "env_owner": null,
   "waves": [
     {
@@ -1657,16 +1657,6 @@
       "file": "docs/delix/tasks/T056-hooks-stale-card-config.md",
       "role": "backend",
       "tier": 3,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
-      "cost_usd": null,
-      "spec": "docs/delix/specs/D-stale-card-config.md"
-    },
-    "T057": {
-      "file": "docs/delix/tasks/T057-docs-stale-card-config.md",
-      "role": "docs",
-      "tier": 2,
       "status": "in_progress",
       "pr": null,
       "rounds": 0,
@@ -1679,9 +1669,47 @@
           "round": 0,
           "sha": null,
           "verdict": null,
+          "at": "2026-11-19T20:00:57Z",
+          "branch": "claude/competent-cannon-69baef",
+          "session": "delix-t056-bayat-kart-ve"
+        }
+      ]
+    },
+    "T057": {
+      "file": "docs/delix/tasks/T057-docs-stale-card-config.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "in_review",
+      "pr": 87,
+      "rounds": 1,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/D-stale-card-config.md",
+      "agents": [
+        {
+          "role": "implementer",
+          "by": "main",
+          "round": 0,
+          "sha": null,
+          "verdict": null,
           "at": "2026-11-19T19:42:41Z",
-          "branch": null,
+          "branch": "claude/elastic-sutherland-3c3efb",
           "session": "delix-t057-bayat-kart-ve"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 1,
+          "sha": "b13a18f5ba4dc70482e6bc3dfd8ac89545ec5d26",
+          "verdict": "ACCEPT",
+          "at": "2026-11-19T20:05:15Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 1,
+          "sha": "b13a18f5ba4dc70482e6bc3dfd8ac89545ec5d26",
+          "verdict": "CLEAN",
+          "at": "2026-11-19T20:05:15Z"
         }
       ]
     },
