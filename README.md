@@ -123,8 +123,9 @@ What runs locally, what it writes and when it uses the network. What a feedback 
   `git push [-u|--set-upstream] [--force-with-lease] origin <HEAD|branch>` from the card's own branch, which is not the
   default branch, with no `remote.origin.push`, and with no `cd` and no git command other than `add`, `commit`,
   `status`, `diff`, `log` or `show` in the same command; that command holds nothing else but `gh pr create`, a pipe
-  into `tail` or `head`, a redirection to `/dev/null` or a descriptor (`2>&1`) and a heredoc with a quoted
-  delimiter, with no word a shell expands (T052). The branch name form also needs the branch's upstream unset
+  into `tail` or `head`, a redirection to `/dev/null` by `>`, `1>`, `2>` or `&>` (with one space or none), the
+  descriptor copies `2>&1`, `1>&2` and `>&2`, and a heredoc with a quoted delimiter, with no word a shell expands
+  (T052, T054). The branch name form also needs the branch's upstream unset
   or the branch itself. A git global option outside git's own list is denied there, and so is a command name git
   does not list while `help.autocorrect` is on. A `git config` call that names an `alias.`, `remote.`, `push.`, `url.`,
   `include` or `help.` key is denied there unless git reads it as a read: `get` or `list` as its first argument, or a
@@ -413,9 +414,9 @@ front of a `git` word, also in a heredoc body (close the quote or put
 the text in a file), a command nested too deep for the hook to read, a push in a command that also has `cd` or a git
 command other than `add`, `commit`, `status`, `diff`, `log` or `show`, and a push in a command that also has any other
 command except `gh pr create` and a pipe into `tail` or `head`, a `--output` option, a redirection other than `>`,
-`1>`, `2>` or `&>` to `/dev/null`, `2>&1`, `1>&2` or `>&2`, a heredoc with an unquoted delimiter, `<<-` or `<<<`, a
-`$`, backtick or backslash outside single quotes, a glob, `~`, `!`, a lone `&` or `(` outside quotes, or a `{` or `}`
-word after a command's name (T052; run the other command in a separate call). The one
+`1>`, `2>` or `&>` to `/dev/null` (with one space or none), `2>&1`, `1>&2` or `>&2`, a heredoc with an unquoted
+delimiter, `<<-` or `<<<`, a `$`, backtick or backslash outside single quotes, a glob, `~`, `!`, a lone `&` or `(`
+outside quotes, or a `{` or `}` word after a command's name (T052; run the other command in a separate call). The one
 allowed `cat` heredoc
 writes nothing the Write tool could not already write. With git older than 2.44, a missing object in a promisor
 (partial clone) repository can still be fetched from its remote while the hooks read the index (K225).

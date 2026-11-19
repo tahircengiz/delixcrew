@@ -123,8 +123,9 @@ bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
   `git push [-u|--set-upstream] [--force-with-lease] origin <HEAD|dal>` biçiminde, kartın varsayılan dal olmayan kendi
   dalından, `remote.origin.push` yokken, aynı komutta `cd` ve `add`, `commit`, `status`, `diff`, `log`, `show`
   dışında bir git komutu yokken çalışır; o komutta bunlardan başka yalnız `gh pr create`, `tail` ya da `head`'e bir
-  pipe, `/dev/null`'a ya da bir tanımlayıcıya (`2>&1`) bir yönlendirme ve sınırlayıcısı tırnaklı bir heredoc
-  bulunur, kabuğun genişlettiği bir kelime bulunmaz (T052). Dal adı biçimi ayrıca dalın upstream'inin olmamasını ya
+  pipe, `>`, `1>`, `2>` ya da `&>` ile `/dev/null`'a bir yönlendirme (bir boşlukla ya da boşluksuz), `2>&1`, `1>&2` ve
+  `>&2` tanımlayıcı kopyaları ve sınırlayıcısı tırnaklı bir heredoc bulunur, kabuğun genişlettiği bir kelime bulunmaz
+  (T052, T054). Dal adı biçimi ayrıca dalın upstream'inin olmamasını ya
   da dalın kendisi
   olmasını ister. Git'in kendi listesinde olmayan bir git genel seçeneği de, `help.autocorrect` açıkken git'in
   listelemediği bir komut adı da orada reddedilir. Orada `alias.`, `remote.`, `push.`, `url.`, `include` ya da `help.`
@@ -416,10 +417,10 @@ okuyan ve okuma seçeneğinden önce başka bir seçenek taşıyan `git config` 
 tırnağı (tırnağı kapat ya da metni bir dosyaya yaz), hook'un okuyamayacağı kadar derin iç içe bir komutu, `cd` ya da
 `add`, `commit`, `status`, `diff`, `log`, `show` dışında bir git komutu da içeren bir komuttaki push'u ve
 `gh pr create` ile `tail` ya da `head`'e bir pipe dışında başka bir komut, bir `--output` seçeneği, `/dev/null`'a
-`>`, `1>`, `2>` ya da `&>` ve `2>&1`, `1>&2`, `>&2` dışında bir yönlendirme, sınırlayıcısı tırnaksız bir heredoc,
-`<<-` ya da `<<<`, tek tırnak dışında bir `$`, ters tırnak ya da ters eğik çizgi, tırnak dışında bir glob, `~`, `!`,
-tek başına bir `&` ya da `(` ya da bir komutun adından sonra bir `{` ya da `}` kelimesi de içeren bir komuttaki
-push'u reddeder (T052; öteki komutu ayrı bir çağrıda çalıştır).
+`>`, `1>`, `2>` ya da `&>` (bir boşlukla ya da boşluksuz) ve `2>&1`, `1>&2`, `>&2` dışında bir yönlendirme,
+sınırlayıcısı tırnaksız bir heredoc, `<<-` ya da `<<<`, tek tırnak dışında bir `$`, ters tırnak ya da ters eğik çizgi,
+tırnak dışında bir glob, `~`, `!`, tek başına bir `&` ya da `(` ya da bir komutun adından sonra bir `{` ya da `}`
+kelimesi de içeren bir komuttaki push'u reddeder (T052; öteki komutu ayrı bir çağrıda çalıştır).
 İzin verilen tek `cat` heredoc'u,
 Write aracının zaten yazamayacağı hiçbir şeyi yazmaz. 2.44'ten eski git ile promisor (kısmi klon) bir repoda eksik bir
 nesne, hook'lar index'i okurken uzak depodan yine çekilebilir (K225).
