@@ -692,6 +692,10 @@ Kararlar (oturumda; spec §9'da K240–K300):
 - Önceki listeden açık kalan: O5 (ayrışmayan `delix.json` `{}` okunuyor), O6 (`write_gate.py` nesne olmayan
   `delix.json`'da çöküyor).
 - Temizlik (K323): yeniden kullanılan `delix-t043-9935f0` worktree'sinde bayat `.delix/` ve `.t042-draft/`.
+- Bekleyen öneri: insan kapılarında HTML karar sayfası
+  ([docs/proposals/2026-11-03-html-kapi-sayfalari.md](docs/proposals/2026-11-03-html-kapi-sayfalari.md), 2026-11-19'da
+  dalından main'e alındı); S1–S7 kabul, kod yok. Ölçüm sıradaki M spec'in kapı 1'inde, onaydan önce elle üretilen
+  sayfayla; Spec C'nin kapı 1'i sayfasız geçti.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
