@@ -7,6 +7,7 @@ import pwd
 import stat
 import subprocess
 import sys
+import unicodedata
 
 REVIEWERS = {"delixcrew:architect", "delixcrew:qa", "delixcrew:security", "delixcrew:scout",
              "architect", "qa", "security", "scout"}
@@ -39,11 +40,82 @@ def git(cwd, *args):
         return None
 
 
+def card_id(text):
+    """Spec D REQ-1 (K353): "T" plus the whole run of ASCII digits after a leading T in the last path part, or None."""
+    name = text.rsplit("/", 1)[-1]
+    digits = ""
+    for c in name[1:]:
+        if c not in "0123456789":  # not str.isdigit: it accepts other scripts' digits
+            break
+        digits += c
+    return "T" + digits if name[:1] == "T" and digits else None
+
+
+def _trusted_json(cwd, sha, rel):
+    """Spec D REQ-1 (K352): the JSON object of blob <sha>:<rel>, at most 1 MiB, without lazy fetch or replace objects;
+    None on any other result or error."""
+    try:
+        r = git(cwd, "--no-lazy-fetch", "--no-replace-objects", "cat-file", "blob", sha + ":" + rel)
+        if r is None or r.returncode != 0 or len(r.stdout.encode("utf-8")) > 1 << 20:
+            return None
+        obj = json.loads(r.stdout)
+        return obj if isinstance(obj, dict) else None
+    except Exception:
+        return None
+
+
+def _card_finished(cwd, marker):
+    """Spec D REQ-1 (K344, K345, K353): the card id when the card the marker names is finished on origin/HEAD (its
+    record's file equals the marker; status accepted or merged an object); None in every other case (fail closed)."""
+    try:
+        cid = card_id(marker)
+        if cid is None:
+            return None
+        r = git(cwd, "--no-lazy-fetch", "show-ref", "--verify", "refs/remotes/origin/HEAD")
+        fields = r.stdout.split() if r is not None and r.returncode == 0 else []
+        if len(fields) != 2 or fields[1] != "refs/remotes/origin/HEAD" or len(fields[0]) not in (40, 64) \
+                or any(c not in "0123456789abcdef" for c in fields[0]):
+            return None
+        sha = fields[0]
+
+        def decide(state):  # True/False when state's cards hold a record of cid whose file is the marker, else None
+            cards = state.get("cards")
+            rec = cards.get(cid) if isinstance(cards, dict) else None
+            if not (isinstance(rec, dict) and isinstance(rec.get("file"), str) and rec["file"] == marker):
+                return None
+            return rec.get("status") == "accepted" or isinstance(rec.get("merged"), dict)
+
+        state = _trusted_json(cwd, sha, "docs/delix/STATE.json")  # never the worktree copy
+        if state is None:
+            return None
+        cards = state.get("cards")
+        if isinstance(cards, dict) and cid in cards:  # that record alone decides; the archive is not read
+            return cid if decide(state) else None
+        archive = state.get("archive")
+        if not isinstance(archive, list):
+            return None
+        head, tail = "docs/delix/archive/", "/STATE.json"
+        for item in archive[:20]:
+            if not isinstance(item, str) or not item.startswith(head) or not item.endswith(tail) or ".." in item:
+                continue
+            middle = item[len(head):-len(tail)]
+            if not middle or "/" in middle:
+                continue
+            old = _trusted_json(cwd, sha, item)
+            done = decide(old) if old is not None else None
+            if done is not None:
+                return cid if done else None
+        return None
+    except Exception:
+        return None
+
+
 def card_path(cwd):
     """Returns the card path if the implementer worktree has .delix/card; otherwise None (hook inactive).
     Only a local card counts (issue #8): cwd is the root of a git work tree, .delix/card is not reached through a
     symlink, and git knows nothing under .delix in any letter case (no tracked file, no submodule). A card that
-    arrives with the repo (clone, archive, symlink) would make the Stop gate run the repo's commands."""
+    arrives with the repo (clone, archive, symlink) would make the Stop gate run the repo's commands.
+    Spec D REQ-1: a card that is finished on origin/HEAD also gives None, with one stderr line."""
     p = os.path.join(cwd, ".delix", "card")
     if not os.path.isfile(p):
         return None
@@ -61,18 +133,46 @@ def card_path(cwd):
                          "inactive here. The implementer writes it locally (.git/info/exclude).\n")
         return None
     with open(p, encoding="utf-8") as f:
-        return f.read().strip() or None
+        text = f.read().strip()
+    if not text:
+        return None
+    cid = _card_finished(cwd, text)
+    if cid is not None:
+        sys.stderr.write(f"delixcrew: .delix/card names {cid}, "
+                         "which is accepted on origin/HEAD; implementer hooks stay inactive here. "
+                         "Move .delix aside before starting a new card.\n")
+        return None
+    return text
 
 
 def delix_json(cwd):
+    """Spec D REQ-2 (K346): the docs/delix/delix.json object; None when it is missing, not a regular file, unreadable,
+    not JSON or not an object."""
     for candidate in (os.path.join(cwd, "docs", "delix", "delix.json"),):
         if os.path.isfile(candidate):
             try:
                 with open(candidate, encoding="utf-8") as f:
-                    return json.load(f)
+                    cfg = json.load(f)
             except Exception:
-                return {}
-    return {}
+                return None
+            return cfg if isinstance(cfg, dict) else None
+    return None
+
+
+CONFIG_DENY = ("delixcrew: docs/delix/delix.json is missing, not valid JSON or not a JSON object with string lists; "
+               "this card worktree stays blocked until the user fixes it from their own terminal")
+
+
+def gate_config(cwd):
+    """Spec D REQ-2 (K346): delix_json(cwd) when protected_paths and test_paths are each absent or a list of str;
+    otherwise None (a key present with null too). The write and Bash gates deny with CONFIG_DENY on None."""
+    cfg = delix_json(cwd)
+    if cfg is None:
+        return None
+    for key in ("protected_paths", "test_paths"):
+        if key in cfg and not (isinstance(cfg[key], list) and all(isinstance(x, str) for x in cfg[key])):
+            return None
+    return cfg
 
 
 def stop_commands(cwd):
@@ -200,15 +300,44 @@ def is_trusted(cwd, commands=None):
         return False
 
 
-def matches(path, patterns, cwd):
-    """Normalizes a relative/absolute path against cwd and compares it with glob patterns ('**' supported)."""
-    if not path:
-        return None
-    rel = os.path.relpath(os.path.abspath(os.path.join(cwd, path)), cwd)
-    rel = rel.replace(os.sep, "/")
+def _fold_text(s):
+    """Spec D REQ-5 (K356): NFD, then casefold, in the order of write_gate._fold (K129)."""
+    return unicodedata.normalize("NFD", s).casefold()
+
+
+def _rel_forms(path, cwd):
+    """Spec D REQ-5 (K355): (given, real) relative paths, '/' separated and folded. given: against cwd as written;
+    real: realpath of the target against realpath(cwd)."""
+    given = os.path.relpath(os.path.abspath(os.path.join(cwd, path)), cwd)
+    real = os.path.relpath(os.path.realpath(os.path.join(cwd, path)), os.path.realpath(cwd))
+    return _fold_text(given.replace(os.sep, "/")), _fold_text(real.replace(os.sep, "/"))
+
+
+def _match_one(rel, patterns):
+    """The first pattern (as given, unfolded) whose folded form matches the folded rel ('**' supported), or None."""
     for d in patterns:
-        d2 = d.replace("**/", "").replace("/**", "")
-        if fnmatch.fnmatch(rel, d) or fnmatch.fnmatch(rel, d2) or rel.startswith(d2.rstrip("*").rstrip("/") + "/") \
-                or fnmatch.fnmatch(os.path.basename(rel), d):
+        f = _fold_text(d)
+        f2 = f.replace("**/", "").replace("/**", "")
+        if fnmatch.fnmatch(rel, f) or fnmatch.fnmatch(rel, f2) or rel.startswith(f2.rstrip("*").rstrip("/") + "/") \
+                or fnmatch.fnmatch(os.path.basename(rel), f):
             return d
     return None
+
+
+def matches(path, patterns, cwd):
+    """Normalizes a relative/absolute path against cwd and compares it with glob patterns ('**' supported).
+    Spec D REQ-5: the folded given path first, then the folded real path; either one matching is a match."""
+    if not path:
+        return None
+    given, real = _rel_forms(path, cwd)
+    return _match_one(given, patterns) or _match_one(real, patterns)
+
+
+def matches_both(path, patterns, cwd):
+    """Spec D REQ-5 (K357): the given form's pattern only when the given and the real form each match a pattern;
+    otherwise None. For the rule that opens the gate (the card's Files list)."""
+    if not path:
+        return None
+    given, real = _rel_forms(path, cwd)
+    d = _match_one(given, patterns)
+    return d if d and _match_one(real, patterns) else None
