@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/D-stale-card-config.md",
   "size": "M",
-  "updated": "2026-11-19T19:02:48Z",
+  "updated": "2026-11-19T19:37:52Z",
   "env_owner": null,
   "waves": [
     {
@@ -167,6 +167,21 @@
         "T055"
       ],
       "note": "T055 \ud83d\udd10 Tier 3 (.claude-plugin/plugin.json): release 0.7.2 of T054 (#85); 8 files, 16 anchors: the version, a one-item CHANGELOG section above 0.7.1, the redirection text in README and README.tr Hooks and Known limits and in both usage pages, 8 site version marks and 4 footer dates; delix-board stays 0.1.7. Card by the lead from its prototype on 0efcfac; an independent applier of the card gives the 8 after sha256s; 18 probes on main match the text; site_tests 23 and 17 suites on Python 3.9.6 and 3.13. K341. Approved 2026-11-19 tahircengiz (the user's item-specific yes in the lead chat)."
+    },
+    {
+      "wave": 27,
+      "cards": [
+        "T056",
+        "T057"
+      ],
+      "note": "Spec D wave 1, parallel, no shared file. T056 \ud83d\udd10 Tier 3 (scripts/common.py, write_gate.py, bash_gate.py): REQ-1 stale marker from origin/HEAD STATE, REQ-2 delix.json fails closed, REQ-5 real path and folded case; new tests/stale_card_tests.sh, tests/ref_gate_tests.sh lines 30 and 111 only (K354). T057 Tier 2 docs: REQ-3 (implementer writes no STATE) and REQ-4 text, CHANGELOG Unreleased; 19 anchors from the lead's prototype on 22a51ef (11 after sha256s, site_tests 23). Cards by architect job B, anchors checked by the lead against 22a51ef; T057 Known limits: refspec pull measured, no recipe text (D5)."
+    },
+    {
+      "wave": 28,
+      "cards": [
+        "T058"
+      ],
+      "note": "Spec D wave 2: T058 \ud83d\udd10 Tier 3 (.claude-plugin/plugin.json) release 0.7.3 after T056 and T057 merge; the lead fills <DATE>, <PR56>, <PR57>, base SHA and sha256s at dispatch; delix-board stays 0.1.7."
     }
   ],
   "cards": {
@@ -1637,6 +1652,36 @@
         "head": "bf44eff878f46e0824198f5578db262bf53b4b44",
         "at": "2026-11-19T11:15:18Z"
       }
+    },
+    "T056": {
+      "file": "docs/delix/tasks/T056-hooks-stale-card-config.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/D-stale-card-config.md"
+    },
+    "T057": {
+      "file": "docs/delix/tasks/T057-docs-stale-card-config.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/D-stale-card-config.md"
+    },
+    "T058": {
+      "file": "docs/delix/tasks/T058-release-0-7-3.md",
+      "role": "devops",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/D-stale-card-config.md"
     }
   },
   "status_values": [

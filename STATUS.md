@@ -707,7 +707,7 @@ Size M · Tier 3.
 |---|---|---|
 | 14.1 | Grill (K344, K351, K355 kullanıcı) ve spec rev 1–5: architect job A ve security (Tier 3) sıfır bağlamla; rev 1 FIX (P1×4 P2×3, Medium×5 Low×2), rev 2 ve rev 3 yeniden kontrolde birer yeni bulgu, rev 4 architect READY, rev 5 security Medium'u işlendi (yeniden incelenmedi, T056 kart incelemesinde); lead her güvenlik bulgusunu geçici depoda üretti, iki önceden var olan açık dahil (klasör symlink'i ve APFS harf farkı korunan yolu geçiyor; K355, K356). Kapı 1: kullanıcı onayladı (2026-11-19 19:02Z), değişiklik 0 | ✔ 2026-11-19 |
 | 14.2 | HTML karar sayfası ölçümü 1 (öneri S6, §7): sayfa S2 yöntemiyle (lead verisi, stdlib betik) üretildi, dosya `docs/delix/views/` (git dışı) ve özel Artifact; kullanıcı: "Sayfa daha kolaydı"; kapı 1 süresi ≈ 5,5 dk (yayın → onay); maliyet payı lead'in spec fazının %25–32'si (27/85 çağrı; çıkış %31, cache okuma %32, cache yazma %25; üst sınır, betik yeniden yazıldı, alt ajanlar paydada yok), S6 eşiği %10; USD hesaplanmadı | ✔ 2026-11-19 |
-| 14.3 | Dispatch: T056 🔐 hook kodu ve testi (REQ-1, REQ-2, REQ-5), T057 skill/ajan/şablon/README/site/CHANGELOG, T058 🔐 sürüm 0.7.3 | ◻ |
+| 14.3 | Dispatch: T056 🔐 hook kodu ve testi (REQ-1, REQ-2, REQ-5), T057 skill/ajan/şablon/README/site/CHANGELOG, T058 🔐 sürüm 0.7.3; kartlar architect job B, lead çapaları 22a51ef'e karşı denetledi (30 alıntı), T056'nın taban kırmızısını (7 ✘) ve T057'nin prototipini (11 sha256, site_tests 23 ✔) üretti; refspec'li pull ölçüldü (bash_gate izin veriyor, origin/HEAD kayıyor), README'den sahte STATE tarifi çıkarıldı; CI git 2.56.1. Dalga 27/28 STATE'te; T056 🔐 onayı bekliyor | ◐ |
 | 14.4 | Dalga 1: T056 ve T057 paralel | ◻ |
 | 14.5 | Dalga 2: T058 | ◻ |
 | 14.6 | Kapanış (`/delixcrew:close`) | ◻ |
