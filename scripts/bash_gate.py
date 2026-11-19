@@ -151,8 +151,8 @@ PUSH_OPTS = {"-u", "--set-upstream", "--force-with-lease"}
 CONFIG_KEYS = ("alias.", "remote.", "push.", "url.", "include", "help.")  # R-P5, casefold prefixes
 AUTOCORRECT_OFF = {"0", "false", "off", "no", "show", "never"}  # R-P4a: help.autocorrect values that run nothing
 PUSH_PEERS = {"add", "commit", "status", "diff", "log", "show"}  # R-P3b: git commands a push may share a line with
-LINE_REDIRS = (">/dev/null", "> /dev/null", "1>/dev/null", "2>/dev/null", "2> /dev/null", "&>/dev/null", "2>&1",
-               "1>&2", ">&2")  # R-L1: the only redirections a push line may hold
+LINE_REDIRS = (">/dev/null", "> /dev/null", "1>/dev/null", "1> /dev/null", "2>/dev/null", "2> /dev/null",
+               "&>/dev/null", "&> /dev/null", "2>&1", "1>&2", ">&2")  # R-L1: the only redirections a push line may hold
 _PLAIN = re.compile(r"[A-Za-z0-9_./:@%+=,-]+")  # R-L1: characters neither bash nor zsh expands in an unquoted word
 _DQPLAIN = re.compile(r'"[^"$`\\]*"')  # R-L1: double quotes with no `$`, backtick or backslash: no expansion
 _HDWORD = re.compile(r"[A-Za-z_][A-Za-z0-9_.-]*")  # R-L1: the quoted delimiter word of a heredoc on a push line
