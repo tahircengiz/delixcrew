@@ -385,4 +385,25 @@ The first output line is `git --version`.
 Do not write STATE.json. Read only this card and spec §1–§7, K344–K357.
 
 ## Review findings (filled by the lead)
-- Round 1: …
+- Round 1 (PR #88 @ `5a58b4fe755ac95608d28978ede534e741f70bd8`): deterministic gate green (Stop gate both commands `[exit 0]`;
+  CI `test` and `check` pass; the lead's own run from the commit: 18 files, 0 `✘` on Python 3.9.6 and 3.13.13;
+  `tests/ref_gate_tests.sh` changes only lines 30 and 111). qa **ACCEPT_WITH_NOTES** (P0 0, P1 0; every spec scenario
+  has a case). security **🔐 HUMAN_APPROVAL** (no Critical, High or Medium by reading). The lead reproduced the
+  security notes on main and on the branch (real hooks, throwaway card worktree, Python 3.9.6, APFS):
+  - **F1, Medium (lead, regression; fix):** a Bash redirect through a symlink chain of 1100 links makes the new
+    `common._rel_forms` (`scripts/common.py:308-313`) raise `RecursionError` from `os.path.realpath`; `bash_gate.py`
+    exits 1 with a traceback before its push rule. `echo > c0/x; <git> <push> origin HEAD:main` in a live card
+    worktree: main **deny**, branch **exit 1** (allowed if the host does not block on exit 1). Fix: `_rel_forms`
+    returns `None` on `OSError`, `ValueError` or `RecursionError`; `matches` then returns `patterns[0]` (fail closed:
+    an unresolvable path matches) and `matches_both` returns `None` (an unresolvable path is not listed).
+  - **F2, Low (pre-existing; fixed with F1, same function, REQ-5):** `_rel_forms` folds after `relpath`, so an absolute
+    target whose cwd part differs only in letter case gives `../W/scripts/x.py` in both forms and matches nothing.
+    `echo x > <parent>/W/scripts/x.py` with the worktree at `<parent>/w`: main **allow**, branch **allow**. Fix: fold
+    both sides before `relpath`.
+  - The lead's prototype of F1 and F2 (only `scripts/common.py`, 18 added / 10 removed lines, every added line at most
+    120 characters) flips both repros to **deny** with exit 0 and keeps the controls.
+  - Noted, no fix in this card: a lone surrogate in a redirect target did not crash (main and branch deny); the write
+    gate's own `realpath` calls (`_fold`, `outside_cwd`) still raise on such a chain, as on main, and the Write itself
+    then fails with ELOOP; a Write of junk to the worktree's `.git` file switches all three hooks off on main and on
+    the branch (pre-existing, Write tool only; lead follow-up); hard links (pre-existing, needs Bash); the 1 MiB check
+    runs after the blob is read (card design).
