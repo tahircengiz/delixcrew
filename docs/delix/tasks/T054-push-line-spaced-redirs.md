@@ -167,3 +167,5 @@ Read only this card and spec K313, K331, K336, K337 and K338.
     redirection, the same as the existing `&>/dev/null`; it writes no file. Claude Code runs zsh on this Mac.
   - Note (qa unsure): the Stop gate output has 16 `ALL PASSED` lines for 17 files; `site_tests.sh` prints no summary
     line (the lead checked).
+- Gate 2 (the user, 2026-11-19): merged (K340). The user merged head `f68d43a4585a9a4f35a120254bb8c96f9b275c3c` as it is (merge commit `7f448984a62b1892f3d8047d10296061a116086c`, 2026-11-19T06:51:59Z).
+  The merge commit changes only the 2 Files, and they equal the reviewed head byte for byte. Status `accepted`.
