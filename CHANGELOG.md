@@ -2,6 +2,13 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## 0.7.2 — 2026-11-19
+
+- **A push command may redirect to `/dev/null` with a space** (🔐 K336, K338; #85): in an implementer worktree
+  `1> /dev/null` and `&> /dev/null` now pass like `1>/dev/null` and `&>/dev/null`. The redirections a push command may
+  hold are `>`, `1>`, `2>` or `&>` to `/dev/null`, with one space or none, and the descriptor copies `2>&1`, `1>&2` and
+  `>&2`; the README's Hooks sentence and Known limits now say so.
+
 ## 0.7.1 — 2026-11-18
 
 - **The lead's Desktop title says Lead** (#80): when `/delixcrew:dispatch` opens card sessions in Claude Desktop, the
