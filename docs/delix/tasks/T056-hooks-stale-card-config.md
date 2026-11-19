@@ -4,7 +4,9 @@
 |---|---|---|---|---|---|
 | T056 | M | 3 | backend | 27 | open |
 
-> 🔐 Tier 3: `scripts/common.py`, `scripts/write_gate.py` and `scripts/bash_gate.py` are protected (`docs/delix/delix.json:10`, `:11`, `:13`). The lead adds the Approved line after the user's item-specific yes in chat and commits it to main before dispatch. Until then the hook rejects these paths.
+**🔐 Approved:** 2026-11-19 tahircengiz
+
+> 🔐 Tier 3: `scripts/common.py`, `scripts/write_gate.py` and `scripts/bash_gate.py` are protected (`docs/delix/delix.json:10`, `:11`, `:13`). The 🔐 Approved line above records the user's item-specific yes in chat on 2026-11-19 ("Evet, T056", said in the lead session). The lead commits it to main before the session starts; the session branches from that commit.
 > - `tests/ref_gate_tests.sh` is an existing test file. Only lines 30 and 111 change, and they change on purpose (K354). qa counts any other change in that file as a finding.
 
 **Goal (1 sentence):** These hooks change: `card_path` returns `None` for a card that is finished on `origin/HEAD`, the write and Bash gates deny with one message when `delix.json` cannot be read, the write gate guards a live `.delix/card`, and `common.matches` also matches the folded real path. · **Spec:** `docs/delix/specs/D-stale-card-config.md` REQ-1, REQ-2, REQ-5, §4, §6, K344–K348, K351–K357

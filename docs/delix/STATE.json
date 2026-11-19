@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/D-stale-card-config.md",
   "size": "M",
-  "updated": "2026-11-19T19:37:52Z",
+  "updated": "2026-11-19T19:42:41Z",
   "env_owner": null,
   "waves": [
     {
@@ -1667,11 +1667,23 @@
       "file": "docs/delix/tasks/T057-docs-stale-card-config.md",
       "role": "docs",
       "tier": 2,
-      "status": "open",
+      "status": "in_progress",
       "pr": null,
       "rounds": 0,
       "cost_usd": null,
-      "spec": "docs/delix/specs/D-stale-card-config.md"
+      "spec": "docs/delix/specs/D-stale-card-config.md",
+      "agents": [
+        {
+          "role": "implementer",
+          "by": "main",
+          "round": 0,
+          "sha": null,
+          "verdict": null,
+          "at": "2026-11-19T19:42:41Z",
+          "branch": null,
+          "session": "delix-t057-bayat-kart-ve"
+        }
+      ]
     },
     "T058": {
       "file": "docs/delix/tasks/T058-release-0-7-3.md",
