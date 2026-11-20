@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/E-gitdir-bash-outside.md",
   "size": "M",
-  "updated": "2026-11-20T12:48:21Z",
+  "updated": "2026-11-20T12:53:07Z",
   "env_owner": null,
   "waves": [
     {
@@ -1817,21 +1817,45 @@
       "file": "docs/delix/tasks/T059-hooks-gitdir-write-gate.md",
       "role": "backend",
       "tier": 3,
-      "status": "open",
+      "status": "in_progress",
       "pr": null,
       "rounds": 0,
       "cost_usd": null,
-      "spec": "docs/delix/specs/E-gitdir-bash-outside.md"
+      "spec": "docs/delix/specs/E-gitdir-bash-outside.md",
+      "agents": [
+        {
+          "role": "implementer",
+          "by": "main",
+          "round": 0,
+          "sha": null,
+          "verdict": null,
+          "at": "2026-11-20T12:53:07Z",
+          "branch": null,
+          "session": "delix-t059-gitdir-gate"
+        }
+      ]
     },
     "T060": {
       "file": "docs/delix/tasks/T060-docs-gitdir-bash-limits.md",
       "role": "docs",
       "tier": 2,
-      "status": "open",
+      "status": "in_progress",
       "pr": null,
       "rounds": 0,
       "cost_usd": null,
-      "spec": "docs/delix/specs/E-gitdir-bash-outside.md"
+      "spec": "docs/delix/specs/E-gitdir-bash-outside.md",
+      "agents": [
+        {
+          "role": "implementer",
+          "by": "main",
+          "round": 0,
+          "sha": null,
+          "verdict": null,
+          "at": "2026-11-20T12:53:07Z",
+          "branch": null,
+          "session": "delix-t060-spec-e-docs"
+        }
+      ]
     },
     "T061": {
       "file": "docs/delix/tasks/T061-release-0-7-4.md",
