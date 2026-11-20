@@ -1759,11 +1759,23 @@
       "file": "docs/delix/tasks/T058-release-0-7-3.md",
       "role": "devops",
       "tier": 3,
-      "status": "open",
+      "status": "in_progress",
       "pr": null,
       "rounds": 0,
       "cost_usd": null,
-      "spec": "docs/delix/specs/D-stale-card-config.md"
+      "spec": "docs/delix/specs/D-stale-card-config.md",
+      "agents": [
+        {
+          "role": "implementer",
+          "by": "main",
+          "round": 0,
+          "sha": null,
+          "verdict": null,
+          "at": "2026-11-20T10:08:01Z",
+          "branch": null,
+          "session": null
+        }
+      ]
     }
   },
   "status_values": [
