@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """PreToolUse (Write|Edit|MultiEdit|NotebookEdit): reviewer roles cannot write; the implementer cannot write the card
-file or docs/delix/**; a protected path is writable only if it is in the card's Files list and the card carries a
+file, docs/delix/** or .git; a protected path is writable only if it is in the card's Files list and the card carries a
 🔐 Approved line; an existing test file is writable only if it is in the Files list (new test files are free); nothing
 outside cwd (the worktree) is writable (A13). The implementer gate is active only when cwd/.delix/card exists."""
 import os
@@ -109,6 +109,12 @@ test_paths = cfg.get("test_paths") or ["tests/**"]
 if matches(path, ["docs/delix/**", card], cwd):
     deny(f"delixcrew: '{path}' is the card or under docs/delix; the implementer cannot change these. If needed, explain "
          f"with NEEDS_CONTEXT in the report, the lead updates them.")
+
+# Spec E REQ-1 (K358-K360): the worktree's own .git (gitfile or directory) is how the hooks find the card
+if matches(path, [".git/**"], cwd):
+    deny(f"delixcrew: '{path}' is the worktree's .git; the implementer cannot change it with this tool "
+         f"(the hooks find the card through it). .delix/ is excluded with: echo .delix/ >> "
+         f"\"$(git rev-parse --git-path info/exclude)\"; for anything else, explain with NEEDS_CONTEXT in the report.")
 
 files, approved = read_card()
 listed = bool(matches_both(path, files, cwd))  # K357: given and real path both listed
