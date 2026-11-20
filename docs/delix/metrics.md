@@ -344,3 +344,47 @@ Not counted: "Kalan işler neler?" (2026-11-19T18:31Z, a question about the whol
 Spec E follow-up lead's transcript.
 
 **No single-session baseline** exists for this feature.
+
+## Spec E: the card worktree's `.git` in the write gate, Bash writes outside the worktree (closed 2026-11-20; SPEC `docs/delix/specs/E-gitdir-bash-outside.md`, cards T059–T061)
+
+Sources: `STATE.json`, `gh pr view`, and `message.usage` summed once per assistant message (deduplicated by message id,
+then `uuid`). The lead is counted from the request (the brief from the Spec D lead, 2026-11-20T09:49Z) to this close.
+Each implementer session was matched to its card by the card path in its dispatch text; T060 and T061 ran in the same
+worktree directory, which the app reused. No implementer session started subagents.
+
+Session cost in USD: not measured.
+
+| card | tier | PR | fix rounds | PR open → merge | implementer session | implementer tokens (out / cache read / cache write) | note |
+|---|---|---|---|---|---|---|---|
+| T059 hooks: the write gate denies the worktree's own `.git` | 3 | #91 | 0 | 3.5 h | 26 min | 26K / 6.0M / 132K | 🔐; both files byte for byte the lead's prototype; merged before T060 |
+| T060 docs: Bash write limits, REQ-3 text, CHANGELOG `## Unreleased` | 2 | #90 | 1 | 3.6 h | 26 min active (223 min span; 198 min idle before the fix round) | 79K / 23.1M / 422K | security Low (the installed copy was not named) fixed from the lead's prototype in one round (K368) |
+| T061 release 0.7.4 | 3 | #92 | 0 | 9 min | 16 min | 54K / 11.0M / 177K | 🔐; six files byte for byte the lead's prototype |
+
+Implementers, 3 sessions: output 160K, cache read 40.1M, cache write 731K.
+
+Lead session (2026-11-20T09:49Z to this close; repro, grill, spec, dispatch, three reviews, one fix round, close):
+output 314K, cache read 75.5M, cache write 1.0M; subagents (12: architect 3 for spec review, job B and the drift check;
+qa 4 for T059, T060 rounds 1 and 2, T061; security 5 for the spec and the same four reviews): output 321K, cache read
+12.9M, cache write 1.5M.
+
+**Gates and interventions** (counted from the lead transcript and the three implementer transcripts; the implementers
+got no user message besides their dispatch):
+- `AskUserQuestion` calls: 6 (grill 2: K358, K359; gate 1; 🔐 T059; the T060 security Low; 🔐 T061).
+- Gates, 8 in all:
+  - spec approval (gate 1);
+  - 🔐 card approvals: T059, T061;
+  - 🔐 merge approvals at gate 2: T059 with T060 (one answer), T061;
+  - 3 merges (#91, #90, #92), each run by the user with `--match-head-commit`.
+- Interventions outside gates, 13 in all (4.3 per card; target ≤ 5, met):
+  - the request (the Spec D lead's brief) and "Kapandı, başla": 2;
+  - grill answers: 2;
+  - "Kapanınca devam et", "İkisini başlat", "Sen başlat", "kontrol", "Evet, kapanışa geç": 5;
+  - the T060 security Low decision ("Şimdi düzelt"): 1;
+  - session starts the user clicked on a proposal card: 3 (T059, T060 and T061 implementers).
+- Not counted above: 6 post-merge release commands the user ran in the lead session (the `v0.7.4` tag 1,
+  `claude plugin marketplace update` 2, `claude plugin update` 3, two of them repeats). With them: 19, 6.3 per card.
+  In Spec D the tag ran outside the session, so 13 is the comparable number.
+
+Not counted: the two context summaries and the task notifications (system messages).
+
+**No single-session baseline** exists for this feature.
