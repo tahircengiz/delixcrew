@@ -302,3 +302,45 @@ Not counted: the first close's cleanup (8 `git branch -D` / `git worktree remove
 second lead), and this lead's first 6 messages (2026-11-12T20:00Z to 20:43Z, T032 and the first close).
 
 **No single-session baseline** exists for this feature.
+
+## Spec D: stale card marker, `delix.json` fails closed, real-path rules (closed 2026-11-20; SPEC `docs/delix/specs/D-stale-card-config.md`, cards T056–T058)
+
+Sources: `STATE.json`, `gh pr view`, and `message.usage` summed once per assistant message (deduplicated by message id,
+then `uuid`). The lead is counted from the request ("Takip spec'i başlat", 2026-11-19T18:32Z) to this close; its
+earlier transcript (Spec C follow-up, 0.7.1, 0.7.2) is not counted. Each implementer session was matched to its card
+by the card id in its dispatch text; T057 and T058 ran in the same worktree directory, which the app reused. No
+implementer session started subagents.
+
+Session cost in USD: not measured.
+
+| card | tier | PR | fix rounds | PR open → merge | implementer session | implementer tokens (out / cache read / cache write) | note |
+|---|---|---|---|---|---|---|---|
+| T057 docs, skills, site, CHANGELOG `## Unreleased` | 2 | #87 | 0 | 14.0 h | 16 min | 55K / 17.5M / 199K | byte for byte the lead's prototype; merged after T056 |
+| T056 hooks: stale marker, `delix.json` fails closed, real path | 3 | #88 | 1 | 13.8 h | 71 min | 101K / 18.6M / 249K | 🔐; F1 Medium regression (deep symlink chain, exit 1) and F2 Low (case in the cwd part) fixed from the lead's prototype; merged the next morning |
+| T058 release 0.7.3 | 3 | #89 | 0 | 27 min | 20 min | 34K / 7.9M / 133K | 🔐; six files byte for byte the lead's prototype |
+
+Implementers, 3 sessions: output 190K, cache read 44.0M, cache write 581K.
+
+Lead session (2026-11-19T18:32Z to this close; spec, dispatch, three reviews, one fix round, close): output 360K,
+cache read 76.2M, cache write 947K; subagents (11: architect and security spec review, architect job B, qa and
+security for T057, T056 rounds 1 and 2 and T058): output 386K, cache read 17.1M, cache write 1.5M.
+
+**Gates and interventions** (counted from the lead transcript and the three implementer transcripts; the implementers
+got no user message besides their dispatch):
+- `AskUserQuestion` calls: 4 (grill 3: K344, K351, K355; gate 1 with the HTML decision page 1).
+- Gates, 8 in all:
+  - spec approval (gate 1);
+  - 🔐 card approvals: T056, T058;
+  - 🔐 merge approvals at gate 2: T056, T058;
+  - 3 merges (#88, #87, #89), each run by the user with `--match-head-commit`.
+- Interventions outside gates, 9 in all (3.0 per card; target ≤ 5, met):
+  - the request ("Takip spec'i başlat"): 1;
+  - grill answers: 3;
+  - "Dispatch'e geç": 1;
+  - session starts the user clicked on a proposal card: 4 (T057, T056 and T058 implementers; the Spec E follow-up
+    lead, whose own messages belong to Spec E).
+
+Not counted: "Kalan işler neler?" (2026-11-19T18:31Z, a question about the whole project before the request), and the
+Spec E follow-up lead's transcript.
+
+**No single-session baseline** exists for this feature.

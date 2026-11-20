@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-19 · **Sürüm:** 0.7.2 (2026-11-19, boşluklu `/dev/null` yönlendirmesi; T055, PR #86, `f54c9aa`; etiket `v0.7.2`) · önceki 0.7.1 (2026-11-18, T053, PR #84, `7ea54f7`, `v0.7.1`) · **Faz:** Spec C (board görünürlüğü, `docs/delix/specs/C-board-visibility.md`) takip turuyla kapandı 2026-11-17: ilk tur T029–T041, 13 PR (#59–#71), 2026-11-12; takip turu T043–T050 ve sürüm kartı T042, 9 PR (#72–#79, #81). §12: spec B #17, T026–T028. §11: #34–#36, T023–T024, arşiv `docs/delix/archive/0.6.x-triage-fixes/`.
+**Son güncelleme:** 2026-11-20 · **Sürüm:** 0.7.3 (2026-11-20, Spec D: bayat kart işareti, `delix.json` fail closed, gerçek yol kuralları; T058, PR #89, `2f5446e`; etiket `v0.7.3` kullanıcıda) · önceki 0.7.2 (2026-11-19, T055, PR #86, `f54c9aa`, `v0.7.2`) · **Faz:** Spec D (`docs/delix/specs/D-stale-card-config.md`) kapandı 2026-11-20: T056–T058, 3 PR (#87–#89); takip Spec E (`.git` yazımı, worktree dışı Bash yazımı) ayrı lead oturumunda. Önceki faz: Spec C (board görünürlüğü, `docs/delix/specs/C-board-visibility.md`) takip turuyla kapandı 2026-11-17: ilk tur T029–T041, 13 PR (#59–#71), 2026-11-12; takip turu T043–T050 ve sürüm kartı T042, 9 PR (#72–#79, #81). §12: spec B #17, T026–T028. §11: #34–#36, T023–T024, arşiv `docs/delix/archive/0.6.x-triage-fixes/`.
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -710,7 +710,16 @@ Size M · Tier 3.
 | 14.3 | Dispatch: T056 🔐 hook kodu ve testi (REQ-1, REQ-2, REQ-5), T057 skill/ajan/şablon/README/site/CHANGELOG, T058 🔐 sürüm 0.7.3; kartlar architect job B, lead çapaları 22a51ef'e karşı denetledi (30 alıntı), T056'nın taban kırmızısını (7 ✘) ve T057'nin prototipini (11 sha256, site_tests 23 ✔) üretti; refspec'li pull ölçüldü (bash_gate izin veriyor, origin/HEAD kayıyor), README'den sahte STATE tarifi çıkarıldı; CI git 2.56.1. Dalga 27/28 STATE'te (`dd34f2b`); T056 🔐 onayı kullanıcıdan ("Evet, T056", 2026-11-19), T058 onayı dalga 28'de | ✔ 2026-11-19 |
 | 14.4 | Dalga 1: T056 ve T057 paralel. T057 #87 tur 1: qa ACCEPT, security CLEAN (`be987b7`). T056 #88 tur 1: F1 Medium (1100 halkalı symlink zincirinde `RecursionError`, bash gate exit 1; gerileme) ve F2 Low (cwd kısmında harf farkı; önceden var) lead prototipiyle düzeltildi (`0f09664`, testler 24 ve 25); tur 2: qa ACCEPT_WITH_NOTES, security 🔐 HUMAN_APPROVAL. Lead takibi: worktree'deki `.git` dosyasına Write hook'ları kapatıyor; Bash yazma kuralı worktree dışını denetlemiyor (ikisi de önceden var). Kapı 2: T056 🔐 onayı kullanıcıdan ("Evet, T056", 2026-11-20); kullanıcı birleştirdi: #88 `995e57a`, #87 `99359a3` (2026-11-20 09:55Z), iki head de son qa SHA'sı (K297), ikisi `accepted` | ✔ 2026-11-20 |
 | 14.5 | Dalga 2: T058 🔐 sürüm 0.7.3; onay kullanıcıdan ("Evet, T058", 2026-11-20, `68187e1`); #89 @ `602e157` lead prototipiyle birebir; tur 1: qa ACCEPT, security 🔐 HUMAN_APPROVAL; kapı 2: "Evet, T058"; kullanıcı birleştirdi (#89, 2026-11-20), head son qa SHA'sı (K297), `accepted` | ✔ 2026-11-20 |
-| 14.6 | Kapanış (`/delixcrew:close`) | ◻ |
+| 14.6 | Kapanış (`/delixcrew:close`): üç kart `accepted`, her birinde birleşen head son qa SHA'sı (K297); metrikler `docs/delix/metrics.md` (kapı 8, kapı dışı müdahale 9, kart başına 3,0; USD ölçülmedi); drift kontrolü (aşağıda Açık iş); temizlik blokları ve `v0.7.3` tag'i kullanıcıda | ✔ 2026-11-20 |
+
+**Açık iş (kapanış drift kontrolü, 2026-11-20; architect: REQ-1–REQ-5 uygulanmış, kapı açan çelişki yok):**
+- `common._card_finished` (`scripts/common.py:91-96`): `cards` yoksa ya da sözlük değilse arşive bakılıyor; spec "beklenmeyen tip"te işaretin etkin kalmasını istiyor. Etki düşük (origin/HEAD STATE'ini değiştirmek gerekir, K351 sınıfı); `stale_card_tests.sh:106` bu yolu arşivsiz sınıyor. Lead okumayla doğruladı.
+- Çözülemeyen yolda `write_gate` ret mesajı `docs/delix` metni (`write_gate.py:109`); asıl sebebi söylemiyor (T056 F1).
+- Doküman ifadeleri kodla tam örtüşmüyor (hepsi kapalı yönde): arşiv yalnız kayıt `cards`'ta yoksa ve ilk 20 madde okunur (README, site usage, CHANGELOG "or an archive STATE it lists"); "en çok 1 MiB okunur" yerine "1 MiB'tan büyükse reddedilir" (README); bozuk config'te `.delix/` istisnası canlı işarete ve harf farkına uygulanmaz (site usage).
+- README "Files it writes" `.delix/previous/<id>/`'yi listelemiyor (spec §4; CLAUDE.md site/README kuralı).
+- Bilinen sınırlar README ve sitede yok: `.delix/card`'ın Bash ile üzerine yazılması (T057'de bilerek dışarıda) ve git 2.44 altında işaretin hiç bayatlamaması (spec §6).
+- Doğrulanmadı: CHANGELOG 0.7.3 "both hooks match a path and its real path" (bash gate'te test yolu kuralı yok); `site/index.html:360` "hook çökerse işlem de engellenir" (exit 1'de host'un engellediği doğrulanmadı; Spec D'den önce).
+
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
