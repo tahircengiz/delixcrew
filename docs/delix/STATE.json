@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/E-gitdir-bash-outside.md",
   "size": "M",
-  "updated": "2026-11-20T16:32:46Z",
+  "updated": "2026-11-20T16:40:55Z",
   "env_owner": null,
   "waves": [
     {
@@ -1855,7 +1855,7 @@
       "file": "docs/delix/tasks/T060-docs-gitdir-bash-limits.md",
       "role": "docs",
       "tier": 2,
-      "status": "fixing",
+      "status": "in_review",
       "pr": 90,
       "rounds": 1,
       "cost_usd": null,
@@ -1886,6 +1886,22 @@
           "sha": "3d46065aa3ba08d96396b9113e403f0f3eacdf33",
           "verdict": "FIX",
           "at": "2026-11-20T13:15:48Z"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 2,
+          "sha": "79ddae3232406f591460c9e617f2a2ac6f31b278",
+          "verdict": "ACCEPT",
+          "at": "2026-11-20T16:37:26Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 2,
+          "sha": "79ddae3232406f591460c9e617f2a2ac6f31b278",
+          "verdict": "CLEAN",
+          "at": "2026-11-20T16:40:55Z"
         }
       ]
     },

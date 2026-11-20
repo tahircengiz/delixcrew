@@ -331,3 +331,13 @@ Do not write STATE.json. Read only this card and spec REQ-2, REQ-3, K358, K361, 
     `7ccd2fe4da568ff1`, `site/usage.html` `fe36a30ad90b6559`, `site/tr/usage.html` `27d75012d92e65df`; the 28
     Verification greps give `1`; `tests/site_tests.sh` 23 `✔`; numstat vs main 23/5, 22/5, 16/0, 5/5, 5/5, 1/0, 1/0;
     `wc -l` 473, 476, 307, 702, 702, 252, 252.
+- Round 2 (PR #90 @ `79ddae3232406f591460c9e617f2a2ac6f31b278`, comprehensive): deterministic gate green. The 7 files
+  equal the round 1 prototype byte for byte, with the same numstat and `wc -l`. The lead's `tests/site_tests.sh` on
+  the archived commit gave 23 `✔`, exit 0, and the 28 greps gave `1`. CI `test` and `check` pass; the implementer's
+  Stop gate and Verification are `[exit 0]`. qa **ACCEPT** (P0 0, P1 0, P2 0). security **CLEAN**: the round 1 Low is
+  fixed in all five places, and the claims were checked against `hooks/hooks.json`, `bash_gate.py` and `common.py`.
+  - Merge condition, unchanged: merge after T059 or together.
+  - Pre-existing, out of scope (lead follow-up):
+    - The `site/index.html:446` note and its TR twin (round 1 unsure).
+    - A gitleaks generic-api-key hit on the tree at `evals/secret-refusal/prompt.md:7`, a secret-refusal eval
+      fixture that this change does not touch and that `.gitleaks.toml` does not allowlist.
