@@ -310,4 +310,20 @@ rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
 Do not write STATE.json. Read only this card and spec §1–§7, K358–K365.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 1 (PR #91 @ `5e59102c54c8bdd2cdcf9e92b6b219490c1a4729`): deterministic gate green. Both files equal the lead's
+  prototype (`1a2193d18f2990e7`, `f2a3b69481c873d3`; numstat 7/1 and 135/0). The lead's full suite on the archived
+  commit: 19 files, 1622 `✔`, 0 `✘` on Python 3.9.6 and on the 3.13.13 shim. CI `test` (3.12) and `check` pass; Stop
+  gate and Verification `[exit 0]`. Lead repro with this commit's hooks in a temp card worktree: Write `.git`,
+  `./.git` and `.GIT` are denied; Write to the common git dir (`../../../.git/info/exclude`, absolute) and to the
+  `gitdir` record is denied (A13); `.gitignore` and `src/.git` are allowed. After junk is written to `.git` outside
+  the hooks they are off (K361), and Bash writes outside cwd are allowed (K358); both are T060's known limits.
+  qa **ACCEPT** (P0 0, P1 0):
+  - P2, noted (no fix): `.delix/evidence/verification.txt` summarises the new test's output instead of copying it;
+    the full run is in `.delix/test-result.txt` and the counts agree.
+  security **🔐 HUMAN_APPROVAL**: no finding. The protected path carries the Approved line (`bcc2928`, an ancestor of
+  `5e59102`).
+  - Unsure (two, pre-existing, all implementer rules): a leading `~` and surrounding whitespace in `file_path`. The
+    lead checked this with Claude Code 2.1.309 and the installed hooks, with its own session in a temp card worktree.
+    The Write tool expands `~` and trims the whitespace before the PreToolUse hook runs. In all four tries the hook
+    got the absolute path and denied the protected path. Not a finding.
+  - `/security-review` was not run: it reviews the current branch, and the lead's checkout stays on main.
