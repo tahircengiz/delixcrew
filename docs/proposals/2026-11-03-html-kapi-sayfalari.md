@@ -2,7 +2,8 @@
 
 > Durum: **öneri, beklemede** (2026-11-19) · S1–S7 önerileri kabul edildi (kullanıcı, 2026-11-03: "öneri") · S1
 > prototipi yapıldı (§10) · Plugin kodu yok. Spec C'nin kapı 1'i (2026-11-04) sayfasız geçti. S6'nın iki ölçümünden ilki
-> Spec D'nin kapı 1'inde, onaydan önce yapıldı (§11, 2026-11-19); ikincisi sıradaki M spec'te. Plugin'e alma
+> Spec D'nin kapı 1'inde, onaydan önce yapıldı (§11, 2026-11-19); Spec E'nin kapı 1'i (2026-11-20) sayfasız geçti,
+> ikincisi sıradaki M spec'te. Plugin'e alma
 > (`/delixcrew:start` → grill → spec) ikinci ölçümden sonra kararlaştırılır. Bu not bir spec değildir; K numarası almaz,
 > kararlar aşağıda S1–S7.
 

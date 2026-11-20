@@ -1,6 +1,6 @@
 # STATUS — prj_Ekip (plugin `delix`, eski adı `ekip`)
 
-**Son güncelleme:** 2026-11-20 · **Sürüm:** 0.7.3 (2026-11-20, Spec D: bayat kart işareti, `delix.json` fail closed, gerçek yol kuralları; T058, PR #89, `2f5446e`; etiket `v0.7.3` kullanıcıda) · önceki 0.7.2 (2026-11-19, T055, PR #86, `f54c9aa`, `v0.7.2`) · **Faz:** Spec D (`docs/delix/specs/D-stale-card-config.md`) kapandı 2026-11-20: T056–T058, 3 PR (#87–#89); takip Spec E (`.git` yazımı, worktree dışı Bash yazımı) ayrı lead oturumunda. Önceki faz: Spec C (board görünürlüğü, `docs/delix/specs/C-board-visibility.md`) takip turuyla kapandı 2026-11-17: ilk tur T029–T041, 13 PR (#59–#71), 2026-11-12; takip turu T043–T050 ve sürüm kartı T042, 9 PR (#72–#79, #81). §12: spec B #17, T026–T028. §11: #34–#36, T023–T024, arşiv `docs/delix/archive/0.6.x-triage-fixes/`.
+**Son güncelleme:** 2026-11-20 · **Sürüm:** 0.7.3 (2026-11-20, Spec D: bayat kart işareti, `delix.json` fail closed, gerçek yol kuralları; T058, PR #89, `2f5446e`; etiket `v0.7.3` kullanıcıda) · önceki 0.7.2 (2026-11-19, T055, PR #86, `f54c9aa`, `v0.7.2`) · **Faz:** Spec E (`docs/delix/specs/E-gitdir-bash-outside.md`: kart worktree'sinin `.git`'i yazma kapısında, worktree dışı Bash yazımı Bilinen sınır) kapı 1 onaylı 2026-11-20 (K358–K365); dispatch sırada (§15). Önceki faz: Spec D (`docs/delix/specs/D-stale-card-config.md`) kapandı 2026-11-20: T056–T058, 3 PR (#87–#89). Ondan önce: Spec C (board görünürlüğü, `docs/delix/specs/C-board-visibility.md`) takip turuyla kapandı 2026-11-17: ilk tur T029–T041, 13 PR (#59–#71), 2026-11-12; takip turu T043–T050 ve sürüm kartı T042, 9 PR (#72–#79, #81). §12: spec B #17, T026–T028. §11: #34–#36, T023–T024, arşiv `docs/delix/archive/0.6.x-triage-fixes/`.
 **Hedef:** Claude Code için "ekip" plugin'i: orkestratör oturum grill ile tech spec yazar, işi rollere böler, rol
 oturumlarına atar, incelemeyi ve kalite/güvenlik kontrolünü yapar. İki insan kapısı: spec onayı ve PR merge.
 
@@ -695,7 +695,7 @@ Kararlar (oturumda; spec §9'da K240–K300):
 - Bekleyen öneri: insan kapılarında HTML karar sayfası
   ([docs/proposals/2026-11-03-html-kapi-sayfalari.md](docs/proposals/2026-11-03-html-kapi-sayfalari.md), 2026-11-19'da
   dalından main'e alındı); S1–S7 kabul, kod yok. S6'nın iki ölçümünden ilki Spec D'nin kapı 1'inde yapıldı (§14.2,
-  öneri §11); ikincisi sıradaki M spec'te.
+  öneri §11); Spec E'nin kapı 1'i sayfasız geçti (§15.1), ikincisi sıradaki M spec'te.
 
 ## 14. Spec D: bayat kart işareti, `delix.json` fail closed, `docs/delix` sahipliği (2026-11-19, `docs/delix/specs/D-stale-card-config.md`)
 
@@ -719,6 +719,19 @@ Size M · Tier 3.
 - README "Files it writes" `.delix/previous/<id>/`'yi listelemiyor (spec §4; CLAUDE.md site/README kuralı).
 - Bilinen sınırlar README ve sitede yok: `.delix/card`'ın Bash ile üzerine yazılması (T057'de bilerek dışarıda) ve git 2.44 altında işaretin hiç bayatlamaması (spec §6).
 - Doğrulanmadı: CHANGELOG 0.7.3 "both hooks match a path and its real path" (bash gate'te test yolu kuralı yok); `site/index.html:360` "hook çökerse işlem de engellenir" (exit 1'de host'un engellediği doğrulanmadı; Spec D'den önce).
+
+## 15. Spec E: kart worktree'sinin `.git`'i, worktree dışı Bash yazımı (2026-11-20, `docs/delix/specs/E-gitdir-bash-outside.md`)
+
+Kaynak: Spec D lead'inin takip işi (§14.4 "Lead takibi"; T056 `## Review findings` Round 1 son madde, Round 2
+security Low), ayrı lead oturumunda. Size M · Tier 3.
+
+| # | Adım | Durum |
+|---|---|---|
+| 15.1 | Repro ve grill: lead iki açığı gerçek hook'larla geçici depoda üretti (main `ab07cfe`, PR #88 @ `0f09664`, birleşmiş main `68187e1`): Write ile kart worktree'sinin `.git`'ine bozuk içerik üç hook'u kapatıyor, ardından `docs/delix/**`, korunan yol ve push serbest; Bash yönlendirme/`cp`/`mv`/`tee` ana checkout'un `scripts/common.py`'sine ve `docs/delix/STATE.json`'una göreli ve mutlak yolla yazıyor, Write A13 ile reddediyor. Grill K358 (1 düzelt, 2 belgele) ve K359 (düzeltme write_gate'te) kullanıcı. Lead prototipi `write_gate.py`'ye 5 satır: 16 `.git` biçimi deny, 9 kontrol aynı, 18 test dosyası ✔ (3.9.6; 3.13'te write gate'in 3 dosyası). Spec rev 1–3: architect job A FIX (P1×3 P2×4), security 🔐 HUMAN_APPROVAL (Medium×2 Low×4), hepsi işlendi; rev 2–3 farkı yeniden incelenmedi (K365). Security'nin "dispatch `--permission-mode auto`, Bash istemi yok" bulgusu grill'deki gerekçeyi düzeltti; kullanıcıya kapı 1'de söylendi. `git add -f .delix/card` hook'ları kapatıyor, `core.bare`/`core.worktree` kapatmıyor (lead üretti). HTML karar sayfası kullanılmadı (öneri S6 ölçüm 2 yapılmadı). Kapı 1: kullanıcı onayladı 2026-11-20 | ✔ 2026-11-20 |
+| 15.2 | Dispatch: 🔐 hook kartı (REQ-1), belge kartı (REQ-2, REQ-3 belge), 🔐 sürüm kartı 0.7.4; taban `af6c35b` | ◻ |
+| 15.3 | Dalga 1: hook kartı ve belge kartı paralel | ◻ |
+| 15.4 | Dalga 2: sürüm 0.7.4 | ◻ |
+| 15.5 | Kapanış (`/delixcrew:close`) | ◻ |
 
 
 ## Açık riskler
