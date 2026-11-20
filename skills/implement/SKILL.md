@@ -13,9 +13,11 @@ role tag.
 2. Write the card path into `.delix/card` in the worktree root (the hooks activate on this file: write gate, Stop test
    gate, pre-commit secret scan). Write gate: an existing test file is appended to only if it is in the card's Files
    list; a protected path is written only if it is in Files **and** the card carries a `🔐 Approved` line; the card file
-   and `docs/delix/**` are never changed (not via Bash either; the review counts it as a finding). If you get a
-   rejection, do not route around it; write `BLOCKED`/`NEEDS_CONTEXT`. `.delix/` is kept out of git
-   (`.git/info/exclude`).
+   and `docs/delix/**` are never changed (not via Bash either; the review counts it as a finding). The worktree's own
+   `.git` is never written with Write or Edit (the hooks find the card through it; T059). If you get a rejection, do not
+   route around it; write `BLOCKED`/`NEEDS_CONTEXT`. `.delix/` is kept out of git through `info/exclude`; if
+   `git status` shows it, run `echo .delix/ >> "$(git rev-parse --git-path info/exclude)"`, the one Bash write into
+   `.git` (the `.git` deny message gives the same command; running it is not routing around the gate).
    Write `.delix/card` only with the Write tool: while its card is not finished, the gate denies any other tool
    on it. If `.delix/card` already names another card, first read its old id (the `T<digits>` at the start of its
    last path part, else `unknown`), then write the new card path. If the gate denies that write (the old card is

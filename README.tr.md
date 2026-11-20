@@ -38,11 +38,13 @@ claude plugin install delixcrew@delixcrew
 ```
 
 Yerel klondan: `claude plugin marketplace add /path/to/delix`, sonra aynı `install` komutu. Marketplace tanımı
-[`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json). İki kurulum da plugin'i Claude'un plugin
-cache'ine sürüm başına bir klasör olarak kopyalar; kurulum yalnız `plugin.json` sürümü değişince güncellenir:
+[`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json). İki kurulum da plugin'i Claude'un plugin cache'ine
+sürüm başına bir klasör olarak kopyalar; kurulum yalnız `plugin.json` sürümü değişince güncellenir:
 `claude plugin marketplace update delixcrew` (GitHub; yerel klasör doğrudan okunur), sonra
-`claude plugin update delixcrew@delixcrew`, ardından Claude'u yeniden başlat. Sürüm artmadan yapılan yerel değişiklik
-kurulu kopyaya ulaşmaz, `git pull` tek başına yetmez; denemek için `claude --plugin-dir /path/to/delix` klasörü yerinde okur.
+`claude plugin update delixcrew@delixcrew`, ardından Claude'u yeniden başlat. GitHub kurulumunda sürüm artmadan yapılan
+değişiklik kurulu kopyaya ulaşmaz. Yerel klasör kurulumu da bu kopyayı alır, ama 2026-11-20 ölçümünde (Claude Code
+2.1.328, K371) hook'ları klasörün kendisinden çalıştı; oradaki bir değişiklik ya da `git pull` hook'lara hemen ulaşır.
+Kurmadan denemek için `claude --plugin-dir /path/to/delix` klasörü yerinde okur.
 0.4.0'dan önce `delix` plugin adıyla (ya da `delix-local` marketplace adıyla) kurduysan: [CHANGELOG](CHANGELOG.md#040--2026-11-03).
 Doğrulama (CI her push ve PR'da da koşar): `claude plugin validate .`; hook testleri: `bash tests/hook_tests.sh`; pano testleri:
 `bash tests/board_tests.sh`; davranış testleri: `claude plugin eval . --trust-plugin --no-publish` (model çağrısı yapar,
@@ -392,12 +394,13 @@ ve 3 teşhis koşusunda hiç başlamadı, 2026-11-01'de kaldırıldı (retro A9,
 `gitleaks` kuruluysa commit öncesi sır taraması yapılır; yoksa `.delix/warnings.log`'a not düşer.
 
 Yazma kapısı (`scripts/write_gate.py`) yalnız Write/Edit/MultiEdit/NotebookEdit araçlarını görür; uygulayıcının Bash
-ile dosya yazması (`echo >`, `sed -i`, `tee`) bu hook'un kapsamı dışıdır (`bash_gate.py` yalnız korunan yollara
-yönlendirme, `cp`, `mv` ve `tee`'yi, inceleyici Bash'ini ve her oturumda bilinen geri bildirim gönderme yollarını ve triage yazma
-yollarını keser; bkz. [Geri bildirim](#geri-bildirim) ve [Triage](#triage)). Yazma kapısı worktree (cwd) dışına çıkan
-yolu her zaman reddeder (A13, K42); yol eşleşmeleri cwd'ye
-göredir. Bu yüzden kart dosyası, `docs/delix/**` ya da kartta onaysız korunan yol değişikliği `delixcrew:qa` incelemesinde
-diff'ten bulgu sayılır. Tier 3 izni kartın başlık tablosundan sonraki `**🔐 Approved:** <YYYY-MM-DD> <kim>` satırıyla
+ile dosya yazması (`echo >`, `sed -i`, `tee`) bu hook'un kapsamı dışıdır (`bash_gate.py` yalnız worktree içindeki
+korunan yollara yönlendirme, `cp`, `mv` ve `tee`'yi, inceleyici Bash'ini ve her oturumda bilinen geri bildirim gönderme
+yollarını ve triage yazma yollarını keser; bkz. [Geri bildirim](#geri-bildirim) ve [Triage](#triage)). Yazma kapısı
+worktree (cwd) dışına çıkan yolu her zaman reddeder (A13, K42); yol eşleşmeleri cwd'ye göredir. Bu yüzden kart dosyası,
+`docs/delix/**` ya da kartta onaysız korunan yol değişikliği `delixcrew:qa` incelemesinde diff'ten bulgu sayılır.
+Worktree dışına, örneğin ana checkout'a Bash ile yapılan bir yazım o diff'te görünmez (bkz. sonraki paragraf). Tier 3
+izni kartın başlık tablosundan sonraki `**🔐 Approved:** <YYYY-MM-DD> <kim>` satırıyla
 açılır; bu satırı yalnız ekip lideri, kullanıcının sohbetteki açık "evet"inden sonra yazar ve main'e commit eder.
 
 Bash yazma kuralı (yönlendirme, `cp`, `mv` ve `tee`) hedefi de cwd'ye göre eşler; bu yüzden `scripts/**` gibi
@@ -405,9 +408,10 @@ klasörlü bir desen worktree dışındaki bir hedefi eşlemez: başka bir check
 `.claude/worktrees/<x>` altında tutan ana checkout ve onun `docs/delix/`'i (`../../../scripts/x.py` gibi göreli
 ya da mutlak bir yolla). `.env*` gibi klasörsüz bir desen dosya adına bakar ve yine eşler. Böyle bir yazım plugin'in
 kendi dosyalarına da ulaşır. Hook'lar betiklerini her çağrıda plugin'in kökünden çalıştırır; bu yüzden yüklü kopyaya
-(marketplace kurulumunda `~/.claude/plugins/cache/delixcrew/delixcrew/<version>/`) yapılan yazım hemen geçerli olur.
-Plugin bir checkout'tan çalışıyorsa hook kodu hemen (`--plugin-dir`) ya da sonraki `claude plugin update` ile
-(`directory` marketplace) değişebilir; böyle bir oturumdan ya da güncellemeden önce o checkout'ta `git status` çalıştır.
+(GitHub marketplace kurulumunda `~/.claude/plugins/cache/delixcrew/delixcrew/<version>/`) yapılan yazım hemen geçerli
+olur. Plugin bir checkout'tan çalışıyorsa (`--plugin-dir` ya da `directory` marketplace; ikincisinde hook'lar
+`installed_plugins.json`'un gösterdiği önbellek kopyasından değil o klasörden çalışır, Claude Code 2.1.328 ile ölçüldü,
+K371) hook koduna yapılan değişiklik hemen geçerli olur; böyle bir oturumdan önce o checkout'ta `git status` çalıştır.
 Buradaki sınır Claude Code'un Bash izin istemidir (K77); dispatch'in açtığı `--permission-mode auto` oturumunda istem
 yoktur, bu yazımı yalnız auto mode sınıflandırıcısı görür (K358). Worktree'nin `.git`'ini değiştiren bir Bash komutu
 (`printf … > .git` ya da `git add -f .delix/card`) üç hook'u kapatır; bu, `.delix/card`'ı silmekle ve worktree kökünün
@@ -444,9 +448,9 @@ tırnağı (tırnağı kapat ya da metni bir dosyaya yaz), hook'un okuyamayacağ
 sınırlayıcısı tırnaksız bir heredoc, `<<-` ya da `<<<`, tek tırnak dışında bir `$`, ters tırnak ya da ters eğik çizgi,
 tırnak dışında bir glob, `~`, `!`, tek başına bir `&` ya da `(` ya da bir komutun adından sonra bir `{` ya da `}`
 kelimesi de içeren bir komuttaki push'u reddeder (T052; öteki komutu ayrı bir çağrıda çalıştır).
-İzin verilen tek `cat` heredoc'u,
-Write aracının zaten yazamayacağı hiçbir şeyi yazmaz. 2.44'ten eski git ile promisor (kısmi klon) bir repoda eksik bir
-nesne, hook'lar index'i okurken uzak depodan yine çekilebilir (K225).
+İzin verilen tek `cat` heredoc'u Write aracının reddettiğini yazabilir: öteki Bash yazımları gibi worktree'nin
+`.git`'ine ve worktree dışındaki bir hedefe ulaşabilir (T059, A13; bkz. yukarıdaki Bash yazma kuralı). 2.44'ten eski git
+ile promisor (kısmi klon) bir repoda eksik bir nesne, hook'lar index'i okurken uzak depodan yine çekilebilir (K225).
 
 `/delixcrew:status` ve delix-board yalnız yerel dosyaları ve yerel git'i okur: `git fetch` ve `gh` çalıştırmaz, bu
 yüzden uzak dal bilgisi son fetch anının hâlidir (başlık zamanını gösterir). Bir kart Ready to merge altında yalnız
