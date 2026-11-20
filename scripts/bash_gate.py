@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import REVIEWERS, card_path, delix_json, deny, git, matches, read_input  # noqa: E402
+from common import CONFIG_DENY, REVIEWERS, card_path, deny, gate_config, git, matches, read_input  # noqa: E402
 
 g = read_input()
 cmd = ((g.get("tool_input") or {}).get("command") or "").strip()
@@ -110,10 +110,9 @@ if agent in REVIEWERS:
 if not card_path(cwd):
     sys.exit(0)
 
-cfg = delix_json(cwd)
-if not isinstance(cfg, dict):  # R-U4: the rules below read cfg; a list, string, number or null is not a config
-    deny("delixcrew: docs/delix/delix.json is not a JSON object; Bash stays blocked in this card worktree until the "
-         "user fixes it from their own terminal")
+cfg = gate_config(cwd)
+if cfg is None:  # Spec D REQ-2 (K346): missing, broken, not an object, or a path list that is not a list of str
+    deny(CONFIG_DENY)
 protected = cfg.get("protected_paths") or []
 
 # writing to a protected path via shell redirect / cp / mv / tee

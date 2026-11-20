@@ -27,7 +27,7 @@ cp "$W/.$G/config" "$BK"
 PUSH_DENY="delixcrew: an implementer session pushes only its own card branch ($G $P [-u] origin <branch>); the default branch and every other $P run from the user's own terminal"
 REF_DENY="delixcrew: an implementer session does not write $G refs or change ${R}s ($U, $R $HD, $UR, add, remove); those run from the user's own terminal"
 ENC_DENY="delixcrew: a $G setting or ref name holds a byte that is not UTF-8, which this hook cannot read; the command is denied until the user removes it from their own terminal"
-JSON_DENY="delixcrew: docs/delix/delix.json is not a JSON object; Bash stays blocked in this card worktree until the user fixes it from their own terminal"
+JSON_DENY="delixcrew: docs/delix/delix.json is missing, not valid JSON or not a JSON object with string lists; this card worktree stays blocked until the user fixes it from their own terminal"
 js(){ python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2"; }
 run(){ js "$1" "$2" | python3 "$S/bash_gate.py"; }
 # allow = exit 0 and no deny; deny = exit 0, the deny decision and the exact message. A hook that raises exits 1.
@@ -108,7 +108,7 @@ allow "54 delix.json {}: ls"                    "$W" "ls"
 allow "55 delix.json {}: own branch send"       "$W" "$G $P origin claude/t1"
 deny "56 delix.json {}: ref update"             "$W" "$G $U x y"                                     "$REF_DENY"
 rm "$DJ"
-allow "57 delix.json removed: ls"               "$W" "ls"
+deny "57 delix.json removed: ls"                "$W" "ls"                                            "$JSON_DENY"
 printf '{"default_branch":"main"}' > "$DJ"
 
 # R-U5: a byte that is not UTF-8 (octal escape 377) in a setting the rule reads denies with a message

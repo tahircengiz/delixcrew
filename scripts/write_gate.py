@@ -8,7 +8,8 @@ import re
 import sys
 import unicodedata
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import REVIEWERS, card_path, delix_json, deny, matches, read_input, trust_file  # noqa: E402
+from common import (CONFIG_DENY, REVIEWERS, card_id, card_path, deny, gate_config, matches,  # noqa: E402
+                    matches_both, read_input, trust_file)
 
 
 def _fold(p):
@@ -16,6 +17,9 @@ def _fold(p):
     return unicodedata.normalize("NFD", os.path.realpath(p)).casefold()
 
 TRUST_DENY = "delixcrew: Stop gate commands are approved only by the user from their own terminal"  # K210: literal here and in bash_gate.py
+MARKER_DENY = ("delixcrew: .delix/card names {}, "  # Spec D REQ-1 (K348): str.format with the card id
+               "which is not finished on origin/HEAD; this worktree belongs to that card. "
+               "Write nothing under .delix; end with BLOCKED in your final message; the lead opens a new worktree.")
 
 
 g = read_input()
@@ -45,10 +49,9 @@ if agent in REVIEWERS:
     deny(f"delixcrew: role '{agent}' is read-only; it cannot write files. Put the finding in your report, the lead applies it.")
 
 cwd = g.get("cwd") or os.getcwd()
-if not card_path(cwd):
+card = card_path(cwd)  # REQ-1: called once; None for no card, a non-local card or a finished card
+if not card:
     sys.exit(0)  # not an implementer session, inactive
-
-card = card_path(cwd)
 APPROVED = re.compile(r"^\*\*🔐 Approved:\*\* \d{4}-\d{2}-\d{2} \S+", re.M)
 
 
@@ -78,22 +81,37 @@ def outside_cwd(path):
     return os.path.commonpath([root, target]) != root
 
 
-cfg = delix_json(cwd)
 ti = g.get("tool_input") or {}
 path = ti.get("file_path") or ti.get("notebook_path") or ""
-protected = cfg.get("protected_paths") or []
-test_paths = cfg.get("test_paths") or ["tests/**"]
 
 if path and outside_cwd(path):
     deny(f"delixcrew: '{path}' is outside the worktree ({cwd}); the implementer writes only inside its own worktree (A13). "
          f"Build the path relative to cwd; if the file really lives elsewhere, write NEEDS_CONTEXT in the report.")
+
+# Spec D REQ-1 (K348, K356): the live marker is rewritten only by Write with the same text
+if path and _fold(os.path.join(cwd, path)) == _fold(os.path.join(cwd, ".delix", "card")):
+    content = ti.get("content")
+    if g.get("tool_name") == "Write" and isinstance(content, str) and content.strip() == card:
+        sys.exit(0)  # the same card's marker (a fix round in its own worktree)
+    deny(MARKER_DENY.format(card_id(card) or "unknown"))
+
+# Spec D REQ-2 (K346): a delix.json the gate cannot read blocks every write except under realpath(cwd)/.delix/
+cfg = gate_config(cwd)
+if cfg is None:
+    dot = os.path.join(os.path.realpath(cwd), ".delix")
+    target = os.path.realpath(os.path.join(cwd, path))
+    if target != dot and os.path.commonpath([dot, target]) == dot:
+        sys.exit(0)  # the implementer can still write its BLOCKED report
+    deny(CONFIG_DENY)
+protected = cfg.get("protected_paths") or []
+test_paths = cfg.get("test_paths") or ["tests/**"]
 
 if matches(path, ["docs/delix/**", card], cwd):
     deny(f"delixcrew: '{path}' is the card or under docs/delix; the implementer cannot change these. If needed, explain "
          f"with NEEDS_CONTEXT in the report, the lead updates them.")
 
 files, approved = read_card()
-listed = bool(matches(path, files, cwd))
+listed = bool(matches_both(path, files, cwd))  # K357: given and real path both listed
 
 d = matches(path, protected, cwd)
 if d:
