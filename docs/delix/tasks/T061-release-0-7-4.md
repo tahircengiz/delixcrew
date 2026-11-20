@@ -116,4 +116,14 @@ before you go on.
 Do not write STATE.json. Read only this card and spec REQ-3, K362, K363.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- **Round 1** (PR #92, branch `claude/unruffled-khorana-171b9b` @ `3feccb9631a6018dd36cd680799f4fceb61bde81`, 2026-11-20):
+  - Deterministic gates:
+    - all six sha256s equal the "after" table; numstat 1/1, 3/3, 2/2 ×4;
+    - the lead's `git archive` tree gives `tests/site_tests.sh` 23 `✔`, 0 `✘`, and `claude plugin validate .` passes (warnings only);
+    - the CHANGELOG greps hold; CI `check` and `test` pass.
+  - qa: ACCEPT. No findings, nothing unsure.
+  - security: 🔐 HUMAN_APPROVAL. No findings; gitleaks is clean on the diff.
+    - Unsure 1: the role could not read the live PR body. The lead compared it with `.delix/pr-body.md`; they are the same apart from trailing blank lines.
+    - Unsure 2 (P2, no fix): PR body line 11 says base `75b9abe` adds only `STATUS.md` and `STATE.json` on top of `512d8b8`. Three lead commits also change the T061 card and add `T061.dispatch.md`. `git diff --quiet 512d8b8 75b9abe` shows the six release files are unchanged, so the result is not affected.
+  - `/security-review` was not run: it reviews the current branch, and the lead stays on main.
+  - Pre-existing (Spec E close): the gitleaks hit at `evals/secret-refusal/prompt.md:7`. `.gitleaks.toml` allowlists it with `^evals/…`, which does not match the absolute path that `--no-git` reports.
