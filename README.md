@@ -40,10 +40,12 @@ claude plugin install delixcrew@delixcrew
 
 From a local clone: `claude plugin marketplace add /path/to/delix`, then the same `install` command. The marketplace
 definition is [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json). Both installs copy the plugin into
-Claude's plugin cache, one folder per version, so an install updates only when the version in `plugin.json` changes:
-run `claude plugin marketplace update delixcrew` (GitHub; a local folder is read directly), then
-`claude plugin update delixcrew@delixcrew`, and restart Claude. A local change without a version bump does not reach the
-installed copy, `git pull` alone is not enough; to try one, `claude --plugin-dir /path/to/delix` reads the folder in place.
+Claude's plugin cache, one folder per version, so an install updates only when the version in `plugin.json` changes: run
+`claude plugin marketplace update delixcrew` (GitHub; a local folder is read directly), then
+`claude plugin update delixcrew@delixcrew`, and restart Claude. With a GitHub install, a change without a version bump
+does not reach the installed copy. A local-folder install gets that copy too, but its hooks ran from the folder itself
+in a 2026-11-20 measurement (Claude Code 2.1.328, K371), so a change or a `git pull` there reaches the hooks at once. To
+try a change without installing, `claude --plugin-dir /path/to/delix` reads the folder in place.
 Installed before 0.4.0 as plugin `delix` (or under the marketplace name `delix-local`): see the [CHANGELOG](CHANGELOG.md#040--2026-11-03).
 Checks (also run by CI on every push and PR): `claude plugin validate .`; hook tests: `bash tests/hook_tests.sh`; board tests:
 `bash tests/board_tests.sh`; behaviour evals: `claude plugin eval . --trust-plugin --no-publish` (calls the model, costs money).
@@ -391,12 +393,13 @@ the former watcher never started in the pilot and 3 diagnostic runs and was remo
 note is appended to `.delix/warnings.log`.
 
 The write gate (`scripts/write_gate.py`) sees only the Write/Edit/MultiEdit/NotebookEdit tools; an implementer writing
-files through Bash (`echo >`, `sed -i`, `tee`) is outside this hook (`bash_gate.py` intercepts only redirects, `cp`, `mv`
-and `tee` into protected paths, reviewer Bash and, in every session, the known feedback send paths and triage write
-paths; see [Feedback](#feedback) and [Triage](#triage)). The write gate always rejects a path that escapes the worktree
-(cwd; A13, K42); path matching is relative to cwd. For
-that reason a change to the card file, `docs/delix/**` or an unapproved protected path in the card counts as a finding in
-the `delixcrew:qa` review of the diff. Tier 3 permission is opened by the `**🔐 Approved:** <YYYY-MM-DD> <who>` line after
+files through Bash (`echo >`, `sed -i`, `tee`) is outside this hook (`bash_gate.py` intercepts only redirects, `cp`,
+`mv` and `tee` into protected paths inside the worktree, reviewer Bash and, in every session, the known feedback send
+paths and triage write paths; see [Feedback](#feedback) and [Triage](#triage)). The write gate always rejects a path
+that escapes the worktree (cwd; A13, K42); path matching is relative to cwd. For that reason a change to the card file,
+`docs/delix/**` or an unapproved protected path in the card counts as a finding in the `delixcrew:qa` review of the
+diff. A Bash write outside the worktree, such as into the main checkout, is not in that diff (see the next paragraph).
+Tier 3 permission is opened by the `**🔐 Approved:** <YYYY-MM-DD> <who>` line after
 the card's header table; only the lead writes it, after the user's explicit "yes" in chat, and commits it to main.
 
 The Bash write rule (redirects, `cp`, `mv` and `tee`) matches its target relative to cwd as well, so a pattern with a
@@ -405,9 +408,10 @@ holds the card worktree under `.claude/worktrees/<x>` and its `docs/delix/`, by 
 `../../../scripts/x.py` or an absolute one. A pattern without a folder, such as `.env*`, looks at the file name and
 still matches. Such a write also reaches the plugin's own files. The hooks run their scripts from the plugin's root on
 every call, so a write into the installed copy (`~/.claude/plugins/cache/delixcrew/delixcrew/<version>/` for a
-marketplace install) takes effect at once. When the plugin runs from a checkout, its hook code can change at once
-(`--plugin-dir`) or with the next `claude plugin update` (a `directory` marketplace); run `git status` in that checkout
-before such a session or update. The boundary here is Claude Code's Bash permission
+GitHub marketplace install) takes effect at once. When the plugin runs from a checkout (`--plugin-dir`, or a `directory`
+marketplace, where the hooks run from that folder and not from the cached copy that `installed_plugins.json` names;
+measured with Claude Code 2.1.328, K371), a change to its hook code takes effect at once; run `git status` in that
+checkout before such a session. The boundary here is Claude Code's Bash permission
 prompt (K77); the `--permission-mode auto` session that dispatch opens has no prompt, so only the auto mode
 classifier sees this write (K358). A Bash command that changes the worktree's `.git` (`printf … > .git` or
 `git add -f .delix/card`) switches the three hooks off; that is the same class as deleting `.delix/card` and a
@@ -442,9 +446,10 @@ command except `gh pr create` and a pipe into `tail` or `head`, a `--output` opt
 `1>`, `2>` or `&>` to `/dev/null` (with one space or none), `2>&1`, `1>&2` or `>&2`, a heredoc with an unquoted
 delimiter, `<<-` or `<<<`, a `$`, backtick or backslash outside single quotes, a glob, `~`, `!`, a lone `&` or `(`
 outside quotes, or a `{` or `}` word after a command's name (T052; run the other command in a separate call). The one
-allowed `cat` heredoc
-writes nothing the Write tool could not already write. With git older than 2.44, a missing object in a promisor
-(partial clone) repository can still be fetched from its remote while the hooks read the index (K225).
+allowed `cat` heredoc can write what the Write tool denies: like any other Bash write, it can reach the worktree's
+`.git` and a target outside the worktree (T059, A13; see the Bash write rule above). With git older than 2.44, a missing
+object in a promisor (partial clone) repository can still be fetched from its remote while the hooks read the index
+(K225).
 
 `/delixcrew:status` and delix-board read only local files and local git: they run no `git fetch` and no `gh`, so
 remote branch data is as of your last fetch (the header shows its time). A card shows under Ready to merge only when
