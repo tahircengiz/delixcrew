@@ -4,6 +4,8 @@
 |---|---|---|---|---|---|
 | T058 | S | 3 | devops | 28 | open |
 
+**🔐 Approved:** 2026-11-20 tahircengiz
+
 > 🔐 Tier 3: `.claude-plugin/plugin.json` is protected (`.claude-plugin/**`, `docs/delix/delix.json:16`). The lead adds the Approved line after the user's item-specific yes in chat and commits it to main before dispatch.
 > - Filled by the lead at dispatch: release day 2026-11-20, T056 merged as #88, T057 merged as #87, base main `b338f13` (full SHA under Files), line counts and sha256s.
 > - The only placeholder left is `<merge commit>` in Step 4, which the user fills after the merge. If any other placeholder is in this card, stop with `NEEDS_CONTEXT`.
