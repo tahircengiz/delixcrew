@@ -2,6 +2,22 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## Unreleased
+
+- **The write gate denies writes to the card worktree's `.git`** (🔐 K358, K359, K360): in a card worktree
+  Write, Edit, MultiEdit and NotebookEdit can no longer write the worktree's own `.git` (the gitfile of a linked
+  worktree or the directory of a main checkout) or anything under it, in any letter case and through a symlink, even
+  when the card lists the path and carries the approval line. Junk written there used to stop git, so the hooks no
+  longer found the card and switched off, which opened `docs/delix/**`, protected paths and a push to the default
+  branch. The deny message gives the Bash command that adds `.delix/` to `info/exclude`. Bash can still change
+  `.git`; that is a known limit (K361).
+- **Two limits of the Bash write rule are documented** (K358, K361): the rule matches a redirect, `cp`, `mv` or
+  `tee` target relative to cwd, so a folder pattern such as `scripts/**` does not match a target in another
+  checkout or in the main checkout that holds the card worktree, and that write can reach the plugin's own hook
+  code when the plugin runs from a checkout. The `--permission-mode auto` session that dispatch opens shows no Bash
+  prompt for it. A Bash change to the worktree's `.git` switches the hooks off, like deleting `.delix/card`.
+  README, README.tr and the site say so, and their write-gate text names `.git`.
+
 ## 0.7.3 — 2026-11-20
 
 - **A finished card's `.delix/card` no longer switches the hooks on** (🔐 K344, K345, K348, K352, K353; #88):
