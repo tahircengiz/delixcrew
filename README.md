@@ -403,9 +403,11 @@ The Bash write rule (redirects, `cp`, `mv` and `tee`) matches its target relativ
 folder, such as `scripts/**`, does not match a target outside the worktree: another checkout, the main checkout that
 holds the card worktree under `.claude/worktrees/<x>` and its `docs/delix/`, by a relative path such as
 `../../../scripts/x.py` or an absolute one. A pattern without a folder, such as `.env*`, looks at the file name and
-still matches. Such a write also reaches the plugin's own files: when the plugin runs from a checkout, its hook code
-can change at once (`--plugin-dir`) or with the next `claude plugin update` (a `directory` marketplace); run
-`git status` in that checkout before such a session or update. The boundary here is Claude Code's Bash permission
+still matches. Such a write also reaches the plugin's own files. The hooks run their scripts from the plugin's root on
+every call, so a write into the installed copy (`~/.claude/plugins/cache/delixcrew/delixcrew/<version>/` for a
+marketplace install) takes effect at once. When the plugin runs from a checkout, its hook code can change at once
+(`--plugin-dir`) or with the next `claude plugin update` (a `directory` marketplace); run `git status` in that checkout
+before such a session or update. The boundary here is Claude Code's Bash permission
 prompt (K77); the `--permission-mode auto` session that dispatch opens has no prompt, so only the auto mode
 classifier sees this write (K358). A Bash command that changes the worktree's `.git` (`printf … > .git` or
 `git add -f .delix/card`) switches the three hooks off; that is the same class as deleting `.delix/card` and a

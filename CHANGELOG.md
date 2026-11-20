@@ -13,10 +13,10 @@ Earlier versions: git history and the [v0.2.0 release](https://github.com/tahirc
   `.git`; that is a known limit (K361).
 - **Two limits of the Bash write rule are documented** (K358, K361): the rule matches a redirect, `cp`, `mv` or
   `tee` target relative to cwd, so a folder pattern such as `scripts/**` does not match a target in another
-  checkout or in the main checkout that holds the card worktree, and that write can reach the plugin's own hook
-  code when the plugin runs from a checkout. The `--permission-mode auto` session that dispatch opens shows no Bash
-  prompt for it. A Bash change to the worktree's `.git` switches the hooks off, like deleting `.delix/card`.
-  README, README.tr and the site say so, and their write-gate text names `.git`.
+  checkout or in the main checkout that holds the card worktree, and that write can reach the plugin's own hook code:
+  the installed copy at once, or the checkout the plugin runs from. The `--permission-mode auto` session that dispatch
+  opens shows no Bash prompt for it. A Bash change to the worktree's `.git` switches the hooks off, like deleting
+  `.delix/card`. README, README.tr and the site say so, and their write-gate text names `.git`.
 
 ## 0.7.3 — 2026-11-20
 
