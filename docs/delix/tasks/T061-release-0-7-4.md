@@ -4,15 +4,17 @@
 |---|---|---|---|---|---|
 | T061 | S | 3 | devops | 30 | open |
 
+**🔐 Approved:** 2026-11-20 tahircengiz
+
 > 🔐 Tier 3: `.claude-plugin/plugin.json` is protected (`.claude-plugin/**`, `docs/delix/delix.json:16`). The lead adds the Approved line after the user's item-specific yes in chat and commits it to main before dispatch.
-> - Filled by the lead at dispatch: `<DATE>` (release day), `<PR59>`, `<PR60>`, base main `<SHA>` (after T059 and T060 merged), line counts and sha256s. The lead also re-checks every line number marked "(T060)" against that base.
+> - Filled by the lead at dispatch (2026-11-20): release day `2026-11-20`, T059 = #91, T060 = #90, base main `512d8b817a71c77f1eaff12831103a9efda162ea` (T060's merge; the six files are unchanged on main after it), line counts and sha256s. Every line number marked "(T060)" was re-checked on that base.
 > - The only placeholder left after that is `<merge commit>` in Step 4, which the user fills after the merge. If any other placeholder is in this card, stop with `NEEDS_CONTEXT`.
 
 **Goal (1 sentence):** Ship T059 and T060 as **0.7.4** (K363: one deny rule on the existing gate, with no new command, role or gate). That means the plugin version, the CHANGELOG heading in place of `## Unreleased`, the PR numbers in the two items, and the eight version marks and four footer dates of the site. · **Spec:** `docs/delix/specs/E-gitdir-bash-outside.md` REQ-3 (scenario "sürüm"), K362, K363; the CLAUDE.md "Site (GitHub Pages)" rule.
 
 **Docs/site:** this card is the version update that CLAUDE.md asks for.
 
-## Files (base: main `<SHA>`, after T059 and T060 merged)
+## Files (base: main `512d8b8`, after T059 and T060 merged)
 - Modify: `.claude-plugin/plugin.json` (A1, line 4)
 - Modify: `CHANGELOG.md` (A2 to A4, lines 5, 7, 14 as T060 left them)
 - Modify: `site/index.html` (A5, A6, lines 29 and 695)
@@ -40,14 +42,27 @@
 
 ## Edit anchors (replace in the line; each "Find" occurs exactly once in its file)
 - **A1** `.claude-plugin/plugin.json`: `"version": "0.7.3"` → `"version": "0.7.4"`
-- **A2** `CHANGELOG.md` (line 5, T060): `## Unreleased` → `## 0.7.4 — <DATE>`
-- **A3** `CHANGELOG.md` (line 7, T060): `(🔐 K358, K359, K360):` → `(🔐 K358, K359, K360; #<PR59>):`
-- **A4** `CHANGELOG.md` (line 14, T060): `(K358, K361):` → `(K358, K361; #<PR60>):`
+- **A2** `CHANGELOG.md` (line 5, T060): `## Unreleased` → `## 0.7.4 — 2026-11-20`
+- **A3** `CHANGELOG.md` (line 7, T060): `(🔐 K358, K359, K360):` → `(🔐 K358, K359, K360; #91):`
+- **A4** `CHANGELOG.md` (line 14, T060): `(K358, K361):` → `(K358, K361; #90):`
 - **A5 / A7 / A9 / A11**, line 29 of each page: `<span class="ver" data-version="0.7.3">delixcrew 0.7.3</span>` → `<span class="ver" data-version="0.7.4">delixcrew 0.7.4</span>`
-- **A6** `site/index.html` (line 695) and **A10** `site/usage.html` (line 245, T060): `<span data-version="0.7.3">delixcrew 0.7.3</span> · as of 2026-11-20.` → `<span data-version="0.7.4">delixcrew 0.7.4</span> · as of <DATE>.`
-- **A8** `site/tr/index.html` (line 695) and **A12** `site/tr/usage.html` (line 245, T060): `<span data-version="0.7.3">delixcrew 0.7.3</span> · durum 2026-11-20.` → `<span data-version="0.7.4">delixcrew 0.7.4</span> · durum <DATE>.`
+- **A6** `site/index.html` (line 695) and **A10** `site/usage.html` (line 245, T060): `<span data-version="0.7.3">delixcrew 0.7.3</span> · as of 2026-11-20.` → `<span data-version="0.7.4">delixcrew 0.7.4</span> · as of 2026-11-20.`
+- **A8** `site/tr/index.html` (line 695) and **A12** `site/tr/usage.html` (line 245, T060): `<span data-version="0.7.3">delixcrew 0.7.3</span> · durum 2026-11-20.` → `<span data-version="0.7.4">delixcrew 0.7.4</span> · durum 2026-11-20.`
 
-## Base and after (`<LEAD: prototype table — file, lines (plugin.json 19, CHANGELOG 307, index 702, usage 252), sha256 base, sha256 after>`)
+## Base and after (lead prototype, 2026-11-20, base `512d8b8`)
+An independent applier of A1 to A12 on a copy of the base gave these sha256 prefixes (16 hex); `tests/site_tests.sh`
+gave 23 `✔` (`version 0.7.4 (2 marks)` on each page), and the numstat and greps above held. CHANGELOG lines 7 and 14
+are 113 and 116 characters after A3 and A4. Compare yours with `shasum -a 256 <file>`; if one differs, find the anchor
+before you go on.
+
+| file | lines | base | after |
+|---|---|---|---|
+| `.claude-plugin/plugin.json` | 19 | `9aa700e457ebb9c4` | `3d12a7ec6af2bdfa` |
+| `CHANGELOG.md` | 307 | `7ccd2fe4da568ff1` | `01bd37ab5f15548f` |
+| `site/index.html` | 702 | `340c67eae6f3bf78` | `887308471ecd82c9` |
+| `site/tr/index.html` | 702 | `24ac0a5ae6202cf5` | `82ef285ac721e6e9` |
+| `site/usage.html` | 252 | `fe36a30ad90b6559` | `a0b3b333985841af` |
+| `site/tr/usage.html` | 252 | `27d75012d92e65df` | `924d4aafd22a0d27` |
 
 ## Global Constraints
 - `plugin.json`: only the version value changes.
@@ -63,7 +78,7 @@
 3. Run Verification and write the output to `.delix/evidence/verification.txt`. Take one screenshot of each page (kicker and footer).
 4. Commit, push and open the PR:
    - Run `git add` with the 6 paths.
-   - Commit `Sürüm 0.7.4: .git reddi, Bash yazım sınırları belgesi (#<PR59>, #<PR60>)`.
+   - Commit `Sürüm 0.7.4: .git reddi, Bash yazım sınırları belgesi (#91, #90)`.
    - Run `git push -u origin HEAD` alone.
    - Open the PR with `--body-file`.
    - The body has `## How I tested`.
@@ -78,8 +93,8 @@
 - `claude plugin validate .` → exit 0.
 - `grep -c '"version": "0.7.4"' .claude-plugin/plugin.json` → `1`.
 - `grep -cF 'data-version="0.7.4"'` on each page → `2`; the same grep for `0.7.3` → `0`.
-- `grep -n '^## ' CHANGELOG.md | head -2` → `5:## 0.7.4 — <DATE>` then `21:## 0.7.3 — 2026-11-20`; `grep -c '^## Unreleased' CHANGELOG.md` → `0`.
-- `grep -cF '; #<PR59>):' CHANGELOG.md` → `1`; `grep -cF '; #<PR60>):' CHANGELOG.md` → `1`.
+- `grep -n '^## ' CHANGELOG.md | head -2` → `5:## 0.7.4 — 2026-11-20` then `21:## 0.7.3 — 2026-11-20`; `grep -c '^## Unreleased' CHANGELOG.md` → `0`.
+- `grep -cF '; #91):' CHANGELOG.md` → `1`; `grep -cF '; #90):' CHANGELOG.md` → `1`.
 - `grep -cF "the worktree's own \`.git\` file or" README.md` → `1` (REQ-3 scenario; README is not changed here).
 - `git diff --numstat origin/main...HEAD` → 6 lines: `plugin.json` 1/1, `CHANGELOG.md` 3/3, each site page 2/2.
 
