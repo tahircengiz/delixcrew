@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/E-gitdir-bash-outside.md",
   "size": "M",
-  "updated": "2026-11-20T17:11:55Z",
+  "updated": "2026-11-20T20:12:24Z",
   "env_owner": null,
   "waves": [
     {
@@ -197,6 +197,13 @@
         "T061"
       ],
       "note": "Spec E wave 2: T061 \ud83d\udd10 Tier 3 (.claude-plugin/plugin.json) release 0.7.4 after T059 and T060 merge; the lead fills <DATE>, <PR59>, <PR60>, the base SHA and sha256s at dispatch and re-checks CHANGELOG lines 5, 7, 14 and usage footer line 245 (checked on the T060 prototype); delix-board stays 0.1.7."
+    },
+    {
+      "wave": 31,
+      "cards": [
+        "T062"
+      ],
+      "note": "Spec E close drift (STATUS \u00a715 A\u00e7\u0131k i\u015f), size S, gate 1 = card approval. Tier 2 docs: README, README.tr, four site pages, skills/implement/SKILL.md; 21 anchors on 56c4d6d (architect critique round 1 FIX, all findings handled, K373). The lead's independent applier gives the after sha256s (site_tests 23, 41 greps in bash and zsh, 19 suites pass). K371 measured by the lead (hooks run from the checkout); spec text, gitleaks evals/ path, CHANGELOG long lines and impeccable flags out of scope (K372); bash_gate redirect check is a separate Tier 3 follow-up (K374)."
     }
   ],
   "cards": {
@@ -1957,6 +1964,16 @@
         "head": "3feccb9631a6018dd36cd680799f4fceb61bde81",
         "at": "2026-11-20T17:11:36Z"
       }
+    },
+    "T062": {
+      "file": "docs/delix/tasks/T062-docs-spec-e-drift.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": null
     }
   },
   "status_values": [
