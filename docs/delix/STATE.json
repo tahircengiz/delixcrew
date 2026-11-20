@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/E-gitdir-bash-outside.md",
   "size": "M",
-  "updated": "2026-11-20T12:08:07Z",
+  "updated": "2026-11-20T12:48:21Z",
   "env_owner": null,
   "waves": [
     {
@@ -182,6 +182,21 @@
         "T058"
       ],
       "note": "Spec D wave 2: T058 \ud83d\udd10 Tier 3 (.claude-plugin/plugin.json) release 0.7.3 after T056 and T057 merge; the lead fills <DATE>, <PR56>, <PR57>, base SHA and sha256s at dispatch; delix-board stays 0.1.7."
+    },
+    {
+      "wave": 29,
+      "cards": [
+        "T059",
+        "T060"
+      ],
+      "note": "Spec E wave 1 (K362), parallel, no shared file. T059 \ud83d\udd10 Tier 3 (scripts/write_gate.py): REQ-1 .git/** deny after the docs/delix rule and before the Files permission, docstring line 3; new tests/gitdir_gate_tests.sh. T060 Tier 2 docs: REQ-2 Bash limits and the REQ-3 text (README, README.tr, four site pages, CHANGELOG Unreleased with two items); 21 anchors. Cards by architect job B on af6c35b; the lead's independent applier gives the after sha256s in both cards (T059 red 38/27, green 65, 19 suites on Python 3.9.6 and 3.13.13; T060 site_tests 23, 28 greps, numstat and wc -l as written)."
+    },
+    {
+      "wave": 30,
+      "cards": [
+        "T061"
+      ],
+      "note": "Spec E wave 2: T061 \ud83d\udd10 Tier 3 (.claude-plugin/plugin.json) release 0.7.4 after T059 and T060 merge; the lead fills <DATE>, <PR59>, <PR60>, the base SHA and sha256s at dispatch and re-checks CHANGELOG lines 5, 7, 14 and usage footer line 245 (checked on the T060 prototype); delix-board stays 0.1.7."
     }
   ],
   "cards": {
@@ -1797,6 +1812,36 @@
         "head": "602e1576a1072900440dc3901a5940bd96fb61c1",
         "at": "2026-11-20T11:55:28Z"
       }
+    },
+    "T059": {
+      "file": "docs/delix/tasks/T059-hooks-gitdir-write-gate.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/E-gitdir-bash-outside.md"
+    },
+    "T060": {
+      "file": "docs/delix/tasks/T060-docs-gitdir-bash-limits.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/E-gitdir-bash-outside.md"
+    },
+    "T061": {
+      "file": "docs/delix/tasks/T061-release-0-7-4.md",
+      "role": "devops",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/E-gitdir-bash-outside.md"
     }
   },
   "status_values": [
