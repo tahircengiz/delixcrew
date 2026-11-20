@@ -4,6 +4,8 @@
 |---|---|---|---|---|---|
 | T059 | S | 3 | backend | 29 | open |
 
+**🔐 Approved:** 2026-11-20 tahircengiz
+
 > 🔐 Tier 3: `scripts/write_gate.py` is protected (`docs/delix/delix.json:10`). The lead adds the Approved line after the user's item-specific yes in chat and commits it to main before the session starts; the session branches from that commit.
 > - The lead filled the base SHA and the sha256s at dispatch from its prototype (below). If a placeholder is left in this card, stop with `NEEDS_CONTEXT`.
 
