@@ -16,6 +16,13 @@ role tag.
    and `docs/delix/**` are never changed (not via Bash either; the review counts it as a finding). If you get a
    rejection, do not route around it; write `BLOCKED`/`NEEDS_CONTEXT`. `.delix/` is kept out of git
    (`.git/info/exclude`).
+   Write `.delix/card` only with the Write tool: while its card is not finished, the gate denies any other tool
+   on it. If `.delix/card` already names another card, first read its old id (the `T<digits>` at the start of its
+   last path part, else `unknown`), then write the new card path. If the gate denies that write (the old card is
+   not finished on origin/HEAD), write nothing under `.delix/` (the live card's `report.md` stays as it is) and end
+   your final message with `BLOCKED`. If it allows it, move everything else in `.delix/` except `card` and
+   `previous/` into `.delix/previous/<id>/` with `mv -n` (never overwrite); delete no file and list the moves in
+   the report.
 3. If anything in the card is unclear or contradictory, **do not guess**: write `NEEDS_CONTEXT` in `.delix/report.md`
    and stop.
 
@@ -54,9 +61,10 @@ role tag.
 - Open a PR (`gh pr create`): title `T<nnn> <short>`; body with the card link, `## How I tested` (command + output),
   assumptions, reason for any new dependency. **You do not merge and do not request review**; gate 2 is human.
   Project without PRs (no git remote, or the card / dispatch says "no PR"): do not push; leave the commits on the card
-  branch, write `**PR:** none (<branch> @ <sha>)` in the report and keep `pr` `null` (the review reads the branch SHA).
-- Fill `.delix/report.md` from `${CLAUDE_PLUGIN_ROOT}/templates/report.md` (≤ 1–2K tokens); in `STATE.json` update only
-  your own card's `status: in_review` and `pr` fields.
+  branch and write `**PR:** none (<branch> @ <sha>)` in the report (the review reads the branch SHA).
+- Fill `.delix/report.md` from `${CLAUDE_PLUGIN_ROOT}/templates/report.md` (≤ 1–2K tokens) and put the PR
+  number in its `**PR:**` line. Do not write `STATE.json` or anything under `docs/delix/`: the lead records
+  `in_review` and `pr` from your report.
 - Your last message: the report summary + the PR number. If a fix round arrives (a lead message or the card's
   "Review findings" section), fix only the findings with the same protocol; not every finding, the P0/P1s.
 

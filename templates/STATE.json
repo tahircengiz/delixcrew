@@ -1,5 +1,5 @@
 {
-  "$comment": "docs/delix/STATE.json. The lead writes it; the implementer changes only its own card's status and pr fields.",
+  "$comment": "docs/delix/STATE.json. Only the lead writes it; the implementer puts its PR number in .delix/report.md and the lead records status and pr.",
   "spec": "docs/delix/SPEC.md",
   "size": "M",
   "updated": "2026-01-01T00:00:00Z",

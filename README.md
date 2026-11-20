@@ -133,8 +133,11 @@ What runs locally, what it writes and when it uses the network. What a feedback 
   `gh pr merge` is denied there: gate 2 is the user's (T041, K279). It
   also denies `git update-ref` and every `git remote` form except plain `git remote`, `-v` / `--verbose`, `show` and
   `get-url`, so a card session does not rewrite refs or remotes with those commands (T044, K296). A
-  `docs/delix/delix.json` that is not a JSON object, or a byte that is not UTF-8 in a git setting the rule reads,
-  makes it deny the command with a message instead of failing. The rules read a command both by the loose word scan and
+  byte that is not UTF-8 in a git setting the rule reads makes it deny the command with a message instead of
+  failing. In a card worktree both `PreToolUse` hooks deny with one message when `docs/delix/delix.json` is
+  missing, is not valid JSON or not a JSON object, or has a `protected_paths` or `test_paths` that is not a list
+  of strings; the write hook still allows writes under `.delix/` (T056).
+  The rules read a command both by the loose word scan and
   the way bash builds its argv, so a quoted blank, an option value with a comma or a bracket, a backslash-newline, a
   redirection and the text of an `sh -c` string do not hide the subcommand, and an alias that starts with a global
   option such as `-c` is followed to its command. A quote that is never closed in front of a `git` word
@@ -162,8 +165,12 @@ What runs locally, what it writes and when it uses the network. What a feedback 
   (not at the root of a git checkout or worktree, `.git` a symlink, a command that is not a string, the record not
   writable). Nothing is approved on 6 or 7.
 - An implementer worktree is one with a local, untracked `.delix/card` at the work-tree root
-  ([`scripts/common.py`](scripts/common.py)). Without `python3` both `PreToolUse` hooks block (see
-  [Requirements](#requirements)).
+  ([`scripts/common.py`](scripts/common.py)) whose card is not finished. The card is finished when the STATE at
+  `refs/remotes/origin/HEAD` (read with `--no-lazy-fetch --no-replace-objects`, at most 1 MiB, never the
+  worktree's copy), or an archive STATE it lists, holds the card (same id, same `file`) as `accepted` or with a
+  `merged` record; then the three hooks stay inactive and print one line on stderr (T056). Any read error
+  keeps them active. While the card is not finished, the write hook denies a Write that changes `.delix/card`
+  and any other tool on it. Without `python3` both `PreToolUse` hooks block (see [Requirements](#requirements)).
 
 **Files it writes**
 - In your project: `docs/delix/` (spec, cards, `STATE.json` with its `cost_usd` fields, verification reports), written
@@ -435,9 +442,12 @@ the T041 push rule denies `gh pr merge` only in an implementer worktree, and for
 and status skill text only.
 The ref-write rule (T044, K296) is a check on the command's words too. It does not see a ref written by another command
 (such as `git symbolic-ref`, `git fast-import`, `git fetch` with a refspec into `refs/remotes/`, or `git branch -f`),
-a file written under the git directory, or a command that a script or another program runs. delix-board reads its
-trusted state from `refs/remotes/origin/HEAD`, so a card session can still make the board show a card as ready to merge
-by those routes; the merge click (gate 2) stays yours.
+a file written under the git directory, or a command that a script or another program runs. delix-board and the card
+worktree's hooks read their trusted state from `refs/remotes/origin/HEAD` (T056), so by those routes or by `git pull`
+with a refspec a card session can still make the board show a card as ready to merge, and switch its own hooks off by
+making its card look finished there (K351). That equals deleting `.delix/card` (see the push rule above), only harder
+to spot. A `refs/replace/` object and a tag or branch named like `refs/remotes/origin/HEAD` do not change what the
+hooks read. The merge click (gate 2) stays yours.
 
 ## License
 

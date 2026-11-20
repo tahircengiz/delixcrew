@@ -31,6 +31,8 @@ red → implement → green → commit), **Verification command + expected outpu
 **Report contract**. Cards are written for "a junior with no project context who is reluctant to test": leave nothing
 to guess. Every ui-ux card, and every frontend card with a visual change, puts `DESIGN.md` (or the repo's token file) in
 Global Constraints: its tokens only, no new colour, font or spacing value.
+A card's Files list holds no `docs/delix/**` path (the write gate denies it to the implementer): evidence goes to
+`.delix/evidence/`, and a `docs/delix` change is a lead step in the wave plan.
 Assign the tier by file path + action type: `auth/`, Keycloak/OIDC, `.env*`, CI workflows, lockfiles, deploy, prod
 data → Tier 3; new behaviour / many files / new dependency / template-route → Tier 2; everything else Tier 1.
 Put dependencies in the **wave plan**, not in the cards: cards in the same wave run in parallel (at most 3), waves run
