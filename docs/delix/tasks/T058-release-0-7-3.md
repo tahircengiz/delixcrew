@@ -98,4 +98,11 @@
 Do not write STATE.json. Read only this card and spec K349, K350.
 
 ## Review findings (filled by the lead)
-- Round 1: …
+- Round 1 (PR #89 @ `602e1576a1072900440dc3901a5940bd96fb61c1`): the six files are byte for byte the lead's prototype
+  (`cmp` on each). Deterministic gate green (Stop gate both commands `[exit 0]`; CI `test` and `check` pass; the
+  prototype tree with the same six files: 18 files, 0 `✘` on Python 3.9.6 and 3.13.13, `tests/site_tests.sh` 23 `✔`).
+  qa **ACCEPT** (P0 0, P1 0, P2 0). security **🔐 HUMAN_APPROVAL** (no finding; gitleaks clean on the diff and the PR
+  body; no invisible or bidi character).
+  - Noted, no fix: the worktree's `.delix/chrome-profile/` (headless Chrome for the screenshots) is kept out of git
+    only by `info/exclude`; it goes with the worktree at close. The worktree directory was T057's, reused by the app;
+    the implementer moved T057's `.delix` files to `.delix/previous/T057/` and deleted nothing.

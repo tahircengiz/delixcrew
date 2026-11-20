@@ -1759,9 +1759,9 @@
       "file": "docs/delix/tasks/T058-release-0-7-3.md",
       "role": "devops",
       "tier": 3,
-      "status": "in_progress",
-      "pr": null,
-      "rounds": 0,
+      "status": "in_review",
+      "pr": 89,
+      "rounds": 1,
       "cost_usd": null,
       "spec": "docs/delix/specs/D-stale-card-config.md",
       "agents": [
@@ -1772,8 +1772,24 @@
           "sha": null,
           "verdict": null,
           "at": "2026-11-20T10:08:01Z",
-          "branch": null,
-          "session": null
+          "branch": "claude/focused-almeida-3583c2",
+          "session": "delix-t058-s-r-m-0-7-3"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 1,
+          "sha": "602e1576a1072900440dc3901a5940bd96fb61c1",
+          "verdict": "ACCEPT",
+          "at": "2026-11-20T11:36:47Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 1,
+          "sha": "602e1576a1072900440dc3901a5940bd96fb61c1",
+          "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
+          "at": "2026-11-20T11:36:47Z"
         }
       ]
     }
