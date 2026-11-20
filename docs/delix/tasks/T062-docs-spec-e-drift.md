@@ -422,3 +422,13 @@ git diff -U0 origin/main...HEAD -- README.md README.tr.md skills/implement/SKILL
 Do not write STATE.json. Read only this card and, if you need it, spec REQ-2, K358, K361, K364.
 
 ## Review findings (filled by the lead)
+- **Round 1** (PR #93, branch `claude/reverent-wiles-a75943` @ `09d96e6ee0bea2fe1c58e5754b506b5aae273f6d`, 2026-11-20):
+  - Deterministic gates:
+    - all seven sha256s equal the "after" table; numstat and `wc -l` as the card expects;
+    - the lead's prototype tree has the same seven files byte for byte; there `tests/site_tests.sh` gives 23 `✔` and the 19 suites pass;
+    - the Stop gate (`.delix/test-result.txt`) ends `[exit 0]`; CI `check` and `test` pass.
+  - No protected path and no test file touched.
+  - qa: ACCEPT. No findings.
+    - Unsure (P2, no fix, out of scope): the `scripts/common.py:133` comment still says `.git/info/exclude`.
+  - security: CLEAN. No findings; gitleaks is clean on the diff and the changed files; no `Cf` characters.
+    - Unsure (P2, no fix): in a linked worktree `git rev-parse --git-path info/exclude` is the shared `info/exclude` of the main repository. So the one Bash write that A21 names lands outside the card worktree. It only adds `.delix/` and matches the `.git` deny message.
