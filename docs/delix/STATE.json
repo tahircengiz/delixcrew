@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/E-gitdir-bash-outside.md",
   "size": "M",
-  "updated": "2026-11-20T20:35:00Z",
+  "updated": "2026-11-20T20:40:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -1969,7 +1969,7 @@
       "file": "docs/delix/tasks/T062-docs-spec-e-drift.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 93,
       "rounds": 0,
       "cost_usd": null,
@@ -2001,7 +2001,12 @@
           "verdict": "CLEAN",
           "at": "2026-11-20T20:34:10Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "396bbead1c7fb8c88e827c3a577ac17820f2e90a",
+        "head": "09d96e6ee0bea2fe1c58e5754b506b5aae273f6d",
+        "at": "2026-11-20T20:36:02Z"
+      }
     }
   },
   "status_values": [
