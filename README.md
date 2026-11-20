@@ -102,8 +102,10 @@ What runs locally, what it writes and when it uses the network. What a feedback 
 **Hooks** ([`hooks/hooks.json`](hooks/hooks.json)) load in every session where the plugin is enabled:
 - `PreToolUse` on `Write|Edit|MultiEdit|NotebookEdit` runs [`scripts/write_gate.py`](scripts/write_gate.py). In every
   session it denies writes into the feedback and triage directories below and to the Stop gate record
-  `~/.claude/delixcrew/trust.json`; for the reviewer agents it denies every write. In an implementer worktree it also denies writes outside the worktree, to the card and `docs/delix/**`, to a
-  protected path without an approved card, and to an existing test file.
+  `~/.claude/delixcrew/trust.json`; for the reviewer agents it denies every write. In an implementer worktree it
+  also denies writes outside the worktree, to the card, to `docs/delix/**`, to the worktree's own `.git` file or
+  directory and anything under it (the hooks find the card through it; T059), to a protected path without an
+  approved card, and to an existing test file.
 - `PreToolUse` on `Bash` runs [`scripts/bash_gate.py`](scripts/bash_gate.py). In every session it denies the known send
   and apply paths (`feedback.py send`, `triage.py apply`, terminal wrappers such as `script`, and writing `gh issue`,
   `gh label` or `gh api` calls aimed at this repository). A `gh api` write to this repository's settings, rulesets or
@@ -118,8 +120,8 @@ What runs locally, what it writes and when it uses the network. What a feedback 
   heredoc; the rule for a command naming the record and the protected-path redirect check still see the full text.
   The security reviewer may run only commands that start with an
   allowlisted scanner or read command and match no known write pattern; this is a pattern check, not a sandbox. The
-  other reviewers get no Bash. In an implementer worktree it denies shell writes into a protected path and runs
-  `gitleaks protect --staged` before every `git commit`. There a push runs only as
+  other reviewers get no Bash. In an implementer worktree it denies shell writes into a protected path inside the
+  worktree and runs `gitleaks protect --staged` before every `git commit`. There a push runs only as
   `git push [-u|--set-upstream] [--force-with-lease] origin <HEAD|branch>` from the card's own branch, which is not the
   default branch, with no `remote.origin.push`, and with no `cd` and no git command other than `add`, `commit`,
   `status`, `diff`, `log` or `show` in the same command; that command holds nothing else but `gh pr create`, a pipe
@@ -391,10 +393,26 @@ note is appended to `.delix/warnings.log`.
 The write gate (`scripts/write_gate.py`) sees only the Write/Edit/MultiEdit/NotebookEdit tools; an implementer writing
 files through Bash (`echo >`, `sed -i`, `tee`) is outside this hook (`bash_gate.py` intercepts only redirects, `cp`, `mv`
 and `tee` into protected paths, reviewer Bash and, in every session, the known feedback send paths and triage write
-paths; see [Feedback](#feedback) and [Triage](#triage)). A path escaping the worktree (cwd) is always rejected (A13, K42); path matching is relative to cwd. For
+paths; see [Feedback](#feedback) and [Triage](#triage)). The write gate always rejects a path that escapes the worktree
+(cwd; A13, K42); path matching is relative to cwd. For
 that reason a change to the card file, `docs/delix/**` or an unapproved protected path in the card counts as a finding in
 the `delixcrew:qa` review of the diff. Tier 3 permission is opened by the `**🔐 Approved:** <YYYY-MM-DD> <who>` line after
 the card's header table; only the lead writes it, after the user's explicit "yes" in chat, and commits it to main.
+
+The Bash write rule (redirects, `cp`, `mv` and `tee`) matches its target relative to cwd as well, so a pattern with a
+folder, such as `scripts/**`, does not match a target outside the worktree: another checkout, the main checkout that
+holds the card worktree under `.claude/worktrees/<x>` and its `docs/delix/`, by a relative path such as
+`../../../scripts/x.py` or an absolute one. A pattern without a folder, such as `.env*`, looks at the file name and
+still matches. Such a write also reaches the plugin's own files. The hooks run their scripts from the plugin's root on
+every call, so a write into the installed copy (`~/.claude/plugins/cache/delixcrew/delixcrew/<version>/` for a
+marketplace install) takes effect at once. When the plugin runs from a checkout, its hook code can change at once
+(`--plugin-dir`) or with the next `claude plugin update` (a `directory` marketplace); run `git status` in that checkout
+before such a session or update. The boundary here is Claude Code's Bash permission
+prompt (K77); the `--permission-mode auto` session that dispatch opens has no prompt, so only the auto mode
+classifier sees this write (K358). A Bash command that changes the worktree's `.git` (`printf … > .git` or
+`git add -f .delix/card`) switches the three hooks off; that is the same class as deleting `.delix/card` and a
+`cd` below the worktree root (see the push rule below; K361). The write gate denies that change through Write and
+Edit (T059).
 
 The Stop gate approval (`trust.py allow`) has these limits. It covers the command text, not the files it runs: on an
 approved repository, a branch that changes `tests/` but keeps the list runs them, as if you ran the tests on that

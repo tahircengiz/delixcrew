@@ -103,8 +103,9 @@ bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
 - `Write|Edit|MultiEdit|NotebookEdit` için `PreToolUse`, [`scripts/write_gate.py`](scripts/write_gate.py)'yi çalıştırır.
   Her oturumda aşağıdaki geri bildirim ve triage dizinlerine ve Stop gate kaydı `~/.claude/delixcrew/trust.json`'a
   yazmayı reddeder; inceleyici agent'lar için her yazmayı
-  reddeder. Uygulayıcı worktree'sinde ayrıca worktree dışına, karta ve `docs/delix/**`'a, onaylı kartı olmayan korumalı
-  yola ve mevcut test dosyasına yazmayı reddeder.
+  reddeder. Uygulayıcı worktree'sinde ayrıca worktree dışına, karta, `docs/delix/**`'a, worktree'nin kendi `.git`
+  dosyasına ya da dizinine ve altındaki her yola (hook'lar kartı onun üzerinden bulur; T059), onaylı kartı olmayan
+  korumalı yola ve mevcut test dosyasına yazmayı reddeder.
 - `Bash` için `PreToolUse`, [`scripts/bash_gate.py`](scripts/bash_gate.py)'yi çalıştırır. Her oturumda bilinen gönderme
   ve uygulama yollarını reddeder (`feedback.py send`, `triage.py apply`, `script` gibi terminal sarmalayıcıları ve bu
   repoyu hedefleyen yazan `gh issue`, `gh label` ya da `gh api` çağrıları). Bu reponun ayarlarına, ruleset'lerine ya
@@ -118,8 +119,9 @@ bölümünde. Güvenlik bildirimi: [SECURITY.md](SECURITY.md).
   satırından denetlenir; kaydı adlandıran komut kuralı ve korunan yola yönlendirme denetimi yine tam metni görür.
   security inceleyicisi yalnız izinli bir
   tarayıcı ya da okuma komutuyla başlayan ve bilinen hiçbir yazma kalıbına uymayan komutları çalıştırabilir; bu bir kalıp
-  denetimidir, sandbox değildir. Diğer inceleyicilere Bash verilmez. Uygulayıcı worktree'sinde korumalı yola kabuk
-  yazmasını reddeder ve her `git commit`'ten önce `gitleaks protect --staged` çalıştırır. Orada push yalnız
+  denetimidir, sandbox değildir. Diğer inceleyicilere Bash verilmez.
+  Uygulayıcı worktree'sinde, worktree içindeki korumalı yola kabuk yazmasını reddeder ve her `git commit`'ten önce
+  `gitleaks protect --staged` çalıştırır. Orada push yalnız
   `git push [-u|--set-upstream] [--force-with-lease] origin <HEAD|dal>` biçiminde, kartın varsayılan dal olmayan kendi
   dalından, `remote.origin.push` yokken, aynı komutta `cd` ve `add`, `commit`, `status`, `diff`, `log`, `show`
   dışında bir git komutu yokken çalışır; o komutta bunlardan başka yalnız `gh pr create`, `tail` ya da `head`'e bir
@@ -392,10 +394,25 @@ ve 3 teşhis koşusunda hiç başlamadı, 2026-11-01'de kaldırıldı (retro A9,
 Yazma kapısı (`scripts/write_gate.py`) yalnız Write/Edit/MultiEdit/NotebookEdit araçlarını görür; uygulayıcının Bash
 ile dosya yazması (`echo >`, `sed -i`, `tee`) bu hook'un kapsamı dışıdır (`bash_gate.py` yalnız korunan yollara
 yönlendirme, `cp`, `mv` ve `tee`'yi, inceleyici Bash'ini ve her oturumda bilinen geri bildirim gönderme yollarını ve triage yazma
-yollarını keser; bkz. [Geri bildirim](#geri-bildirim) ve [Triage](#triage)). Worktree (cwd) dışına çıkan yol her zaman reddedilir (A13, K42); yol eşleşmeleri cwd'ye
+yollarını keser; bkz. [Geri bildirim](#geri-bildirim) ve [Triage](#triage)). Yazma kapısı worktree (cwd) dışına çıkan
+yolu her zaman reddeder (A13, K42); yol eşleşmeleri cwd'ye
 göredir. Bu yüzden kart dosyası, `docs/delix/**` ya da kartta onaysız korunan yol değişikliği `delixcrew:qa` incelemesinde
 diff'ten bulgu sayılır. Tier 3 izni kartın başlık tablosundan sonraki `**🔐 Approved:** <YYYY-MM-DD> <kim>` satırıyla
 açılır; bu satırı yalnız ekip lideri, kullanıcının sohbetteki açık "evet"inden sonra yazar ve main'e commit eder.
+
+Bash yazma kuralı (yönlendirme, `cp`, `mv` ve `tee`) hedefi de cwd'ye göre eşler; bu yüzden `scripts/**` gibi
+klasörlü bir desen worktree dışındaki bir hedefi eşlemez: başka bir checkout, kart worktree'sini
+`.claude/worktrees/<x>` altında tutan ana checkout ve onun `docs/delix/`'i (`../../../scripts/x.py` gibi göreli
+ya da mutlak bir yolla). `.env*` gibi klasörsüz bir desen dosya adına bakar ve yine eşler. Böyle bir yazım plugin'in
+kendi dosyalarına da ulaşır. Hook'lar betiklerini her çağrıda plugin'in kökünden çalıştırır; bu yüzden yüklü kopyaya
+(marketplace kurulumunda `~/.claude/plugins/cache/delixcrew/delixcrew/<version>/`) yapılan yazım hemen geçerli olur.
+Plugin bir checkout'tan çalışıyorsa hook kodu hemen (`--plugin-dir`) ya da sonraki `claude plugin update` ile
+(`directory` marketplace) değişebilir; böyle bir oturumdan ya da güncellemeden önce o checkout'ta `git status` çalıştır.
+Buradaki sınır Claude Code'un Bash izin istemidir (K77); dispatch'in açtığı `--permission-mode auto` oturumunda istem
+yoktur, bu yazımı yalnız auto mode sınıflandırıcısı görür (K358). Worktree'nin `.git`'ini değiştiren bir Bash komutu
+(`printf … > .git` ya da `git add -f .delix/card`) üç hook'u kapatır; bu, `.delix/card`'ı silmekle ve worktree kökünün
+altına `cd` ile aynı sınıftır (bkz. aşağıdaki push kuralı; K361). Yazma kapısı aynı değişikliği Write ve Edit ile
+reddeder (T059).
 
 Stop gate onayının (`trust.py allow`) sınırları şunlardır. Onay dosyaları değil komut metnini kapsar: onaylı bir
 repoda listeyi koruyup `tests/`'i değiştiren bir dal onları çalıştırır; bu, testleri o dalda sizin çalıştırmanızla
