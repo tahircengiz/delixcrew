@@ -309,4 +309,25 @@ kuralı; K361). Yazma kapısı aynı değişikliği Write ve Edit ile reddeder (
 Do not write STATE.json. Read only this card and spec REQ-2, REQ-3, K358, K361, K364.
 
 ## Review findings (filled by the lead)
-- (none yet)
+- Round 1 (PR #90 @ `3d46065aa3ba08d96396b9113e403f0f3eacdf33`): deterministic gate green (the 7 files equal the lead's
+  prototype byte for byte; lead's `tests/site_tests.sh` on the archived commit 23 `✔`, exit 0; CI `test` and `check`
+  pass; Stop gate and Verification `[exit 0]`). qa **ACCEPT** (P0 0, P1 0). security **FIX**:
+  - Low: the new Bash-limit text names only a checkout install as a way the hook code can change. A Bash `cp` or
+    redirect into the installed copy (`~/.claude/plugins/cache/delixcrew/delixcrew/<version>/`, the
+    `${CLAUDE_PLUGIN_ROOT}` that `hooks/hooks.json` runs) also passes bash_gate on every install, and the session runs
+    the changed hook code from then on. Lead repro on main `fca7b02` with the real hooks in a temp card worktree:
+    `cp /dev/null <cache>/scripts/write_gate.py`, the same with `~/`, and `echo x > <cache>/hooks/hooks.json` are
+    allowed by bash_gate; Write on the same path is denied (A13). Places: README.md:406-408, README.tr.md:406-409,
+    site/usage.html:223, site/tr/usage.html:223, CHANGELOG.md:16-17. Spec E REQ-2 has the same gap (§6 names only the
+    main checkout).
+  - Merge order (qa and security, no text change): the text describes T059's behaviour and the site publishes on
+    every push to main; merge T060 after T059 or with it.
+  - Unsure, pre-existing, out of scope: `site/index.html:446` and its TR twin say qa counts a card or `docs/delix/**`
+    change in the diff; a Bash write outside the worktree does not show in that diff.
+  - Decision (user, 2026-11-20): fix now. Spec E rev 4 adds the installed copy to REQ-2 (K368). Fix round 1 (F1 to
+    F5: README.md 406–408, README.tr.md 407–413, CHANGELOG.md 16–19, both usage pages line 223) goes to the T060
+    session with the full text; the lead's prototype and an independent applier of F1 to F5 on `3d46065` give the
+    same bytes: sha256 prefixes `README.md` `ac474d1f180a45b8`, `README.tr.md` `7bca481d8012a97a`, `CHANGELOG.md`
+    `7ccd2fe4da568ff1`, `site/usage.html` `fe36a30ad90b6559`, `site/tr/usage.html` `27d75012d92e65df`; the 28
+    Verification greps give `1`; `tests/site_tests.sh` 23 `✔`; numstat vs main 23/5, 22/5, 16/0, 5/5, 5/5, 1/0, 1/0;
+    `wc -l` 473, 476, 307, 702, 702, 252, 252.

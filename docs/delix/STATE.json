@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/E-gitdir-bash-outside.md",
   "size": "M",
-  "updated": "2026-11-20T12:53:07Z",
+  "updated": "2026-11-20T16:25:01Z",
   "env_owner": null,
   "waves": [
     {
@@ -1831,7 +1831,7 @@
           "verdict": null,
           "at": "2026-11-20T12:53:07Z",
           "branch": null,
-          "session": "delix-t059-gitdir-gate"
+          "session": "delix-t059-git-yazma-kap"
         }
       ]
     },
@@ -1839,9 +1839,9 @@
       "file": "docs/delix/tasks/T060-docs-gitdir-bash-limits.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_progress",
-      "pr": null,
-      "rounds": 0,
+      "status": "fixing",
+      "pr": 90,
+      "rounds": 1,
       "cost_usd": null,
       "spec": "docs/delix/specs/E-gitdir-bash-outside.md",
       "agents": [
@@ -1852,8 +1852,24 @@
           "sha": null,
           "verdict": null,
           "at": "2026-11-20T12:53:07Z",
-          "branch": null,
-          "session": "delix-t060-spec-e-docs"
+          "branch": "claude/elegant-goldstine-aa57ca",
+          "session": "delix-t060-spec-e-belgel"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 1,
+          "sha": "3d46065aa3ba08d96396b9113e403f0f3eacdf33",
+          "verdict": "ACCEPT",
+          "at": "2026-11-20T13:10:28Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 1,
+          "sha": "3d46065aa3ba08d96396b9113e403f0f3eacdf33",
+          "verdict": "FIX",
+          "at": "2026-11-20T13:15:48Z"
         }
       ]
     },

@@ -1,8 +1,9 @@
 # SPEC — Spec E: kart worktree'sinin `.git`'i yazma kapısında, Bash yazımının worktree dışı Bilinen sınır
 
-> Size: **M** · Tier: 3 · Date: 2026-11-20 · Status: **approved (gate 1, 2026-11-20)** · rev 3 (rev 2: architect FIX
+> Size: **M** · Tier: 3 · Date: 2026-11-20 · Status: **approved (gate 1, 2026-11-20)** · rev 4 (rev 2: architect FIX
 > P1×3 P2×4, hepsi işlendi, K362 değişti, K364; rev 3: security 🔐 HUMAN_APPROVAL Medium×2 Low×4, hepsi işlendi,
-> K361 ve K364 değişti, K365)
+> K361 ve K364 değişti, K365; rev 4: T060 tur 1 security Low, REQ-2'nin plugin dosyaları cümlesi yüklü kopyayı da
+> adlandırır, K366–K368)
 > Source: Spec D incelemesinde lead'in bulduğu iki önceden var olan açık (T056 `## Review findings` Round 1 son madde,
 > Round 2 security Low; STATUS §14.4 "Lead takibi"). Grill kararları K358 ve K359 (kullanıcı), lead kararları
 > K360–K365. K numaraları STATUS.md'nin devamıdır. Satır numaraları Spec D kapanışına (`af6c35b`) göredir. Önceki
@@ -65,9 +66,12 @@ README `## Known limits` ve README.tr `## Bilinen sınırlar`:
 - Bash yazma kuralı (yönlendirme, `cp`, `mv`, `tee`) yolu cwd'ye göre eşler: `scripts/**` gibi dizinli bir desen
   worktree dışındaki hedefi eşlemez (başka bir checkout, kart worktree'sini `.claude/worktrees/<x>` altında tutan ana
   checkout ve onun `docs/delix/`'i; `../../../scripts/x.py` gibi göreli ya da mutlak yol); `.env*` gibi dizinsiz desen
-  dosya adına bakar ve eşler. Bu yazım plugin'in kendi dosyalarına da ulaşır: plugin bir checkout'tan yükleniyorsa
-  (`--plugin-dir`, `directory` marketplace) hook kodu o andan ya da sonraki `claude plugin update`'ten sonra değişmiş
-  olur; böyle bir oturumdan ya da güncellemeden önce o checkout'ta `git status` bakılır. Sınır Claude Code'un Bash
+  dosya adına bakar ve eşler. Bu yazım plugin'in kendi dosyalarına da ulaşır: hook'lar betiklerini her çağrıda
+  plugin'in kökünden (`${CLAUDE_PLUGIN_ROOT}`, `hooks/hooks.json`) çalıştırdığı için yüklü kopyaya (marketplace
+  kurulumunda `~/.claude/plugins/cache/delixcrew/delixcrew/<version>/`) yazım hemen geçerli olur (K368); plugin bir
+  checkout'tan yükleniyorsa (`--plugin-dir`, `directory` marketplace) hook kodu o andan ya da sonraki
+  `claude plugin update`'ten sonra değişmiş olur; böyle bir oturumdan ya da güncellemeden önce o checkout'ta
+  `git status` bakılır. Sınır Claude Code'un Bash
   izin istemidir (K77); dispatch'in açtığı `--permission-mode auto` oturumunda istem yoktur, bu yazımı yalnız auto
   mode sınıflandırıcısı görür.
 - Bash'in worktree'nin `.git`'ini değiştirmesi (`printf … > .git` ya da `git add -f .delix/card`) üç hook'u kapatır;
@@ -169,6 +173,14 @@ başlığına ve dört footer tarihine yazar (T058 D4: footer tarihi CHANGELOG t
   `git add -f .delix/card` gibi yollara iterdi (security Low).
 - **K365** (lead, geri alınır) Rev 2 ve rev 3 farkı yeniden incelenmedi: değişiklik belge metni ve deny metnidir, kural
   ve yeri aynı kaldı. Hook kartının ve belge kartının incelemesinde bakılır.
+- **K366** (lead, geri alınır; dispatch) Dispatch istemleri yüklü hook sürümünü 0.7.3 yazar: eklenti önbelleği
+  2026-11-20'de 0.7.3'e geçti; uygulayıcının kendi çağrıları bu kopyayla çalışır, kart worktree'sindeki betikle değil.
+- **K367** (lead, geri alınır; dispatch) T059 ve T060 oturumları kart olarak önerildi (`own_initiative`): lead başka bir
+  oturumdan açıldı ve T059 🔐; kullanıcı ikisini 2026-11-20'de başlattı.
+- **K368** (kullanıcı, geri alınır; rev 4) REQ-2'nin plugin dosyaları cümlesi yüklü kopyayı da adlandırır. Neden: T060
+  tur 1 security Low; lead main `fca7b02`'de gerçek hook'larla geçici kart worktree'sinde üretti: önbellekteki
+  `scripts/write_gate.py`'ye `cp /dev/null` (`~/` ve mutlak yolla) ve `hooks/hooks.json`'a yönlendirme bash_gate'ten
+  geçer, aynı yola Write A13 ile reddedilir. Düzeltme T060'ın 2. turunda, 5 yerde.
 
 Lead prototipi (2026-11-20, birleşmiş main `68187e1`, rev 1 deny metniyle): `write_gate.py`'ye 5 satır; Python 3.9.6
 ve 3.13.13'te 16 `.git` biçimi allow → deny, 6 izin kontrolü ve 3 başka kural kontrolü değişmedi, Bash
