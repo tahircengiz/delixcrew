@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/F-intake-decisions.md",
   "size": "M",
-  "updated": "2026-11-21T10:52:41Z",
+  "updated": "2026-11-21T10:55:24Z",
   "env_owner": null,
   "waves": [
     {
@@ -2020,7 +2020,7 @@
       "file": "docs/delix/tasks/T065-script-intake-checker.md",
       "role": "backend",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 95,
       "rounds": 1,
       "cost_usd": null,
@@ -2068,13 +2068,18 @@
           "verdict": "CLEAN",
           "at": "2026-11-21T10:52:41Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "8f7b3a40071f66097b5d40e0e3f799be75c7f463",
+        "head": "469f0bee18e4795617362c96bf3d3dd69593099a",
+        "at": "2026-11-21T10:55:03Z"
+      }
     },
     "T066": {
       "file": "docs/delix/tasks/T066-skills-intake-entry-points.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 94,
       "rounds": 0,
       "cost_usd": null,
@@ -2106,7 +2111,12 @@
           "verdict": "CLEAN",
           "at": "2026-11-21T10:20:47Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "78b8d92fcbfb73fbf25bf0a3a5b14191fe7a0985",
+        "head": "a3282ec35eb433024044b2ec55b690711530c7d8",
+        "at": "2026-11-21T10:54:47Z"
+      }
     }
   },
   "status_values": [
