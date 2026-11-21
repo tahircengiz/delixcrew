@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/F-intake-decisions.md",
   "size": "M",
-  "updated": "2026-11-21T15:42:02Z",
+  "updated": "2026-11-21T15:47:14Z",
   "env_owner": null,
   "waves": [
     {
@@ -2208,8 +2208,8 @@
       "file": "docs/delix/tasks/T069-hooks-finished-marker-cause.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_progress",
-      "pr": null,
+      "status": "in_review",
+      "pr": 97,
       "rounds": 0,
       "cost_usd": null,
       "spec": null,
@@ -2221,7 +2221,7 @@
           "sha": null,
           "verdict": null,
           "at": "2026-11-21T15:19:11Z",
-          "branch": null,
+          "branch": "claude/ecstatic-goldwasser-f25820",
           "session": "delix-t069-bitmi-kart-i"
         }
       ],
