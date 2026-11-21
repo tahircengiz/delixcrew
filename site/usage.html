@@ -89,7 +89,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
     <p>You type the commands in the lead session, in the project's main checkout. The lead proposes the next step at the end of each one; the order is below. Amber steps are your decisions.</p>
   </div>
   <ol class="steps">
-    <li><h3><code>/delixcrew:start &lt;request&gt;</code></h3><p>The lead reads <code>CLAUDE.md</code>, <code>STATUS.md</code> and <code>docs/delix/</code>. It proposes a <strong>size</strong> (S/M/L, process weight) and a <strong>tier</strong> (1/2/3, risk) and sets up <code>docs/delix/</code>. For S a single card is written. For well-described work of size S or M and at most Tier 2, it proposes a single session plus <code>/delixcrew:verify</code> instead of the full flow.</p></li>
+    <li><h3><code>/delixcrew:start &lt;request&gt;</code></h3><p>The lead reads <code>CLAUDE.md</code>, <code>STATUS.md</code> and <code>docs/delix/</code>. It proposes a <strong>size</strong> (S/M/L, process weight) and a <strong>tier</strong> (1/2/3, risk) and sets up <code>docs/delix/</code>. For S a single card is written. For well-described work of size S or M and at most Tier 2, it proposes a single session plus <code>/delixcrew:verify</code> instead of the full flow. Where <code>docs/delix/intake.json</code> exists, <code>/delixcrew:start I&lt;nnn&gt;</code> takes the request from an intake item: only an accepted item with no work yet; it is shown as <code>UNTRUSTED</code> and no file is written before your yes in chat.</p></li>
     <li><h3><code>/delixcrew:spec</code> · size M and L</h3><p>The grill asks one question at a time and adds its recommendation to each. The result is <code>docs/delix/SPEC.md</code>, with requirements in <code>SHALL</code> and <code>WHEN/THEN</code> form. The architect reviews the spec, and security too at Tier 3. For UI work the spec links <code>DESIGN.md</code> or the repo's token file, and produces <code>DESIGN.md</code> when neither exists.</p></li>
     <li class="gate"><h3>Gate 1 · spec approval</h3><p>You approve the spec (the card, for S). For Tier 3 cards you also say an explicit "yes" in chat; the lead writes the <code>**🔐 Approved:** &lt;date&gt; &lt;who&gt;</code> line into the card header and commits it to main.</p></li>
     <li><h3><code>/delixcrew:dispatch</code></h3><p>The architect writes the cards and the wave plan and checks that Files lists do not overlap. Each card gets a dispatch prompt (<code>docs/delix/tasks/T&lt;nnn&gt;.dispatch.md</code>) and you are told how to open its session. At most 3 cards run at once. Tier 1–2 cards open headless with <code>claude -p</code> in a terminal, Tier 3 cards in an interactive session. Once per repository, before the first session, you approve the Stop gate commands in the main checkout from your own terminal: <code>python3 &lt;plugin dir&gt;/scripts/trust.py allow</code>, typing <code>TRUST &lt;hash&gt;</code>.</p></li>
@@ -101,7 +101,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
   <div class="callout ag" style="margin-top:18px">
     <p><strong>Shortcut: <code>/delixcrew:verify &lt;branch|commit|dir&gt;</code>.</strong> It only verifies work done without a card. In order it runs gitleaks, the local tests, a remote isolated unit test (when <code>delix.json</code> has a <code>verify</code> block) and, on request, the full suite with <code>--full</code>. Then qa (plus security at Tier 2 and above) reviews in a single pass; there are no fix rounds. The result is written as ACCEPT or FIX to a <code>docs/delix/verifications/&lt;date&gt;-&lt;name&gt;.md</code> report.</p>
   </div>
-  <p class="src"><b>Source:</b> README.md (Flow) · skills/start, spec, dispatch, implement, review, close, verify (SKILL.md) · scripts/trust.py</p>
+  <p class="src"><b>Source:</b> README.md (Flow) · skills/start, spec, dispatch, implement, review, close, verify, intake (SKILL.md) · scripts/trust.py · scripts/intake.py</p>
 </section>
 
 <section id="commands">
@@ -124,10 +124,11 @@ claude plugin update delixcrew@delixcrew</code></pre>
         <tr><th><code>/delixcrew:status</code></th><td>Any time</td><td>Read-only board: wave, card, role, tier, status, rounds, PR, cost, last report, pending gate. With <code>--write</code> to <code>docs/delix/BOARD.md</code> (not committed). Also works under <code>-p</code>. Below it: leads, agents, what waits on you, what is ready to merge, and the push / merge / cleanup commands, each in its own one-line block for the Run button. Waiting on you and Ready to merge also name who opened each card and its last review round.</td></tr>
         <tr><th><code>/delixcrew:feedback</code></th><td>When the plugin misbehaves</td><td><code>note</code>: writes the problem to a local draft. <code>review</code>: shows the drafts exactly as they would be sent. It never sends anything itself.</td></tr>
         <tr><th><code>/delixcrew:triage</code></th><td>Only in the delixcrew repo, when issues arrive</td><td>Reads issues cleaned; the architect proposes a decision. You decide in chat with the number (<code>accept #12</code>) and publish the comment and labels from your own terminal. Only an issue accepted in triage becomes work through <code>/delixcrew:start #&lt;n&gt;</code>.</td></tr>
+        <tr><th><code>/delixcrew:intake</code></th><td>Only where <code>docs/delix/intake.json</code> exists</td><td><code>add</code>: records a follow-up, a review finding a card did not fix, a close drift finding or, in the delixcrew repo, a feedback draft as an item with its evidence; a new event of the same problem is a new ref on that item. <code>decide</code>: shows each pending item with the decision of the table in <code>scripts/intake.py</code>. You decide in chat with the id (<code>accept I004</code>); an <code>accept</code>, a <code>wontfix</code> or a decision other than the table's is written only then. <code>list</code>: shows the items. Only an accepted item with no work yet becomes work through <code>/delixcrew:start I&lt;nnn&gt;</code>.</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="src"><b>Source:</b> README.md (Flow) · skills/*/SKILL.md (description) · README.md (Triage)</p>
+  <p class="src"><b>Source:</b> README.md (Flow) · skills/*/SKILL.md (description) · README.md (Triage) · skills/intake/SKILL.md · scripts/intake.py</p>
 </section>
 
 <section id="files">
@@ -145,6 +146,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
         <li><code>tasks/T&lt;nnn&gt;-&lt;slug&gt;.md</code>: cards and dispatch prompts</li>
         <li><code>STATE.json</code>: card states, waves, <code>verifications</code> records</li>
         <li><code>verifications/&lt;date&gt;-&lt;name&gt;.md</code>: verify reports</li>
+        <li><code>intake.json</code>: intake items with their refs, evidence, decision, consent and <code>work</code>; only where you asked the lead to set it up from <code>templates/intake.json</code>, not by default</li>
         <li><code>BOARD.md</code>: generated only on request, in <code>.gitignore</code></li>
       </ul>
     </div>
@@ -170,7 +172,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
 }</code></pre>
     <figcaption><strong><code>docs/delix/delix.json</code>, shortened example.</strong> The Stop hook runs only <code>test_command</code> and <code>extra_checks</code>, so the unit tests that can run locally belong here. Every card that touches <code>protected_paths</code> becomes Tier 3. Full template: <a href="https://github.com/tahircengiz/delixcrew/blob/main/templates/delix.json">templates/delix.json</a>.</figcaption>
   </figure>
-  <p class="src"><b>Source:</b> README.md (Files on the project side) · templates/delix.json · templates/report.md</p>
+  <p class="src"><b>Source:</b> README.md (Files on the project side) · templates/delix.json · templates/report.md · templates/intake.json · skills/intake/SKILL.md</p>
 </section>
 
 <section id="feedback">
@@ -181,7 +183,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
   </div>
   <ol class="steps">
     <li><h3>Turn it on in your own terminal</h3><pre><code>python3 &lt;plugin dir&gt;/scripts/feedback.py enable --terms acme,example-corp</code></pre><p>For a marketplace install the script is at <code>~/.claude/plugins/cache/delixcrew/delixcrew/&lt;version&gt;/scripts/feedback.py</code>. <code>--terms</code> adds your own words to redact (customer names, codenames). <code>status</code> shows the state, <code>disable</code> turns it off.</p></li>
-    <li><h3>A draft is created</h3><p>You say <code>/delixcrew:feedback note</code> in chat, or close and review add a draft when one of the three events above happened. A repeated finding raises the draft's count instead of adding a new one.</p></li>
+    <li><h3>A draft is created</h3><p>You say <code>/delixcrew:feedback note</code> in chat, or close and review add a draft when one of the three events above happened. A finding with the same kind (bug or feature), component and title (letter case, punctuation and digits aside) raises the draft's count; a different wording opens a new draft. Only in the delixcrew repository itself (with <code>docs/delix/intake.json</code>) does the lead join the drafts of one problem in one intake item, one ref per draft.</p></li>
     <li><h3>See the full text</h3><p><code>/delixcrew:feedback review</code> shows each draft exactly as it would be published: repo, label, title, body, a <code>VERDICT:</code> and a <code>HASH:</code> line.</p></li>
     <li class="gate"><h3>Approve by id in chat</h3><p>Reply with the id of the draft you want to send: <code>yes F003</code> (or <code>evet F003</code>). A bare "yes", "send all" or an "approved" in a file is not consent. Claude then gives you one command.</p></li>
     <li class="gate"><h3>Send from your own terminal</h3><pre><code>python3 &lt;plugin dir&gt;/scripts/feedback.py send F003 --confirm &lt;hash&gt;</code></pre><p>It prints the text once more and waits for you to type <code>SEND &lt;hash&gt;</code>. If the text changed since the preview, it stops.</p></li>
@@ -196,7 +198,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
       <pre><code>{ "permissions": { "deny": ["Bash(gh issue create:*)", "Bash(gh api:*)"] } }</code></pre>
     </div>
   </div>
-  <p class="src"><b>Source:</b> README.md (Feedback, Data &amp; privacy) · skills/feedback/SKILL.md</p>
+  <p class="src"><b>Source:</b> README.md (Feedback, Data &amp; privacy) · skills/feedback/SKILL.md · scripts/feedback.py · skills/intake/SKILL.md</p>
 </section>
 
 <section id="board">

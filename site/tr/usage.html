@@ -89,7 +89,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
     <p>Komutları projenin ana checkout'unda, ekip lideri oturumunda yazarsın. Ekip lideri her adımın sonunda bir sonrakini önerir; sıra aşağıdaki gibidir. Kehribar renkli adımlar senin kararındır.</p>
   </div>
   <ol class="steps">
-    <li><h3><code>/delixcrew:start &lt;istek&gt;</code></h3><p>Ekip lideri <code>CLAUDE.md</code>, <code>STATUS.md</code> ve <code>docs/delix/</code>'i okur. <strong>Boy</strong> (S/M/L, süreç ağırlığı) ve <strong>kademe</strong> (1/2/3, risk) önerir ve <code>docs/delix/</code> klasörünü kurar. S için tek bir kart yazılır. İyi tarif edilmiş S ya da M boyunda, en çok Tier 2 bir iş için tam akış yerine tek oturum ve <code>/delixcrew:verify</code> önerilir.</p></li>
+    <li><h3><code>/delixcrew:start &lt;istek&gt;</code></h3><p>Ekip lideri <code>CLAUDE.md</code>, <code>STATUS.md</code> ve <code>docs/delix/</code>'i okur. <strong>Boy</strong> (S/M/L, süreç ağırlığı) ve <strong>kademe</strong> (1/2/3, risk) önerir ve <code>docs/delix/</code> klasörünü kurar. S için tek bir kart yazılır. İyi tarif edilmiş S ya da M boyunda, en çok Tier 2 bir iş için tam akış yerine tek oturum ve <code>/delixcrew:verify</code> önerilir. <code>docs/delix/intake.json</code> olan projede <code>/delixcrew:start I&lt;nnn&gt;</code> isteği bir intake öğesinden alır: öğe kabul edilmiş ve henüz işe dönüşmemiş olmalıdır; öğe <code>UNTRUSTED</code> olarak gösterilir ve sohbetteki evet'inden önce hiçbir dosya yazılmaz.</p></li>
     <li><h3><code>/delixcrew:spec</code> · boy M ve L</h3><p>Grill her seferinde tek soru sorar ve her soruya önerisini ekler. Sonuç <code>docs/delix/SPEC.md</code>'dir: gereksinimler <code>SHALL</code> ve <code>WHEN/THEN</code> biçiminde. Spec'i architect inceler, Tier 3'te security de. UI işinde spec <code>DESIGN.md</code>'ye ya da reponun token dosyasına bağlanır; ikisi de yoksa <code>DESIGN.md</code> üretilir.</p></li>
     <li class="gate"><h3>Kapı 1 · spec onayı</h3><p>Spec'i (S'de kartı) sen onaylarsın. Tier 3 kartlar için ayrıca sohbette açıkça "evet" dersin; ekip lideri kartın başına <code>**🔐 Approved:** &lt;tarih&gt; &lt;kim&gt;</code> satırını yazar ve main'e commit eder.</p></li>
     <li><h3><code>/delixcrew:dispatch</code></h3><p>architect kartları ve wave planını yazar, Files listelerinin çakışmadığını denetler. Her kart için bir dispatch prompt'u (<code>docs/delix/tasks/T&lt;nnn&gt;.dispatch.md</code>) üretilir ve oturumun nasıl açılacağı söylenir. Aynı anda en çok 3 kart çalışır. Tier 1–2 kartlar terminalde headless <code>claude -p</code> ile, Tier 3 kartlar etkileşimli bir oturumda açılır. Her repoda bir kez, ilk oturumdan önce, Stop gate komutlarını ana checkout'ta kendi terminalinden onaylarsın: <code>python3 &lt;plugin dir&gt;/scripts/trust.py allow</code>, sonra <code>TRUST &lt;hash&gt;</code> yazarak.</p></li>
@@ -101,7 +101,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
   <div class="callout ag" style="margin-top:18px">
     <p><strong>Kısa yol: <code>/delixcrew:verify &lt;dal|commit|dizin&gt;</code>.</strong> Kartsız yapılmış bir işi yalnız doğrular. Sırasıyla gitleaks, yerel testler, uzak ve izole bir unit test (<code>delix.json</code>'da <code>verify</code> bloğu varsa), istenirse <code>--full</code> ile tam suite koşar. Sonra qa (Tier 2 ve üstünde security de) tek geçişte inceler; düzeltme turu yoktur. Sonuç <code>docs/delix/verifications/&lt;tarih&gt;-&lt;ad&gt;.md</code> raporuna ACCEPT ya da FIX olarak yazılır.</p>
   </div>
-  <p class="src"><b>Kaynak:</b> README.md (Flow) · skills/start, spec, dispatch, implement, review, close, verify (SKILL.md) · scripts/trust.py</p>
+  <p class="src"><b>Kaynak:</b> README.md (Flow) · skills/start, spec, dispatch, implement, review, close, verify, intake (SKILL.md) · scripts/trust.py · scripts/intake.py</p>
 </section>
 
 <section id="komutlar">
@@ -124,10 +124,11 @@ claude plugin update delixcrew@delixcrew</code></pre>
         <tr><th><code>/delixcrew:status</code></th><td>Her zaman</td><td>Salt-okunur pano: wave, kart, rol, tier, durum, tur, PR, maliyet, son rapor, bekleyen kapı. <code>--write</code> ile <code>docs/delix/BOARD.md</code> (commit edilmez). <code>-p</code> altında da çalışır. Altında: lead'ler, ajanlar, seni bekleyenler, merge'e hazır olanlar ve push / merge / temizlik komutları, her biri Run düğmesi için kendi tek satırlık bloğunda. Seni bekleyenler ve merge'e hazır olanlar her kartı kimin açtığını ve son inceleme turunu da gösterir.</td></tr>
         <tr><th><code>/delixcrew:feedback</code></th><td>Plugin hata yapınca</td><td><code>note</code>: sorunu yerel taslağa yazar. <code>review</code>: taslakları gönderilecekleri haliyle gösterir. Kendisi hiçbir şey göndermez.</td></tr>
         <tr><th><code>/delixcrew:triage</code></th><td>Yalnız delixcrew reposunda, issue gelince</td><td>Issue'ları temizleyerek okur; architect bir karar önerir. Kararı sen sohbette numarasıyla verirsin (<code>accept #12</code>); yorum ve etiketi kendi terminalinde yayımlarsın. Yalnız triage'da kabul edilen issue <code>/delixcrew:start #&lt;n&gt;</code> ile işe dönüşür.</td></tr>
+        <tr><th><code>/delixcrew:intake</code></th><td>Yalnız <code>docs/delix/intake.json</code> olan projede</td><td><code>add</code>: bir takip işini, kartın düzeltmediği bir inceleme bulgusunu, bir close drift bulgusunu ya da delixcrew reposunda bir geri bildirim taslağını kanıtıyla birlikte öğe olarak kaydeder; aynı sorunun yeni olayı o öğeye yeni bir ref olur. <code>decide</code>: bekleyen her öğeyi <code>scripts/intake.py</code>'deki tablonun kararıyla gösterir. Kararı sen sohbette id ile verirsin (<code>accept I004</code>); <code>accept</code>, <code>wontfix</code> ya da tablodan farklı bir karar ancak o zaman yazılır. <code>list</code>: öğeleri gösterir. Yalnız kabul edilmiş ve henüz işe dönüşmemiş öğe <code>/delixcrew:start I&lt;nnn&gt;</code> ile işe dönüşür.</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="src"><b>Kaynak:</b> README.md (Flow) · skills/*/SKILL.md (description) · README.md (Triage)</p>
+  <p class="src"><b>Kaynak:</b> README.md (Flow) · skills/*/SKILL.md (description) · README.md (Triage) · skills/intake/SKILL.md · scripts/intake.py</p>
 </section>
 
 <section id="dosyalar">
@@ -145,6 +146,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
         <li><code>tasks/T&lt;nnn&gt;-&lt;slug&gt;.md</code>: kartlar ve dispatch prompt'ları</li>
         <li><code>STATE.json</code>: kart durumları, wave'ler, <code>verifications</code> kayıtları</li>
         <li><code>verifications/&lt;tarih&gt;-&lt;ad&gt;.md</code>: verify raporları</li>
+        <li><code>intake.json</code>: ref'leri, kanıtı, kararı, onayı ve <code>work</code> alanıyla intake öğeleri; yalnız ekip liderinden istediğin projede <code>templates/intake.json</code>'dan kurulur, varsayılan olarak yoktur</li>
         <li><code>BOARD.md</code>: yalnız istenince üretilir, <code>.gitignore</code>'da</li>
       </ul>
     </div>
@@ -170,7 +172,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
 }</code></pre>
     <figcaption><strong><code>docs/delix/delix.json</code>, kısaltılmış örnek.</strong> Stop hook yalnız <code>test_command</code> ve <code>extra_checks</code>'i koşar; bu yüzden yerelde çalışabilen unit testler burada olmalı. <code>protected_paths</code>'e dokunan her kart Tier 3 olur. Tam şablon: <a href="https://github.com/tahircengiz/delixcrew/blob/main/templates/delix.json">templates/delix.json</a>.</figcaption>
   </figure>
-  <p class="src"><b>Kaynak:</b> README.md (Files on the project side) · templates/delix.json · templates/report.md</p>
+  <p class="src"><b>Kaynak:</b> README.md (Files on the project side) · templates/delix.json · templates/report.md · templates/intake.json · skills/intake/SKILL.md</p>
 </section>
 
 <section id="feedback">
@@ -181,7 +183,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
   </div>
   <ol class="steps">
     <li><h3>Kendi terminalinde aç</h3><pre><code>python3 &lt;plugin dizini&gt;/scripts/feedback.py enable --terms acme,example-corp</code></pre><p>Marketplace kurulumunda betik <code>~/.claude/plugins/cache/delixcrew/delixcrew/&lt;sürüm&gt;/scripts/feedback.py</code>'dedir. <code>--terms</code>, temizlenecek kendi kelimelerini ekler (müşteri adı, kod adı). <code>status</code> durumu gösterir, <code>disable</code> kapatır.</p></li>
-    <li><h3>Taslak oluşur</h3><p>Sohbette <code>/delixcrew:feedback note</code> dersin ya da close ve review yukarıdaki üç durumdan biri olunca taslak ekler. Aynı bulgu tekrar ederse yeni taslak açılmaz, sayaç artar.</p></li>
+    <li><h3>Taslak oluşur</h3><p>Sohbette <code>/delixcrew:feedback note</code> dersin ya da close ve review yukarıdaki üç durumdan biri olunca taslak ekler. Türü (bug ya da feature), bileşeni ve başlığı (büyük-küçük harf, noktalama ve rakam farkı sayılmaz) aynı olan bulgu yeni taslak açmaz, taslağın sayacını artırır; farklı ifade yeni taslak açar. Ekip lideri aynı sorunun taslaklarını yalnız delixcrew reposunun kendisinde (<code>docs/delix/intake.json</code> varken) tek bir intake öğesinde birleştirir; her taslak bir ref olur.</p></li>
     <li><h3>Tam metni gör</h3><p><code>/delixcrew:feedback review</code> her taslağı yayımlanacağı haliyle gösterir: repo, etiket, başlık, gövde, <code>VERDICT:</code> ve <code>HASH:</code> satırı.</p></li>
     <li class="gate"><h3>Sohbette id ile onayla</h3><p>Göndermek istediğin taslağın id'sini yaz: <code>yes F003</code> (ya da <code>evet F003</code>). Çıplak "evet", "hepsini gönder" ya da bir dosyadaki "approved" onay sayılmaz. Claude sana tek satırlık komutu verir.</p></li>
     <li class="gate"><h3>Kendi terminalinde gönder</h3><pre><code>python3 &lt;plugin dizini&gt;/scripts/feedback.py send F003 --confirm &lt;hash&gt;</code></pre><p>Komut metni bir kez daha basar ve <code>SEND &lt;hash&gt;</code> yazmanı bekler. Metin preview'dan sonra değiştiyse durur.</p></li>
@@ -196,7 +198,7 @@ claude plugin update delixcrew@delixcrew</code></pre>
       <pre><code>{ "permissions": { "deny": ["Bash(gh issue create:*)", "Bash(gh api:*)"] } }</code></pre>
     </div>
   </div>
-  <p class="src"><b>Kaynak:</b> README.md (Feedback, Data &amp; privacy) · skills/feedback/SKILL.md</p>
+  <p class="src"><b>Kaynak:</b> README.md (Feedback, Data &amp; privacy) · skills/feedback/SKILL.md · scripts/feedback.py · skills/intake/SKILL.md</p>
 </section>
 
 <section id="board">

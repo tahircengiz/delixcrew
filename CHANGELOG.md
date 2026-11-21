@@ -2,6 +2,35 @@
 
 Earlier versions: git history and the [v0.2.0 release](https://github.com/tahircengiz/delixcrew/releases/tag/v0.2.0).
 
+## Unreleased
+
+- **The intake record and its read-only checker** (K402, K414–K417, K420, K421, K425–K427, K433; #95):
+  `scripts/intake.py check | list [--pending] | show I<nnn> [--require accepted]` reads `docs/delix/intake.json`
+  (a missing file is an empty record) and writes no file. `check` exits 2 on a shape error (including a `title` or
+  `reason` that fails the public text filter) and 8 on a rule: a `basis: table` decision that differs from the
+  code table; an `accept`, a `wontfix`, a decision on a `gate_open` item or a maintainer decision without consent;
+  a consent whose decision, table result or event count (`len(refs)`) no longer matches; a `gate_open` item with
+  neither `work` nor `covered_by`. `show --require accepted` exits 8 unless the item is accepted, follows the
+  rules and has no `work`. With a feedback queue on the machine the filter also uses its terms, and it fails
+  closed (exit 2) when the queue cannot be read. `templates/intake.json` is the empty record;
+  `tests/intake_tests.sh` runs the cases and, when the repository has a record, requires exit 0 from its `check`.
+- **`/delixcrew:intake` and four entry points** (K401, K405–K409, K415, K418, K419, K425; #94): where
+  `docs/delix/intake.json` exists, the new skill `/delixcrew:intake [add|decide|list]` keeps the record.
+  `add` writes an item with its evidence, and a new event of the same problem becomes a new ref on that item.
+  `decide` shows each pending item with the table's decision and asks for `<decision> I<nnn>` in chat;
+  an `accept`, a `wontfix`, a decision on a `gate_open` item and a decision other than the table's are written
+  only with that consent, while a `duplicate`, `defer` or `needs-info` that the table gives needs none.
+  `/delixcrew:start I<nnn>` takes only an accepted item with no `work`, shows it as `UNTRUSTED` and writes
+  nothing before the user's yes in chat. Review findings a card did not fix and close drift findings become work
+  only as intake items, and so does a feedback draft in the delixcrew repository; a security finding stays in an
+  out-of-repo note until it is fixed. Projects without the file work as before.
+- **README, README.tr and the site name the intake step** (K408, K415): the Flow and Files sections of both
+  READMEs and the usage page's first job, commands and project files name `/delixcrew:intake`,
+  `/delixcrew:start I<nnn>` and `docs/delix/intake.json`, which exists only where the user asked for it. The
+  Feedback flow now says which finding raises a draft's count: the same kind, component and title (letter case,
+  punctuation and digits aside); a different wording opens a new draft, and only in the delixcrew repository are
+  the drafts of one problem joined in one intake item. The index lists the record among what the lead writes.
+
 ## 0.7.4 — 2026-11-20
 
 - **The write gate denies writes to the card worktree's `.git`** (🔐 K358, K359, K360; #91): in a card worktree
