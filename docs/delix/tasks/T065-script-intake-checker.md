@@ -261,3 +261,16 @@ Read only this card and spec §3–§6 and its K list.
     `origin_terms` traceback is at `scripts/feedback.py:523`. These are lead follow-ups.
   - Not for this card (security unsure, spec level): K417 has no secret pattern check. The lead writes `title` and
     `reason`, and the record's `check` runs in CI. Lead follow-up.
+- **Round 2** (PR #95, same branch @ `469f0bee18e4795617362c96bf3d3dd69593099a`, 2026-11-21; fix round 1 commit
+  `469f0be` on `7d1c2dd`):
+  - Deterministic gates:
+    - read from the branch commit: sha256 prefixes `scripts/intake.py` `12663da762e0`, `tests/intake_tests.sh`
+      `b8ca3f928f87`, equal to the lead's prototype; only the three Files paths;
+    - the lead's run on an export of the commit: 34 `✔`, 0 `✘`, `ALL PASSED` on 3.9.6 and 3.13.13; the six round-1
+      queue cases now give exit 2 with the G1 line, and an empty queue gives exit 0; with a failing `mktemp` the test
+      exits 1 and the canary file stays;
+    - the Stop gate ends `[exit 0]`, 19 `ALL PASSED`, 0 `✘`; CI `check` and `test` pass.
+  - qa: ACCEPT. G1 to G3 fixed as required; no findings.
+  - security: CLEAN. G1 to G3 fixed; no findings; gitleaks clean on the diff and the three files.
+    - Unsure (no fix): a falsy non-list `origin_terms` (`0`, `""`, `false`, `{}`) counts as empty; no term string is
+      lost. A queue directory that is a dangling symlink counts as no queue, as the queue module itself does.
