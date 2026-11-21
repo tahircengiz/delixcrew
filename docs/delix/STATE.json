@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/F-intake-decisions.md",
   "size": "M",
-  "updated": "2026-11-21T14:52:31Z",
+  "updated": "2026-11-21T14:56:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -2129,7 +2129,7 @@
       "file": "docs/delix/tasks/T067-docs-intake-step.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 96,
       "rounds": 0,
       "cost_usd": null,
@@ -2161,7 +2161,12 @@
           "verdict": "CLEAN",
           "at": "2026-11-21T14:52:31Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "21541cd78893c518f3b63815d4574d9f7cfd3c6a",
+        "head": "c5d0aec6e82192def3fd0ee5ef694189eed6f0af",
+        "at": "2026-11-21T14:54:55Z"
+      }
     }
   },
   "status_values": [
