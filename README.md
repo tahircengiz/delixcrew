@@ -75,6 +75,7 @@ claude plugin install delix-board@delixcrew
 | shortcut | `/delixcrew:verify <branch\|commit\|dir>` | **Only verifies** work done without a card (a single session or you) (K43): gitleaks, local tests, a remote **isolated** unit test (separate directory + separate image, never touches the live stack), `--full` on request; `qa` (+ `security`) in a **single pass**, no fix rounds → a `docs/delix/verifications/<date>-<name>.md` report (ACCEPT / FIX, 🔐) and `STATE.json.verifications`. For S/M + well-described + Tier ≤ 2 work, `/delixcrew:start` proposes this; the full flow is for Tier 3 / parallel cards / an unclear spec. |
 | any time | `/delixcrew:status` | Read-only board: wave · card · role · tier · status · rounds · PR · cost · last report · pending gate (🔐, merge) table in the chat; on request (`--write`) to `docs/delix/BOARD.md` (not committed). Below it: Leads, Agents, Waiting on you, Ready to merge and Git actions; Agents, Waiting on you and Ready to merge name who opened each card and its last review round; each push / merge / cleanup command in its own one-line `bash` block for Desktop's Run button. You run them; the status skill tells the lead never to run them, and no hook enforces that (see [Known limits](#known-limits)). |
 | issues | `/delixcrew:triage [#n]` | In the delixcrew repo: reads incoming issues cleaned, the read-only `architect` checks each one and proposes a decision; after your `<decision> #<n>` in chat it records it and shows the exact comment; you publish it from your own terminal. See [Triage](#triage). |
+| intake | `/delixcrew:intake [add\|decide\|list]` | Only where `docs/delix/intake.json` exists (set up only when you ask): follow-ups, review findings a card did not fix, close drift and, in the delixcrew repo, feedback drafts wait there as items with their evidence; a new event of the same problem is a new ref on its item. `decide` shows each pending item with the decision of the table in `scripts/intake.py`; an `accept`, a `wontfix` or a decision other than the table's is written only after your `<decision> I<nnn>` in chat, the lead writes that consent, and `intake.py check` fails when the decision, the table's result or the number of refs changes after it. `/delixcrew:start I<nnn>` takes only an accepted item with no work yet, shows it as `UNTRUSTED` and writes no file before your yes in chat. |
 
 ## Roles
 
@@ -92,8 +93,10 @@ claude plugin install delix-board@delixcrew
 `docs/delix/delix.json` (test command, protected paths, test paths, max parallel, the `verify` remote isolated-run block),
 `docs/delix/SPEC.md`, `docs/delix/tasks/T<nnn>-<slug>.md`, `docs/delix/STATE.json` (cards with their `agents` ledger and `merged` record + `verifications` records),
 `docs/delix/verifications/<date>-<name>.md|.patch` (`/delixcrew:verify` report and patch), `docs/delix/BOARD.md` (generated only
-on request, in `.gitignore`). In the implementer worktree: `.delix/card` (activates the hooks), `.delix/report.md`,
-`.delix/test-result.txt`, `.delix/evidence/`.
+on request, in `.gitignore`) and `docs/delix/intake.json` (the intake items with their refs, evidence, decision,
+basis, reason, consent and `work`, checked by `scripts/intake.py check`; only where you asked the lead to set it
+up from `templates/intake.json`, not by default). In the implementer worktree: `.delix/card`
+(activates the hooks), `.delix/report.md`, `.delix/test-result.txt`, `.delix/evidence/`.
 
 ## What this plugin does on your machine
 
@@ -225,8 +228,10 @@ file as it is: fix or remove it, or give the terms again with `enable --terms`. 
 
 **Flow.**
 1. A draft is created by `/delixcrew:feedback note` (a finding from the current conversation), or by `/delixcrew:close`
-   and `/delixcrew:review` when one of the three events above happened. A repeated finding raises the draft's count
-   instead of adding a new one.
+   and `/delixcrew:review` when one of the three events above happened. A finding with the same kind (bug or
+   feature), component and title (letter case, punctuation and digits aside) raises the draft's count; a different
+   wording opens a new draft. Only in the delixcrew repository itself (with `docs/delix/intake.json`)
+   does the lead join the drafts of one problem in one intake item, one ref per draft (`/delixcrew:intake add`).
 2. `/delixcrew:feedback review` shows each draft **exactly** as it would be published (repo, label, title, body), with a
    `VERDICT:` and a `HASH:` line.
 3. To send a draft, reply in chat with its id: `yes F003` (or `evet F003`). A bare "yes", "send all" or "approved" in a

@@ -182,7 +182,7 @@
     <table class="mx">
       <thead><tr><th>Bileşen</th><th>Okur</th><th>Yazar</th><th>Sınırı koyan</th></tr></thead>
       <tbody>
-        <tr><th>Ekip lideri</th><td><code>CLAUDE.md</code>, <code>STATUS.md</code>, <code>docs/delix/*</code>, rapor, diff, <code>gh pr checks</code></td><td><code>SPEC.md</code>, kartlar, <code>*.dispatch.md</code>, <code>STATE.json</code>, verifications, metrics, feedback taslağı</td><td>Skill metni: kod yazmaz, kartı kendisi yapmaz, merge etmez</td></tr>
+        <tr><th>Ekip lideri</th><td><code>CLAUDE.md</code>, <code>STATUS.md</code>, <code>docs/delix/*</code>, rapor, diff, <code>gh pr checks</code></td><td><code>SPEC.md</code>, kartlar, <code>*.dispatch.md</code>, <code>STATE.json</code>, verifications, metrics, feedback taslağı, intake kaydı (<code>docs/delix/intake.json</code> olan projede)</td><td>Skill metni: kod yazmaz, kartı kendisi yapmaz, merge etmez</td></tr>
         <tr><th>Uygulayıcı</th><td>Kart, SPEC'te kartın REQ bölümü, <code>delix.json</code>, rol notu</td><td>Files listesindeki kod, yeni testler, <code>.delix/*</code>, commit, PR</td><td>write_gate, bash_gate, Stop gate (yalnız yerel <code>.delix/card</code> varsa)</td></tr>
         <tr><th>architect</th><td>SPEC, repo, kartlar</td><td>Hiçbir dosya; kartları ve wave planını metin olarak döndürür</td><td><code>tools: Read, Grep, Glob</code> + hook</td></tr>
         <tr><th>qa</th><td>Diff, kart, SPEC, test çıktısı</td><td>Hiçbir dosya; <code>ACCEPT</code> · <code>ACCEPT_WITH_NOTES</code> · <code>REJECT</code> · <code>ESCALATE</code></td><td><code>tools: Read, Grep, Glob</code> + hook</td></tr>
@@ -191,7 +191,7 @@
       </tbody>
     </table>
   </div>
-  <p class="src"><b>Kaynak:</b> README.md (Roles, Files on the project side) · agents/*.md · skills/implement/SKILL.md §0 · scripts/write_gate.py · scripts/bash_gate.py</p>
+  <p class="src"><b>Kaynak:</b> README.md (Roles, Files on the project side) · agents/*.md · skills/implement/SKILL.md §0 · scripts/write_gate.py · scripts/bash_gate.py · skills/intake/SKILL.md</p>
 </section>
 
 <section id="akis">

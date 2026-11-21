@@ -75,6 +75,7 @@ claude plugin install delix-board@delixcrew
 | kısa yol | `/delixcrew:verify <dal\|commit\|dizin>` | Kartsız yapılmış işi (tek oturum ya da sen) **yalnız doğrular** (K43): gitleaks, yerel test, uzak **izole** birim testi (ayrı dizin + ayrı imaj, canlı stack'e dokunmaz), istenirse `--full`; `qa` (+ `security`) **tek geçiş**, düzeltme turu yok → `docs/delix/verifications/<tarih>-<ad>.md` raporu (ACCEPT / FIX, 🔐) ve `STATE.json.verifications`. S/M + iyi tarif + Tier ≤ 2 işte `/delixcrew:start` bunu önerir; tam akış Tier 3 / paralel kart / belirsiz spec'e. |
 | her an | `/delixcrew:status` | Salt-okunur pano: wave · kart · rol · tier · status · tur · PR · maliyet · son rapor · bekleyen kapı (🔐, merge) tablosu sohbete; istenirse (`--write`) `docs/delix/BOARD.md`'ye (git'e girmez). Altında Leads, Agents, Waiting on you, Ready to merge ve Git actions bölümleri; Agents, Waiting on you ve Ready to merge her kartı kimin açtığını ve son inceleme turunu gösterir; her push / merge / temizlik komutu Desktop'un Run düğmesi için kendi tek satırlık `bash` bloğunda. Komutları sen çalıştırırsın; status skill'i lead'e onları hiç çalıştırmamasını söyler, bunu bir hook zorlamaz (bkz. [Bilinen sınırlar](#bilinen-sınırlar)). |
 | issue'lar | `/delixcrew:triage [#n]` | delixcrew reposunda: gelen issue'ları temizlenmiş okur, salt-okunur `architect` her birini kontrol edip bir karar önerir; sohbette `<karar> #<n>` yazınca kaydeder ve yayınlanacak yorumu aynen gösterir; yayını siz kendi terminalinizden yaparsınız. Bkz. [Triage](#triage). |
+| intake | `/delixcrew:intake [add\|decide\|list]` | Yalnız `docs/delix/intake.json` olan projede (siz isteyince kurulur): takip işleri, kartın düzeltmediği inceleme bulguları, close'un drift bulguları ve delixcrew reposunda geri bildirim taslakları kanıtlarıyla birer öğe olarak orada bekler; aynı sorunun yeni olayı kendi öğesine yeni bir ref olur. `decide` bekleyen her öğeyi `scripts/intake.py`'deki tablonun verdiği kararla gösterir; `accept`, `wontfix` ya da tablodan farklı bir karar ancak sohbette `<karar> I<nnn>` yazmanızdan sonra yazılır, bu onayı ekip lideri yazar ve sonra karar, tablonun sonucu ya da ref sayısı değişirse `intake.py check` hata verir. `/delixcrew:start I<nnn>` yalnız kabul edilmiş ve henüz işe dönüşmemiş öğeyi alır, onu `UNTRUSTED` olarak gösterir ve sohbetteki evet'inizden önce hiçbir dosya yazmaz. |
 
 ## Roller
 
@@ -92,8 +93,10 @@ claude plugin install delix-board@delixcrew
 `docs/delix/delix.json` (test komutu, korunan yollar, test yolları, paralel üst sınır, `verify` uzak izole koşu bloğu),
 `docs/delix/SPEC.md`, `docs/delix/tasks/T<nnn>-<slug>.md`, `docs/delix/STATE.json` (`agents` kaydı ve `merged` kaydıyla kartlar + `verifications` kayıtları),
 `docs/delix/verifications/<tarih>-<ad>.md|.patch` (`/delixcrew:verify` raporu ve yaması), `docs/delix/BOARD.md` (yalnız istenince
-üretilir, `.gitignore`'da). Uygulayıcı worktree'sinde `.delix/card` (hook'ları aktifleştirir), `.delix/report.md`,
-`.delix/test-result.txt`, `.delix/evidence/`.
+üretilir, `.gitignore`'da) ve `docs/delix/intake.json` (ref'leri, kanıtı, kararı, dayanağı, gerekçesi, onayı ve
+`work` alanıyla intake öğeleri; `scripts/intake.py check` denetler; yalnız ekip liderinden istediğiniz projede
+`templates/intake.json`'dan kurulur, varsayılan olarak yoktur). Uygulayıcı worktree'sinde `.delix/card`
+(hook'ları aktifleştirir), `.delix/report.md`, `.delix/test-result.txt`, `.delix/evidence/`.
 
 ## Bu plugin makinende ne yapar
 
@@ -227,7 +230,10 @@ silin, veya terimleri `enable --terms` ile yeniden verin. Kapalıyken hiçbir ş
 
 **Akış.**
 1. Taslağı `/delixcrew:feedback note` (bu sohbetteki bir bulgu) ya da yukarıdaki üç olaydan biri yaşandıysa
-   `/delixcrew:close` ve `/delixcrew:review` oluşturur. Tekrarlanan bulgu yeni taslak açmaz, sayacı artırır.
+   `/delixcrew:close` ve `/delixcrew:review` oluşturur. Türü (bug ya da feature), bileşeni ve başlığı (büyük-küçük
+   harf, noktalama ve rakam farkı sayılmaz) aynı olan bulgu yeni taslak açmaz, taslağın sayacını artırır; farklı
+   ifade yeni taslak açar. Ekip lideri aynı sorunun taslaklarını yalnız delixcrew reposunun kendisinde
+   (`docs/delix/intake.json` varken) bir intake öğesinde birleştirir (her taslak bir ref; `/delixcrew:intake add`).
 2. `/delixcrew:feedback review` her taslağı yayınlanacağı haliyle **aynen** gösterir (repo, label, başlık, gövde);
    `VERDICT:` ve `HASH:` satırlarıyla.
 3. Göndermek için sohbette kimliğiyle cevap verin: `evet F003` (ya da `yes F003`). Kimliksiz "evet", "hepsini gönder" ya

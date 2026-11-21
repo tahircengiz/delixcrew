@@ -182,7 +182,7 @@
     <table class="mx">
       <thead><tr><th>Component</th><th>Reads</th><th>Writes</th><th>Limited by</th></tr></thead>
       <tbody>
-        <tr><th>Lead</th><td><code>CLAUDE.md</code>, <code>STATUS.md</code>, <code>docs/delix/*</code>, report, diff, <code>gh pr checks</code></td><td><code>SPEC.md</code>, cards, <code>*.dispatch.md</code>, <code>STATE.json</code>, verifications, metrics, feedback draft</td><td>Skill text: writes no code, does no card itself, does not merge</td></tr>
+        <tr><th>Lead</th><td><code>CLAUDE.md</code>, <code>STATUS.md</code>, <code>docs/delix/*</code>, report, diff, <code>gh pr checks</code></td><td><code>SPEC.md</code>, cards, <code>*.dispatch.md</code>, <code>STATE.json</code>, verifications, metrics, feedback draft, the intake record (where <code>docs/delix/intake.json</code> exists)</td><td>Skill text: writes no code, does no card itself, does not merge</td></tr>
         <tr><th>Implementer</th><td>The card, its REQ section in SPEC, <code>delix.json</code>, role note</td><td>Code in the Files list, new tests, <code>.delix/*</code>, commit, PR</td><td>write_gate, bash_gate, Stop gate (only when a local <code>.delix/card</code> exists)</td></tr>
         <tr><th>architect</th><td>SPEC, repo, cards</td><td>No files; returns the cards and the wave plan as text</td><td><code>tools: Read, Grep, Glob</code> + hook</td></tr>
         <tr><th>qa</th><td>Diff, card, SPEC, test output</td><td>No files; <code>ACCEPT</code> · <code>ACCEPT_WITH_NOTES</code> · <code>REJECT</code> · <code>ESCALATE</code></td><td><code>tools: Read, Grep, Glob</code> + hook</td></tr>
@@ -191,7 +191,7 @@
       </tbody>
     </table>
   </div>
-  <p class="src"><b>Source:</b> README.md (Roles, Files on the project side) · agents/*.md · skills/implement/SKILL.md §0 · scripts/write_gate.py · scripts/bash_gate.py</p>
+  <p class="src"><b>Source:</b> README.md (Roles, Files on the project side) · agents/*.md · skills/implement/SKILL.md §0 · scripts/write_gate.py · scripts/bash_gate.py · skills/intake/SKILL.md</p>
 </section>
 
 <section id="flow">
