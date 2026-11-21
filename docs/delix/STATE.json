@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/F-intake-decisions.md",
   "size": "M",
-  "updated": "2026-11-21T15:19:11Z",
+  "updated": "2026-11-21T15:36:49Z",
   "env_owner": null,
   "waves": [
     {
@@ -204,6 +204,13 @@
         "T062"
       ],
       "note": "Spec E close drift (STATUS \u00a715 A\u00e7\u0131k i\u015f), size S, gate 1 = card approval. Tier 2 docs: README, README.tr, four site pages, skills/implement/SKILL.md; 21 anchors on 56c4d6d (architect critique round 1 FIX, all findings handled, K373). The lead's independent applier gives the after sha256s (site_tests 23, 41 greps in bash and zsh, 19 suites pass). K371 measured by the lead (hooks run from the checkout); spec text, gitleaks evals/ path, CHANGELOG long lines and impeccable flags out of scope (K372); bash_gate redirect check is a separate Tier 3 follow-up (K374)."
+    },
+    {
+      "wave": 32,
+      "cards": [
+        "T063"
+      ],
+      "note": "K374 follow-up (STATUS \u00a715 K374, K376-K379), size S, gate 1 = card approval. Tier 3 backend: scripts/bash_gate.py W1 (lines 118-120) and new tests/redirect_gate_tests.sh; anchors from the lead's prototype on 2e8a09a; the write forms, W1 text and test file are in a private brief appended to the dispatch prompt, not in the repo (K378). A release card follows."
     },
     {
       "wave": 34,
@@ -2029,6 +2036,16 @@
         "head": "09d96e6ee0bea2fe1c58e5754b506b5aae273f6d",
         "at": "2026-11-20T20:36:02Z"
       }
+    },
+    "T063": {
+      "file": "docs/delix/tasks/T063-hooks-bash-protected-write-forms.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": null
     },
     "T065": {
       "file": "docs/delix/tasks/T065-script-intake-checker.md",
