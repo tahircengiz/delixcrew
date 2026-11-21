@@ -50,4 +50,10 @@ denies it anyway (`delixcrew: feedback is sent only by the user from their own t
      Run this in your own terminal, not through me. It shows the text again and asks you to type `SEND <HASH>`.
 6. `drop F<nnn>` from the user in chat: run `feedback.py drop F<nnn>` and show its output.
 
+## Intake (delixcrew repository only)
+Where `docs/delix/intake.json` exists and the `name` in the project root's `.claude-plugin/plugin.json` is
+`delixcrew` (K408), a draft becomes work only as an intake item with the ref `F<nnn>` (`/delixcrew:intake add`;
+a new event of the same problem is a new ref on the existing item). For a draft that is in the record, offer
+the user `drop F<nnn>` (step 6, K407). Elsewhere drafts reach work through the review steps above and triage.
+
 Reply in the user's language; keep the ids, `VERDICT`/`HASH` lines and commands as written.

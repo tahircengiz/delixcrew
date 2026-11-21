@@ -54,6 +54,10 @@ that the reviewers' diff was made from; never 7 characters, never re-read after 
 ## 3. Process the findings
 - Only P0/P1 (and Critical/High/Medium security) ask for a fix; P2s are noted on the card, no fix ("do not fix every
   finding").
+- Where `docs/delix/intake.json` exists (K415, K419): every finding this card does not fix (a qa P2,
+  a security Low, an off-card or pre-existing finding of any severity) becomes work only as an intake item
+  (`/delixcrew:intake add`, ref `T<nnn>.R<round>[.<n>]`); do not propose a follow-up card. A security finding of
+  any severity takes the intake skill's `gate_open` route (K418).
 - Write the findings to the card's `## Review findings` section with the round number; `STATE.json` → `fixing`,
   `rounds += 1`.
 - Send the fix to the **implementer session** (`SendMessage` / a message to the session, or re-issue the dispatch); do not

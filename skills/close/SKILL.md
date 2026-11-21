@@ -27,7 +27,9 @@ Whatever was not measured is written as "not measured".
 
 ## 3. Drift check
 `Agent` with `delixcrew:architect`: compare the SPEC with the merged code, list unimplemented REQs and behaviour not in the
-spec. Size L with EGM: `egm-drift-report`. Findings go to STATUS "Open work".
+spec. Size L with EGM: `egm-drift-report`. Findings go to STATUS "Open work". Where `docs/delix/intake.json` exists
+(K415), each drift finding is an intake item (`/delixcrew:intake add`, ref `<spec letter>.close.<n>`) and STATUS
+"Open work" lists the item ids (`I<nnn>`).
 
 ## 4. Docs and memory
 - Update `STATUS.md` (phase, steps, decisions), `CHANGELOG.md`; the affected README section.
