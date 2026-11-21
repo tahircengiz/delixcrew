@@ -652,10 +652,15 @@
         "reproduced": "main@8a5fc08",
         "covered_by": null
       },
-      "decision": null,
-      "basis": null,
-      "reason": null,
-      "consent": null,
+      "decision": "accept",
+      "basis": "table",
+      "reason": "The skill's description is wrong on main: the body lets the lead write a table-given duplicate, defer or needs-info with no consent (K401).",
+      "consent": {
+        "decision": "accept",
+        "table": "accept",
+        "events": 1,
+        "at": "2026-11-21T11:41:59Z"
+      },
       "work": null
     },
     {
