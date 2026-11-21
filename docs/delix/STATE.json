@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/F-intake-decisions.md",
   "size": "M",
-  "updated": "2026-11-21T14:56:00Z",
+  "updated": "2026-11-21T15:15:40Z",
   "env_owner": null,
   "waves": [
     {
@@ -219,6 +219,13 @@
         "T067"
       ],
       "note": "Spec F wave 2 (K413, K424): T067 Tier 2 docs (REQ-7): README, README.tr, four site pages, CHANGELOG Unreleased with three items whose first lines T068 anchors on; 27 anchors by architect job B on d2528d4; the lead's independent applier gives the after sha256s (site_tests 23, 39 greps). Lead step in the same wave: the REQ-8 seed docs/delix/intake.json (2e8a09a, 31 items; I002 accept by the maintainer, 8a5fc08). T068 (release, wave 36) is written after T067 merges and after the parallel lead's T064."
+    },
+    {
+      "wave": 37,
+      "cards": [
+        "T069"
+      ],
+      "note": "intake I002 (F033, accepted by the maintainer), size S, gate 1 = card approval (2026-11-21), outside Spec F. T069 \ud83d\udd10 Tier 3 backend (scripts/common.py, scripts/write_gate.py): the MARKER_DENY message gains one Cause sentence (H1 record without file, H2 finished on origin/<default_branch> while origin/HEAD points elsewhere); the decision does not change (K344, K345, K352, K353); skills/dispatch asks for file and checks origin/HEAD, skills/implement quotes the deny; new tests/finished_marker_tests.sh. Anchors by architect job B on c74146b; the lead's independent applier: red 10/24, green 34/0, full suite on 3.9.6 and 3.13. README, README.tr, site and CHANGELOG go to T070 after T068 merges (K452)."
     }
   ],
   "cards": {
@@ -2167,6 +2174,18 @@
         "head": "c5d0aec6e82192def3fd0ee5ef694189eed6f0af",
         "at": "2026-11-21T14:54:55Z"
       }
+    },
+    "T069": {
+      "file": "docs/delix/tasks/T069-hooks-finished-marker-cause.md",
+      "role": "backend",
+      "tier": 3,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": null,
+      "agents": [],
+      "merged": null
     }
   },
   "status_values": [

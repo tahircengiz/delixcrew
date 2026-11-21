@@ -788,6 +788,37 @@ Tier 3. K numaraları K400'den başlar: K376–K399 paralel lead'in T063 kartın
   "Yeni takip"); `T065.R1.1` qa unsure (3.9 tamsayı), `T065.R1.2` kuyruk modülünde `origin_terms` traceback'i;
   `lead.2026-11-21.1` ve `.2` T067 kartını yazan architect'in kapsam dışı iki notu (I032, I033).
 
+## 17. I002: bitmiş kartın işareti sonraki kartı kilitliyor (2026-11-21, intake I002, F033; Spec F dışı)
+
+Kaynak: intake I002 (`accept`, `basis: maintainer`, 2026-11-21T11:18:46Z); `/delixcrew:start I002` ile ayrı lead
+oturumu. Size S · Tier 3 🔐. Numaralar T069'dan (gerekirse T070), dalga 37'den, K450'den: T063–T064, dalga 32–33 ve
+K376–K399 paralel lead'in; T065–T068, dalga 34–36 ve K400–K449 Spec F'nin.
+
+| # | Adım | Durum |
+|---|---|---|
+| 17.1 | Yeniden üretim ve talep. F033'ün dört vakası main `7b46427`'de tohum notuyla aynı (C1 açık, C2 MARKER_DENY, C3 MARKER_DENY, C4 açık). Kullanıcı talebin yeniden yazımını, K455 tasarımını ve K452 sıralamasını onayladı (2026-11-21) | ✔ 2026-11-21 |
+| 17.2 | T069 kartı: architect job B, taban `c74146b`, E1–E9. Lead'in bağımsız uygulayıcısı (kartı ayrıştıran betik) dokuz çapayı eşledi; satır sayıları 416, 140, 92, 74, 107; yeni test tabanda 10 ✘ / 24 ✔, sonra 34 ✔ / 0 ✘; tüm takım 3.9.6 ve 3.13.13'te exit 0 (21 dosya); `claude plugin validate` tabanla aynı tek uyarı. Kapı 1 ve 🔐: kullanıcı "Evet, T069 🔐" (2026-11-21). I002 `work: T069`, `intake.py check` exit 0 | ✔ 2026-11-21 |
+| 17.3 | T069 uygulama, inceleme, kapı 2 | ◻ |
+| 17.4 | T070: README, README.tr, site, CHANGELOG (iki `Cause:` cümlesi, dispatch'in `file` ve origin/HEAD adımı); T068 birleşince yazılır | ◻ |
+
+**Kararlar (17, 2026-11-21):**
+- **K450** (lead, geri alınır) Numaralar: T069 (T070), dalga 37, K450'den. Neden: iki lead'in ayırdığı aralıklardan
+  sonraki ilk boş numaralar.
+- **K451** (lead, geri alınır) Ortak dosyalar (`docs/delix/intake.json`, `docs/delix/STATE.json`, `STATUS.md`): Spec F
+  lead'iyle anlaşma; her düzenlemeden önce `git status`, hemen commit ve push; intake'te yalnız I002, STATUS'ta yalnız §17.
+- **K452** (kullanıcı, geri alınır) Kod ve skill kartı (T069) şimdi; README, README.tr, site ve CHANGELOG T070'te, T068
+  birleşince. `scripts/bash_gate.py` T063'ün dosyası, kapsam dışı. Neden: Spec F'nin T067/T068 dosyalarıyla çakışmaz.
+- **K453** (lead, geri alınır) H1 yalnız origin/HEAD'deki canlı kayıtta, `file` eksik ya da str değilse; arşiv kaydında
+  ve farklı `file`'da neden cümlesi yok. Neden: tavsiye başka bir kartı bitmiş gösterebilir (K353).
+- **K454** (lead, geri alınır) Kartın tabanı `c74146b`; main `9539d06`'ya ilerledi ama `scripts`, `skills`, `tests`
+  farkı boş. Önce ve sonra sha256 önekleri kartta.
+- **K455** (kullanıcı, geri alınır) Tasarım: neyin bitmiş sayılacağı ve tek güven çapası (origin/HEAD) değişmez; ret
+  mesajı iki nedenden birini adlandırır (H1 kayıtta `file` yok, H2 kart `origin/<default_branch>`'te bitmiş ama
+  origin/HEAD orayı göstermiyor); dispatch `file` yazar ve ilk oturumdan önce origin/HEAD'i denetler. Reddedilen
+  seçenekler: yalnız doküman (neden görünmez kalır); kapıyı gevşetmek (kart numarası yeniden kullanılınca hook'lar
+  sessizce kapanabilir).
+- Sıradaki K numarası K456.
+
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
 - [Orta] Rol oturumları paralel çalışırken aynı dosyaya dokunma; görev bölme bunu bağımlılık olarak çözmeli.
