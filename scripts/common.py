@@ -167,9 +167,9 @@ def marker_cause(cwd, marker):
         r = git(cwd, "--no-lazy-fetch", "symbolic-ref", "--quiet", "refs/remotes/origin/HEAD")
         target = r.stdout.strip() if r is not None and r.returncode == 0 else ""
         if sha and target != ref and _finished_at(cwd, sha, marker) == cid:
-            return (f"Cause: the card is finished in the STATE on origin/{y}, the default_branch in delix.json, "
-                    f"but refs/remotes/origin/HEAD does not point at it; if {y} is the default branch, the user runs "
-                    f"git remote set-head origin {y} in the main checkout.")
+            return (f"Cause: the card is finished in the STATE on origin/{y}, the default_branch in the worktree "
+                    "delix.json, but refs/remotes/origin/HEAD does not point at it; the lead runs the origin/HEAD "
+                    "check of /delixcrew:dispatch step 4 with default_branch from the main checkout.")
         return ""
     except Exception:
         return ""

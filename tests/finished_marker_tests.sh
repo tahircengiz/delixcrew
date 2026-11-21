@@ -17,7 +17,7 @@ GC="$G -c user.name=t -c user.email=t@t -c commit.gpgsign=false -c core.hooksPat
 C55="docs/delix/tasks/T055-x.md"; NEXT="docs/delix/tasks/T056-y.md"; FILE='"file": "'"$C55"'"'
 MARKER="delixcrew: .delix/card names T055, which is not finished on origin/HEAD; this worktree belongs to that card. Write nothing under .delix; end with BLOCKED in your final message; the lead opens a new worktree."
 H1="Cause: the record of T055 in the STATE on origin/HEAD is finished but has no file field; the lead sets file to the card path in .delix/card and ${P}es."
-h2(){ printf 'Cause: the card is finished in the STATE on origin/%s, the default_branch in delix.json, but %s/HEAD does not point at it; if %s is the default branch, the user runs %s %s set-head origin %s in the main checkout.' "$1" "$RO" "$1" "$G" "$R" "$1"; }
+h2(){ printf 'Cause: the card is finished in the STATE on origin/%s, the default_branch in the worktree delix.json, but %s/HEAD does not point at it; the lead runs the origin/HEAD check of /delixcrew:dispatch step 4 with default_branch from the main checkout.' "$1" "$RO"; }
 SL="delixcrew: .delix/card names T055, which is accepted on origin/HEAD; implementer hooks stay inactive here. Move .delix aside before starting a new card."
 PROT="is a protected path (scripts/x.py, Tier 3)"
 cfg(){ # [<default_branch as JSON>]: the worktree delix.json; without an argument it has no default_branch
