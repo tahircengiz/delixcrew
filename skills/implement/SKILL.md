@@ -22,7 +22,8 @@ role tag.
    on it. If `.delix/card` already names another card, first read its old id (the `T<digits>` at the start of its
    last path part, else `unknown`), then write the new card path. If the gate denies that write (the old card is
    not finished on origin/HEAD), write nothing under `.delix/` (the live card's `report.md` stays as it is) and end
-   your final message with `BLOCKED`. If it allows it, move everything else in `.delix/` except `card` and
+   your final message with `BLOCKED`; quote the deny message as it is above that token (its `Cause:` sentence, when
+   present, tells the lead what to fix). If it allows it, move everything else in `.delix/` except `card` and
    `previous/` into `.delix/previous/<id>/` with `mv -n` (never overwrite); delete no file and list the moves in
    the report.
 3. If anything in the card is unclear or contradictory, **do not guess**: write `NEEDS_CONTEXT` in `.delix/report.md`

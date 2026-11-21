@@ -10,10 +10,13 @@ approved card is enough).
 
 ## 1. Have the cards written
 Size S with an approved card from `/delixcrew:start`: skip this step (the card is the plan; put it into `STATE.json`
-as a single wave and go to step 2). Otherwise `Agent` with `delixcrew:architect`: the SPEC path, `docs/delix/delix.json` (protected paths, test paths, max parallel), "job B:
+as a single wave, its record with `file` as below, and go to step 2). Otherwise `Agent` with `delixcrew:architect`:
+the SPEC path, `docs/delix/delix.json` (protected paths, test paths, max parallel), "job B:
 task card production". Write every card in the output to `docs/delix/tasks/T<nnn>-<slug>.md` (all fields of
 `templates/task-card.md`; if a field is missing, ask the architect again, do not fill it with your own guess). Put
-`## Wave plan` into `STATE.json.waves`, the cards into `STATE.json.cards` (status `open`, rounds 0).
+`## Wave plan` into `STATE.json.waves`, the cards into `STATE.json.cards` (status `open`, rounds 0). Every card
+record gets `file`: the card path exactly as the implementer writes it into `.delix/card`
+(`docs/delix/tasks/T<nnn>-<slug>.md`); the hooks count a card as finished only through it (K353).
 
 ## 2. Conflict and tier check
 - Same file in two cards? Merge them or sequence them (separate waves). `Agent` with the architect, "job C".
@@ -35,6 +38,10 @@ full plan is passed.**
 
 ## 4. Open the sessions (in wave order)
 One line per card for the user: card, role, tier, how to open it.
+- **origin/HEAD:** before the first session, check that `git symbolic-ref --short refs/remotes/origin/HEAD` prints
+  `origin/<default_branch>`. Otherwise stop and give the user the one-line command to run in the main checkout,
+  `git remote set-head origin <default_branch>`: you push your records to `<default_branch>` and the hooks read
+  them from origin/HEAD, so a finished card's `.delix/card` would keep blocking the next card in its worktree.
 - **Stop gate approval (once per repository):** before the first session, the user runs
   `python3 <plugin root>/scripts/trust.py allow` in the main checkout, in their own terminal, and types `TRUST <hash>`.
   Give the command with the plugin root written out (`${CLAUDE_PLUGIN_ROOT}`); never run it yourself, because the Bash
