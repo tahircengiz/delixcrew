@@ -133,3 +133,18 @@ W1; all 21 test files exit 0 on 3.9.6 and on the 3.13 shim (1744 `✔`, 0 `✘`;
 Do not write STATE.json. Read only this card and the dispatch prompt's private brief.
 
 ## Review findings (filled by the lead)
+- **Round 1** (PR #98, branch `claude/intelligent-turing-e8fdd2` @ `7a04c8931c435eac43584017f495910599848611`, 2026-11-21):
+  - Deterministic gates:
+    - both files equal the lead's prototype byte for byte (sha256 `7abc33a7cd15f2f3`, `289e6b62c80d54b2`); numstat
+      `15 3` and `154 0`, one hunk under `scripts`;
+    - the new test is red on the base code (42 `✘` / 46 `✔`) and green with W1 (88 `✔`); the Stop gate
+      (`.delix/test-result.txt`) ends `[exit 0]` with no `✘`; CI `check` and `test` pass;
+    - the lead's run on a `git archive` of the head: 21 files, 1744 `✔`, 0 `✘` on 3.9.6 and on the 3.13 shim.
+  - Protected path `scripts/bash_gate.py` touched (Tier 3, the 🔐 Approved line is on the card); no existing test file
+    changed.
+  - qa: ACCEPT. No findings.
+  - security: 🔐 HUMAN_APPROVAL. One Low finding: the word list still misses a few spellings of the same class. The base
+    misses them too, so this is not a regression. The lead reproduced them on the base and on the branch. The forms are
+    in the lead's private notes (K378).
+    - Unsure (P2, no fix): each distinct word after the three commands costs one path lookup (linear; lead measured
+      80000 words in 5.8 s; the Bash hook fails closed on its timeout).
