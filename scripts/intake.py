@@ -95,18 +95,29 @@ def read_record(path):
         os.close(fd)
 
 
+QUEUE_BAD = "the feedback queue's config.json or a record is unreadable; fix it so its terms apply (K433)"
+
+
 def term_re():
-    """K426: the feedback module's term set when its queue holds config.json or an F<n>.json, else None (as in CI)."""
+    """K426: the feedback module's term set when its queue holds config.json or an F<n>.json, else None (as in CI).
+    K433: fails closed (Reject) when the queue cannot be listed, config.json is unusable, a record is unreadable or
+    an origin_terms is not a list of strings."""
     try:
         names = os.listdir(feedback.queue_dir())
-    except OSError:
+    except FileNotFoundError:
         return None
+    except OSError:
+        raise Reject(QUEUE_BAD)
     records, bad = feedback.load_records()
     if "config.json" not in names and not records and not bad:
         return None
-    terms = set(feedback.load_config()["extra_terms"]) | feedback.local_terms()
-    for r in records:
-        terms.update(t for t in (r.get("origin_terms") or []) if isinstance(t, str))
+    cfg = feedback.load_config(strict=True)
+    origin = [r.get("origin_terms") or [] for r in records]
+    if cfg is None or bad or not all(type(o) is list and all(type(t) is str for t in o) for o in origin):
+        raise Reject(QUEUE_BAD)
+    terms = set(cfg["extra_terms"]) | feedback.local_terms()
+    for o in origin:
+        terms.update(o)
     return feedback.term_regex(terms)
 
 
@@ -331,7 +342,12 @@ def main(argv):
     if rec is None:
         print(P + "file: " + why, file=sys.stderr)
         return 2
-    errors = shape(rec, term_re() if type(rec) is dict and rec.get("items") else None)
+    try:
+        tre = term_re() if type(rec) is dict and rec.get("items") else None
+    except Reject as e:
+        print(P + "file: " + str(e), file=sys.stderr)
+        return 2
+    errors = shape(rec, tre)
     if errors:
         for line in errors:
             print(line, file=sys.stderr)

@@ -6,7 +6,7 @@
 # Run: bash tests/intake_tests.sh
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"; S="$ROOT/scripts"; FAIL=0
-T="$(cd "$(mktemp -d)" && pwd -P)"
+T="$(mktemp -d)" || exit 1; T="$(cd "$T" && pwd -P)" || exit 1
 unset DELIXCREW_TRIAGE_DIR
 export DELIXCREW_FEEDBACK_DIR="$T/fb"
 mkdir -p "$T/fb" "$T/fx" "$T/empty"
@@ -260,6 +260,18 @@ export DELIXCREW_FEEDBACK_DIR="$T/fb2"; c2 'doc(item(title="Zorblat build breaks
 export DELIXCREW_FEEDBACK_DIR="$T/fb"; c0 'doc(item(title="Zorblat build breaks"))'
 export DELIXCREW_FEEDBACK_DIR="$T/fb3"; c2 'doc(item(title="Quuxcorp build breaks"))'
 export DELIXCREW_FEEDBACK_DIR="$T/fb"; c0 'doc(item(title="Quuxcorp build breaks"))'
+export DELIXCREW_FEEDBACK_DIR="$T/fb2"; c0 'doc(item())'
+QBAD="delixcrew: intake: file: the feedback queue's config.json or a record is unreadable;"
+QBAD="$QBAD fix it so its terms apply (K433)"
+mkdir -p "$T/fb4" "$T/fb5" "$T/fb6" "$T/fb7"; printf x > "$T/fb8"
+mk "$T/fb4/config.json" '{"enabled": False, "extra_terms": "zorblat"}'
+mk "$T/fb5/config.json" 'b"{\"enabled\": false, \"extra_terms\": [\"zorblat\""'
+mk "$T/fb6/F002.json" 'b"{\"origin_terms\": [\"zorblat\""'
+mk "$T/fb7/F001.json" '{"origin_terms": 5}'
+for q in fb4 fb5 fb6 fb7 fb8; do
+  export DELIXCREW_FEEDBACK_DIR="$T/$q"; c2 'doc(item(title="Zorblat build breaks"))'; erris "$QBAD"
+done
+export DELIXCREW_FEEDBACK_DIR="$T/fb"
 end
 
 begin "S13 a shape error and a rule error: exit 2, no rule line"
