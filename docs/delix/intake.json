@@ -1,0 +1,637 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "I001",
+      "title": "A stale card marker in a reused worktree folder made a new session act as the old card's implementer",
+      "refs": [
+        "F012",
+        "F023",
+        "F026",
+        "F030",
+        "F032"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": "T056"
+      },
+      "decision": "duplicate",
+      "basis": "table",
+      "reason": "Fixed on main by T056 (Spec D REQ-1): a finished card's marker no longer switches the hooks on.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I002",
+      "title": "A finished card's marker still blocks the next card when its STATE record lacks a file field or the branches differ",
+      "refs": [
+        "F033"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": true,
+        "against_principle": false,
+        "reproduced": "main@d2528d4",
+        "covered_by": null
+      },
+      "decision": null,
+      "basis": null,
+      "reason": null,
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I003",
+      "title": "The implement skill and the architect gave implementers record writes that the write gate denies",
+      "refs": [
+        "F005",
+        "F007",
+        "F014",
+        "F017",
+        "F024"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": "T057"
+      },
+      "decision": "duplicate",
+      "basis": "table",
+      "reason": "Fixed on main by T057 (Spec D REQ-3, REQ-4): the implementer writes no STATE and cards hold no docs/delix path.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I004",
+      "title": "The Stop gate overwrote the card's verification output in the test result file",
+      "refs": [
+        "F010"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": "T040"
+      },
+      "decision": "duplicate",
+      "basis": "table",
+      "reason": "Fixed on main by T040 (K278): the implementer writes its verification output to its own evidence file.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I005",
+      "title": "The Tier 3 security-review step cannot target the card's PR commit",
+      "refs": [
+        "F006",
+        "F008",
+        "F009"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I006",
+      "title": "The dispatch base step makes the card branch track the default branch, so the push rule rejects the push",
+      "refs": [
+        "F027",
+        "F029"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I007",
+      "title": "A hard reset step in a dispatch prompt is refused in auto permission mode",
+      "refs": [
+        "F018"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I008",
+      "title": "A board cleanup command can remove a worktree folder that a new session reused after the board was read",
+      "refs": [
+        "F013"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I009",
+      "title": "The board shows the cards of an archived STATE as open",
+      "refs": [
+        "F015"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I010",
+      "title": "The Stop gate runs in the lead session when its working directory is inside a card worktree",
+      "refs": [
+        "F016"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I011",
+      "title": "Feature: let the implementer keep its report outside the worktree before the worktree is removed",
+      "refs": [
+        "F025"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I012",
+      "title": "Feature: let the security reviewer run the code it traces",
+      "refs": [
+        "F004"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I013",
+      "title": "The API write rule denies commands whose search pattern, message or heredoc body only names the API command",
+      "refs": [
+        "F011",
+        "F022"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I014",
+      "title": "A Bash rule denies a heredoc whose text names the Stop gate approval command",
+      "refs": [
+        "F019"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I015",
+      "title": "A Bash rule denies a two-part lead command whose heredoc body names the queue tool and a terminal helper",
+      "refs": [
+        "F035"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I016",
+      "title": "An approved Tier 3 card may edit a protected path but cannot stage it with git add",
+      "refs": [
+        "F020"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I017",
+      "title": "The card reader ends the Files section at a heading line inside a fenced code block",
+      "refs": [
+        "F021"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I018",
+      "title": "A fix round that widens the card's Files list is denied because the gate reads the card from the card branch",
+      "refs": [
+        "F028"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I019",
+      "title": "Feature: record gate 2 without pushing the STATE file when the task forbids a push",
+      "refs": [
+        "F031"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I020",
+      "title": "The reviewer Bash rule denies a read-only search whose quoted argument holds a greater-than sign",
+      "refs": [
+        "F034"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I021",
+      "title": "The finished-card check reads the archive when the cards field is missing or not an object",
+      "refs": [
+        "D.close.1"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I022",
+      "title": "The write gate's deny message for a path it cannot resolve names the wrong rule",
+      "refs": [
+        "D.close.2"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I023",
+      "title": "Docs describe the finished-card and broken-config rules more broadly than the code applies them",
+      "refs": [
+        "D.close.3"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I024",
+      "title": "The list of files the plugin writes omits the folder that keeps a previous card's files",
+      "refs": [
+        "D.close.4"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "main@d2528d4",
+        "covered_by": null
+      },
+      "decision": "defer",
+      "basis": "table",
+      "reason": "Seen on current main; one event, no open gate, no wrong sentence and no blocked step, so the table defers it.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I025",
+      "title": "Known limits do not name a Bash overwrite of the card marker or a marker that never goes stale on old git",
+      "refs": [
+        "D.close.5"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "main@d2528d4",
+        "covered_by": null
+      },
+      "decision": "defer",
+      "basis": "table",
+      "reason": "Seen on current main; one event, no open gate, no wrong sentence and no blocked step, so the table defers it.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I026",
+      "title": "Two docs claims about real-path matching and a failing hook were never checked against the code",
+      "refs": [
+        "D.close.6"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I027",
+      "title": "Some changelog lines are longer than 120 characters",
+      "refs": [
+        "E.close.8"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "main@d2528d4",
+        "covered_by": null
+      },
+      "decision": "defer",
+      "basis": "table",
+      "reason": "Seen on current main; one event, no open gate, no wrong sentence and no blocked step, so the table defers it.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I028",
+      "title": "The site design hook flags small text, accent borders and tight padding on the four pages",
+      "refs": [
+        "E.close.9"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I029",
+      "title": "A hook message names the exclude file by a path that does not exist in a linked worktree",
+      "refs": [
+        "E.close.10"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "main@d2528d4",
+        "covered_by": null
+      },
+      "decision": "defer",
+      "basis": "table",
+      "reason": "Seen on current main; one event, no open gate, no wrong sentence and no blocked step, so the table defers it.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I030",
+      "title": "On Python 3.9 a huge integer literal makes the record check take seconds before it fails",
+      "refs": [
+        "T065.R1.1"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "main@d2528d4",
+        "covered_by": null
+      },
+      "decision": "defer",
+      "basis": "table",
+      "reason": "Seen on current main; one event, no open gate, no wrong sentence and no blocked step, so the table defers it.",
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I031",
+      "title": "The queue module gives a traceback when a draft's term list is a number",
+      "refs": [
+        "T065.R1.2"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "not-tried",
+        "covered_by": null
+      },
+      "decision": "needs-info",
+      "basis": "table",
+      "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
+      "consent": null,
+      "work": null
+    }
+  ]
+}
