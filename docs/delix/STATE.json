@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/F-intake-decisions.md",
   "size": "M",
-  "updated": "2026-11-21T16:29:31Z",
+  "updated": "2026-11-21T16:44:06Z",
   "env_owner": null,
   "waves": [
     {
@@ -2224,7 +2224,7 @@
       "file": "docs/delix/tasks/T069-hooks-finished-marker-cause.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 97,
       "rounds": 1,
       "cost_usd": null,
@@ -2273,7 +2273,11 @@
           "at": "2026-11-21T16:29:31Z"
         }
       ],
-      "merged": null
+      "merged": {
+        "sha": "05989b89aa98c24b31ad329bb357392ff34e9e21",
+        "head": "2d59c88a95d8e38d05ed160d545faf3d0d9f88e8",
+        "at": "2026-11-21T16:43:42Z"
+      }
     }
   },
   "status_values": [
