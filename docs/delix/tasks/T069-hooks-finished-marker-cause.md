@@ -39,7 +39,7 @@ H2: origin/HEAD is not the default branch), and the lead skills close both gaps.
 - **Produced (deny message):** `MARKER_DENY.format(<id>)`. When `marker_cause` is non-empty, one space and the sentence
   follow it:
   - H1: `Cause: the record of <id> in the STATE on origin/HEAD is finished but has no file field; the lead sets file to the card path in .delix/card and pushes.`
-  - H2: `Cause: the card is finished in the STATE on origin/<Y>, the default_branch in delix.json, but refs/remotes/origin/HEAD does not point at it; if <Y> is the default branch, the user runs git remote set-head origin <Y> in the main checkout.`
+  - H2 (round 2 text, see Review findings): `Cause: the card is finished in the STATE on origin/<Y>, the default_branch in the worktree delix.json, but refs/remotes/origin/HEAD does not point at it; the lead runs the origin/HEAD check of /delixcrew:dispatch step 4 with default_branch from the main checkout.`
   - T070 documents these two texts.
 - **Unchanged:** `card_path`, the stale stderr line, `stop_gate.py`, `bash_gate.py` (owned by T063).
 
@@ -462,3 +462,41 @@ rm -rf "$T"; [ $FAIL -eq 0 ] && echo "ALL PASSED" || { echo "FAILED"; exit 1; }
 Do not write STATE.json. Read only this card and the dispatch prompt.
 
 ## Review findings (filled by the lead)
+
+### Round 1 (head `42e9ead5187e9857768883a7328e69d542580fb7`): qa ACCEPT, security 🔐 HUMAN_APPROVAL
+Deterministic gates green: Stop gate `[exit 0]`, CI `check` and `test` pass, the five files equal the lead's
+prototype (sha256), the full suite from `git archive 42e9ead` exits 0 on 3.9.6 and 3.13.13.
+
+- **S1 (security Low, fixed in round 2 by the maintainer's choice, 2026-11-21).** `scripts/common.py:170-172`: the
+  H2 sentence puts `<Y>`, read from the worktree copy of `docs/delix/delix.json`, into a command for the user
+  (`git remote set-head origin <Y>`). A card branch can set `default_branch` to a branch it pushed with a STATE that
+  marks its card finished; the deny message then recommends moving `refs/remotes/origin/HEAD`, the single trust
+  anchor, to that branch, which would switch the hooks off in every worktree. Lead's reproduction: on head the deny
+  reads `... the user runs git remote set-head origin claude/t1-pushed in the main checkout.`; on main the same
+  setup gives no `Cause:` sentence, so the exposure is new with this card. Fix: H2 keeps the detection and names
+  `<Y>`, but gives no command; it sends the lead to the dispatch step 4 check, which reads `default_branch` from the
+  main checkout. Exact lines:
+  - `scripts/common.py` lines 170–172, current:
+    ```python
+                return (f"Cause: the card is finished in the STATE on origin/{y}, the default_branch in delix.json, "
+                        f"but refs/remotes/origin/HEAD does not point at it; if {y} is the default branch, the user runs "
+                        f"git remote set-head origin {y} in the main checkout.")
+    ```
+    new:
+    ```python
+                return (f"Cause: the card is finished in the STATE on origin/{y}, the default_branch in the worktree "
+                        "delix.json, but refs/remotes/origin/HEAD does not point at it; the lead runs the origin/HEAD "
+                        "check of /delixcrew:dispatch step 4 with default_branch from the main checkout.")
+    ```
+  - `tests/finished_marker_tests.sh` line 20 (this card's own new test; only this line), current:
+    `h2(){ printf 'Cause: the card is finished in the STATE on origin/%s, the default_branch in delix.json, but %s/HEAD does not point at it; if %s is the default branch, the user runs %s %s set-head origin %s in the main checkout.' "$1" "$RO" "$1" "$G" "$R" "$1"; }`
+    new:
+    `h2(){ printf 'Cause: the card is finished in the STATE on origin/%s, the default_branch in the worktree delix.json, but %s/HEAD does not point at it; the lead runs the origin/HEAD check of /delixcrew:dispatch step 4 with default_branch from the main checkout.' "$1" "$RO"; }`
+  - Lead's prototype on `git archive 42e9ead`: `finished_marker_tests.sh` 34 `✔` / 0 `✘`, `stale_card_tests.sh`
+    `ALL PASSED`, `wc -l` 416 and 107 (unchanged), the three new lines 114, 115 and 102 characters,
+    `grep -c set-head scripts/common.py tests/finished_marker_tests.sh` gives `0` and `0`; sha256 prefixes after:
+    common.py `974a2e00b1ac`, test `631be80d78ae` (write_gate, dispatch, implement unchanged).
+- Notes, no fix (not findings): qa unsure, the worktree `delix.json` is read without a size cap (the same read as
+  `gate_config`, not new); security unsure, deny-path time with 20 archive STATEs of ~1 MiB on both refs: lead
+  measured 0.39–0.57 s on main and 0.78–0.81 s on head against the 10 s hook timeout (and a timeout still blocks);
+  whether Bash can rewrite the worktree `delix.json` is T063's scope and no longer matters for S1 after the fix.

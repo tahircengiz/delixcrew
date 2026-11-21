@@ -805,7 +805,7 @@ K376–K399 paralel lead'in; T065–T068, dalga 34–36 ve K400–K449 Spec F'ni
 |---|---|---|
 | 17.1 | Yeniden üretim ve talep. F033'ün dört vakası main `7b46427`'de tohum notuyla aynı (C1 açık, C2 MARKER_DENY, C3 MARKER_DENY, C4 açık). Kullanıcı talebin yeniden yazımını, K455 tasarımını ve K452 sıralamasını onayladı (2026-11-21) | ✔ 2026-11-21 |
 | 17.2 | T069 kartı: architect job B, taban `c74146b`, E1–E9. Lead'in bağımsız uygulayıcısı (kartı ayrıştıran betik) dokuz çapayı eşledi; satır sayıları 416, 140, 92, 74, 107; yeni test tabanda 10 ✘ / 24 ✔, sonra 34 ✔ / 0 ✘; tüm takım 3.9.6 ve 3.13.13'te exit 0 (21 dosya); `claude plugin validate` tabanla aynı tek uyarı. Kapı 1 ve 🔐: kullanıcı "Evet, T069 🔐" (2026-11-21). I002 `work: T069`, `intake.py check` exit 0 | ✔ 2026-11-21 |
-| 17.3 | T069 uygulama, inceleme, kapı 2 | ◻ |
+| 17.3 | T069 uygulama, inceleme, kapı 2. Implementer DONE: PR #97 (`42e9ead`), kırmızı 10/24, yeşil 34/0; Stop gate exit 0, CI geçti, beş dosya lead prototipiyle aynı, `git archive 42e9ead`'den tam takım 3.9.6 ve 3.13.13'te exit 0. Tur 1: qa ACCEPT, security 🔐 HUMAN_APPROVAL (Low S1: H2 cümlesi worktree `delix.json`'daki dal adını kullanıcıya önerilen `set-head` komutuna koyuyor; lead yeniden üretti, main'de yok). İki "unsure" lead ölçümüyle kapandı (reddetme yolu 20 arşivle 0,78–0,81 s, sınır 10 s). Kullanıcı tur 2'yi seçti (K456); prototip kartta | ◐ |
 | 17.4 | T070: README, README.tr, site, CHANGELOG (iki `Cause:` cümlesi, dispatch'in `file` ve origin/HEAD adımı); T068 birleşince yazılır | ◻ |
 
 **Kararlar (17, 2026-11-21):**
@@ -824,7 +824,10 @@ K376–K399 paralel lead'in; T065–T068, dalga 34–36 ve K400–K449 Spec F'ni
   origin/HEAD orayı göstermiyor); dispatch `file` yazar ve ilk oturumdan önce origin/HEAD'i denetler. Reddedilen
   seçenekler: yalnız doküman (neden görünmez kalır); kapıyı gevşetmek (kart numarası yeniden kullanılınca hook'lar
   sessizce kapanabilir).
-- Sıradaki K numarası K456.
+- **K456** (kullanıcı, 2026-11-21, geri alınır) T069 tur 2: security'nin Low bulgusu (S1) bu kartta düzelir; H2
+  cümlesi dal adını söyler ama komut vermez, lead'i dispatch adım 4 denetimine yönlendirir. Neden: açık bu kartla
+  geliyor ve düzeltme üç satır. Seçilmeyen: olduğu gibi merge ve Low'u intake'e almak.
+- Sıradaki K numarası K457.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
