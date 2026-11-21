@@ -795,6 +795,25 @@ Tier 3. K numaraları K400'den başlar: K376–K399 paralel lead'in T063 kartın
   "Yeni takip"); `T065.R1.1` qa unsure (3.9 tamsayı), `T065.R1.2` kuyruk modülünde `origin_terms` traceback'i;
   `lead.2026-11-21.1` ve `.2` T067 kartını yazan architect'in kapsam dışı iki notu (I032, I033).
 
+**Kararlar (16, özet):** K400–K402 ve K437, K438 kullanıcının; K403–K436 lead'in (16.1–16.3 satırlarında). K436 Spec F'nin
+K aralığı K400–K449. Sıradaki K numarası K439.
+
+**Açık riskler ve notlar (16):**
+- [Orta] İki lead aynı ana checkout'ta ortak kayıt dosyalarını yazıyor (`intake.json`, `STATE.json`, `STATUS.md`);
+  önlem K451: her düzenlemeden önce `git status`, hemen commit ve push, intake'te ve STATUS'ta yalnız kendi bölümü.
+- [Düşük] Sıra zinciri: T070 (I002 lead'i) T068'i, T068 T064'ü, T064 T063'ü (PR #98, `in_review`) bekliyor. Intake kodu
+  ve T069'un kodu main'de; T064'ün etiketi ikisini de taşıyacak, CHANGELOG'da yalnız Spec F'nin `## Unreleased` maddeleri var.
+- [Düşük] T069'un CHANGELOG satırının hangi sürüm bölümüne gireceği (T068'in mi, T070'in mi) T068 yazılırken kararlaşır (§17 risk 3).
+- İki security "unsure" notu (site intake satırı, README Data & privacy) K418 gereği depo dışı, ortak not klasöründe;
+  bakımcı isterse tek docs kartı.
+- Kayıtlar: `docs/delix/intake.json` (33 öğe), `docs/delix/tasks/T065-*`, `T066-*`, `T067-*` (kart ve dispatch),
+  STATE `cards.T065`–`T067` (`accepted`). PR ve commit: T066 #94 `78b8d92`, T065 #95 `8f7b3a4`, T067 #96 `21541cd`; tohum
+  `2e8a09a`, I002 kararı `8a5fc08`, T067 kartı `7b46427`, I032 `b761946`, K437 `c74146b`, T067 accepted `6cf199d`, K438 `9539d06`.
+- Devam: T064 birleşince yeni Spec F lead oturumu, ortak not klasöründeki `spec-f-t068-handover.md` devir notuyla
+  (T068 🔐, sonra `/delixcrew:close`).
+
+Son güncelleme (16): 2026-11-21, main `47f4c8c` sonrası; Spec F lead oturumu bir kez sıkıştırıldı.
+
 ## 17. I002: bitmiş kartın işareti sonraki kartı kilitliyor (2026-11-21, intake I002, F033; Spec F dışı)
 
 Kaynak: intake I002 (`accept`, `basis: maintainer`, 2026-11-21T11:18:46Z); `/delixcrew:start I002` ile ayrı lead
