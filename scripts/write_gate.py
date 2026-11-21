@@ -8,8 +8,8 @@ import re
 import sys
 import unicodedata
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import (CONFIG_DENY, REVIEWERS, card_id, card_path, deny, gate_config, matches,  # noqa: E402
-                    matches_both, read_input, trust_file)
+from common import (CONFIG_DENY, REVIEWERS, card_id, card_path, deny, gate_config, marker_cause,  # noqa: E402
+                    matches, matches_both, read_input, trust_file)
 
 
 def _fold(p):
@@ -93,7 +93,8 @@ if path and _fold(os.path.join(cwd, path)) == _fold(os.path.join(cwd, ".delix", 
     content = ti.get("content")
     if g.get("tool_name") == "Write" and isinstance(content, str) and content.strip() == card:
         sys.exit(0)  # the same card's marker (a fix round in its own worktree)
-    deny(MARKER_DENY.format(card_id(card) or "unknown"))
+    cause = marker_cause(cwd, card)  # I002 (F033): computed only on this deny path
+    deny(MARKER_DENY.format(card_id(card) or "unknown") + (" " + cause if cause else ""))
 
 # Spec D REQ-2 (K346): a delix.json the gate cannot read blocks every write except under realpath(cwd)/.delix/
 cfg = gate_config(cwd)

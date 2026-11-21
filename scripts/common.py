@@ -64,19 +64,40 @@ def _trusted_json(cwd, sha, rel):
         return None
 
 
+def _ref_sha(cwd, ref):
+    """Spec D REQ-1 (K352): the sha of the full ref <ref> (show-ref --verify, no lazy fetch; 40 or 64 lower-case
+    hex, the second field exactly <ref>); None on any other result or error."""
+    try:
+        r = git(cwd, "--no-lazy-fetch", "show-ref", "--verify", ref)
+        fields = r.stdout.split() if r is not None and r.returncode == 0 else []
+        if len(fields) != 2 or fields[1] != ref or len(fields[0]) not in (40, 64) \
+                or any(c not in "0123456789abcdef" for c in fields[0]):
+            return None
+        return fields[0]
+    except Exception:
+        return None
+
+
 def _card_finished(cwd, marker):
-    """Spec D REQ-1 (K344, K345, K353): the card id when the card the marker names is finished on origin/HEAD (its
-    record's file equals the marker; status accepted or merged an object); None in every other case (fail closed)."""
+    """Spec D REQ-1 (K344, K345, K353): _finished_at at the sha of refs/remotes/origin/HEAD, the single trust anchor;
+    None when the marker has no card id, origin/HEAD does not verify or on any error (fail closed)."""
+    try:
+        if card_id(marker) is None:
+            return None
+        sha = _ref_sha(cwd, "refs/remotes/origin/HEAD")
+        return _finished_at(cwd, sha, marker) if sha else None
+    except Exception:
+        return None
+
+
+def _finished_at(cwd, sha, marker):
+    """Spec D REQ-1 (K344, K345, K353): the card id when the card the marker names is finished in the STATE of commit
+    <sha> (its record's file equals the marker; status accepted or merged an object; the live record decides, the
+    archive only when the id is not live); None in every other case (fail closed)."""
     try:
         cid = card_id(marker)
         if cid is None:
             return None
-        r = git(cwd, "--no-lazy-fetch", "show-ref", "--verify", "refs/remotes/origin/HEAD")
-        fields = r.stdout.split() if r is not None and r.returncode == 0 else []
-        if len(fields) != 2 or fields[1] != "refs/remotes/origin/HEAD" or len(fields[0]) not in (40, 64) \
-                or any(c not in "0123456789abcdef" for c in fields[0]):
-            return None
-        sha = fields[0]
 
         def decide(state):  # True/False when state's cards hold a record of cid whose file is the marker, else None
             cards = state.get("cards")
@@ -108,6 +129,50 @@ def _card_finished(cwd, marker):
         return None
     except Exception:
         return None
+
+
+def _safe_branch(name):
+    """I002: True for a str a Cause sentence may name as a branch (no regex): 1 to 100 of A-Z a-z 0-9 . _ - /; not
+    starting with - . or /; no .. or //; not ending in /, . or .lock."""
+    ok = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-/"
+    return (isinstance(name, str) and 0 < len(name) <= 100 and all(c in ok for c in name) and name[0] not in "-./"
+            and ".." not in name and "//" not in name and not name.endswith(("/", ".", ".lock")))
+
+
+def marker_cause(cwd, marker):
+    """I002 (F033): "" or one sentence that starts with "Cause: ", for the deny of a marker that is not finished on
+    origin/HEAD; a hint only, _card_finished still decides. H1, checked first: the live record at origin/HEAD is
+    finished and its file is missing or not a str (never an archive record or a file that differs, K353). H2: the
+    card is finished at origin/<Y>, Y the worktree delix.json default_branch and a safe branch name, and
+    refs/remotes/origin/HEAD is not a symbolic ref to it. A sentence holds no marker text but the card id (K348);
+    never raises ("" on any error)."""
+    try:
+        cid = card_id(marker)
+        if cid is None:
+            return ""
+        head = _ref_sha(cwd, "refs/remotes/origin/HEAD")
+        state = _trusted_json(cwd, head, "docs/delix/STATE.json") if head else None
+        cards = state.get("cards") if state is not None else None
+        rec = cards.get(cid) if isinstance(cards, dict) else None
+        if isinstance(rec, dict) and not isinstance(rec.get("file"), str) \
+                and (rec.get("status") == "accepted" or isinstance(rec.get("merged"), dict)):
+            return (f"Cause: the record of {cid} in the STATE on origin/HEAD is finished but has no file field; "
+                    "the lead sets file to the card path in .delix/card and pushes.")
+        cfg = delix_json(cwd)
+        y = cfg.get("default_branch") if cfg is not None else None
+        if not _safe_branch(y):
+            return ""
+        ref = "refs/remotes/origin/" + y
+        sha = _ref_sha(cwd, ref)
+        r = git(cwd, "--no-lazy-fetch", "symbolic-ref", "--quiet", "refs/remotes/origin/HEAD")
+        target = r.stdout.strip() if r is not None and r.returncode == 0 else ""
+        if sha and target != ref and _finished_at(cwd, sha, marker) == cid:
+            return (f"Cause: the card is finished in the STATE on origin/{y}, the default_branch in the worktree "
+                    "delix.json, but refs/remotes/origin/HEAD does not point at it; the lead runs the origin/HEAD "
+                    "check of /delixcrew:dispatch step 4 with default_branch from the main checkout.")
+        return ""
+    except Exception:
+        return ""
 
 
 def card_path(cwd):
