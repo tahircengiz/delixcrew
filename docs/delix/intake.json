@@ -39,10 +39,15 @@
         "reproduced": "main@d2528d4",
         "covered_by": null
       },
-      "decision": null,
-      "basis": null,
-      "reason": null,
-      "consent": null,
+      "decision": "accept",
+      "basis": "maintainer",
+      "reason": "Any project that follows dispatch as written hits this after its first finished card, so a second event is near certain; the fix touches a protected path (Tier 3).",
+      "consent": {
+        "decision": "accept",
+        "table": "defer",
+        "events": 1,
+        "at": "2026-11-21T11:18:46Z"
+      },
       "work": null
     },
     {
