@@ -759,6 +759,20 @@ security Low), ayrı lead oturumunda. Size M · Tier 3.
   - Yeni takip (P2, kart dışı): `scripts/common.py:133` yorumu hâlâ `.git/info/exclude` diyor (korunan yol, bir sonraki `common.py` kartına).
 
 
+## 16. Spec F: geri bildirim karar kaydı (intake) (2026-11-21, `docs/delix/specs/F-intake-decisions.md`)
+
+Kaynak: bakımcının yönergesi ("her geri bildirimi işleme almamalıyız, bunu bir karar mekanizmasına bağlayıp sadece
+gerçekten faydalı olacakları almalıyız"), ayrı lead oturumu; architect'in salt-okur önerisi (depo dışı). Size M ·
+Tier 3. K numaraları K400'den başlar: K376–K399 paralel lead'in T063 kartına bırakıldı (K422).
+
+| # | Adım | Durum |
+|---|---|---|
+| 16.1 | Grill ve spec. Kullanıcı kararları: K400 v1 çekirdek (kayıt, salt-okur doğrulayıcı, karar tablosu, dört giriş noktası); K401 bakımcı onayı accept, wontfix, açık kapı ve tablodan sapma için; K402 tablo `scripts/intake.py`'de kod. Lead kararları K403–K422. Spec rev 1–3: architect job A FIX (P1×5 P2×2), security 🔐 HUMAN_APPROVAL (Medium×5 Low×3); rev 2 yeniden incelemesi architect FIX (P1×2 P2×2), security 🔐 HUMAN_APPROVAL (Medium×1 Low×1); hepsi işlendi, rev 3 farkı yeniden incelenmedi. İnceleyiciler güvenlik bulgusunun kayda girişinde ayrıştı; security'nin yolu seçildi (K418). Spec D lead'i F033'ü main `a025e66`'da yeniden üretti; kanıt depo dışı tohum notunda, tohum adımında öğe olur. Kapı 1: kullanıcı onayladı 2026-11-21 | ✔ 2026-11-21 |
+| 16.2 | Dispatch, dalga 1: A (`scripts/intake.py`, `tests/intake_tests.sh`, `templates/intake.json`) ve B (skill metinleri); kart numaraları paralel lead'in T063'ünden ve sürüm kartından sonra | ◻ |
+| 16.3 | Dalga 2: C (README, README.tr, site, CHANGELOG) ve tohum (lead, REQ-8) | ◻ |
+| 16.4 | Dalga 3: sürüm 🔐 (D) | ◻ |
+| 16.5 | Kapanış (`/delixcrew:close`) | ◻ |
+
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
 - [Orta] Rol oturumları paralel çalışırken aynı dosyaya dokunma; görev bölme bunu bağımlılık olarak çözmeli.
