@@ -403,3 +403,15 @@ Türü (bug ya da feature), bileşeni ve başlığı (büyük-küçük harf, nok
 Do not write STATE.json. Read only this card and spec REQ-5, REQ-7 and §4.
 
 ## Review findings (filled by the lead)
+- **Round 1** (PR #96, branch `claude/great-chaplygin-62a4b9` @ `c5d0aec6e82192def3fd0ee5ef694189eed6f0af`, 2026-11-21):
+  - Deterministic gates:
+    - read from the branch commit: the seven sha256 prefixes equal the "after" column and the lead's prototype; only
+      the seven Files paths changed (numstat as in Verification); no protected path, no test file;
+    - the lead's run on an export of the commit: `tests/site_tests.sh` 23 `✔`, 0 `✘`, exit 0 on 3.9.6 and 3.13.13;
+      `tests/intake_tests.sh` ALL PASSED; the 39 Verification greps give `1`, the four give `0`;
+    - the Stop gate (`.delix/test-result.txt`) ends `[exit 0]`; CI `check` and `test` pass.
+  - qa: ACCEPT. No findings.
+    - Unsure (no fix): in `fingerprint()` only the title is normalized; the text puts "(letter case, punctuation and
+      digits aside)" right after "title", as the card dictates (A3, A6, A17, A25).
+  - security: CLEAN. No findings; gitleaks clean on the diff, the site tree, the three Markdown files and the commit
+    range. Two unsure notes (documentation, no fix in this card) are kept in an out-of-repo lead note (K418).
