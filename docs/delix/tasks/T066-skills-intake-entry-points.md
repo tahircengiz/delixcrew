@@ -214,3 +214,19 @@ into the command. A follow-up you found yourself is not a request: record it wit
 - assumptions.
 
 Read only this card and spec REQ-5, §4 and the K list.
+
+## Review findings (filled by the lead)
+- **Round 1** (PR #94, branch `claude/fervent-mcclintock-e58a23` @ `a3282ec35eb433024044b2ec55b690711530c7d8`, 2026-11-21):
+  - Deterministic gates:
+    - read from the branch commit, all five sha256s, numstat and `wc -l` equal the Definition of done;
+    - only the five Files paths changed; no protected path and no test file;
+    - the Stop gate (`.delix/test-result.txt`) ends `[exit 0]` on 3.9.6 and the 3.13 shim; CI `check` and `test` pass.
+  - qa: ACCEPT. No findings.
+    - Unsure (no fix): `templates/intake.json` comes from T065, outside this card.
+  - security: CLEAN. No findings; gitleaks is clean on the tree and the diff; no Cc, Cf or bidi characters.
+    - Unsure (P2, no fix): `add` step 1 runs `intake.py list` without the `UNTRUSTED` fence that `list` and `decide`
+      use; the start §1b and intake exit-2 stderr lines are shown unfenced. The lead checked T065 at `7d1c2dd`: a
+      shape line echoes only values that already match their pattern (id, ref, decision) and unknown key names that
+      match `[a-z_]{1,40}`. Candidate intake item once the record exists (K419).
+    - Unsure (no fix): a `gate_open` item enters the record once `work` or `covered_by` is set, while the gap may
+      still be open on main; this is K418 as approved at gate 1.

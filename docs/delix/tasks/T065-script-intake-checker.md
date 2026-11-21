@@ -217,3 +217,47 @@ REQ-1–REQ-4, REQ-6, §4, §6; K414–K417, K420, K421, K425–K427.
 - every hook denial of your own commands.
 
 Read only this card and spec §3–§6 and its K list.
+
+## Review findings (filled by the lead)
+- **Round 1** (PR #95, branch `claude/elastic-saha-6fc047` @ `7d1c2dd44263dae56c13251d30d6b193124f703e`, 2026-11-21):
+  - Deterministic gates:
+    - the lead's run on an export of the branch commit: `tests/intake_tests.sh` 34 `✔`, 0 `✘`, `ALL PASSED` on 3.9.6
+      and 3.13.13; `check --file templates/intake.json` 0; non-ASCII bytes 0 in all three files; no line over 120;
+    - only the three Files paths, all added; no protected path; no existing test file;
+    - the Stop gate (`.delix/test-result.txt`) ends `[exit 0]`, 19 `ALL PASSED`; CI `check` and `test` pass.
+  - qa: ACCEPT. No findings.
+    - Unsure (P2, no fix): Python 3.9 parses a long integer literal in quadratic time. The lead measured `check`
+      on a record whose `version` has n digits: 0.30 s at 200 000, 1.06 s at 400 000, 6.46 s at 1 000 000 (the
+      1 MiB cap). It still exits 2 cleanly. On 3.13 the same file exits 2 in 0.04 s (integer digit limit).
+      The queue module's `read_json` behaves the same.
+    - Unsure (no fix): the repeated-ref line is emitted while the second holder is read; it is the fixed S1 line.
+  - security: FIX, one Low finding. The lead reproduced it and raised it to P1 (K433, below).
+  - **G1 (P1, K417 conformance; security Low).** `term_re()` fails open (`scripts/intake.py:98-110`). With a queue
+    whose `config.json` has `"extra_terms": "zorblat"` (a string), or broken JSON, or an unreadable `F002.json`
+    that holds the term, or a queue path that is a file, `check` exits **0** for the title `Zorblat build breaks`.
+    The control case, a good config that lists the term, exits 2. K417 builds `term_re` from the set in
+    `scripts/feedback.py:521-523`, whose consumers fail closed (`load_config(strict=True)`, `bad_ids`). Required:
+    - only a missing queue directory (`FileNotFoundError`) gives `None`; any other `OSError` from `os.listdir`,
+      `load_config(strict=True)` returning `None`, a non-empty `bad`, or an `origin_terms` that is not a list of
+      strings raise `Reject`;
+    - `main` prints `delixcrew: intake: file: the feedback queue's config.json or a record is unreadable; fix it so
+      its terms apply (K433)` and exits 2.
+  - **G2 (P1, §4 exit contract).** A queue record with `"origin_terms": 5` gives a `TypeError` traceback and exit 1
+    (`scripts/intake.py:109`). Required: exit 2 with the G1 line.
+  - **G3 (P1, data loss).** `tests/intake_tests.sh:9` `T="$(cd "$(mktemp -d)" && pwd -P)"`: when `mktemp -d`
+    fails, bash 3.2 runs `cd ""` as a no-op with exit 0. `T` then becomes the caller's directory, and line 448
+    `rm -rf "$T"` deletes it. The lead showed `T` resolving to the cwd with a failing `mktemp`. Required:
+    `T="$(mktemp -d)" || exit 1; T="$(cd "$T" && pwd -P)" || exit 1`.
+  - Tests required, inside S12:
+    - the five queues above (string `extra_terms`, broken `config.json`, unreadable `F002.json`, `origin_terms: 5`,
+      queue path a file), each `check` exit 2 with exactly the G1 line;
+    - a good queue with a title that has no term, exit 0.
+  - Lead prototype on the branch export: new tests red on `7d1c2dd` (S12 `✘`, the five queue cases), green after the
+    fix (34 `✔`, 0 `✘`, 3.9.6 and 3.13.13). sha256 prefixes after: `scripts/intake.py` `12663da762e0`,
+    `tests/intake_tests.sh` `b8ca3f928f87`. Non-ASCII 0, no line over 120. With a failing `mktemp`, the new test
+    exits 1 and deletes nothing.
+  - Pre-existing, outside this card: the same temp-dir line is at `tests/feedback_tests.sh:6`,
+    `tests/sanitize_tests.sh:6`, `tests/triage_tests.sh:6` and `tests/triage_config_tests.sh:7`, and the same
+    `origin_terms` traceback is at `scripts/feedback.py:523`. These are lead follow-ups.
+  - Not for this card (security unsure, spec level): K417 has no secret pattern check. The lead writes `title` and
+    `reason`, and the record's `check` runs in CI. Lead follow-up.
