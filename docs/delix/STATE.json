@@ -1,7 +1,7 @@
 {
   "spec": "docs/delix/specs/F-intake-decisions.md",
   "size": "M",
-  "updated": "2026-11-21T10:55:24Z",
+  "updated": "2026-11-21T11:40:00Z",
   "env_owner": null,
   "waves": [
     {
@@ -212,6 +212,13 @@
         "T066"
       ],
       "note": "Spec F wave 1 (K423: T064 and wave 33 are reserved for the parallel lead's release card), parallel, no shared file, no protected path. T065 Tier 2 backend: new scripts/intake.py (check, list, show, table), templates/intake.json, tests/intake_tests.sh; K425-K427, K429. T066 Tier 2 docs: new skills/intake/SKILL.md and inserts in review, close, feedback, start (REQ-5, K415 guard on every entry); no new test (K428); interface-first on T065. Cards by architect job B on 2464805; the lead's script applied T066's five blocks to a copy of 2464805 and gives the card's wc -l, numstat and sha256 (K430). Cards C (T067, docs + lead seed) and D (T068, release) are written after this wave merges (K424)."
+    },
+    {
+      "wave": 35,
+      "cards": [
+        "T067"
+      ],
+      "note": "Spec F wave 2 (K413, K424): T067 Tier 2 docs (REQ-7): README, README.tr, four site pages, CHANGELOG Unreleased with three items whose first lines T068 anchors on; 27 anchors by architect job B on d2528d4; the lead's independent applier gives the after sha256s (site_tests 23, 39 greps). Lead step in the same wave: the REQ-8 seed docs/delix/intake.json (2e8a09a, 31 items; I002 accept by the maintainer, 8a5fc08). T068 (release, wave 36) is written after T067 merges and after the parallel lead's T064."
     }
   ],
   "cards": {
@@ -2117,6 +2124,16 @@
         "head": "a3282ec35eb433024044b2ec55b690711530c7d8",
         "at": "2026-11-21T10:54:47Z"
       }
+    },
+    "T067": {
+      "file": "docs/delix/tasks/T067-docs-intake-step.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": "docs/delix/specs/F-intake-decisions.md"
     }
   },
   "status_values": [

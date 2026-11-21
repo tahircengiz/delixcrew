@@ -637,6 +637,46 @@
       "reason": "Not reproduced on current main yet; the table asks for a reproduction before a decision.",
       "consent": null,
       "work": null
+    },
+    {
+      "id": "I032",
+      "title": "The intake skill description says every decision waits for the maintainer, but the table's decisions need no consent",
+      "refs": [
+        "lead.2026-11-21.1"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": true,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "main@8a5fc08",
+        "covered_by": null
+      },
+      "decision": null,
+      "basis": null,
+      "reason": null,
+      "consent": null,
+      "work": null
+    },
+    {
+      "id": "I033",
+      "title": "Known limits do not say that the lead writes the intake consent and the checker cannot see the chat",
+      "refs": [
+        "lead.2026-11-21.2"
+      ],
+      "evidence": {
+        "gate_open": false,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "main@8a5fc08",
+        "covered_by": null
+      },
+      "decision": "defer",
+      "basis": "table",
+      "reason": "Seen on current main; one event, no open gate, no wrong sentence and no blocked step, so the table defers it.",
+      "consent": null,
+      "work": null
     }
   ]
 }
