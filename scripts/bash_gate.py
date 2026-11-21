@@ -115,9 +115,21 @@ if cfg is None:  # Spec D REQ-2 (K346): missing, broken, not an object, or a pat
     deny(CONFIG_DENY)
 protected = cfg.get("protected_paths") or []
 
-# writing to a protected path via shell redirect / cp / mv / tee
-for m in re.finditer(r"(?:>>?|\bcp\b[^|;&]*|\bmv\b[^|;&]*|\btee\b)\s+([^\s;&|]+)", cmd):
-    target = m.group(1).strip("'\"")
+# writing to a protected path via shell redirect / cp / mv / tee. K374: the words the old check took (after `>` or `>>`
+# and a blank); the word after any redirect operator (`>`, `>>`, `>|`, `&>`, `>&`, `N>`, `<>`, zsh `>!`, `>&|`; blanks
+# or none, a backslash newline too) up to a blank, `;`, `&`, `|`, `<` or `>`, whole and split at `(`, `)` and backticks;
+# and every word after cp, mv or tee in any letter case, up to `;`, `&` or `|` outside quotes (across lines), split as
+# the old check split it (at blanks, `;`, `&`, `|`) and also at `<` and `>`, stripped of quotes, `(`, `)` and backticks.
+# Each step is a disjoint class, a bounded repeat or a quote scan (ReDoS); each distinct target is matched once.
+_WORDS = re.compile(r"""\b(?:cp|mv|tee)\b((?:[^;&|\\'"]|\\[\s\S]|'[^']*'|"(?:[^"\\]|\\[\s\S])*"|['"\\])*)""", re.I)
+_REDIR = re.compile(r">[>|&!]{0,3}(?:\s|\\\n)*([^\s;&|<>]+)")
+targets = [m.group(1) for m in re.finditer(r">>?\s+([^\s;&|]+)", cmd)]
+targets += [p for m in _REDIR.finditer(cmd) for p in (m.group(1), *re.split(r"[()`]+", m.group(1)))]
+for m in _WORDS.finditer(cmd):
+    targets += [w for w in re.split(r"[\s;&|]+", m.group(1)) if w]
+    targets += [w.strip("()`'\"") for w in re.split(r"[\s<>;&|]+", m.group(1)) if w]
+for t in dict.fromkeys(targets):
+    target = t.strip("'\"")
     d = matches(target, protected, cwd)
     if d:
         deny(f"delixcrew: the command writes to a protected path ('{target}' ~ {d}). Tier 3 path; human approval required.")
