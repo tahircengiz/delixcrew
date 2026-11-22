@@ -122,7 +122,7 @@ protected = cfg.get("protected_paths") or []
 # `<( )`, `>( )` or backtick substitution and a redirect operator (across lines), split as the old check split it (at
 # blanks, `;`, `&`, `|`) and also at `<` and `>`, stripped of quotes, `(`, `)` and backticks. Each step is a disjoint
 # class, a bounded repeat or a quote scan (ReDoS); each distinct target is matched once.
-_WORDS = re.compile(r"""\b(?:cp|mv|tee)\b((?:[$<>]\((?:[^()'"]|'[^']*'|"(?:[^"\\]|\\[\s\S])*")*\)|`[^`]*`"""
+_WORDS = re.compile(r"""\b(?:cp|mv|tee)\b((?:[$<>]\((?:[^()'"\\]|\\[\s\S]|'[^']*'|"(?:[^"\\]|\\[\s\S])*")*\)|`[^`]*`"""
                     r"""|&?[<>]+[&|!]{0,2}|[^;&|\\'"]|\\[\s\S]|'[^']*'|"(?:[^"\\]|\\[\s\S])*"|['"\\])*)""", re.I)
 _REDIR = re.compile(r">[>|&!]{0,3}(?:\s|\\\n)*([^\s;&|<>]+)")
 targets = [m.group(1) for m in re.finditer(r">>?\s+([^\s;&|]+)", cmd)]
