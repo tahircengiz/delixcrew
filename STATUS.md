@@ -733,7 +733,7 @@ security Low), ayrı lead oturumunda. Size M · Tier 3.
 | 15.4 | Dalga 2: sürüm 0.7.4, T061 🔐 (#92, `d708fff`; taban `512d8b8`, #91, #90; prototip site_tests 23 ✔); Approved 2026-11-20 (`3c93661`); tur 1 qa ACCEPT, security 🔐 HUMAN_APPROVAL, bulgu yok; birleşti, `accepted`; etiket `v0.7.4` kullanıcıda | ✔ 2026-11-20 |
 | 15.5 | Kapanış (`/delixcrew:close`): üç kart `accepted`, her birinde birleşen head son qa SHA'sı (K297); metrikler `docs/delix/metrics.md` (kapı 8, kapı dışı müdahale 13, kart başına 4,3; birleşme sonrası 6 sürüm komutuyla 19; USD ölçülmedi); drift kontrolü (aşağıda Açık iş); feedback taslağı F034; temizlik blokları kullanıcıda | ✔ 2026-11-20 |
 | 15.6 | Açık iş kartı T062 (size S · Tier 2 docs, dalga 31; aşağıdaki "Açık işin durumu"): kapı 1 kart onayı kullanıcı 2026-11-20 (`6d33a29`); uygulayıcı oturumu `delix-t062-spec-e-drift` (dal `claude/reverent-wiles-a75943`); #93 @ `09d96e6`, yedi sha256 kartla aynı, Stop kapısı ve CI yeşil; tur 1 qa ACCEPT, security CLEAN, bulgu yok (iki P2 kartta); birleşti `396bbea`, `accepted`; K374 ayrı lead oturumunda | ✔ 2026-11-20 |
-| 15.7 | K374 düzeltme kartı T063 🔐 (size S · Tier 3 backend, dalga 32; aşağıdaki "K374 takibi"): kapsam kontrolün tamamı (K376), lead prototipi ve özel brif (K378, K379), architect sıfır bağlam eleştirisi (3 tur); kapı 1 kart onayı ve 🔐 Approved 2026-11-21: kullanıcı sohbette "Evet, onaylıyorum" | ◐ |
+| 15.7 | K374 düzeltme kartı T063 🔐 (size S · Tier 3 backend, dalga 32; aşağıdaki "K374 takibi"): kapsam kontrolün tamamı (K376), lead prototipi ve özel brif (K378, K379), architect sıfır bağlam eleştirisi (3 tur); kapı 1 kart onayı ve 🔐 Approved 2026-11-21: kullanıcı sohbette "Evet, onaylıyorum" (`400f57d`); uygulayıcı oturumu `delix-t063-bash-gate-yaz` (dal `claude/intelligent-turing-e8fdd2`), #98 @ `7a04c89`, iki dosya lead prototipiyle aynı bayt, Stop kapısı ve CI yeşil (`74853ce`); tur 1 qa ACCEPT, security 🔐 HUMAN_APPROVAL, bir Low ve bir P2 not (`fbbfbc0`); kullanıcı "Evet, 2. tur" (K380); lead prototipi v8 hazır, tur 2 mesajı sırada | ◐ |
 
 **Açık iş (kapanış drift kontrolü, 2026-11-20; architect: REQ-1–REQ-3 uygulanmış, kapı açan çelişki yok; lead aşağıdakileri dosyada doğruladı):**
 - README "Bilinen sınırlar" `cat` heredoc cümlesi (`README.md:445-446`, `README.tr.md:447-448`) artık yanlış: kart worktree'sinde `cat > .git <<'EOF'` geçiyor (`bash_gate.py:119-123` yalnız korunan yolu denetliyor), aynı yazımı Write reddediyor (T059). Cümle worktree dışı yollar için de zaten doğru değildi (A13).
@@ -765,6 +765,34 @@ security Low), ayrı lead oturumunda. Size M · Tier 3.
 - **K377** (kullanıcı kararı, 2026-11-20): GitHub Security Advisory sürümden sonra, Low, CVE'siz. Taslağı lead depo dışında yazar, kullanıcı GitHub'da açıp yayınlar (hook `gh api` ile depo güvenlik yazımını reddeder). PR açılınca kod ve test farkı herkese açık olur; başlık, gövde, commit ve main kayıtları biçim adı taşımaz.
 - **K378** (lead, geri alınır): kart ve dispatch dosyası biçim adı taşımaz; W1 metni, test dosyası, vaka tablosu ve PR gövdesi depo dışındaki özel brifte, dispatch istemine eklenir ve commit edilmez. Ayrıntı birleşmeden sonra CHANGELOG'da ve advisory'de.
 - **K379** (lead ölçümü; taban `bash_gate.py` sha256 `fef73bf2…`, main `a025e66` ile `2e8a09a` arasında aynı): prototip ve eski/yeni kontrol fark denemesi; tabanın reddettiği hiçbir komutu W1 kabul etmiyor (sayılar özel brifte). Eski kontrolün bir kolu uzun girdide doğrusal büyümüyordu; Bash hook'u 60 s zaman aşımında kapalı kalır (`onFailure: block`). W1'in büyüme oranları testte ölçülüyor.
+- **K380** (kullanıcı kararı, 2026-11-22): tur 1'in security Low bulgusu (sözcük listesi aynı sınıftan birkaç yazımı
+  daha görmüyor; taban da görmüyor, gerileme değil) ikinci düzeltme turunda kapanır. Low için not yeterliydi;
+  kullanıcı "Evet, 2. tur" dedi. P2 (her farklı sözcük için bir yol araması, doğrusal, zaman aşımında hook kapalı
+  kalır) düzeltilmiyor.
+- **K381** (lead ölçümü, v8 prototipi, 2026-11-22): yeni test 98 ✔ (v7 kodu yalnız 7 yeni satırda ✘). Taban ile v8
+  arasındaki fark denemesi 600 bin komutta 0/0: tabanın reddettiği her komutu v8 de reddediyor ve tabanın denetlediği
+  her hedefi v8 de denetliyor. v7 ile v8 arasında da 600 bin komut denendi. v7'nin reddedip v8'in kabul ettiği 15
+  komutun hepsi yapay girdi: korunan yola yazmıyorlar, v7 onları kazara reddediyordu. Büyüme doğrusal (×4 ≈ 4,
+  ×8 ≈ 8–9). Sayılar ve biçimler özel notlarda.
+- **Adımlar (2026-11-22):**
+  - ✔ repro, kapsam ve advisory (K376, K377);
+  - ✔ kart, özel brif, architect 3 tur;
+  - ✔ onay (`400f57d`);
+  - ✔ uygulayıcı oturumu ve #98 (`74853ce`);
+  - ✔ tur 1 (`fbbfbc0`);
+  - ◐ tur 2: v8 prototipi doğrulandı, kart, brif ve uygulayıcıya mesaj sırada;
+  - ◻ tur 2 incelemesi, kapı 2 (kullanıcı `--match-head-commit` ile birleştirir), sürüm kartı T064 🔐,
+    advisory taslağının son hali, K374 kapanışı.
+- **Açık riskler:**
+  - PR farkı birleşene dek kodu ve testi herkese açık gösteriyor (K377'de kabul edildi);
+  - P2 maliyeti doğrusal; zaman aşımında hook kapalı kalır;
+  - T069 test toplamlarını değiştirdi, kart sayıları tur 2'de güncellenir;
+  - v8, v7'nin yapay girdilerdeki fazladan retlerini taşımıyor (K381).
+- **Kayıtlar:**
+  - dal `claude/intelligent-turing-e8fdd2`;
+  - özel brif, tur 1 bulgu kaydı ve advisory taslağı not klasöründe: `T063-private-brief.md`,
+    `T063-review-r1-private.md`, `K374-ghsa-draft.md`; depoya girmez (K378).
+- Son güncelleme (K374): 2026-11-22; lead oturumu bir kez sıkıştırıldı.
 
 ## 16. Spec F: geri bildirim karar kaydı (intake) (2026-11-21, `docs/delix/specs/F-intake-decisions.md`)
 

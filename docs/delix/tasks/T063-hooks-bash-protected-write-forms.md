@@ -40,7 +40,7 @@ follows this one.
     `delixcrew: the command writes to a protected path ('<target>' ~ <pattern>). Tier 3 path; human approval required.`
   - `<target>` is the word as W1 strips it.
 - **Rule order in `bash_gate.py`:** unchanged. The check stays after `cfg` / `protected` (lines 113–116) and before the
-  T041 push rule (line 125 on the base, 137 after W1).
+  T041 push rule (line 125 on the base, 139 after W1).
 
 ## Global Constraints
 - Python 3.9 standard library only; no new import (`re` is already imported), no new dependency, no signature change.
@@ -52,27 +52,31 @@ follows this one.
 ## Edit anchors (base main `2e8a09a`, full SHA `2e8a09a22fb3bce6d08b7751e3584d08303c56bd`)
 - `scripts/bash_gate.py` has 820 lines on the base; base sha256 is
   `fef73bf2d136995c7d08f0938368ac91f2a1315feb2aeb3b2a85c7f66d3d4d96`.
-- **W1 · lines 118–120 · replace** (3 lines with 15; lines 121–123 stay). The exact current and new text is in the
-  private brief. Match the quoted current text before you edit; if it differs, stop with `NEEDS_CONTEXT`.
-- The file then has 832 lines.
+- **W1 · lines 118–120 · replace** (3 lines with 17 since round 2; lines 121–123 stay). The exact current and new
+  text is in the private brief. Match the quoted current text before you edit; if it differs, stop with
+  `NEEDS_CONTEXT`.
+- The file then has 834 lines.
 - Use the Edit tool, because the hook denies shell writes to protected paths.
 
-**Lead prototype (2026-11-21, `2e8a09a`, Python 3.9.6 and 3.13.13, git 2.54.0):** an independent applier of W1 and the
-brief's test file gives these sha256 prefixes (16 hex); compare yours with `shasum -a 256 <file>`, and if one differs,
-find the anchor before you go on.
+**Lead prototype (round 2, 2026-11-22; on the PR head `7a04c89` and on main `03605fe`; Python 3.9.6 and 3.13.13, git
+2.54.0):** an independent applier of W1 and the brief's test file gives these sha256 prefixes (16 hex); compare yours
+with `shasum -a 256 <file>`, and if one differs, find the anchor before you go on.
 
-| file | base | after |
-|---|---|---|
-| `scripts/bash_gate.py` | `fef73bf2d136995c` | `7abc33a7cd15f2f3` |
-| `tests/redirect_gate_tests.sh` | (new) | `289e6b62c80d54b2` |
+| file | base | round 1 | after (round 2) |
+|---|---|---|---|
+| `scripts/bash_gate.py` | `fef73bf2d136995c` | `7abc33a7cd15f2f3` | `b779aebe862d9953` |
+| `tests/redirect_gate_tests.sh` | (new) | `289e6b62c80d54b2` | `f29f3acff2676ec8` |
 
-On that copy the new test gave 42 `✘` / 46 `✔` on the base code (last line `FAILED`, exit 1) and 88 `✔`, 0 `✘` with
-W1; all 21 test files exit 0 on 3.9.6 and on the 3.13 shim (1744 `✔`, 0 `✘`; the 20 files of the base: 1656 `✔`).
+On that copy the new test gave 49 `✘` / 49 `✔` on the base code (last line `FAILED`, exit 1), 7 `✘` / 91 `✔` on the
+round-1 code, and 98 `✔`, 0 `✘` with W1. All 21 test files of the branch exit 0 on 3.9.6 and on the 3.13 shim
+(1754 `✔`, 0 `✘`; the 20 files of the base: 1656 `✔`). On main `03605fe` with W1, all 22 files exit 0 on both
+(1788 `✔`, 0 `✘`).
 
 ## Steps
 1. Baseline: `for t in tests/*_tests.sh; do bash "$t" || exit 1; done` → 20 files, exit 0.
 2. Write `tests/redirect_gate_tests.sh` from the brief with the Write tool and run it on the base code. You should see
-   **red**: 42 `✘` / 46 `✔`, last line `FAILED`, exit 1. Write the counts in the report.
+   **red**: 49 `✘` / 49 `✔` (round 2; round 1: 42 / 46), last line `FAILED`, exit 1. Write the counts in the
+   report.
 3. Apply W1 with the Edit tool. `python3 -c "import ast,sys; ast.parse(open(sys.argv[1]).read())" scripts/bash_gate.py`
    prints nothing.
 4. You should see **green**. Then run every suite on Python 3.9.6 and on the 3.13 shim.
@@ -86,11 +90,11 @@ W1; all 21 test files exit 0 on 3.9.6 and on the 3.13 shim (1744 `✔`, 0 `✘`;
      is the brief's PR body, with the counts filled in.
 
 ## Verification command → expected output
-- `bash tests/redirect_gate_tests.sh` → 88 `✔`, no `✘`, last line `ALL PASSED`, exit 0.
+- `bash tests/redirect_gate_tests.sh` → 98 `✔`, no `✘`, last line `ALL PASSED`, exit 0.
 - `for t in tests/*_tests.sh; do bash "$t" || exit 1; done` → exit 0, 21 files, no `✘`. Run it on 3.9.6 and through
   `P13="$(mktemp -d)" && ln -s /opt/homebrew/bin/python3.13 "$P13/python3" && for t in tests/*_tests.sh; do PATH="$P13:$PATH" bash "$t" || exit 1; done`.
 - `claude plugin validate .` → exit 0.
-- `git diff --numstat origin/main...HEAD` → exactly `15	3	scripts/bash_gate.py` and `154	0	tests/redirect_gate_tests.sh`.
+- `git diff --numstat origin/main...HEAD` → exactly `17	3	scripts/bash_gate.py` and `164	0	tests/redirect_gate_tests.sh`.
 - `git diff -U0 origin/main...HEAD -- scripts | grep -c '^@@'` → `1` (one hunk: W1 only).
 - Added lines longer than 121 characters: `git diff -U0 origin/main...HEAD -- scripts | python3 -c "import sys; [print(len(l), l[:60]) for l in sys.stdin.read().splitlines() if l.startswith('+') and not l.startswith('+++') and len(l) > 121]"` → no output.
 - Non-ASCII bytes: `python3 -c "import sys; d=open(sys.argv[1],'rb').read(); print(sum(1 for b in d if b > 126 or (b < 32 and b not in (9, 10))))" tests/redirect_gate_tests.sh` → `0`.
@@ -148,3 +152,12 @@ Do not write STATE.json. Read only this card and the dispatch prompt's private b
     in the lead's private notes (K378).
     - Unsure (P2, no fix): each distinct word after the three commands costs one path lookup (linear; lead measured
       80000 words in 5.8 s; the Bash hook fails closed on its timeout).
+- **Round 2 decision** (2026-11-22, user in chat: "Evet, 2. tur"; K380): the security Low finding is fixed in this
+  PR; the P2 stays a note.
+  - The lead prototyped the fix on the PR head.
+  - W1 grows to 17 lines: the word list after the three commands now also reads past the characters that did not end
+    the command.
+  - The test gets 7 deny rows, 1 allow row and 2 growth cases (98 cases).
+  - The lead's differential run (600000 commands, K381) shows that the fix denies every command the base denies. Growth
+    stays linear.
+  - The exact edits go to the implementer session in a private message (K378).
