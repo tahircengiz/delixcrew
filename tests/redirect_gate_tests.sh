@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # T063 (K374): in a card worktree bash_gate.py denies a shell write to a protected path through every redirect operator
 # spelling (no blank after the operator, >>, >|, N>, &>, >&, <>, zsh >! and >&|, a backslash newline) and through
-# every word after cp, mv or tee (any letter case, options too), up to the end of the command outside quotes (across
-# lines, as before). Free paths, fd duplication and the REQ-5 cat heredoc stay allowed, and the check grows linearly
-# (growth ratio). The file stays ASCII (the check marks are octal escapes or chr()).
+# every word after cp, mv or tee (any letter case, options too), up to the end of the command outside quotes,
+# substitutions and redirect operators (across lines, as before). Free paths, fd duplication and the REQ-5 cat heredoc
+# stay allowed, and the check grows linearly (growth ratio). The file stays ASCII (check marks: octal escapes, chr()).
 # Run: bash tests/redirect_gate_tests.sh
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; S="$ROOT/scripts"; FAIL=0
@@ -70,6 +70,13 @@ deny "2 cp, redirect glued to the target" "$C" 'cp a scripts/x.py>&2'         "$
 deny "2 cp, ; inside a quoted source" "$C" 'cp "a;b" auth/x.py'                 "$A"
 deny "2 TEE in upper case"           "$C" 'echo x | TEE scripts/x.py'          "$X"
 deny "2 Cp in mixed case"            "$C" 'Cp a auth/x.py'                     "$A"
+deny "2 cp, fd duplication before the target" "$C" 'cp a 2>&1 auth/x.py'      "$A"
+deny "2 cp, &> before the target"    "$C" 'cp a &>/dev/null auth/x.py'         "$A"
+deny "2 tee, >&2 before the file"    "$C" 'echo x | tee >&2 auth/x.py'         "$A"
+deny "2 tee, >| before the file"     "$C" 'echo x | tee >|/dev/null auth/x.py' "$A"
+deny "2 cp, a pipe inside \$( )"     "$C" 'cp $(ls | head -1) auth/x.py'       "$A"
+deny "2 cp, a pipe inside backticks" "$C" 'cp `ls | head -1` auth/x.py'        "$A"
+deny "2 tee, a pipe inside >( )"     "$C" 'echo x | tee >(cat | sort) auth/x.py' "$A"
 
 # ---- 3. The forms the check saw before keep their deny
 deny "3 > path"                      "$C" 'echo x > auth/x.py'                 "$A"
@@ -104,6 +111,7 @@ allow "4 cp -r src/ build/"          "$C" 'cp -r src/ build/'
 allow "4 mv a b -f"                  "$C" 'mv a b -f'
 allow "4 tee -a notes.md"            "$C" 'echo x | tee -a notes.md'
 allow "4 cp, then a protected path in the next command" "$C" 'cp a b; cat auth/x.py'
+allow "4 cp with 2>&1, then a protected path after a pipe" "$C" 'cp a b 2>&1 | grep auth/x.py'
 
 # ---- 5. The REQ-5 cat heredoc allow cases, without a blank too
 allow "5 cat >notes.md heredoc"      "$C" "$(ml "cat >notes.md <<'EOF'" 'x = 1' 'EOF')"
@@ -129,7 +137,9 @@ cases = [("> then blanks", lambda k: "echo x >" + " " * k + ";"),
          ("a run of zsh >!", lambda k: "echo x " + ">!" * k),
          ("cp then an unclosed quote", lambda k: "cp '" + "a " * k),
          ("cp then quoted words", lambda k: "cp" + " 'a'" * k),
-         ("cp then an unclosed double quote", lambda k: 'cp "' + '\\"' * k)]
+         ("cp then an unclosed double quote", lambda k: 'cp "' + '\\"' * k),
+         ("cp then fd duplications", lambda k: "cp" + " 2>&1" * k),
+         ("cp then unclosed $( and quotes", lambda k: "cp " + "$(a '" * k)]
 bad = 0
 for name, make in cases:
     t = {}

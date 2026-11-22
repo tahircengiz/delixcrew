@@ -118,10 +118,12 @@ protected = cfg.get("protected_paths") or []
 # writing to a protected path via shell redirect / cp / mv / tee. K374: the words the old check took (after `>` or `>>`
 # and a blank); the word after any redirect operator (`>`, `>>`, `>|`, `&>`, `>&`, `N>`, `<>`, zsh `>!`, `>&|`; blanks
 # or none, a backslash newline too) up to a blank, `;`, `&`, `|`, `<` or `>`, whole and split at `(`, `)` and backticks;
-# and every word after cp, mv or tee in any letter case, up to `;`, `&` or `|` outside quotes (across lines), split as
-# the old check split it (at blanks, `;`, `&`, `|`) and also at `<` and `>`, stripped of quotes, `(`, `)` and backticks.
-# Each step is a disjoint class, a bounded repeat or a quote scan (ReDoS); each distinct target is matched once.
-_WORDS = re.compile(r"""\b(?:cp|mv|tee)\b((?:[^;&|\\'"]|\\[\s\S]|'[^']*'|"(?:[^"\\]|\\[\s\S])*"|['"\\])*)""", re.I)
+# and every word after cp, mv or tee in any letter case, up to `;`, `&` or `|` outside quotes, a one-level `$( )`,
+# `<( )`, `>( )` or backtick substitution and a redirect operator (across lines), split as the old check split it (at
+# blanks, `;`, `&`, `|`) and also at `<` and `>`, stripped of quotes, `(`, `)` and backticks. Each step is a disjoint
+# class, a bounded repeat or a quote scan (ReDoS); each distinct target is matched once.
+_WORDS = re.compile(r"""\b(?:cp|mv|tee)\b((?:[$<>]\((?:[^()'"]|'[^']*'|"(?:[^"\\]|\\[\s\S])*")*\)|`[^`]*`"""
+                    r"""|&?[<>]+[&|!]{0,2}|[^;&|\\'"]|\\[\s\S]|'[^']*'|"(?:[^"\\]|\\[\s\S])*"|['"\\])*)""", re.I)
 _REDIR = re.compile(r">[>|&!]{0,3}(?:\s|\\\n)*([^\s;&|<>]+)")
 targets = [m.group(1) for m in re.finditer(r">>?\s+([^\s;&|]+)", cmd)]
 targets += [p for m in _REDIR.finditer(cmd) for p in (m.group(1), *re.split(r"[()`]+", m.group(1)))]
