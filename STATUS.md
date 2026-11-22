@@ -720,6 +720,19 @@ Size M · Tier 3.
 - Bilinen sınırlar README ve sitede yok: `.delix/card`'ın Bash ile üzerine yazılması (T057'de bilerek dışarıda) ve git 2.44 altında işaretin hiç bayatlamaması (spec §6).
 - Doğrulanmadı: CHANGELOG 0.7.3 "both hooks match a path and its real path" (bash gate'te test yolu kuralı yok); `site/index.html:360` "hook çökerse işlem de engellenir" (exit 1'de host'un engellediği doğrulanmadı; Spec D'den önce).
 
+**Spec D lead takibi (2026-11-20 → 2026-11-22):** Spec D kapandıktan sonra bu lead oturumu yalnız aktarım ve kontrol
+yaptı; kod, kart ve STATE yazmadı.
+- Intake: kullanıcının "her geri bildirimi işleme almamalıyız" isteği (2026-11-21) architect'e gitti; öneri yeni lead
+  oturumuna verildi ve Spec F oldu (§16). Öneri grill'den geçti, doğrudan uygulamaya gitmedi.
+- F033 başka bir projeden geldi; düzeltme sonrası gerileme değil. Lead dört durumla üretti: origin/HEAD STATE'inde
+  kartın `file` alanı yoksa ya da kart yalnız origin/HEAD'den farklı bir `default_branch`'te kabul edilmişse
+  `write_gate` bitmiş kartın işaretini reddediyor (fail closed). Intake kararı olmadan düzeltme kartı yazılmadı:
+  I002, T069 #97 (§17).
+- Açık (2026-11-22): T063 #98 tur 3 (head `2e9d442`, CI yeşil), inceleme K374 lead'inde; T064, T068 ve T070 bu
+  sırayla bekliyor. Tur 3 son izinli tur.
+- Ders önerisi (kullanıcı onayı bekliyor): spec varsayımı delix kullanan bütün projelerde ölçülür; K353'ün "hepsinde
+  `file` var" notu yalnız bu repoda ölçülmüştü.
+
 ## 15. Spec E: kart worktree'sinin `.git`'i, worktree dışı Bash yazımı (2026-11-20, `docs/delix/specs/E-gitdir-bash-outside.md`)
 
 Kaynak: Spec D lead'inin takip işi (§14.4 "Lead takibi"; T056 `## Review findings` Round 1 son madde, Round 2
