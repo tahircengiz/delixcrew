@@ -733,7 +733,7 @@ security Low), ayrı lead oturumunda. Size M · Tier 3.
 | 15.4 | Dalga 2: sürüm 0.7.4, T061 🔐 (#92, `d708fff`; taban `512d8b8`, #91, #90; prototip site_tests 23 ✔); Approved 2026-11-20 (`3c93661`); tur 1 qa ACCEPT, security 🔐 HUMAN_APPROVAL, bulgu yok; birleşti, `accepted`; etiket `v0.7.4` kullanıcıda | ✔ 2026-11-20 |
 | 15.5 | Kapanış (`/delixcrew:close`): üç kart `accepted`, her birinde birleşen head son qa SHA'sı (K297); metrikler `docs/delix/metrics.md` (kapı 8, kapı dışı müdahale 13, kart başına 4,3; birleşme sonrası 6 sürüm komutuyla 19; USD ölçülmedi); drift kontrolü (aşağıda Açık iş); feedback taslağı F034; temizlik blokları kullanıcıda | ✔ 2026-11-20 |
 | 15.6 | Açık iş kartı T062 (size S · Tier 2 docs, dalga 31; aşağıdaki "Açık işin durumu"): kapı 1 kart onayı kullanıcı 2026-11-20 (`6d33a29`); uygulayıcı oturumu `delix-t062-spec-e-drift` (dal `claude/reverent-wiles-a75943`); #93 @ `09d96e6`, yedi sha256 kartla aynı, Stop kapısı ve CI yeşil; tur 1 qa ACCEPT, security CLEAN, bulgu yok (iki P2 kartta); birleşti `396bbea`, `accepted`; K374 ayrı lead oturumunda | ✔ 2026-11-20 |
-| 15.7 | K374 düzeltme kartı T063 🔐 (size S · Tier 3 backend, dalga 32; aşağıdaki "K374 takibi"): kapsam kontrolün tamamı (K376), lead prototipi ve özel brif (K378, K379), architect sıfır bağlam eleştirisi (3 tur); kapı 1 kart onayı ve 🔐 Approved 2026-11-21: kullanıcı sohbette "Evet, onaylıyorum" (`400f57d`); uygulayıcı oturumu `delix-t063-bash-gate-yaz` (dal `claude/intelligent-turing-e8fdd2`), #98 @ `7a04c89`, iki dosya lead prototipiyle aynı bayt, Stop kapısı ve CI yeşil (`74853ce`); tur 1 qa ACCEPT, security 🔐 HUMAN_APPROVAL, bir Low ve bir P2 not (`fbbfbc0`); kullanıcı "Evet, 2. tur" (K380); lead prototipi v8 hazır, tur 2 mesajı sırada | ◐ |
+| 15.7 | K374 düzeltme kartı T063 🔐 (size S · Tier 3 backend, dalga 32; aşağıdaki "K374 takibi"): kapsam kontrolün tamamı (K376), lead prototipi ve özel brif (K378, K379), architect sıfır bağlam eleştirisi (3 tur); kapı 1 kart onayı ve 🔐 Approved 2026-11-21: kullanıcı sohbette "Evet, onaylıyorum" (`400f57d`); uygulayıcı oturumu `delix-t063-bash-gate-yaz` (dal `claude/intelligent-turing-e8fdd2`), #98 @ `7a04c89`, iki dosya lead prototipiyle aynı bayt, Stop kapısı ve CI yeşil (`74853ce`); tur 1 qa ACCEPT, security 🔐 HUMAN_APPROVAL, bir Low ve bir P2 not (`fbbfbc0`); kullanıcı "Evet, 2. tur" (K380); tur 2 #98 @ `6446d24`, qa ACCEPT, security 🔐 HUMAN_APPROVAL ve bir Medium (K382); düzeltme turu 2 sırada | ◐ |
 
 **Açık iş (kapanış drift kontrolü, 2026-11-20; architect: REQ-1–REQ-3 uygulanmış, kapı açan çelişki yok; lead aşağıdakileri dosyada doğruladı):**
 - README "Bilinen sınırlar" `cat` heredoc cümlesi (`README.md:445-446`, `README.tr.md:447-448`) artık yanlış: kart worktree'sinde `cat > .git <<'EOF'` geçiyor (`bash_gate.py:119-123` yalnız korunan yolu denetliyor), aynı yazımı Write reddediyor (T059). Cümle worktree dışı yollar için de zaten doğru değildi (A13).
@@ -773,14 +773,22 @@ security Low), ayrı lead oturumunda. Size M · Tier 3.
   arasındaki fark denemesi 600 bin komutta 0/0: tabanın reddettiği her komutu v8 de reddediyor ve tabanın denetlediği
   her hedefi v8 de denetliyor. v7 ile v8 arasında da 600 bin komut denendi. v7'nin reddedip v8'in kabul ettiği 15
   komutun hepsi yapay girdi: korunan yola yazmıyorlar, v7 onları kazara reddediyordu. Büyüme doğrusal (×4 ≈ 4,
-  ×8 ≈ 8–9). Sayılar ve biçimler özel notlarda.
+  ×8 ≈ 8–9). Sayılar ve biçimler özel notlarda. Büyüme iddiası v8 için yanlış çıktı (K382).
+- **K382** (lead, review kuralı, 2026-11-22): tur 2 incelemesinde (#98 @ `6446d24`) qa ACCEPT verdi. security 🔐
+  HUMAN_APPROVAL ve bir Medium buldu: tur 2'de eklenen ikame kısmı ters bölüyü desenin geri kalanından farklı
+  okuyor, bir girdi sınıfında süre karesel büyüyor. Atlatma değil; Bash hook'u 60 s zaman aşımında kapalı kalır.
+  Ama kartın doğrusal kısıtını bozuyor. Lead head'de üretti: uzunluk iki katına çıkınca süre ×4. Önerilen düzeltme
+  (v9) ×2 ile doğrusal; taban↔v9 ve v8↔v9 fark denemesi 900 bin komutta yeni kabul yok. Lead'in tur 2 taraması en
+  fazla 3 karakterlik birim kullanmıştı. 4 karakterlik taramada 62 işaret çıktı; tek başına ölçülünce hepsi
+  doğrusal (en kötü ×8 oranı 9,8). Medium düzeltme ister (review kuralı), düzeltme turu 2 uygulayıcıya gider.
 - **Adımlar (2026-11-22):**
   - ✔ repro, kapsam ve advisory (K376, K377);
   - ✔ kart, özel brif, architect 3 tur;
   - ✔ onay (`400f57d`);
   - ✔ uygulayıcı oturumu ve #98 (`74853ce`);
   - ✔ tur 1 (`fbbfbc0`);
-  - ◐ tur 2: v8 prototipi doğrulandı, kart, brif ve uygulayıcıya mesaj sırada;
+  - ✔ tur 2: v8 (`295242b`), #98 @ `6446d24`; qa ACCEPT, security bir Medium (K382);
+  - ◐ tur 3: v9 prototipi doğrulandı, kart, brif ve uygulayıcıya mesaj sırada;
   - ◻ tur 2 incelemesi, kapı 2 (kullanıcı `--match-head-commit` ile birleştirir), sürüm kartı T064 🔐,
     advisory taslağının son hali, K374 kapanışı.
 - **Açık riskler:**
