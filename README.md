@@ -430,7 +430,11 @@ inherit its approval. The project's own `.claude/settings.json` hooks and `PATH`
 folder trust dialog; the approval closes only the `delix.json` channel. The Bash hook's denylist is friction, not a
 boundary: commands built from split quotes, variables or globs get past it, and so does a path to the trust record
 written as a relative path after `cd`, with `//` or `/./`, or through a symlinked directory, because that rule is a
-substring match (K220); the boundary is Claude Code's Bash permission prompt (K77). The implementer push rule (T041,
+substring match (K220); the boundary is Claude Code's Bash permission prompt (K77). After `cp`, `mv` or `tee` the
+Bash write rule reads a one-level `$( )`, `<( )` or `>( )` only up to its first `)`: after a `(` or a quoted or
+escaped `)` inside one, the words that follow a `;`, `&` or `|` may not be read; earlier versions did not read them
+either (K384). A target with very many path parts costs more than linear time in the path match the hooks share
+(`scripts/common.py`); past the 60 s timeout the Bash hook fails closed (K387). The implementer push rule (T041,
 K279) is a check on words too, an allowlist that fails closed, defence in depth and not a GitHub boundary: words built
 from variables, `eval`, globs, ANSI-C escapes such as `$'\x67it'`, a command whose output spells a word (`$(echo gi)t`),
 and brace expansion (`git {push,origin,HEAD:main}` runs as a push), git settings given through the environment
