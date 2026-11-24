@@ -2043,7 +2043,7 @@
       "tier": 3,
       "status": "fixing",
       "pr": 98,
-      "rounds": 2,
+      "rounds": 3,
       "cost_usd": null,
       "spec": null,
       "agents": [
@@ -2088,6 +2088,22 @@
           "sha": "6446d24351622ffc8bd39ae7f9ee06eeddc91b6b",
           "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
           "at": "2026-11-22T15:18:51Z"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 3,
+          "sha": "2e9d442d684cf4b4d9c073547dbb7fff9a8ae2f6",
+          "verdict": "ACCEPT",
+          "at": "2026-11-24T10:28:43Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 3,
+          "sha": "2e9d442d684cf4b4d9c073547dbb7fff9a8ae2f6",
+          "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
+          "at": "2026-11-24T10:40:19Z"
         }
       ]
     },
