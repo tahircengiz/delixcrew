@@ -682,6 +682,31 @@
       "reason": "Seen on current main; one event, no open gate, no wrong sentence and no blocked step, so the table defers it.",
       "consent": null,
       "work": null
+    },
+    {
+      "id": "I034",
+      "title": "A command target with very many path parts makes the shared protected-path check slower than linear",
+      "refs": [
+        "T063.R4.1"
+      ],
+      "evidence": {
+        "gate_open": true,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "main@4623f51",
+        "covered_by": "K387"
+      },
+      "decision": "duplicate",
+      "basis": "table",
+      "reason": "Known limit (K387): on main and before T063 the time grows faster than linear with the number of path parts; the hook fails closed on its timeout, so no write gets through.",
+      "consent": {
+        "decision": "duplicate",
+        "table": "duplicate",
+        "events": 1,
+        "at": "2026-11-24T13:03:23Z"
+      },
+      "work": null
     }
   ]
 }

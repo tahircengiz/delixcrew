@@ -746,7 +746,7 @@ security Low), ayrı lead oturumunda. Size M · Tier 3.
 | 15.4 | Dalga 2: sürüm 0.7.4, T061 🔐 (#92, `d708fff`; taban `512d8b8`, #91, #90; prototip site_tests 23 ✔); Approved 2026-11-20 (`3c93661`); tur 1 qa ACCEPT, security 🔐 HUMAN_APPROVAL, bulgu yok; birleşti, `accepted`; etiket `v0.7.4` kullanıcıda | ✔ 2026-11-20 |
 | 15.5 | Kapanış (`/delixcrew:close`): üç kart `accepted`, her birinde birleşen head son qa SHA'sı (K297); metrikler `docs/delix/metrics.md` (kapı 8, kapı dışı müdahale 13, kart başına 4,3; birleşme sonrası 6 sürüm komutuyla 19; USD ölçülmedi); drift kontrolü (aşağıda Açık iş); feedback taslağı F034; temizlik blokları kullanıcıda | ✔ 2026-11-20 |
 | 15.6 | Açık iş kartı T062 (size S · Tier 2 docs, dalga 31; aşağıdaki "Açık işin durumu"): kapı 1 kart onayı kullanıcı 2026-11-20 (`6d33a29`); uygulayıcı oturumu `delix-t062-spec-e-drift` (dal `claude/reverent-wiles-a75943`); #93 @ `09d96e6`, yedi sha256 kartla aynı, Stop kapısı ve CI yeşil; tur 1 qa ACCEPT, security CLEAN, bulgu yok (iki P2 kartta); birleşti `396bbea`, `accepted`; K374 ayrı lead oturumunda | ✔ 2026-11-20 |
-| 15.7 | K374 düzeltme kartı T063 🔐 (size S · Tier 3 backend, dalga 32; aşağıdaki "K374 takibi"): kapsam kontrolün tamamı (K376), lead prototipi ve özel brif (K378, K379), architect sıfır bağlam eleştirisi (3 tur); kapı 1 kart onayı ve 🔐 Approved 2026-11-21: kullanıcı sohbette "Evet, onaylıyorum" (`400f57d`); uygulayıcı oturumu `delix-t063-bash-gate-yaz` (dal `claude/intelligent-turing-e8fdd2`), #98 @ `7a04c89`, iki dosya lead prototipiyle aynı bayt, Stop kapısı ve CI yeşil (`74853ce`); tur 1 qa ACCEPT, security 🔐 HUMAN_APPROVAL, bir Low ve bir P2 not (`fbbfbc0`); kullanıcı "Evet, 2. tur" (K380); tur 2 #98 @ `6446d24`, qa ACCEPT, security 🔐 HUMAN_APPROVAL ve bir Medium (K382); tur 3 #98 @ `2e9d442`, qa ACCEPT, security 🔐 HUMAN_APPROVAL ve bir Medium (K383); son düzeltme turu 3 (K384) #98 @ `923e745`, tur 4 qa ACCEPT, security 🔐 HUMAN_APPROVAL, bulgu yok (K385); kullanıcı birleştirdi (`4623f51`, 2026-11-24), `accepted`; tek sürüm 0.8.0 (K386), T064 docs kartı sırada | ◐ |
+| 15.7 | K374 düzeltme kartı T063 🔐 (size S · Tier 3 backend, dalga 32; aşağıdaki "K374 takibi"): kapsam kontrolün tamamı (K376), lead prototipi ve özel brif (K378, K379), architect sıfır bağlam eleştirisi (3 tur); kapı 1 kart onayı ve 🔐 Approved 2026-11-21: kullanıcı sohbette "Evet, onaylıyorum" (`400f57d`); uygulayıcı oturumu `delix-t063-bash-gate-yaz` (dal `claude/intelligent-turing-e8fdd2`), #98 @ `7a04c89`, iki dosya lead prototipiyle aynı bayt, Stop kapısı ve CI yeşil (`74853ce`); tur 1 qa ACCEPT, security 🔐 HUMAN_APPROVAL, bir Low ve bir P2 not (`fbbfbc0`); kullanıcı "Evet, 2. tur" (K380); tur 2 #98 @ `6446d24`, qa ACCEPT, security 🔐 HUMAN_APPROVAL ve bir Medium (K382); tur 3 #98 @ `2e9d442`, qa ACCEPT, security 🔐 HUMAN_APPROVAL ve bir Medium (K383); son düzeltme turu 3 (K384) #98 @ `923e745`, tur 4 qa ACCEPT, security 🔐 HUMAN_APPROVAL, bulgu yok (K385); kullanıcı birleştirdi (`4623f51`, 2026-11-24), `accepted`; tek sürüm 0.8.0 (K386); T064 docs kartı (dalga 33) onaylandı, I034 kayıtta (K388) | ◐ |
 
 **Açık iş (kapanış drift kontrolü, 2026-11-20; architect: REQ-1–REQ-3 uygulanmış, kapı açan çelişki yok; lead aşağıdakileri dosyada doğruladı):**
 - README "Bilinen sınırlar" `cat` heredoc cümlesi (`README.md:445-446`, `README.tr.md:447-448`) artık yanlış: kart worktree'sinde `cat > .git <<'EOF'` geçiyor (`bash_gate.py:119-123` yalnız korunan yolu denetliyor), aynı yazımı Write reddediyor (T059). Cümle worktree dışı yollar için de zaten doğru değildi (A13).
@@ -822,6 +822,13 @@ security Low), ayrı lead oturumunda. Size M · Tier 3.
 - **K387** (kullanıcı kararı, 2026-11-24): tur 4'te çıkan kart dışı maliyet (çok parçalı bir hedefin ortak yol
   kontrolündeki süresi üst-doğrusal, tabanda da aynı, hook zaman aşımında kapalı kalır) Bilinen sınır olur: README
   Known limits'e bir cümle (T064) ve intake'e `covered_by: K387` ile bir öğe. Kod değişmez.
+- **K388** (kullanıcı kararı, 2026-11-24): T064 kartı onaylandı ("Onayla, duplicate I034"; size S · Tier 2 docs,
+  dalga 33, kapı 1 kart onayı). Kart CHANGELOG `## Unreleased`'e T063 maddesini, README ve README.tr Known limits'e
+  iki cümleyi ekler: ikame içindeki `(` ya da tırnaklı veya kaçışlı `)` (K384) ve çok parçalı hedefin yol eşleme
+  maliyeti (K387). Architect sıfır bağlam eleştirisi tur 1 FIX (iki P1: "doğrusal" iddiası K387 ile çelişiyordu,
+  site testinin son satırı yanlıştı), tur 2 ACCEPT. Lead prototipi `93f2718` kopyasında (üç dosya `a12c899` ile
+  aynı): sha256 kartta, 22 dosya 1790 ✔ iki Python'da; taban ve head probe'u yeni Bilinen sınır cümlesini doğruladı.
+  Aynı mesajla intake I034 (`T063.R4.1`, `gate_open`, `covered_by: K387`) `duplicate`, `basis: table`, onaylı.
 - **Adımlar (2026-11-24):**
   - ✔ repro, kapsam ve advisory (K376, K377);
   - ✔ kart, özel brif, architect 3 tur;
@@ -833,11 +840,9 @@ security Low), ayrı lead oturumunda. Size M · Tier 3.
   - ✔ düzeltme turu 3 (son): v10 (K384), #98 @ `923e745`;
   - ✔ tur 4: qa ACCEPT, security 🔐 HUMAN_APPROVAL, bulgu yok (K385);
   - ✔ kapı 2: kullanıcı #98'i birleştirdi (`4623f51`, head `923e745` = tur 4 qa sha'sı), `accepted`;
-  - ◐ T064 docs kartı (K386, K387): CHANGELOG `## Unreleased` maddesi, README ve README.tr Known limits; lead
-    prototipi `a12c899` kopyasında hazır (üç çapa, sha256 ve doküman testleri); kart, architect eleştirisi ve kapı 1
-    sırada;
-  - ◻ intake öğesi (K387; bakımcının sohbette `<karar> I<nnn>` onayı gerekir);
-  - ◻ T064 uygulayıcı, inceleme ve birleştirme (birleşince Spec F lead'ine haber; T068 ona çapalanır);
+  - ✔ T064 docs kartı (K386, K387): prototip, architect 2 tur (FIX, ACCEPT), kapı 1 kart onayı (K388);
+  - ✔ intake I034 `duplicate`, onaylı (K388);
+  - ◐ T064 uygulayıcı, inceleme ve birleştirme (birleşince Spec F lead'ine haber; T068 ona çapalanır);
   - ◻ K374 kapanışı (#98, `4623f51`), advisory taslağının son hali (sürüm 0.8.0, T068'den sonra yayımlanır).
 - **Açık riskler:**
   - PR farkı birleşene dek kodu ve testi herkese açık gösteriyor (K377'de kabul edildi);

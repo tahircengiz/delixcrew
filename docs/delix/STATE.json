@@ -213,6 +213,13 @@
       "note": "K374 follow-up (STATUS \u00a715 K374, K376-K379), size S, gate 1 = card approval. Tier 3 backend: scripts/bash_gate.py W1 (lines 118-120) and new tests/redirect_gate_tests.sh; anchors from the lead's prototype on 2e8a09a; the write forms, W1 text and test file are in a private brief appended to the dispatch prompt, not in the repo (K378). A release card follows."
     },
     {
+      "wave": 33,
+      "cards": [
+        "T064"
+      ],
+      "note": "T063 release follow-up (K386, K387), size S, gate 1 = card approval (2026-11-24). Tier 2 docs: CHANGELOG.md Unreleased item for T063 (#98) whose first line T068 anchors on, and two Known limits sentences in README.md and README.tr.md (K384, K387); no code, test, site or version change. Anchors from the lead's prototype on 93f2718 (the three files as on a12c899): after sha256s, 22 test files 1790 on both Pythons; architect critique FIX then ACCEPT. T068 releases 0.8.0 after this card merges."
+    },
+    {
       "wave": 34,
       "cards": [
         "T065",
@@ -2127,6 +2134,17 @@
         "head": "923e7454653579f163dac5e86caef0743193aecf",
         "at": "2026-11-24T12:26:10Z"
       }
+    },
+    "T064": {
+      "file": "docs/delix/tasks/T064-docs-t063-changelog-limits.md",
+      "role": "docs",
+      "tier": 2,
+      "status": "open",
+      "pr": null,
+      "rounds": 0,
+      "cost_usd": null,
+      "spec": null,
+      "agents": []
     },
     "T065": {
       "file": "docs/delix/tasks/T065-script-intake-checker.md",
