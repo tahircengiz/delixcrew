@@ -140,7 +140,8 @@ cases = [("> then blanks", lambda k: "echo x >" + " " * k + ";"),
          ("cp then an unclosed double quote", lambda k: 'cp "' + '\\"' * k),
          ("cp then fd duplications", lambda k: "cp" + " 2>&1" * k),
          ("cp then unclosed $( and quotes", lambda k: "cp " + "$(a '" * k),
-         ("cp then $( and escaped double quotes", lambda k: "cp " + '$(\\"' * k)]
+         ("cp then $( and escaped double quotes", lambda k: "cp " + '$(\\"' * k),
+         ("cp then $( with an escaped quote and backticks", lambda k: "cp " + "$(\\'`'`" * k)]
 bad = 0
 for name, make in cases:
     t = {}
