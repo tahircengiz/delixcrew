@@ -2139,12 +2139,39 @@
       "file": "docs/delix/tasks/T064-docs-t063-changelog-limits.md",
       "role": "docs",
       "tier": 2,
-      "status": "open",
-      "pr": null,
-      "rounds": 0,
+      "status": "fixing",
+      "pr": 99,
+      "rounds": 1,
       "cost_usd": null,
       "spec": null,
-      "agents": []
+      "agents": [
+        {
+          "role": "implementer",
+          "by": "main",
+          "round": 0,
+          "sha": null,
+          "verdict": null,
+          "at": "2026-11-24T13:05:25Z",
+          "branch": "claude/lucid-dirac-e8878c",
+          "session": "delix-t064-docs"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 1,
+          "sha": "f5f0577909f0b299e19f165393265da9564dfca5",
+          "verdict": "ACCEPT",
+          "at": "2026-11-24T15:55:32Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 1,
+          "sha": "f5f0577909f0b299e19f165393265da9564dfca5",
+          "verdict": "FIX",
+          "at": "2026-11-24T15:55:32Z"
+        }
+      ]
     },
     "T065": {
       "file": "docs/delix/tasks/T065-script-intake-checker.md",
