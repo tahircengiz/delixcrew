@@ -931,19 +931,23 @@ K376–K399 paralel lead'in; T065–T068, dalga 34–36 ve K400–K449 Spec F'ni
 - **K456** (kullanıcı, 2026-11-21, geri alınır) T069 tur 2: security'nin Low bulgusu (S1) bu kartta düzelir; H2
   cümlesi dal adını söyler ama komut vermez, lead'i dispatch adım 4 denetimine yönlendirir. Neden: açık bu kartla
   geliyor ve düzeltme üç satır. Seçilmeyen: olduğu gibi merge ve Low'u intake'e almak.
-- Sıradaki K numarası K457.
+- **K457** (lead, 2026-11-24, geri alınır) CHANGELOG: T069'un satırı T068'in `## 0.8.0` bölümüne girer (Spec F K439);
+  T070 kendi README/site değişikliği için yeni `## Unreleased` altına ayrı bir satır yazar, T069 satırını tekrarlamaz.
+  Neden: depoda README ve site değişiklikleri kendi satırını alıyor (ör. intake adımı satırı). T069 satır taslağı lead
+  tarafından koda karşı denetlendi (üç düzeltme Spec F lead'ine gönderildi).
+- Sıradaki K numarası K458.
 
 **Açık riskler ve notlar (17):**
 - [Düşük] H2 worktree'deki `delix.json`'u boyut sınırı olmadan okur; `gate_config` ile aynı yol, T069 ile gelmedi.
 - [Düşük] Worktree `delix.json`'unun Bash ile yazılması T063'ün kapsamında (`scripts/bash_gate.py`); T069 buna
   dayanmaz, ret kararı yine origin/HEAD'den gelir.
-- [Düşük] T070 sıralaması: T070 T068'i, T068 de T064'ü bekliyor (K438). 0.8.0 T069'un kodunu da taşıyacak; CHANGELOG
-  satırının T068'e mi T070'e mi gireceği Spec F lead'inin kararı.
+- [Düşük] T070 sıralaması: T070 T068'i, T068 de T064'ü bekliyor (K438). CHANGELOG ayrımı K457'de: T069 satırı
+  0.8.0'da, T070 yalnız kendi doküman satırını yazar.
 - Kayıtlar: kart `docs/delix/tasks/T069-hooks-finished-marker-cause.md`, dispatch `docs/delix/tasks/T069.dispatch.md`,
   STATE `cards.T069` (`accepted`, `merged` `05989b8`), intake I002 `work: T069`, implementer dalı
-  `claude/ecstatic-goldwasser-f25820`. T070 yeni oturumda, K457'den başlar.
+  `claude/ecstatic-goldwasser-f25820`. T070 yeni oturumda, K458'den başlar.
 
-Son güncelleme (17): 2026-11-21, main `309843e` sonrası.
+Son güncelleme (17): 2026-11-24, main `a12c899` sonrası.
 
 ## Açık riskler
 - [Orta] Harness bileşenleri model nesline bağlı varsayım taşır; ilk "bir bileşeni çıkar" turu yapıldı (K32), her pilotta tekrarlanır.
