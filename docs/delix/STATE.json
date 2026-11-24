@@ -2041,7 +2041,7 @@
       "file": "docs/delix/tasks/T063-hooks-bash-protected-write-forms.md",
       "role": "backend",
       "tier": 3,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 98,
       "rounds": 3,
       "cost_usd": null,
@@ -2121,7 +2121,12 @@
           "verdict": "\ud83d\udd10 HUMAN_APPROVAL",
           "at": "2026-11-24T11:46:22Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "4623f51a15a8a4d69d7f293284e728b51508272e",
+        "head": "923e7454653579f163dac5e86caef0743193aecf",
+        "at": "2026-11-24T12:26:10Z"
+      }
     },
     "T065": {
       "file": "docs/delix/tasks/T065-script-intake-checker.md",
