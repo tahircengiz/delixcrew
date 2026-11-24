@@ -218,3 +218,12 @@ Kart: [`docs/delix/tasks/T064-docs-t063-changelog-limits.md`](docs/delix/tasks/T
     adds the `$'…'` limit. The form goes to the later code card with K389.
 - **Fix round 2** (2026-11-24): C1, R1 and R2 above replace the round 1 texts, and the K387 sentence names older
   versions. The sha256 table, numstat, PR title and PR body above are the round 2 values.
+- **Round 3** (PR #99 @ `6fa791d0ca21a633c911a760f4329879d67a398e`, 2026-11-24):
+  - Deterministic gates:
+    - the three sha256s equal the round 2 "after" prefixes (`27d93a5301815a3d`, `fa849f5529d8dc64`, `1a1139e1a8a30fa6`);
+    - numstat `13 0`, `11 1`, `12 1`;
+    - the Stop gate ends `[exit 0]` with no `✘`; CI `check` and `test` pass.
+  - qa: ACCEPT. No findings.
+  - security: CLEAN. The round 2 Low is closed; gitleaks and the invisible character scan found nothing.
+    - Unsure: the CHANGELOG cites the K387 timeout limit by number only. Lead: no change; Known limits explains it and
+      the CHANGELOG claims no complete list (K391).

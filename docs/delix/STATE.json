@@ -2139,7 +2139,7 @@
       "file": "docs/delix/tasks/T064-docs-t063-changelog-limits.md",
       "role": "docs",
       "tier": 2,
-      "status": "fixing",
+      "status": "in_review",
       "pr": 99,
       "rounds": 2,
       "cost_usd": null,
@@ -2186,6 +2186,22 @@
           "sha": "55cac538cd584fae1b1f45c7a15c6da3a344748d",
           "verdict": "FIX",
           "at": "2026-11-24T17:22:05Z"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 3,
+          "sha": "6fa791d0ca21a633c911a760f4329879d67a398e",
+          "verdict": "ACCEPT",
+          "at": "2026-11-24T17:49:32Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 3,
+          "sha": "6fa791d0ca21a633c911a760f4329879d67a398e",
+          "verdict": "CLEAN",
+          "at": "2026-11-24T17:49:32Z"
         }
       ]
     },
