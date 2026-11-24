@@ -2141,7 +2141,7 @@
       "tier": 2,
       "status": "fixing",
       "pr": 99,
-      "rounds": 1,
+      "rounds": 2,
       "cost_usd": null,
       "spec": null,
       "agents": [
@@ -2170,6 +2170,22 @@
           "sha": "f5f0577909f0b299e19f165393265da9564dfca5",
           "verdict": "FIX",
           "at": "2026-11-24T15:55:32Z"
+        },
+        {
+          "role": "qa",
+          "by": "main",
+          "round": 2,
+          "sha": "55cac538cd584fae1b1f45c7a15c6da3a344748d",
+          "verdict": "ACCEPT",
+          "at": "2026-11-24T17:22:05Z"
+        },
+        {
+          "role": "security",
+          "by": "main",
+          "round": 2,
+          "sha": "55cac538cd584fae1b1f45c7a15c6da3a344748d",
+          "verdict": "FIX",
+          "at": "2026-11-24T17:22:05Z"
         }
       ]
     },

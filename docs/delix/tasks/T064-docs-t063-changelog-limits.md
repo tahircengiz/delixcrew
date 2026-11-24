@@ -1,4 +1,4 @@
-# T064 — Docs: T063's CHANGELOG item and the Known limits of its review (K386, K387, K389)
+# T064 — Docs: T063's CHANGELOG item and the Known limits of its review (K386, K387, K389, K390)
 
 | id | size | tier | role | wave | status |
 |---|---|---|---|---|---|
@@ -9,9 +9,9 @@ no file is protected and none matches `test_paths` (`docs/delix/delix.json`), so
 change: it does not carry these sentences, and the version marks go with the release card T068.
 
 **Goal (1 sentence):** `CHANGELOG.md` `## Unreleased` gets the item for T063 (#98) and the Known limits of `README.md`
-and `README.tr.md` get the three limits the T063 and T064 reviews settled, so the next release (0.8.0, T068) ships with accurate
+and `README.tr.md` get the limits the T063 and T064 reviews settled, so the next release (0.8.0, T068) ships with accurate
 notes. · **Spec:** none (size S; gate 1 is this card's approval). Sources: `STATUS.md` §15 K374, K384, K385, K386,
-K387, K389; card `docs/delix/tasks/T063-hooks-bash-protected-write-forms.md` (Review findings, rounds 1–4) and this
+K387, K389, K390; card `docs/delix/tasks/T063-hooks-bash-protected-write-forms.md` (Review findings, rounds 1–4) and this
 card's Review findings.
 
 **Docs/site:** this card is the docs update. No version change (K386: one release, 0.8.0, by T068).
@@ -34,7 +34,7 @@ Current (1 line):
 ````text
   the drafts of one problem joined in one intake item. The index lists the record among what the lead writes.
 ````
-New (13 lines):
+New (14 lines):
 ````text
   the drafts of one problem joined in one intake item. The index lists the record among what the lead writes.
 - **The Bash hook sees the protected-path writes its check missed** (🔐 K374, K376, K380, K382, K384; #98): in a card
@@ -45,10 +45,11 @@ New (13 lines):
   operator and read one word after `cp`, `mv` or `tee`, so with `auth/**` protected a write such as
   `echo x >auth/x.py`, `tee -a auth/x.py` or `cp a auth/x.py -f` reached a protected path without a denial. Every
   word the old check read is still read, the command is scanned in linear time, each distinct word is matched once,
-  and a protected path used as a `cp` source is denied too (fail closed). Three limits of the new reading remain and
-  are in Known limits (K384, K387, K389); the rule's other limits (other write commands, variables, globs, split
-  quotes, targets outside the worktree) do not change. `tests/redirect_gate_tests.sh` holds the cases and 14 growth
-  checks; a security advisory follows the release.
+  and a protected path used as a `cp` source is denied too (fail closed). The rule still reads words, not the shell's
+  grammar, so some quoting, substitution and line-continuation forms get past it, as do other write commands,
+  variables, globs, split quotes and targets outside the worktree; Known limits has the details (K384, K387, K389,
+  K390). `tests/redirect_gate_tests.sh` holds the cases and 14 growth checks; a security advisory follows the
+  release.
 ````
 
 **R1 · `README.md` line 433 · replace.** The line is split; the sentence that starts with `The implementer push rule` goes on as before.
@@ -56,15 +57,19 @@ Current (1 line):
 ````text
 substring match (K220); the boundary is Claude Code's Bash permission prompt (K77). The implementer push rule (T041,
 ````
-New (7 lines):
+New (11 lines):
 ````text
-substring match (K220); the boundary is Claude Code's Bash permission prompt (K77). After `cp`, `mv` or `tee` the
-Bash write rule reads a one-level `$( )`, `<( )` or `>( )` only up to its first `)`: after a `(` or a quoted or
-escaped `)` inside one, the words that follow a `;`, `&` or `|` may not be read; earlier versions did not read them
-either (K384). A backslash newline between the characters of a redirect operator, which bash joins into one operator,
-may hide the target from the rule; zsh rejects such a command (K389). A target with very many path parts costs more
-than linear time in the path match the hooks share (`scripts/common.py`); past the 60 s timeout the Bash hook fails
-closed on Claude Code 2.1.295 or later, which applies `onFailure: "block"` (K387). The implementer push rule (T041,
+substring match (K220); the boundary is Claude Code's Bash permission prompt (K77). The Bash write rule is a word
+check of the same kind: it reads words, not the shell's grammar, so a quoting or substitution form it does not model
+can hide a target. After `cp`, `mv` or `tee` it reads a one-level `$( )`, `<( )` or `>( )` only up to its first `)`:
+after a `(` or a quoted or escaped `)` inside one, the words that follow a `;`, `&` or `|` may not be read; earlier
+versions did not read them either (K384). It reads a `$'…'` word as plain single quotes, so an escaped quote inside
+one can end the word list; earlier versions did not read those words either (K390). A backslash newline between the
+characters of a redirect operator, which bash joins into one operator, may hide the target from the rule; zsh rejects
+such a command (K389). A target with very many path parts costs more than linear time in the path match the hooks
+share (`scripts/common.py`); past the 60 s timeout the Bash hook fails closed on Claude Code 2.1.295 or later, which
+applies `onFailure: "block"`; older versions lack the field, and there a timed-out hook does not block the call
+(K387). The implementer push rule (T041,
 ````
 
 **R2 · `README.tr.md` line 434 · replace.** The same in Turkish; the sentence that starts with `Uygulayıcının push kuralı` goes on as before.
@@ -72,26 +77,30 @@ Current (1 line):
 ````text
 bir alt dize eşleşmesidir (K220); sınır Claude Code'un Bash izin istemidir (K77). Uygulayıcının push kuralı (T041, K279)
 ````
-New (8 lines):
+New (12 lines):
 ````text
-bir alt dize eşleşmesidir (K220); sınır Claude Code'un Bash izin istemidir (K77). `cp`, `mv` ya da `tee`'den sonra
-Bash yazma kuralı tek düzeyli bir `$( )`, `<( )` ya da `>( )`'yi yalnız ilk `)`'ye kadar okur: içinde bir `(` ya da
-tırnaklı veya kaçışlı bir `)` varsa, ardından gelen `;`, `&` ya da `|`'den sonraki kelimeler okunmayabilir; önceki
-sürümler de okumuyordu (K384). Bir yönlendirme operatörünün karakterleri arasındaki ters bölü ve yeni satır, bash'in
-tek operatöre birleştirdiği bir yazım, hedefi kuraldan gizleyebilir; zsh böyle bir komutu reddeder (K389). Çok sayıda
-parçası olan bir hedef yolun, hook'ların ortak yol eşlemesindeki (`scripts/common.py`) süresi doğrusaldan hızlı
-büyür; 60 s zaman aşımını geçerse Bash hook'u, `onFailure: "block"`'u uygulayan Claude Code 2.1.295 ve sonrasında
-komutu reddeder (K387). Uygulayıcının push kuralı (T041, K279)
+bir alt dize eşleşmesidir (K220); sınır Claude Code'un Bash izin istemidir (K77). Bash yazma kuralı da aynı türden
+bir kelime denetimidir: kabuğun dilbilgisini değil kelimeleri okur, bu yüzden modellemediği bir tırnak ya da ikame
+biçimi hedefi gizleyebilir. `cp`, `mv` ya da `tee`'den sonra tek düzeyli bir `$( )`, `<( )` ya da `>( )`'yi yalnız
+ilk `)`'ye kadar okur: içinde bir `(` ya da tırnaklı veya kaçışlı bir `)` varsa, ardından gelen `;`, `&` ya da
+`|`'den sonraki kelimeler okunmayabilir; önceki sürümler de okumuyordu (K384). `$'…'` kelimesini düz tek tırnak gibi
+okur, bu yüzden içindeki kaçışlı bir tırnak kelime listesini bitirebilir; önceki sürümler de o kelimeleri okumuyordu
+(K390). Bir yönlendirme operatörünün karakterleri arasındaki ters bölü ve yeni satır, bash'in tek operatöre
+birleştirdiği bir yazım, hedefi kuraldan gizleyebilir; zsh böyle bir komutu reddeder (K389). Çok sayıda parçası olan
+bir hedef yolun, hook'ların ortak yol eşlemesindeki (`scripts/common.py`) süresi doğrusaldan hızlı büyür; 60 s zaman
+aşımını geçerse Bash hook'u, `onFailure: "block"`'u uygulayan Claude Code 2.1.295 ve sonrasında komutu reddeder; daha
+eski sürümlerde bu alan yoktur ve zaman aşımına uğrayan hook çağrıyı durdurmaz (K387).
+Uygulayıcının push kuralı (T041, K279)
 ````
 
-**Lead prototype (2026-11-24, after review round 1; a copy of main `926e736`, where the three files are as on
+**Lead prototype (2026-11-24, after review round 2; a copy of main `926e736`, where the three files are as on
 `a12c899`; Python 3.9.6 and 3.13.13):** the three edits applied to that copy give these sha256 prefixes (16 hex) and line counts; compare yours with `shasum -a 256 <file>`.
 
 | file | base | after |
 |---|---|---|
-| `CHANGELOG.md` | `8cb2f1ccbac3d548` (336 lines) | `022abd6116b0a3d2` (348 lines) |
-| `README.md` | `bab0c59c06deb58b` (483 lines) | `39bb153ffd95f612` (489 lines) |
-| `README.tr.md` | `17f329eac099e3f2` (486 lines) | `668850318c4bdf40` (493 lines) |
+| `CHANGELOG.md` | `8cb2f1ccbac3d548` (336 lines) | `27d93a5301815a3d` (349 lines) |
+| `README.md` | `bab0c59c06deb58b` (483 lines) | `fa849f5529d8dc64` (493 lines) |
+| `README.tr.md` | `17f329eac099e3f2` (486 lines) | `1a1139e1a8a30fa6` (497 lines) |
 
 On that copy all 22 test files exit 0 on 3.9.6 and on the 3.13 shim (1790 `✔`, 0 `✘`).
 
@@ -110,7 +119,7 @@ On that copy all 22 test files exit 0 on 3.9.6 and on the 3.13 shim (1790 `✔`,
    (`$ <command>`, output, `[exit <code>]`). That file stays local.
 5. Commit and push:
    - Run `git add CHANGELOG.md README.md README.tr.md` in a call of its own.
-   - Commit `T064: T063'ün CHANGELOG maddesi ve Bilinen sınır cümleleri (K386, K387, K389)` in a call of its own.
+   - Commit `T064: T063'ün CHANGELOG maddesi ve Bilinen sınır cümleleri (K386, K387, K389, K390)` in a call of its own.
    - Run `git push -u origin HEAD` alone, from the worktree root.
    - Write the PR body below with the Write tool to `.delix/pr-body.md` and open the PR with
      `gh pr create --title "<commit subject>" --body-file .delix/pr-body.md`.
@@ -122,7 +131,7 @@ On that copy all 22 test files exit 0 on 3.9.6 and on the 3.13 shim (1790 `✔`,
   `P13="$(mktemp -d)" && ln -s /opt/homebrew/bin/python3.13 "$P13/python3" && for t in tests/*_tests.sh; do PATH="$P13:$PATH" bash "$t" || exit 1; done`.
 - `claude plugin validate .` → exit 0.
 - `shasum -a 256 CHANGELOG.md README.md README.tr.md` → the three "after" prefixes of the table above.
-- `git diff --numstat origin/main...HEAD` → exactly `12	0	CHANGELOG.md`, `7	1	README.md` and `8	1	README.tr.md`.
+- `git diff --numstat origin/main...HEAD` → exactly `13	0	CHANGELOG.md`, `11	1	README.md` and `12	1	README.tr.md`.
 - Line length and invisible characters on the added lines (no output):
 ```text
 git diff -U0 origin/main...HEAD -- CHANGELOG.md README.md README.tr.md | python3 -c "import sys,unicodedata as u; [print(l.rstrip()) for l in sys.stdin if l.startswith('+') and not l.startswith('+++') and (len(l.rstrip(chr(10)))>118 or any(u.category(c)=='Cf' for c in l))]"
@@ -130,7 +139,7 @@ git diff -U0 origin/main...HEAD -- CHANGELOG.md README.md README.tr.md | python3
 
 ## Review Focus
 - Each claim against the merged code and the T063 card: the operator list, where the word list ends, "every word
-  the old check read is still read", the `cp` source denial, the 14 growth checks, and the three limits (K384, K387 with its Claude Code version, K389 in bash and zsh).
+  the old check read is still read", the `cp` source denial, the 14 growth checks, the word-check sentence, and the limits (K384, K390, K389 in bash and zsh, K387 with its Claude Code version).
 - The English and Turkish Known limits sentences say the same thing, and both name the rule as the rest of Known
   limits does (the Bash write rule, Bash yazma kuralı).
 - T068 anchors on the first line of C1's item; it must stay one line as written.
@@ -152,19 +161,20 @@ both runs · PR number and branch · assumptions · remaining work. Read only th
 
 ### PR body (Write tool, then `--body-file`; fill the `<…>` fields from your own run)
 ````markdown
-Kart: [`docs/delix/tasks/T064-docs-t063-changelog-limits.md`](docs/delix/tasks/T064-docs-t063-changelog-limits.md) · STATUS §15 K386, K387, K389 · Tier 2
+Kart: [`docs/delix/tasks/T064-docs-t063-changelog-limits.md`](docs/delix/tasks/T064-docs-t063-changelog-limits.md) · STATUS §15 K386, K387, K389, K390 · Tier 2
 
 ## Ne değişti
 - `CHANGELOG.md`: `## Unreleased` altına T063 (#98) maddesi; sürüm başlığı T068'de (K386).
-- `README.md`, `README.tr.md`: Known limits / Bilinen sınırlar paragrafına üç cümle (K384, K387, K389).
+- `README.md`, `README.tr.md`: Known limits / Bilinen sınırlar paragrafına kuralın kelime denetimi olduğunu söyleyen cümle ve dört sınır (K384, K387, K389, K390).
 - Kod, test, site ve sürüm değişmedi.
 - Tur 2 (K389): tur 1'in iki security Low bulgusu kapandı; iki cümle daraltıldı, satır devamı Bilinen sınırlara girdi, zaman aşımı cümlesine Claude Code sürümü eklendi.
+- Tur 3 (K390): tur 2'nin security Low bulgusu kapandı; CHANGELOG sınırları saymaz, kuralın kelime okuduğu ve ANSI-C tırnak sınırı Bilinen sınırlara girdi.
 
 ## How I tested
-- sha256 önekleri kartın prototipiyle aynı: `CHANGELOG.md` `022abd6116b0a3d2`, `README.md` `39bb153ffd95f612`, `README.tr.md` `668850318c4bdf40`.
+- sha256 önekleri kartın prototipiyle aynı: `CHANGELOG.md` `27d93a5301815a3d`, `README.md` `fa849f5529d8dc64`, `README.tr.md` `1a1139e1a8a30fa6`.
 - `bash tests/site_tests.sh` → exit 0, ✘ yok; `bash tests/sanitize_tests.sh` → `ALL PASSED`, exit 0.
 - Tüm suite, <n> dosya: Python 3.9.6 → exit 0, <total> ✔, 0 ✘; 3.13 shim → exit 0, <total> ✔, 0 ✘.
-- `claude plugin validate .` → exit 0; numstat `12 0`, `7 1`, `8 1`; 117 karakteri aşan ya da görünmez karakter taşıyan eklenen satır yok.
+- `claude plugin validate .` → exit 0; numstat `13 0`, `11 1`, `12 1`; 117 karakteri aşan ya da görünmez karakter taşıyan eklenen satır yok.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ````
@@ -192,3 +202,19 @@ Kart: [`docs/delix/tasks/T064-docs-t063-changelog-limits.md`](docs/delix/tasks/T
   - Maintainer decision (K389): a docs fix round now; the code fix is a later Tier 3 card, after 0.8.0.
 - **Fix round 1** (2026-11-24): C1, R1 and R2 above replace the round 0 texts; the sha256 table, numstat and PR body
   above are the round 1 values; the PR title becomes the commit subject in Step 5.
+- **Round 2** (PR #99 @ `55cac538cd584fae1b1f45c7a15c6da3a344748d`, 2026-11-24):
+  - Deterministic gates:
+    - the three sha256s equal the round 1 "after" prefixes (`022abd6116b0a3d2`, `39bb153ffd95f612`, `668850318c4bdf40`);
+    - numstat `12 0`, `7 1`, `8 1`;
+    - the Stop gate ends `[exit 0]`; CI `check` and `test` pass.
+  - qa: ACCEPT. No findings.
+  - security: FIX, one Low (the round 1 Lows are closed):
+    - L3: "Three limits of the new reading remain" claims completeness again. The word list reads a `$'…'` word as
+      plain single quotes, so an escaped quote inside one ends it. The lead reproduced it on base `fef73bf2` and head
+      `36060c33`; bash 3.2.57 and zsh 5.9 both write, and both versions allow it. Not a regression.
+    - Unsure: a nested backtick substitution; the lead's probe gave no working write. It is the same class as K384.
+    - Unsure: the K387 sentence did not say what happens before 2.1.295.
+  - Maintainer decision (K390): drop the count. Known limits says the rule is a word check, not a shell parser, and
+    adds the `$'…'` limit. The form goes to the later code card with K389.
+- **Fix round 2** (2026-11-24): C1, R1 and R2 above replace the round 1 texts, and the K387 sentence names older
+  versions. The sha256 table, numstat, PR title and PR body above are the round 2 values.
