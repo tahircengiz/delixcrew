@@ -4,6 +4,8 @@
 |---|---|---|---|---|---|
 | T068 | S | 3 | devops | 36 | open |
 
+**🔐 Approved:** 2026-11-24 tahircengiz
+
 > 🔐 Tier 3: `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` are protected paths
 > (`.claude-plugin/**`, `docs/delix/delix.json:16`). The lead adds the `🔐 Approved` line once the maintainer gives an
 > item-specific yes in chat, and commits it to main before the session.
