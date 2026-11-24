@@ -707,6 +707,32 @@
         "at": "2026-11-24T13:03:23Z"
       },
       "work": null
+    },
+    {
+      "id": "I035",
+      "title": "The Bash write rule misses a protected target hidden by a split redirect operator or an ANSI-C quoted word",
+      "refs": [
+        "T064.R1.2",
+        "T064.R2.1"
+      ],
+      "evidence": {
+        "gate_open": true,
+        "misleading_doc": false,
+        "blocks_flow": false,
+        "against_principle": false,
+        "reproduced": "main@1813437",
+        "covered_by": "K389"
+      },
+      "decision": "accept",
+      "basis": "maintainer",
+      "reason": "Known limits name both forms (K389, K390) and base and head miss them alike; the maintainer wants the code fixed after 0.8.0 in a Tier 3 card.",
+      "consent": {
+        "decision": "accept",
+        "table": "duplicate",
+        "events": 2,
+        "at": "2026-11-24T18:07:28Z"
+      },
+      "work": null
     }
   ]
 }

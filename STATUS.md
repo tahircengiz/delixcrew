@@ -872,8 +872,8 @@ security Low), ayrı lead oturumunda. Size M · Tier 3.
   - ✔ T064 düzeltme turu 2, #99 @ `6fa791d`; tur 3 qa ACCEPT, security CLEAN (K391);
   - ◐ T064 kapı 2, birleştirme (birleşince Spec F lead'ine, T068 oturumuna
     `local_c8185ee7-cb68-4851-ba0d-7e362824b95a`, merge commit'i ve C1 çapalarıyla haber; T068 ona çapalanır);
-  - ◻ intake öğesi: satır devamı ve `$'…'` biçimleri (`gate_open`, `covered_by: K389`; bakımcının `<karar> I<nnn>`
-    onayı);
+  - ✔ intake I035: satır devamı ve `$'…'` biçimleri (`gate_open`, `covered_by: K389`, tablo `duplicate`); bakımcı
+    "accept I035" (2026-11-24), `basis: maintainer`, `work` kod kartı yazılınca;
   - ◻ bu iki biçim için kod kartı (Tier 3, 0.8.0'dan sonra, K389, K390);
   - ◻ K374 kapanışı (#98, `4623f51`), advisory taslağının son hali (sürüm 0.8.0, T068'den sonra yayımlanır).
 - **Açık riskler:**
