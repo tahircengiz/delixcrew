@@ -833,8 +833,12 @@ security Low), ayrı lead oturumunda. Size M · Tier 3.
   - ✔ düzeltme turu 3 (son): v10 (K384), #98 @ `923e745`;
   - ✔ tur 4: qa ACCEPT, security 🔐 HUMAN_APPROVAL, bulgu yok (K385);
   - ✔ kapı 2: kullanıcı #98'i birleştirdi (`4623f51`, head `923e745` = tur 4 qa sha'sı), `accepted`;
-  - ◐ T064 docs kartı (K386, K387): CHANGELOG `## Unreleased` maddesi, README ve README.tr Known limits;
-  - ◻ intake öğesi (K387), advisory taslağının son hali (sürüm 0.8.0, T068'den sonra yayımlanır), K374 kapanışı.
+  - ◐ T064 docs kartı (K386, K387): CHANGELOG `## Unreleased` maddesi, README ve README.tr Known limits; lead
+    prototipi `a12c899` kopyasında hazır (üç çapa, sha256 ve doküman testleri); kart, architect eleştirisi ve kapı 1
+    sırada;
+  - ◻ intake öğesi (K387; bakımcının sohbette `<karar> I<nnn>` onayı gerekir);
+  - ◻ T064 uygulayıcı, inceleme ve birleştirme (birleşince Spec F lead'ine haber; T068 ona çapalanır);
+  - ◻ K374 kapanışı (#98, `4623f51`), advisory taslağının son hali (sürüm 0.8.0, T068'den sonra yayımlanır).
 - **Açık riskler:**
   - PR farkı birleşene dek kodu ve testi herkese açık gösteriyor (K377'de kabul edildi);
   - P2 maliyeti doğrusal; zaman aşımında hook kapalı kalır;
@@ -849,7 +853,7 @@ security Low), ayrı lead oturumunda. Size M · Tier 3.
     `T063-review-r1-private.md`, `T063-review-r2-private.md`, `T063-review-r3-private.md`,
     `T063-review-r4-private.md`, `T063-fix-round2-message.md`, `T063-fix-round3-message.md`, `K374-ghsa-draft.md`;
     depoya girmez (K378).
-- Son güncelleme (K374): 2026-11-24; lead oturumu iki kez sıkıştırıldı.
+- Son güncelleme (K374): 2026-11-24, main `c0e7a31` sonrası; lead oturumu üç kez sıkıştırıldı.
 
 ## 16. Spec F: geri bildirim karar kaydı (intake) (2026-11-21, `docs/delix/specs/F-intake-decisions.md`)
 
