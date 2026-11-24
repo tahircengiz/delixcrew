@@ -38,10 +38,11 @@ Earlier versions: git history and the [v0.2.0 release](https://github.com/tahirc
   operator and read one word after `cp`, `mv` or `tee`, so with `auth/**` protected a write such as
   `echo x >auth/x.py`, `tee -a auth/x.py` or `cp a auth/x.py -f` reached a protected path without a denial. Every
   word the old check read is still read, the command is scanned in linear time, each distinct word is matched once,
-  and a protected path used as a `cp` source is denied too (fail closed). Three limits of the new reading remain and
-  are in Known limits (K384, K387, K389); the rule's other limits (other write commands, variables, globs, split
-  quotes, targets outside the worktree) do not change. `tests/redirect_gate_tests.sh` holds the cases and 14 growth
-  checks; a security advisory follows the release.
+  and a protected path used as a `cp` source is denied too (fail closed). The rule still reads words, not the shell's
+  grammar, so some quoting, substitution and line-continuation forms get past it, as do other write commands,
+  variables, globs, split quotes and targets outside the worktree; Known limits has the details (K384, K387, K389,
+  K390). `tests/redirect_gate_tests.sh` holds the cases and 14 growth checks; a security advisory follows the
+  release.
 
 ## 0.7.4 — 2026-11-20
 
