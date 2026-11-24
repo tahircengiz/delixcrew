@@ -431,7 +431,18 @@ bir dizin onun onayını devralabilir. Projenin kendi `.claude/settings.json` ho
 penceresini kabul ettiğinizde yine kod çalıştırabilir; onay yalnız `delix.json` kanalını kapatır. Bash hook'unun
 denylist'i bir sınır değil, sürtünmedir: bölünmüş tırnak, değişken ya da glob ile kurulan komutlar ondan geçer;
 `cd` sonrası göreli yol, `//`, `/./` ya da sembolik bağlantılı bir dizinle yazılan kayıt yolu da geçer, çünkü o kural
-bir alt dize eşleşmesidir (K220); sınır Claude Code'un Bash izin istemidir (K77). Uygulayıcının push kuralı (T041, K279)
+bir alt dize eşleşmesidir (K220); sınır Claude Code'un Bash izin istemidir (K77). Bash yazma kuralı da aynı türden
+bir kelime denetimidir: kabuğun dilbilgisini değil kelimeleri okur, bu yüzden modellemediği bir tırnak ya da ikame
+biçimi hedefi gizleyebilir. `cp`, `mv` ya da `tee`'den sonra tek düzeyli bir `$( )`, `<( )` ya da `>( )`'yi yalnız
+ilk `)`'ye kadar okur: içinde bir `(` ya da tırnaklı veya kaçışlı bir `)` varsa, ardından gelen `;`, `&` ya da
+`|`'den sonraki kelimeler okunmayabilir; önceki sürümler de okumuyordu (K384). `$'…'` kelimesini düz tek tırnak gibi
+okur, bu yüzden içindeki kaçışlı bir tırnak kelime listesini bitirebilir; önceki sürümler de o kelimeleri okumuyordu
+(K390). Bir yönlendirme operatörünün karakterleri arasındaki ters bölü ve yeni satır, bash'in tek operatöre
+birleştirdiği bir yazım, hedefi kuraldan gizleyebilir; zsh böyle bir komutu reddeder (K389). Çok sayıda parçası olan
+bir hedef yolun, hook'ların ortak yol eşlemesindeki (`scripts/common.py`) süresi doğrusaldan hızlı büyür; 60 s zaman
+aşımını geçerse Bash hook'u, `onFailure: "block"`'u uygulayan Claude Code 2.1.295 ve sonrasında komutu reddeder; daha
+eski sürümlerde bu alan yoktur ve zaman aşımına uğrayan hook çağrıyı durdurmaz (K387).
+Uygulayıcının push kuralı (T041, K279)
 da kelimeler üzerinde, fail closed çalışan bir izin listesi denetimidir, derinlemesine savunmadır, GitHub sınırı
 değildir: değişkenler, `eval`, glob'lar, `$'\x67it'` gibi ANSI-C kaçışları, çıktısı bir kelimeyi yazan komut
 (`$(echo gi)t`) ve süslü parantez genişletme (`git {push,origin,HEAD:main}` bir push olarak çalışır) ile kurulan

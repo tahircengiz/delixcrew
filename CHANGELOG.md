@@ -30,6 +30,19 @@ Earlier versions: git history and the [v0.2.0 release](https://github.com/tahirc
   Feedback flow now says which finding raises a draft's count: the same kind, component and title (letter case,
   punctuation and digits aside); a different wording opens a new draft, and only in the delixcrew repository are
   the drafts of one problem joined in one intake item. The index lists the record among what the lead writes.
+- **The Bash hook sees the protected-path writes its check missed** (🔐 K374, K376, K380, K382, K384; #98): in a card
+  worktree the Bash write rule (`scripts/bash_gate.py`) now reads the target of the redirect operator spellings (such
+  as `>`, `>>`, `>|`, `N>`, `&>`, `&>>`, `>&word`, `<>` and zsh `>!`, `>>!` or `>&|`), with or without a blank and
+  with a backslash newline after the operator, and every word after `cp`, `mv` or `tee` in any letter case, up to a
+  `;`, `&` or `|` outside quotes, one-level substitutions and redirect operators. It used to need a blank after the
+  operator and read one word after `cp`, `mv` or `tee`, so with `auth/**` protected a write such as
+  `echo x >auth/x.py`, `tee -a auth/x.py` or `cp a auth/x.py -f` reached a protected path without a denial. Every
+  word the old check read is still read, the command is scanned in linear time, each distinct word is matched once,
+  and a protected path used as a `cp` source is denied too (fail closed). The rule still reads words, not the shell's
+  grammar, so some quoting, substitution and line-continuation forms get past it, as do other write commands,
+  variables, globs, split quotes and targets outside the worktree; Known limits has the details (K384, K387, K389,
+  K390). `tests/redirect_gate_tests.sh` holds the cases and 14 growth checks; a security advisory follows the
+  release.
 
 ## 0.7.4 — 2026-11-20
 
