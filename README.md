@@ -433,8 +433,10 @@ written as a relative path after `cd`, with `//` or `/./`, or through a symlinke
 substring match (K220); the boundary is Claude Code's Bash permission prompt (K77). After `cp`, `mv` or `tee` the
 Bash write rule reads a one-level `$( )`, `<( )` or `>( )` only up to its first `)`: after a `(` or a quoted or
 escaped `)` inside one, the words that follow a `;`, `&` or `|` may not be read; earlier versions did not read them
-either (K384). A target with very many path parts costs more than linear time in the path match the hooks share
-(`scripts/common.py`); past the 60 s timeout the Bash hook fails closed (K387). The implementer push rule (T041,
+either (K384). A backslash newline between the characters of a redirect operator, which bash joins into one operator,
+may hide the target from the rule; zsh rejects such a command (K389). A target with very many path parts costs more
+than linear time in the path match the hooks share (`scripts/common.py`); past the 60 s timeout the Bash hook fails
+closed on Claude Code 2.1.295 or later, which applies `onFailure: "block"` (K387). The implementer push rule (T041,
 K279) is a check on words too, an allowlist that fails closed, defence in depth and not a GitHub boundary: words built
 from variables, `eval`, globs, ANSI-C escapes such as `$'\x67it'`, a command whose output spells a word (`$(echo gi)t`),
 and brace expansion (`git {push,origin,HEAD:main}` runs as a push), git settings given through the environment
