@@ -194,3 +194,19 @@ Do not write STATE.json. Read only this card and the dispatch prompt's private b
     - The lead's fix drops the quote scan inside the substitution. The substitution now ends at its first closing
       parenthesis, so its inner scan is one character class with no alternation, linear by construction (K384). One
       growth case pins it. The exact text is in the private notes (K378).
+- **Round 4** (PR #98 @ `923e7454653579f163dac5e86caef0743193aecf`, 2026-11-24):
+  - Deterministic gates:
+    - both files equal the lead's round-4 prototype byte for byte (`36060c331bd01685`, `8a391097400e9156`); numstat
+      `18 3` and `166 0`, one hunk under `scripts`;
+    - the new test is red on the round-3 code (1 `✘` / 99 `✔`) and green with W1 (100 `✔`); the Stop gate ends
+      `[exit 0]` with no `✘`; CI `check` and `test` pass;
+    - the lead's run on a `git archive` of the head: 21 files, 1756 `✔`, 0 `✘` on 3.9.6 and on the 3.13 shim.
+  - qa: ACCEPT. No findings.
+  - security: 🔐 HUMAN_APPROVAL for the protected path. No finding at any severity. The lead ran its two "unsure"
+    items:
+    - a second spelling of the known loss of K384; the base misses it too, so it is not a regression (private
+      notes);
+    - pre-existing and outside this card: a target with very many path parts costs super-linear time in the shared
+      path check. It costs the same on the base and the head (40000 parts: 0.27 s; ×21–30 per ×8), and the hook fails
+      closed on its timeout. It stays in the lead's private note for the maintainer's decision (K418).
+  - Gate 2: the user merges with `--match-head-commit 923e7454653579f163dac5e86caef0743193aecf`.
