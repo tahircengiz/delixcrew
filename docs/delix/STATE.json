@@ -2139,7 +2139,7 @@
       "file": "docs/delix/tasks/T064-docs-t063-changelog-limits.md",
       "role": "docs",
       "tier": 2,
-      "status": "in_review",
+      "status": "accepted",
       "pr": 99,
       "rounds": 2,
       "cost_usd": null,
@@ -2203,7 +2203,12 @@
           "verdict": "CLEAN",
           "at": "2026-11-24T17:49:32Z"
         }
-      ]
+      ],
+      "merged": {
+        "sha": "34097d75e07f2a1316205594685d62a953d294ba",
+        "head": "6fa791d0ca21a633c911a760f4329879d67a398e",
+        "at": "2026-11-24T18:07:22Z"
+      }
     },
     "T065": {
       "file": "docs/delix/tasks/T065-script-intake-checker.md",
