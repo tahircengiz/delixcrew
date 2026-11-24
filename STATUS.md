@@ -877,15 +877,21 @@ security Low), ayrı lead oturumunda. Size M · Tier 3.
   - kart dışı: çok parçalı hedefin yol kontrolü maliyeti üst-doğrusal, tabanda da var (K385); Bilinen sınır (K387);
   - düzeltme kullanıcılara 0.8.0 ile ulaşır (K386); o zamana dek kurulumlar 0.7.4'te, advisory sürümden sonra;
   - satır devamı (K389, yalnız bash) ve `$'…'` (K390, bash ve zsh) biçimleri 0.8.0'da açık kalır; Bilinen sınır,
-    kod kartı sonra.
+    kod kartı sonra;
+  - K387'nin zaman aşımında reddetme cümlesi yalnız Claude Code 2.1.295 ve sonrasında doğru (`onFailure: "block"`);
+    eski sürümde zaman aşımına uğrayan hook çağrıyı durdurmaz, cümle bunu söylüyor;
+  - Mac'teki `claude` CLI oturumu dolmuş: `claude -p` ile hook zaman aşımı ölçümü kullanıcı giriş yapınca koşar.
 - **Kayıtlar:**
   - dal `claude/intelligent-turing-e8fdd2`, worktree `.claude/worktrees/fervent-mcclintock-e58a23`; uygulayıcı oturumu
     `local_7ecd3159-2dbe-45fe-bd69-b3c370f97a63`;
   - özel brif, bulgu kayıtları, düzeltme mesajları ve advisory taslağı not klasöründe: `T063-private-brief.md`,
     `T063-review-r1-private.md`, `T063-review-r2-private.md`, `T063-review-r3-private.md`,
     `T063-review-r4-private.md`, `T063-fix-round2-message.md`, `T063-fix-round3-message.md`, `K374-ghsa-draft.md`;
-    depoya girmez (K378).
-- Son güncelleme (K374): 2026-11-24, main `c0e7a31` sonrası; lead oturumu üç kez sıkıştırıldı.
+    depoya girmez (K378);
+  - T064: #99, dal `claude/lucid-dirac-e8878c`, uygulayıcı oturumu `local_83e250fd-f9b9-47ec-b7d9-e2af1435c056`;
+    main kayıtları `926e736`, `8d39f9a`, `4e57e33`; notlar `T064-review-r1-private.md`, `T064-review-r2-private.md`,
+    `T064-fix-round1-message.md`, `T064-fix-round2-message.md` (biçimler yalnız burada).
+- Son güncelleme (K374): 2026-11-24, main `4e57e33` sonrası; lead oturumu dört kez sıkıştırıldı.
 
 ## 16. Spec F: geri bildirim karar kaydı (intake) (2026-11-21, `docs/delix/specs/F-intake-decisions.md`)
 
